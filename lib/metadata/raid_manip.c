@@ -6166,6 +6166,11 @@ static int _set_convenient_raid145610_segtype_to(const struct lv_segment *seg_fr
 	struct cmd_context *cmd = seg_from->lv->vg->cmd;
 	const struct segment_type *segtype_sav = *segtype;
 
+	if (!*segtype) {
+		log_error(INTERNAL_ERROR "segtype is missing.");
+		return 0;
+	}
+
 	/* Linear -> striped request */
 	if (seg_is_linear(seg_from) &&
 	    segtype_is_striped(*segtype))
@@ -6438,6 +6443,11 @@ static int _conversion_options_allowed(const struct lv_segment *seg_from,
 
 	if (new_image_count != count)
 		*stripes = count - seg_from->segtype->parity_devs;
+
+	if (!*segtype_to) {
+		log_error(INTERNAL_ERROR "To segtype is not specified.");
+		return 0;
+	}
 
 	if (!_get_allowed_conversion_options(seg_from, *segtype_to, new_image_count, &opts)) {
 		if (strcmp(lvseg_name(seg_from), (*segtype_to)->name))
@@ -7291,7 +7301,7 @@ int lv_raid_remove_missing(struct logical_volume *lv)
 	 */
 
 	for (s = 0; s < seg->area_count; s++) {
-		if (!lv_is_partial(seg_lv(seg, s)) &&
+		if ((seg_lv(seg, s) && !lv_is_partial(seg_lv(seg, s))) &&
 		    (!seg->meta_areas || !seg_metalv(seg, s) || !lv_is_partial(seg_metalv(seg, s))))
 			continue;
 
