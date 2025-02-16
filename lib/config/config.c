@@ -1941,11 +1941,13 @@ int config_write(struct dm_config_tree *cft,
 		.tree_spec = tree_spec,
 		.mem = cft->mem
 	};
+	int free_fp = 1;
 	int r = 1;
 
 	if (!file) {
 		baton.fp = stdout;
 		file = "stdout";
+		free_fp = 0;
 	} else if (!(baton.fp = fopen(file, "w"))) {
 		log_sys_error("open", file);
 		return 0;
@@ -1976,7 +1978,7 @@ int config_write(struct dm_config_tree *cft,
 		argv++;
 	}
 
-	if (baton.fp && baton.fp != stdout && dm_fclose(baton.fp)) {
+	if (free_fp && baton.fp && dm_fclose(baton.fp)) {
 		stack;
 		r = 0;
 	}
