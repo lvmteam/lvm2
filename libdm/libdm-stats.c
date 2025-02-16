@@ -4753,8 +4753,7 @@ static uint64_t *_stats_map_file_regions(struct dm_stats *dms, int fd,
 
 	if (!(extents = _stats_get_extents_for_file(extent_mem, fd, count))) {
 		log_very_verbose("No extents found in fd %d", fd);
-		if (!update)
-			goto out;
+		goto out;
 	}
 
 	if (update) {
