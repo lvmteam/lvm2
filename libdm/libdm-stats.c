@@ -319,6 +319,9 @@ static uint64_t _stats_region_is_grouped(const struct dm_stats* dms,
 	if (region_id == DM_STATS_GROUP_NOT_PRESENT)
 		return 0;
 
+	if (!dms->regions)
+		return 0;
+
 	if (!_stats_region_present(&dms->regions[region_id]))
 		return 0;
 
