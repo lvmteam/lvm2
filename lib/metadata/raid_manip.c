@@ -6218,8 +6218,8 @@ static int _set_convenient_raid145610_segtype_to(const struct lv_segment *seg_fr
 
 		} else if (segtype_is_raid1(*segtype) || segtype_is_linear(*segtype)) {
 			if (seg_from->area_count != 2) {
-				log_error("Converting %s LV %s to 2 stripes first.",
-					  lvseg_name(seg_from), display_lvname(seg_from->lv));
+				log_warn("WARNING: Converting %s LV %s to 2 stripes first.",
+					 lvseg_name(seg_from), display_lvname(seg_from->lv));
 				*new_image_count = 2;
 				*segtype = seg_from->segtype;
 				seg_flag = 0;
@@ -6234,8 +6234,8 @@ static int _set_convenient_raid145610_segtype_to(const struct lv_segment *seg_fr
 					*new_image_count = 4;
 
 				*segtype = seg_from->segtype;
-				log_error("Converting %s LV %s to %u stripes first.",
-					  lvseg_name(seg_from), display_lvname(seg_from->lv), *new_image_count);
+				log_warn("WARNING: Converting %s LV %s to %u stripes first.",
+					 lvseg_name(seg_from), display_lvname(seg_from->lv), *new_image_count);
 
 			} else
 				seg_flag = seg_is_raid4(seg_from) ? SEG_RAID6_N_6 :_raid_seg_flag_5_to_6(seg_from);
