@@ -768,6 +768,8 @@ int check_lv_segments_incomplete_vg(struct logical_volume *lv)
 						  "inconsistent LV area %u",
 						  lv->name, seg_count, s);
 					inc_error_count;
+					/* Can't check more of such segment */
+					continue;
 				}
 
 
