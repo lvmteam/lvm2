@@ -526,46 +526,53 @@ static char *_extract_uuid_prefix(const char *uuid, const int separator)
 	return uuid_prefix;
 }
 
+static void _destroy_split_name(struct dm_split_name *split_name)
+{
+	free(split_name->subsystem);
+	free(split_name);
+}
+
 static struct dm_split_name *_get_split_name(const char *uuid, const char *name,
 					     int separator)
 {
 	struct dm_split_name *split_name;
+	char *subsystem;
+	size_t len = 0;
 
-	if (!(split_name = malloc(sizeof(*split_name)))) {
+	if (!(subsystem = _extract_uuid_prefix(uuid, separator)))
+		return_NULL;
+
+	if (!strcmp(subsystem, "LVM"))
+		len = strlen(name);
+
+	/* struct size + name string */
+	if (!(split_name = malloc(sizeof(*split_name) + len + 1))) {
 		log_error("Failed to allocate memory to split device name "
 			  "into components.");
+		free(subsystem);
 		return NULL;
 	}
 
-	if (!(split_name->subsystem = _extract_uuid_prefix(uuid, separator))) {
-		free(split_name);
-		return_NULL;
+	split_name->subsystem = subsystem;
+	split_name->vg_name = split_name->lv_name =
+		split_name->lv_layer = (char *) "";
+
+	if (len) {
+		split_name->vg_name = (char*)(split_name + 1);
+		dm_strncpy(split_name->vg_name, name, len + 1);
+
+		if (!dm_split_lvm_name(NULL, NULL,
+				       &split_name->vg_name,
+				       &split_name->lv_name,
+				       &split_name->lv_layer)) {
+			log_error("Failed to allocate memory to split LVM name "
+				  "into components.");
+			_destroy_split_name(split_name);
+			return NULL;
+		}
 	}
 
-	split_name->vg_name = split_name->lv_name =
-	    split_name->lv_layer = (char *) "";
-
-	if (!strcmp(split_name->subsystem, "LVM") &&
-	    (!(split_name->vg_name = strdup(name)) ||
-	     !dm_split_lvm_name(NULL, NULL, &split_name->vg_name,
-				&split_name->lv_name, &split_name->lv_layer)))
-		log_error("Failed to allocate memory to split LVM name "
-			  "into components.");
-
 	return split_name;
-}
-
-static void _destroy_split_name(struct dm_split_name *split_name)
-{
-	/*
-	 * lv_name and lv_layer are allocated within the same block
-	 * of memory as vg_name so don't need to be freed separately.
-	 */
-	if (!strcmp(split_name->subsystem, "LVM"))
-		free(split_name->vg_name);
-
-	free(split_name->subsystem);
-	free(split_name);
 }
 
 /*
