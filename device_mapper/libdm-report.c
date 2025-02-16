@@ -547,7 +547,7 @@ static int _report_field_string_list(struct dm_report *rh,
 	}
 
 	/* more than one item - allocate temporary array for string list items for further processing */
-	if (!(arr = malloc(list_size * sizeof(struct str_pos_len)))) {
+	if (!(arr = zalloc(list_size * sizeof(struct str_pos_len)))) {
 		log_error("%s failed to allocate temporary array for processing", _error_msg_prefix);
 		goto out;
 	}
@@ -589,7 +589,8 @@ static int _report_field_string_list(struct dm_report *rh,
 	for (i = 0, pos = 0; i < list_size; i++) {
 		arr[i].item.pos = pos;
 
-		memcpy(repstr + pos, arr[i].str, arr[i].item.len);
+		if (arr[i].str)
+			memcpy(repstr + pos, arr[i].str, arr[i].item.len);
 		memcpy(repstr_extra + i + 1, &arr[i].item, sizeof(struct pos_len));
 
 		pos += arr[i].item.len;
