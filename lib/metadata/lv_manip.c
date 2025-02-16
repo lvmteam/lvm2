@@ -7665,7 +7665,8 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 				lockd_pool = first_seg(lv)->pool_lv;
 			else if (lv_is_thin_pool(lv))
 				lockd_pool = lv;
-			if (!lockd_pool->lockd_thin_pool_locked) {
+			if (lockd_pool &&
+			    !lockd_pool->lockd_thin_pool_locked) {
 				if (!lockd_lv(cmd, lock_lv, "ex", LDLV_PERSISTENT))
 					return_0;
 				lockd_pool->lockd_thin_pool_locked = 1;
@@ -9685,7 +9686,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 	} else if (lv_is_cache_pool(lv)) {
 		/* Cache pool cannot be activated and zeroed */
 		log_very_verbose("Cache pool is prepared.");
-	} else if (lv_is_thin_volume(lv)) {
+	} else if (pool_lv && lv_is_thin_volume(lv)) {
 		/* Optimize the case when taking a snapshot within same pool and thin origin
 		 * is an active LV, so we can pass thin message with suspend/resume of this LV. */
 		if (origin_lv && lv_is_thin_volume(origin_lv) &&
