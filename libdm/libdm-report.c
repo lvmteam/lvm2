@@ -3522,6 +3522,7 @@ static struct field_selection *_create_field_selection(struct dm_report *rh,
 	struct time_value *tval;
 	uint64_t factor;
 	char *s;
+	const char *s_array[2] = { 0 };
 
 	dm_list_iterate_items(fp, &rh->field_props) {
 		if ((fp->implicit == implicit) && (fp->field_num == field_num)) {
@@ -3593,8 +3594,9 @@ static struct field_selection *_create_field_selection(struct dm_report *rh,
 		}
 		memcpy(s, v, len);
 		s[len] = '\0';
+		s_array[0] = s;
 
-		fs->value->v.r = dm_regex_create(rh->selection->mem, (const char * const *) &s, 1);
+		fs->value->v.r = dm_regex_create(rh->selection->mem, s_array, 1);
 		dm_free(s);
 		if (!fs->value->v.r) {
 			log_error("dm_report: failed to create regex "

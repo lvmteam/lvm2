@@ -356,7 +356,7 @@ struct dm_regex *dm_regex_create(struct dm_pool *mem, const char * const *patter
 
 	for (i = 0; i < num_patterns; i++) {
 		ptr += sprintf(ptr, "(.*(%s)%c)", patterns[i], TARGET_TRANS);
-		if (i < (num_patterns - 1))
+		if ((i + 1) < num_patterns)
 			*ptr++ = '|';
 	}
 
