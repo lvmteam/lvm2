@@ -20,20 +20,23 @@ _create_lv()
 {
 	lvremove -f $vg
 	lvcreate -Zn -L4 -n $lv1 $vg "$dev1"
+	rm -f debug.log_DEBUG*
 }
 
 _keep_open()
 {
-	for i in {1..10}; do
-		# keep device open for 3 seconds
-		LVM_TEST_TAG="kill_me_$PREFIX" sleep ${2-10} < "$DM_DEV_DIR/mapper/$vg-$1" && return
-		# sleep exits with 1 if file couldn't be open and
-		# it has a different exit code when killed
-		test $? -eq 1 || return
+	export LANG=C
+	export LVM_TEST_TAG="kill_me_$PREFIX"
+
+	for i in {1..20}; do
+		# try to keep device open for a while
+		sleep ${2-10} 2>err <"$DM_DEV_DIR/mapper/$vg-$1" || true
+		# finish if sleep has NOT failed for "no such file"
+		not grep "No such file" err && return
 		# wait a bit before retrying open...
 		sleep .1
 	done
-	skip 'Cannot hold device $DM_DEV_DIR/mapper/$vg-$1 open.'
+	skip "Cannot hold device $DM_DEV_DIR/mapper/$vg-$1 open!"
 }
 
 _check_msg()
@@ -49,7 +52,7 @@ aux target_at_least dm-mirror 1 2 0 || skip
 
 aux prepare_vg 3
 
-aux delay_dev "$dev3" 0 1 "$(get first_extent_sector "$dev3"):"
+aux delay_dev "$dev3" 0 2 "$(get first_extent_sector "$dev3"):"
 
 # do not waste 'testing' time on 'retry deactivation' loops
 aux lvmconf 'activation/retry_deactivation = 0' \
