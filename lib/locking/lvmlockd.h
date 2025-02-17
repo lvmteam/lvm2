@@ -133,6 +133,9 @@ int lockd_lvcreate_lock(struct cmd_context *cmd, struct volume_group *vg, struct
 			int creating_thin_pool, int creating_thin_volume, int creating_cow_snapshot, int creating_vdo_volume);
 void lockd_lvcreate_done(struct cmd_context *cmd, struct volume_group *vg, struct lvcreate_params *lp);
 
+int lockd_lvremove_lock(struct cmd_context *cmd, struct logical_volume *lv, struct logical_volume **lv_other, int *other_unlock);
+void lockd_lvremove_done(struct cmd_context *cmd, struct logical_volume *lv, struct logical_volume *lv_other, int other_unlock);
+
 #else /* LVMLOCKD_SUPPORT */
 
 static inline void lockd_lockopt_get_flags(const char *str, uint32_t *flags)
@@ -313,6 +316,17 @@ static inline int lockd_lvcreate_lock(struct cmd_context *cmd, struct volume_gro
 }
 
 static inline void lockd_lvcreate_done(struct cmd_context *cmd, struct volume_group *vg, struct lvcreate_params *lp)
+{
+}
+
+static inline int lockd_lvremove_lock(struct cmd_context *cmd, struct logical_volume *lv, struct logical_volume **lv_other,
+		int *other_unlock)
+{
+	return 1;
+}
+
+static inline void lockd_lvremove_done(struct cmd_context *cmd, struct logical_volume *lv, struct logical_volume *lv_other,
+		int other_unlock)
 {
 }
 

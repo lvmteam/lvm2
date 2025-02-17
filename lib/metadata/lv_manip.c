@@ -7591,12 +7591,12 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 	struct volume_group *vg;
 	int visible, historical;
 	struct logical_volume *pool_lv = NULL;
-	struct logical_volume *lock_lv = lv;
-	struct logical_volume *lockd_pool = NULL;
+	struct logical_volume *lockd_other = NULL;
 	struct lv_segment *cache_seg = NULL;
 	struct seg_list *sl;
 	struct lv_segment *seg = first_seg(lv);
 	char msg[NAME_LEN + 300], *msg_dup;
+	int other_unlock = 0;
 
 	vg = lv->vg;
 
@@ -7646,7 +7646,6 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 				  display_lvname(lv));
 			return 0;
 		}
-		lock_lv = pool_lv;
 		if (pool_lv->to_remove)
 			/* Thin pool is to be removed so skip updating it when possible */
 			pool_lv = NULL;
@@ -7657,27 +7656,8 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 		return 0;
 	}
 
-	if (vg_is_shared(vg)) {
-		if (lv_is_thin_type(lv)) {
-			/* FIXME: is this also needed for other types? */
-			/* Thin is special because it needs to be active and locked to remove. */
-			if (lv_is_thin_volume(lv))
-				lockd_pool = first_seg(lv)->pool_lv;
-			else if (lv_is_thin_pool(lv))
-				lockd_pool = lv;
-			if (lockd_pool &&
-			    !lockd_pool->lockd_thin_pool_locked) {
-				if (!lockd_lv(cmd, lock_lv, "ex", LDLV_PERSISTENT))
-					return_0;
-				lockd_pool->lockd_thin_pool_locked = 1;
-			} else {
-				log_debug("lockd_thin_pool_locked skip repeat lockd_lv ex");
-			}
-		} else {
-			if (!lockd_lv(cmd, lock_lv, "ex", LDLV_PERSISTENT))
-				return_0;
-		}
-	}
+	if (!lockd_lvremove_lock(cmd, lv, &lockd_other, &other_unlock))
+		return_0;
 
 	if (!lv_is_cache_vol(lv)) {
 		if (!_lv_remove_check_in_use(lv, force))
@@ -7826,20 +7806,7 @@ int lv_remove_single(struct cmd_context *cmd, struct logical_volume *lv,
 					display_lvname(pool_lv));
 	}
 
-	if (lockd_pool && !thin_pool_is_active(lockd_pool)) {
-		if (lockd_pool->lockd_thin_pool_locked && !lockd_pool->lockd_thin_pool_unlocked) {
-			if (!lockd_lv_name(cmd, vg, lockd_pool->name, &lockd_pool->lvid.id[1], lockd_pool->lock_args, "un", LDLV_PERSISTENT))
-				log_warn("WARNING: Failed to unlock %s.", display_lvname(lockd_pool));
-			else
-				lockd_pool->lockd_thin_pool_unlocked = 1;
-		} else {
-			log_debug("lockd_thin_pool_unlocked skip repeat lockd_lv un");
-		}
-	} else {
-		if (!lockd_lv(cmd, lv, "un", LDLV_PERSISTENT))
-			log_warn("WARNING: Failed to unlock %s.", display_lvname(lv));
-	}
-	lockd_free_lv_after_update(cmd, vg, lv->name, &lv->lvid.id[1], lv->lock_args);
+	lockd_lvremove_done(cmd, lv, lockd_other, other_unlock);
 
 	if (!suppress_remove_message && (visible || historical)) {
 		(void) dm_snprintf(msg, sizeof(msg),

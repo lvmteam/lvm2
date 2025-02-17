@@ -2759,6 +2759,60 @@ int lockd_lv_name(struct cmd_context *cmd, struct volume_group *vg,
 	return 1;
 }
 
+/*
+ * In general, persistent locks are used for activating an LV,
+ * and transient locks are used for any other LV access by a
+ * command.  In the transient case, access to the LV from the
+ * command stops when the command exits.  In the persistent
+ * case, access to the active LV device continues after the
+ * activation command exits.
+ *
+ * A complication of this is when a command temporarily
+ * activates an LV for its own purposes, to access it
+ * only for the duration of the command, and deactivate
+ * it when done.  If the command crashes, a transient
+ * lock will be released, potentially while the LV
+ * remains active on the system.  (It would be ideal if
+ * the temp activation would also be automatically dropped
+ * if the command crashed, like the transient lock.)
+ *
+ * The problem with using persistent locks instead of
+ * transient locks when commands temporarily activate LVs
+ * for the duration of the command, is that it's difficult
+ * for the command to know if should unlock the persistent
+ * lock before exiting.  It needs to have a place at the
+ * end of the command where it can check if the LV will
+ * remain active, and not unlock the persistent lock if so.
+ * We use this strategy in lvcreate for thin pools/volumes.
+ *
+ * case 1
+ * . LV is active, with a persistent lock in lvmlockd
+ * . a command wants to do something with LV, and requests
+ *   a transient lock
+ * . the transient lock request is granted by lvmlockd
+ *   when it sees a persistent lock exists
+ *   (the transient lock request is a no-op in lvmlockd
+ *   when a persistent lock exists)
+ * . when the command is done, its transient lock is
+ *   unlocked (either explicitly or automatically by
+ *   command exit)
+ * . the transient unlock does not affect the persistent
+ *   lock that existed for the active LV
+ * . the LV remains active with its persistent lock held
+ *
+ * case 2
+ * . LV is inactive, with no lock in lvmlockd
+ * . a command wants to do something with LV, and requests
+ *   a transient lock
+ * . lvmlockd acquires the lock
+ * . if the command activates the LV (for "private" use),
+ *   it must also deactivate it before exiting
+ * . when the command is done, its transient lock is
+ *   unlocked (either explicitly or automatically by
+ *   command exit)
+ * . LV is inactive, with no lock held
+ */
+
 static int _lockd_lvcreate_lock_thin(struct cmd_context *cmd, struct volume_group *vg, struct lvcreate_params *lp,
 				     int creating_thin_pool, int creating_thin_volume)
 {
@@ -2946,6 +3000,213 @@ void lockd_lvcreate_done(struct cmd_context *cmd, struct volume_group *vg, struc
 
 	if (!lockd_lv_name(cmd, vg, pool_lv->name, &pool_lv->lvid.id[1], pool_lv->lock_args, "un", flags))
 		log_error("Failed to unlock thin pool %s", lp->lockd_name);
+}
+
+int lockd_lvremove_lock(struct cmd_context *cmd, struct logical_volume *lv,
+			struct logical_volume **lv_other, int *other_unlock)
+{
+	struct volume_group *vg = lv->vg;
+
+	*lv_other = NULL;
+
+	if (!vg_is_shared(vg))
+		return 1;
+
+	if (lv_is_thin_type(lv)) {
+		struct logical_volume *lv_pool;
+
+		if (lv_is_thin_volume(lv))
+			lv_pool = first_seg(lv)->pool_lv;
+		else if (lv_is_thin_pool(lv))
+			lv_pool = lv;
+		else
+			return_0;
+		if (!lv_pool)
+			return_0;
+
+		if (!lv_pool->lockd_thin_pool_locked) {
+			log_debug("lockd_lvremove_lock thin pool %s for %s", lv_pool->name, lv->name);
+
+			if (!lockd_lv(cmd, lv_pool, "ex", LDLV_PERSISTENT))
+				return_0;
+
+			lv_pool->lockd_thin_pool_locked = 1;
+		} else
+			log_debug("lockd_lvremove_lock skip repeat thin pool %s", lv_pool->name);
+
+		*lv_other = lv_pool;
+		*other_unlock = 2; /* 2: unlock persistent */
+
+	} else if (lv_is_cow(lv)) {
+		struct logical_volume *lv_origin;
+
+		if (!(lv_origin = origin_from_cow(lv)))
+			return_0;
+
+		log_debug("lockd_lvremove_lock cow origin %s for %s", lv_origin->name, lv->name);
+
+		if (!lockd_lv(cmd, lv_origin, "ex", 0))
+			return_0;
+
+		*lv_other = lv_origin;
+		*other_unlock = 1; /* 1: unlock transient */
+
+	} else if (lv_is_vdo(lv)) {
+		struct logical_volume *lv_pool;
+
+		if (!first_seg(lv))
+			return_0;
+		if (!(lv_pool = seg_lv(first_seg(lv), 0)))
+			return_0;
+
+		log_debug("lockd_lvremove_lock vdo pool %s for %s", lv_pool->name, lv->name);
+
+		if (!lockd_lv(cmd, lv_pool, "ex", 0))
+			return_0;
+
+		*lv_other = lv_pool;
+		*other_unlock = 1; /* 1: unlock transient */
+
+	} else if (lv_is_cache_pool(lv) || lv_is_cache_vol(lv)) {
+		struct logical_volume *lv_main;
+		struct lv_segment *seg_main;
+		struct lv_segment *seg_pool;
+		int persistent = 0;
+
+		/*
+		 * lvremove of the hidden cachepool or cachevol is a backdoor
+		 * method of lvconvert --uncache when using dm-cache.
+		 */
+
+		/* No locking is done for an unused cache pool. */
+		if (dm_list_empty(&lv->segs_using_this_lv))
+			return 1;
+
+		if (!(seg_main = get_only_segment_using_this_lv(lv)))
+			return_0;
+		if (!(lv_main = seg_main->lv))
+			return_0;
+
+		if (!lv_is_cache(lv_main)) {
+			/* lvremove to uncache doesn't apply to writecache. */
+			log_error("Detach cachevol before removing.");
+			return 0;
+		}
+
+		/*
+		 * If lv_main is active, use a transient lock, which is a no-op
+		 * here, and unlocking the transient lock in
+		 * lockd_lvremove_done doesn't affect the existing persistent
+		 * lock.  If lv_main is inactive, also use a transient lock,
+		 * which will acquire the lock here, and it will be released in
+		 * lockd_lvremove_done.
+		 *
+		 * FIXME: If lv_main is inactive, and in writeback mode, then
+		 * the lvremove activates the main LV, but leaves the main LV
+		 * active when it's done.  So, in this case (main inactive and
+		 * using writeback), this needs to acquire a persistent lock,
+		 * and not unlock it in lockd_lvremove_done.  If this is fixed,
+		 * we can always use a transient lock here.
+		 */
+		if (!lv_is_active(lv_main)) {
+			if (lv_is_cache_pool(lv)) {
+				seg_pool = first_seg(lv);
+				if (seg_pool->cache_mode == CACHE_MODE_WRITEBACK)
+					persistent = 1;
+			} else if (lv_is_cache_vol(lv)) {
+				if (seg_main->cache_mode == CACHE_MODE_WRITEBACK)
+					persistent = 1;
+			}
+		}
+
+		log_debug("lockd_lvremove_lock cache main %s for %s%s", lv_main->name, lv->name,
+			  persistent ? " persistent" : "");
+
+		if (!lockd_lv(cmd, lv_main, "ex", persistent ? LDLV_PERSISTENT : 0))
+			return_0;
+
+		/* don't unlock new persistent lock since lv_main is kept active per FIXME */
+		*lv_other = lv_main;
+		*other_unlock = persistent ? 0 : 1;
+
+	} else {
+		/*
+		 * The original simple approach to locking here is to request a
+		 * persistent ex lock, and do a persistent unlock before
+		 * lockd_free_lv.  That works whether or not the LV is already
+		 * active with an existing persistent lock.  The problem with
+		 * that approach is if the command follows an error path before
+		 * unlock and free, and the LV isn't removed.  In that case, a
+		 * persistent lock acquired here (i.e. the LV wasn't active
+		 * before lvremove) may remain in place without the LV being
+		 * active.
+		 *
+		 * FIXME: to fix that, request a transient ex lock here, and
+		 * unlock either a transient or persistent lock before free_lv.
+		 * That requires a flag telling lvmlockd to unlock either a
+		 * persistent or transient lock, or tracking in the command
+		 * whether a transient or persistent lock is held, so that the
+		 * correct unlock can be used to release it.  If a persistent
+		 * lock already existed, the transient lock requested here
+		 * will be a no-op, and the persistent lock will remain if
+		 * the LV is not removed.  If a transient lock is acquired
+		 * here, it will be dropped if lvremove follows an error
+		 * path where the LV is not removed, or the transient lock
+		 * will be unlocked before free_lv.
+		 */
+		log_debug("lockd_lvremove_lock %s", lv->name);
+
+		if (!lockd_lv(cmd, lv, "ex", LDLV_PERSISTENT))
+			return_0;
+	}
+
+	return 1;
+}
+
+void lockd_lvremove_done(struct cmd_context *cmd, struct logical_volume *lv, struct logical_volume *lv_other,
+			 int other_unlock)
+{
+	struct volume_group *vg = lv->vg;
+
+	if (!vg_is_shared(vg))
+		return;
+
+	if (lv_other && lv_is_thin_pool(lv_other)) {
+		if (thin_pool_is_active(lv_other))
+			log_debug("lockd_lvremove_done skip unlock of active thin pool %s for %s", lv_other->name, lv->name);
+
+		else if (lv_other->lockd_thin_pool_locked && !lv_other->lockd_thin_pool_unlocked) {
+			log_debug("lockd_lvremove_done unlock thin pool %s for %s", lv_other->name, lv->name);
+
+			if (!lockd_lv(cmd, lv_other, "un", LDLV_PERSISTENT))
+				goto_bad;
+			else
+				lv_other->lockd_thin_pool_unlocked = 1;
+		} else
+			log_debug("lockd_lvremove_done skip unlocked thin pool %s for %s", lv_other->name, lv->name);
+
+	} else if (lv_other) {
+		if (!other_unlock) {
+			log_debug("lockd_lvremove_done skip unlock %s for %s", lv_other->name, lv->name);
+			return;
+		}
+
+		log_debug("lockd_lvremove_done unlock %s for %s%s", lv_other->name, lv->name,
+			  (other_unlock == 2) ? " persistent" : "");
+
+		if (!lockd_lv(cmd, lv_other, "un", (other_unlock == 2) ? LDLV_PERSISTENT : 0))
+			goto_bad;
+	} else {
+		log_debug("lockd_lvremove_done unlock %s", lv->name);
+
+		if (!lockd_lv(cmd, lv, "un", LDLV_PERSISTENT))
+			goto_bad;
+
+		lockd_free_lv_after_update(cmd, vg, lv->name, &lv->lvid.id[1], lv->lock_args);
+	}
+	return;
+bad:
+	log_warn("WARNING: Failed to unlock %s.", lv_other ? display_lvname(lv_other) : display_lvname(lv));
 }
 
 /*

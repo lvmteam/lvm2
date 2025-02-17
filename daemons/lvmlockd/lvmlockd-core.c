@@ -1681,20 +1681,32 @@ static int res_unlock(struct lockspace *ls, struct resource *r,
 {
 	struct lock *lk;
 	uint32_t r_version;
+	int found_transient = 0;
+	int found_persistent = 0;
 	int rv;
 
 	if (act->flags & LD_AF_PERSISTENT) {
 		lk = find_lock_persistent(r);
 		if (lk)
 			goto do_unlock;
+		if (find_lock_client(r, act->client_id))
+			found_transient = 1;
 	} else {
 		lk = find_lock_client(r, act->client_id);
 		if (lk)
 			goto do_unlock;
+		if (find_lock_persistent(r))
+			found_persistent = 1;
 	}
 
-	if (act->op != LD_OP_CLOSE)
-		log_debug("%s:%s res_unlock cl %u no locks", ls->name, r->name, act->client_id);
+	if (act->op != LD_OP_CLOSE) {
+		if (found_transient)
+			log_debug("%s:%s res_unlock cl %u ENOENT (found transient)", ls->name, r->name, act->client_id);
+		else if (found_persistent)
+			log_debug("%s:%s res_unlock cl %u ENOENT (found persistent)", ls->name, r->name, act->client_id);
+		else
+			log_debug("%s:%s res_unlock cl %u ENOENT (no lock)", ls->name, r->name, act->client_id);
+	}
 	return -ENOENT;
 
 do_unlock:
