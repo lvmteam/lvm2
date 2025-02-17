@@ -233,8 +233,8 @@ int lv_extend_integrity_in_raid(struct logical_volume *lv, struct dm_list *pvh)
 
 int lv_remove_integrity_from_raid(struct logical_volume *lv, char **remove_images)
 {
-	struct logical_volume *iorig_lvs[DEFAULT_RAID_MAX_IMAGES];
-	struct logical_volume *imeta_lvs[DEFAULT_RAID_MAX_IMAGES];
+	struct logical_volume *iorig_lvs[DEFAULT_RAID_MAX_IMAGES] = { 0 };
+	struct logical_volume *imeta_lvs[DEFAULT_RAID_MAX_IMAGES] = { 0 };
 	struct cmd_context *cmd = lv->vg->cmd;
 	struct volume_group *vg = lv->vg;
 	struct lv_segment *seg_top, *seg_image;
