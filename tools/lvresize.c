@@ -382,24 +382,29 @@ int lvresize_cmd(struct cmd_context *cmd, int argc, char **argv)
 
 	handle->custom_handle = &lp;
 
-retry:
-	ret = process_each_lv(cmd, 1, cmd->position_argv, NULL, NULL, READ_FOR_UPDATE,
-			      handle, NULL, &_lvresize_single);
+	do  {
+		ret = process_each_lv(cmd, 1, cmd->position_argv, NULL, NULL, READ_FOR_UPDATE,
+				      handle, NULL, &_lvresize_single);
 
-	/*
-	 * The VG can be changed by another command while it is unlocked
-	 * during fs resize.  The fs steps likely succeeded, and this
-	 * retry will likely find that no more fs steps are needed, and
-	 * will resize the LV directly.
-	 */
-	if (lp.vg_changed_error && !retries) {
+		if (!lp.vg_changed_error)
+			break;
+
+		if (retries) {
+			log_error("VG changed during file system resize, LV not resized.");
+			ret = ECMD_FAILED;
+			break;
+		}
+
+		/*
+		 * The VG can be changed by another command while it is unlocked
+		 * during fs resize.  The fs steps likely succeeded, and this
+		 * retry will likely find that no more fs steps are needed, and
+		 * will resize the LV directly.
+		 */
+
 		lp.vg_changed_error = 0;
-		retries = 1;
-		goto retry;
-	} else if (lp.vg_changed_error && retries) {
-		log_error("VG changed during file system resize, LV not resized.");
-		ret = ECMD_FAILED;
-	}
+
+	} while (++retries < 2);
 
 	destroy_processing_handle(cmd, handle);
 
