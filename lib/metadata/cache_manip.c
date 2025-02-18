@@ -559,6 +559,7 @@ int lv_cache_remove(struct logical_volume *cache_lv)
 	struct id *data_id, *metadata_id;
 	uint64_t data_len, metadata_len;
 	cache_mode_t cache_mode;
+	int temp_activated = 0;
 	int is_clear;
 
 	if (!lv_is_cache(cache_lv)) {
@@ -573,11 +574,13 @@ int lv_cache_remove(struct logical_volume *cache_lv)
 		goto remove;  /* Already dropped */
 	}
 
-	/* Locally active volume is needed for writeback */
 	if (!lv_info(cache_lv->vg->cmd, cache_lv, 1, NULL, 0, 0)) {
-		/* Give up any remote locks */
-		if (!deactivate_lv_with_sub_lv(cache_lv))
-			return_0;
+
+		/*
+		 * LV is inactive.  When used in writeback, it will
+		 * need to be activated to write the cache content
+		 * back to the main LV before detaching it.
+		 */
 
 		cache_mode = (lv_is_cache_pool(cache_seg->pool_lv)) ?
 			first_seg(cache_seg->pool_lv)->cache_mode : cache_seg->cache_mode;
@@ -594,7 +597,6 @@ int lv_cache_remove(struct logical_volume *cache_lv)
 				return_0;
 			return 1;
 		default:
-			/* Otherwise locally activate volume to sync dirty blocks */
 			cache_lv->status |= LV_TEMPORARY;
 			if (!activate_lv(cache_lv->vg->cmd, cache_lv) ||
 			    !lv_is_active(cache_lv)) {
@@ -602,6 +604,7 @@ int lv_cache_remove(struct logical_volume *cache_lv)
 				return 0;
 			}
 			cache_lv->status &= ~LV_TEMPORARY;
+			temp_activated = 1;
 		}
 	}
 
@@ -620,8 +623,14 @@ int lv_cache_remove(struct logical_volume *cache_lv)
 	 * remove the cache_pool then without waiting for the flush to
 	 * complete.
 	 */
-	if (!lv_cache_wait_for_clean(cache_lv, &is_clear))
+	if (!lv_cache_wait_for_clean(cache_lv, &is_clear)) {
+		if (temp_activated && !deactivate_lv(cache_lv->vg->cmd, cache_lv))
+			stack;
 		return_0;
+	}
+
+	if (temp_activated && !deactivate_lv(cache_lv->vg->cmd, cache_lv))
+		log_warn("Failed to deactivate after cleaning cache.");
 
 	cache_pool_lv = cache_seg->pool_lv;
 	if (!detach_pool_lv(cache_seg))

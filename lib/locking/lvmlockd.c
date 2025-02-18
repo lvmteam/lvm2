@@ -3118,8 +3118,6 @@ int lockd_lvremove_lock(struct cmd_context *cmd, struct logical_volume *lv,
 	} else if (lv_is_cache_pool(lv) || lv_is_cache_vol(lv)) {
 		struct logical_volume *lv_main;
 		struct lv_segment *seg_main;
-		struct lv_segment *seg_pool;
-		int persistent = 0;
 
 		/*
 		 * lvremove of the hidden cachepool or cachevol is a backdoor
@@ -3148,34 +3146,15 @@ int lockd_lvremove_lock(struct cmd_context *cmd, struct logical_volume *lv,
 		 * lock.  If lv_main is inactive, also use a transient lock,
 		 * which will acquire the lock here, and it will be released in
 		 * lockd_lvremove_done.
-		 *
-		 * FIXME: If lv_main is inactive, and in writeback mode, then
-		 * the lvremove activates the main LV, but leaves the main LV
-		 * active when it's done.  So, in this case (main inactive and
-		 * using writeback), this needs to acquire a persistent lock,
-		 * and not unlock it in lockd_lvremove_done.  If this is fixed,
-		 * we can always use a transient lock here.
 		 */
-		if (!lv_is_active(lv_main)) {
-			if (lv_is_cache_pool(lv)) {
-				seg_pool = first_seg(lv);
-				if (seg_pool->cache_mode == CACHE_MODE_WRITEBACK)
-					persistent = 1;
-			} else if (lv_is_cache_vol(lv)) {
-				if (seg_main->cache_mode == CACHE_MODE_WRITEBACK)
-					persistent = 1;
-			}
-		}
 
-		log_debug("lockd_lvremove_lock cache main %s for %s%s", lv_main->name, lv->name,
-			  persistent ? " persistent" : "");
+		log_debug("lockd_lvremove_lock cache main %s for %s", lv_main->name, lv->name);
 
-		if (!lockd_lv(cmd, lv_main, "ex", persistent ? LDLV_PERSISTENT : 0))
+		if (!lockd_lv(cmd, lv_main, "ex", 0))
 			return_0;
 
-		/* don't unlock new persistent lock since lv_main is kept active per FIXME */
 		*lv_other = lv_main;
-		*other_unlock = persistent ? 0 : 1;
+		*other_unlock = 1; /* 1: unlock transient */
 
 	} else {
 		/*
