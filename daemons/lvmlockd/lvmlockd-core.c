@@ -2106,6 +2106,7 @@ static void res_process(struct lockspace *ls, struct resource *r,
 	 * be held for reading.  If the T lock was sh, it would
 	 * be converted to P ex.  If the T/P modes matched, the
 	 * lock could just be changed from T to P.
+	 * Update: T->P is known to happen sometimes with LV locks.
 	 */
 
 	list_for_each_entry_safe(act, safe, &r->actions, list) {
@@ -2124,6 +2125,7 @@ static void res_process(struct lockspace *ls, struct resource *r,
 			list_del(&act->list);
 			add_client_result(act);
 		} else {
+			log_debug("res_process %s change transient to persistent", r->name);
 			r->last_client_id = act->client_id;
 			lk->flags |= LD_LF_PERSISTENT;
 			lk->client_id = 0;
