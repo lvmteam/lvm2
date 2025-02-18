@@ -25,18 +25,19 @@ _create_lv()
 
 _keep_open()
 {
-	export LANG=C
 	export LVM_TEST_TAG="kill_me_$PREFIX"
+	local d="$DM_DEV_DIR/mapper/$vg-$1"
 
-	for i in {1..20}; do
+	for i in {30..0}; do
+		test "$i" -eq 0 && die "Failed to wait and open: $d!"
 		# try to keep device open for a while
-		sleep ${2-10} 2>err <"$DM_DEV_DIR/mapper/$vg-$1" || true
-		# finish if sleep has NOT failed for "no such file"
-		not grep "No such file" err && return
-		# wait a bit before retrying open...
+		exec 2>/dev/null 3<"$d" && break
 		sleep .1
 	done
-	skip "Cannot hold device $DM_DEV_DIR/mapper/$vg-$1 open!"
+
+	echo "Keeping open: $d."
+	sleep ${2-5} || true
+	exec 3<&-
 }
 
 _check_msg()
