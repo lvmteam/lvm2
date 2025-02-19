@@ -235,7 +235,7 @@ specifies the total number of devices to use in all raid1 images (not the
 number of raid1 devices to spread the LV across, even though that is the
 effective result).  The number of devices in each raid1 mirror will be
 \fINumberStripes\fP/(\fINumberMirrors\fP+1), e.g. mirrors 1 and stripes 4 will stripe
-data across two raid1 mirrors, where each mirror is devices.
+data across two raid1 mirrors, where each mirror contains two devices.
 .
 .TP
 .B --stripesize \fISize
