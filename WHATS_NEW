@@ -1,5 +1,6 @@
 Version 2.03.31 - 
 ==================
+  Enhance error path resolving in polling code.
   Improve mirror split with opened temporary volumes.
   Improve pvmove finish with opened temporary volumes.
   Ignore reported optimal_io_size not divisible by 4096.

@@ -1,5 +1,7 @@
 Version 1.02.205 - 
 ===================
+  Restore missing symbol dm_tree_node_size_changed@Base (1.02.175).
+  Restore missing symbol dm_bitset_parse_list@@DM_1_02_138 (1.02.175).
 
 Version 1.02.204 - 14th January 2025
 ====================================
