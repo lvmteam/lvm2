@@ -194,6 +194,7 @@ ifneq ("$(GENHTML)", "")
 lcov:
 	$(RM) -rf $(LCOV_REPORTS_DIR)
 	$(MKDIR_P) $(LCOV_REPORTS_DIR)
+	-find . -name '*.gc[dn][ao]' ! -newer make.tmpl -delete
 	-$(LCOV) --capture --directory $(top_builddir) --ignore-errors source,negative,gcov \
 		--output-file $(LCOV_REPORTS_DIR)/out.info
 	-test ! -s $(LCOV_REPORTS_DIR)/out.info || \
