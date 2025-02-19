@@ -34,15 +34,13 @@ lvremove -f $vg
 # Mirror split when mirror devices are held open
 #################################################
 
-# do not waste 'testing' time on 'retry deactivation' loops
-aux lvmconf 'activation/retry_deactivation = 0'
-
 lvcreate -aey --type mirror -m 1 -l 2 -n $lv1 $vg
 aux wait_for_sync $vg $lv1
 sleep 2 < "$DM_DEV_DIR/mapper/${vg}-${lv1}_mimage_0" &
 sleep 2 < "$DM_DEV_DIR/mapper/${vg}-${lv1}_mlog" &
 
-not lvconvert --splitmirrors 1 -n $lv2 -v $vg/$lv1
+# do not waste 'testing' time on 'retry deactivation' loops
+not lvconvert --splitmirrors 1 -n $lv2 -v $vg/$lv1 --config 'activation/retry_deactivation = 0' 
 
 wait
 
