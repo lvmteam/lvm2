@@ -659,7 +659,8 @@ void *dm_tree_node_get_context(const struct dm_tree_node *node)
 	return node->context;
 }
 
-int dm_tree_node_size_changed(const struct dm_tree_node *dnode)
+DM_EXPORT_NEW_SYMBOL(int, dm_tree_node_size_changed, 1_02_110)
+	(const struct dm_tree_node *dnode)
 {
 	return dnode->props.size_changed;
 }

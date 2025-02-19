@@ -267,6 +267,7 @@ dm_tree_node_set_thin_external_origin
 dm_tree_node_set_thin_pool_discard
 dm_tree_node_set_thin_pool_error_if_no_space
 dm_tree_node_set_udev_flags
+dm_tree_node_size_changed
 dm_tree_preload_children
 dm_tree_retry_remove
 dm_tree_set_cookie

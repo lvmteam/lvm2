@@ -145,8 +145,8 @@ int dm_bit_get_last(dm_bitset_t bs)
 /*
  * Based on the Linux kernel __bitmap_parselist from lib/bitmap.c
  */
-dm_bitset_t dm_bitset_parse_list(const char *str, struct dm_pool *mem,
-				 size_t min_num_bits)
+DM_EXPORT_NEW_SYMBOL(dm_bitset_t, dm_bitset_parse_list, 1_02_138)
+	(const char *str, struct dm_pool *mem, size_t min_num_bits)
 {
 	unsigned a, b;
 	int c, old_c, totaldigits, ndigits;
