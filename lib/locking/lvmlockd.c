@@ -2023,6 +2023,7 @@ int lockd_global(struct cmd_context *cmd, const char *def_mode)
 	    result == -ESTARTING ||
 	    result == -EVGKILLED ||
 	    result == -ELOCKIO ||
+	    result == -ELMERR ||
 	    result == -EORPHAN ||
 	    result == -EADOPT_RETRY ||
 	    result == -EADOPT_NONE) {
@@ -2036,6 +2037,8 @@ int lockd_global(struct cmd_context *cmd, const char *def_mode)
 				log_error("Global lock failed: check that global lockspace is started");
 			else if (result == -ELOCKIO)
 				log_error("Global lock failed: storage errors for sanlock leases");
+			else if (result == -ELMERR)
+				log_error("Global lock failed: lock manager error");
 			else if (result == -EVGKILLED)
 				log_error("Global lock failed: storage failed for sanlock leases");
 			else if (result == -EORPHAN)
@@ -2087,10 +2090,16 @@ int lockd_global(struct cmd_context *cmd, const char *def_mode)
 			goto allow;
 		}
 
+		if (result == -ELMERR) {
+			log_warn("Skipping global lock: lock manager error");
+			goto allow;
+		}
+
 		if ((lockd_flags & LD_RF_NO_GL_LS) || (lockd_flags & LD_RF_NO_LOCKSPACES)) {
 			log_debug("Skipping global lock: lockspace not found or started");
 			goto allow;
 		}
+
 
 		/*
 		 * This is for completeness.  If we reach here, then
@@ -2397,6 +2406,18 @@ int lockd_vg(struct cmd_context *cmd, const char *vg_name, const char *def_mode,
 			goto out;
 		} else {
 			log_error("VG %s lock failed: adopt found other mode.", vg_name);
+			ret = 0;
+			goto out;
+		}
+	}
+
+	if (result == -ELMERR) {
+		if (!strcmp(mode, "sh")) {
+			log_warn("VG %s lock skipped: lock manager error.", vg_name);
+			ret = 1;
+			goto out;
+		} else {
+			log_error("VG %s lock failed: lock manager error.", vg_name);
 			ret = 0;
 			goto out;
 		}
