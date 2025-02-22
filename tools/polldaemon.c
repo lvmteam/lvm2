@@ -309,6 +309,7 @@ static int _poll_vg(struct cmd_context *cmd, const char *vgname,
 	struct poll_operation_id id;
 	struct logical_volume *lv;
 	int finished;
+	int r = 0;
 
 	if (!handle || !(parms = (struct daemon_parms *) handle->custom_handle)) {
 		log_error(INTERNAL_ERROR "Handle is undefined.");
@@ -363,30 +364,42 @@ static int _poll_vg(struct cmd_context *cmd, const char *vgname,
 			continue;
 		if (parms->lv_type && !(lv->status & parms->lv_type))
 			continue;
-		if (_check_lv_status(cmd, vg, lv, idl->id->display_name, parms, &finished) && !finished)
+		if (!_check_lv_status(cmd, vg, lv, idl->id->display_name, parms, &finished)) {
+			stack;
+			goto err;
+		}
+		if (!finished)
 			parms->outstanding_count++;
 	}
 
+	r = 1;
 err:
 	if (!dm_list_empty(&idls))
 		dm_pool_free(cmd->mem, dm_list_item(dm_list_first(&idls), struct poll_id_list));
 
-	return ECMD_PROCESSED;
+	return r ? ECMD_PROCESSED : ECMD_FAILED;
 }
 
-static void _poll_for_all_vgs(struct cmd_context *cmd,
-			      struct processing_handle *handle)
+static int _poll_for_all_vgs(struct cmd_context *cmd,
+			     struct processing_handle *handle)
 {
 	struct daemon_parms *parms = (struct daemon_parms *) handle->custom_handle;
+	int r;
 
 	while (1) {
 		parms->outstanding_count = 0;
-		process_each_vg(cmd, 0, NULL, NULL, NULL, READ_FOR_UPDATE, 0, handle, _poll_vg);
+		r = process_each_vg(cmd, 0, NULL, NULL, NULL, READ_FOR_UPDATE, 0, handle, _poll_vg);
 		lock_global(cmd, "un");
+		if (r != ECMD_PROCESSED) {
+			stack;
+			break;
+		}
 		if (!parms->outstanding_count)
 			break;
 		_nanosleep(parms->interval, 1);
 	}
+
+	return r;
 }
 
 #ifdef LVMPOLLD_SUPPORT
@@ -497,7 +510,7 @@ static int _lvmpolld_init_poll_vg(struct cmd_context *cmd, const char *vgname,
 
 		if (r && !lpdp->parms->background) {
 			if (!(idl = _poll_id_list_create(cmd->mem, &id)))
-				return ECMD_FAILED;
+				return_ECMD_FAILED;
 
 			dm_list_add(&lpdp->idls, &idl->list);
 		}
@@ -506,11 +519,10 @@ static int _lvmpolld_init_poll_vg(struct cmd_context *cmd, const char *vgname,
 	return ECMD_PROCESSED;
 }
 
-static void _lvmpolld_poll_for_all_vgs(struct cmd_context *cmd,
+static int _lvmpolld_poll_for_all_vgs(struct cmd_context *cmd,
 				       struct daemon_parms *parms,
 				       struct processing_handle *handle)
 {
-	int r;
 	struct dm_list *first;
 	struct poll_id_list *idl, *tlv;
 	unsigned finished;
@@ -522,18 +534,23 @@ static void _lvmpolld_poll_for_all_vgs(struct cmd_context *cmd,
 
 	handle->custom_handle = &lpdp;
 
-	process_each_vg(cmd, 0, NULL, NULL, NULL, 0, 0, handle, _lvmpolld_init_poll_vg);
+	if (ECMD_PROCESSED !=
+	    process_each_vg(cmd, 0, NULL, NULL, NULL, 0, 0, handle, _lvmpolld_init_poll_vg))
+		return_0;
 
 	first = dm_list_first(&lpdp.idls);
 
 	while (!dm_list_empty(&lpdp.idls)) {
 		dm_list_iterate_items_safe(idl, tlv, &lpdp.idls) {
-			r = lvmpolld_request_info(idl->id, lpdp.parms,
-						  &finished);
-			if (!r || finished)
+			if (!lvmpolld_request_info(idl->id, lpdp.parms,
+						   &finished))
+				return_0;
+			if (finished)
 				dm_list_del(&idl->list);
-			else if (!parms->aborting)
-				_report_progress(cmd, idl->id, lpdp.parms);
+			else if (!parms->aborting) {
+				if (!_report_progress(cmd, idl->id, lpdp.parms))
+					stack;
+			}
 		}
 
 		_nanosleep(lpdp.parms->interval, 0);
@@ -541,33 +558,46 @@ static void _lvmpolld_poll_for_all_vgs(struct cmd_context *cmd,
 
 	if (first)
 		dm_pool_free(cmd->mem, dm_list_item(first, struct poll_id_list));
+
+	return 1;
+}
+
+static int _lvmpoll_daemon_id(struct cmd_context *cmd, struct poll_operation_id *id,
+			      struct daemon_parms *parms)
+{
+	unsigned finished = 0;
+
+	if (!lvmpolld_poll_init(cmd, id, parms))
+		return_ECMD_FAILED;
+
+	if (!parms->background)
+		while (1) {
+			if (!lvmpolld_request_info(id, parms, &finished))
+				return_ECMD_FAILED;
+
+			if (finished)
+				break;
+
+			if (!parms->aborting && !_report_progress(cmd, id, parms))
+				return_ECMD_FAILED;
+
+			_nanosleep(parms->interval, 0);
+		}
+
+	return ECMD_PROCESSED;
 }
 
 static int _lvmpoll_daemon(struct cmd_context *cmd, struct poll_operation_id *id,
 			   struct daemon_parms *parms)
 {
+	struct processing_handle *handle;
 	int r;
-	struct processing_handle *handle = NULL;
-	unsigned finished = 0;
 
 	if (parms->aborting)
 		parms->interval = 0;
 
-	if (id) {
-		r = lvmpolld_poll_init(cmd, id, parms);
-		if (r && !parms->background) {
-			while (1) {
-				if (!(r = lvmpolld_request_info(id, parms, &finished)) ||
-				    finished ||
-				    (!parms->aborting && !(r = _report_progress(cmd, id, parms))))
-					break;
-
-				_nanosleep(parms->interval, 0);
-			}
-		}
-
-		return r ? ECMD_PROCESSED : ECMD_FAILED;
-	}
+	if (id)
+		return _lvmpoll_daemon_id(cmd, id, parms);
 
 	/* process all in-flight operations */
 	if (!(handle = init_processing_handle(cmd, NULL))) {
@@ -575,10 +605,12 @@ static int _lvmpoll_daemon(struct cmd_context *cmd, struct poll_operation_id *id
 		return ECMD_FAILED;
 	}
 
-	_lvmpolld_poll_for_all_vgs(cmd, parms, handle);
+	if (!(r = _lvmpolld_poll_for_all_vgs(cmd, parms, handle)))
+		stack;
+
 	destroy_processing_handle(cmd, handle);
 
-	return ECMD_PROCESSED;
+	return r ? ECMD_PROCESSED : ECMD_FAILED;
 }
 #else
 #	define _lvmpoll_daemon(cmd, id, parms) (ECMD_FAILED)
@@ -630,7 +662,7 @@ static int _poll_daemon(struct cmd_context *cmd, struct poll_operation_id *id,
 			ret = ECMD_FAILED;
 		} else {
 			handle->custom_handle = parms;
-			_poll_for_all_vgs(cmd, handle);
+			ret = _poll_for_all_vgs(cmd, handle);
 		}
 	}
 
