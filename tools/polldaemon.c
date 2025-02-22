@@ -113,7 +113,7 @@ static int _check_lv_status(struct cmd_context *cmd,
 	return 1;
 }
 
-static void _nanosleep(unsigned secs, unsigned allow_zero_time)
+static int _nanosleep(unsigned secs, unsigned allow_zero_time)
 {
 	struct timespec wtime = {
 		.tv_sec = secs,
@@ -125,6 +125,8 @@ static void _nanosleep(unsigned secs, unsigned allow_zero_time)
 	sigint_allow();
 	nanosleep(&wtime, &wtime);
 	sigint_restore();
+
+	return !sigint_caught();
 }
 
 static int _sleep_and_rescan_devices(struct cmd_context *cmd, struct daemon_parms *parms)
@@ -138,8 +140,7 @@ static int _sleep_and_rescan_devices(struct cmd_context *cmd, struct daemon_parm
 		 */
 		lvmcache_destroy(cmd, 1, 0);
 		label_scan_destroy(cmd);
-		_nanosleep(parms->interval, 0);
-		if (sigint_caught())
+		if (!_nanosleep(parms->interval, 0))
 			return_0;
 		if (!lvmcache_label_scan(cmd))
 			stack;
@@ -396,7 +397,8 @@ static int _poll_for_all_vgs(struct cmd_context *cmd,
 		}
 		if (!parms->outstanding_count)
 			break;
-		_nanosleep(parms->interval, 1);
+		if (!_nanosleep(parms->interval, 1))
+			return_ECMD_FAILED;
 	}
 
 	return r;
@@ -553,7 +555,8 @@ static int _lvmpolld_poll_for_all_vgs(struct cmd_context *cmd,
 			}
 		}
 
-		_nanosleep(lpdp.parms->interval, 0);
+		if (!_nanosleep(lpdp.parms->interval, 0))
+			return_0;
 	}
 
 	if (first)
@@ -581,7 +584,8 @@ static int _lvmpoll_daemon_id(struct cmd_context *cmd, struct poll_operation_id 
 			if (!parms->aborting && !_report_progress(cmd, id, parms))
 				return_ECMD_FAILED;
 
-			_nanosleep(parms->interval, 0);
+			if (!_nanosleep(parms->interval, 0))
+				return_ECMD_FAILED;
 		}
 
 	return ECMD_PROCESSED;
