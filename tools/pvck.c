@@ -1915,7 +1915,7 @@ static int _repair_label_header(struct cmd_context *cmd, const char *repair,
 
 	if (!found_label) {
 		log_warn("WARNING: No LVM label found on %s.  It may not be an LVM device.", dev_name(dev));
-		if (!arg_count(cmd, yes_ARG) &&
+		if (!arg_is_set(cmd, yes_ARG) &&
 		    yes_no_prompt("Write LVM header to device? ") == 'n')
 			return 0;
 	}
@@ -1952,7 +1952,7 @@ static int _repair_label_header(struct cmd_context *cmd, const char *repair,
 		return 1;
 	}
 
-	if (!arg_count(cmd, yes_ARG) &&
+	if (!arg_is_set(cmd, yes_ARG) &&
 	    yes_no_prompt("Write new LVM header to %s? ", dev_name(dev)) == 'n')
 		return 0;
 
@@ -2289,7 +2289,7 @@ static int _repair_pv_header(struct cmd_context *cmd, const char *repair,
 	} else if (!mda_count) {
 		log_warn("WARNING: no previous metadata areas found on device.");
 
-		if (arg_count(cmd, yes_ARG) ||
+		if (arg_is_set(cmd, yes_ARG) ||
 		    yes_no_prompt("Should a metadata area be included? ") == 'y') {
 			/* mda1_offset/mda1_size are set below */
 			mda_count = 1;
@@ -2474,7 +2474,7 @@ static int _repair_pv_header(struct cmd_context *cmd, const char *repair,
 		return 1;
 	}
 
-	if (!arg_count(cmd, yes_ARG) &&
+	if (!arg_is_set(cmd, yes_ARG) &&
 	    yes_no_prompt("Write new LVM header to %s? ", dev_name(dev)) == 'n')
 		goto fail;
 
@@ -2551,7 +2551,7 @@ static int _update_mda(struct cmd_context *cmd, struct metadata_file *mf, struct
 		return 1;
 	}
 
-	if (!arg_count(cmd, yes_ARG) &&
+	if (!arg_is_set(cmd, yes_ARG) &&
 	    yes_no_prompt("Write new LVM metadata to %s? ", dev_name(dev)) == 'n')
 		goto fail;
 
@@ -2921,7 +2921,7 @@ static int _check_metadata_file(struct cmd_context *cmd, struct metadata_file *m
 
 	log_warn("WARNING: file data does not begin with a VG name and may be invalid.");
 
-	if (!arg_count(cmd, yes_ARG) &&
+	if (!arg_is_set(cmd, yes_ARG) &&
 	    yes_no_prompt("Write input file data to disk?") == 'n') {
 		log_error("Invalid raw text metadata in file.");
 		return 0;

@@ -689,7 +689,7 @@ static int _lvchange_writecache(struct cmd_context *cmd,
 		 * Empty settings can be used to clear all current settings,
 		 * lvchange --cachesettings "" vg/lv
 		 */
-		if (!arg_count(cmd, yes_ARG) &&
+		if (!arg_is_set(cmd, yes_ARG) &&
 		    yes_no_prompt("Clear all writecache settings? ") == 'n') {
 			log_print("No settings changed.");
 			return 1;
@@ -738,7 +738,7 @@ static int _lvchange_cache(struct cmd_context *cmd,
 	if (seg_is_cache(seg) && lv_is_cache_vol(seg->pool_lv) && (mode == CACHE_MODE_WRITEBACK)) {
 		log_warn("WARNING: repairing a damaged cachevol is not yet possible.");
 		log_warn("WARNING: cache mode writethrough is suggested for safe operation.");
-		if (!arg_count(cmd, yes_ARG) &&
+		if (!arg_is_set(cmd, yes_ARG) &&
 			yes_no_prompt("Continue using writeback without repair?") == 'n')
 			goto_out;
 	}
@@ -888,7 +888,7 @@ static int _lvchange_integrity(struct cmd_context *cmd,
 	if (set_count)
 		goto out;
 
-	if (!arg_count(cmd, yes_ARG) &&
+	if (!arg_is_set(cmd, yes_ARG) &&
 	    yes_no_prompt("Clear all integrity settings? ") == 'n') {
 		log_print("No settings changed.");
 		return 1;

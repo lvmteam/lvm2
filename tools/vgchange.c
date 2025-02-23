@@ -114,7 +114,7 @@ static int _activate_lvs_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 		if (lv_is_vdo_pool(lv))
 			continue;
 
-		if (lv_activation_skip(lv, activate, arg_is_set(cmd, ignoreactivationskip_ARG)))
+		if (lv_activation_skip(lv, activate, arg_count(cmd, ignoreactivationskip_ARG)))
 			continue;
 
 		if ((activate == CHANGE_AAY) &&

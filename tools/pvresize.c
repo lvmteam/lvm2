@@ -46,7 +46,7 @@ static int _pvresize_single(struct cmd_context *cmd,
 			return_ECMD_FAILED;
 	}
 
-	if (!pv_resize_single(cmd, vg, pv, params->new_size, arg_is_set(cmd, yes_ARG)))
+	if (!pv_resize_single(cmd, vg, pv, params->new_size, arg_count(cmd, yes_ARG)))
 		return_ECMD_FAILED;
 
 	params->done++;

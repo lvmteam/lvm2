@@ -2661,7 +2661,7 @@ static int _process_common_commands(struct cmd_context *cmd)
 	if (arg_is_set(cmd, help_ARG) ||
 	    arg_is_set(cmd, longhelp_ARG) ||
 	    arg_is_set(cmd, help2_ARG)) {
-		_usage(cmd->name, arg_is_set(cmd, longhelp_ARG), 0);
+		_usage(cmd->name, arg_count(cmd, longhelp_ARG), 0);
 		return ECMD_PROCESSED;
 	}
 

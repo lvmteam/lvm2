@@ -1854,7 +1854,7 @@ static int _lvconvert_splitsnapshot(struct cmd_context *cmd, struct logical_volu
 			return_0;
 
 		if ((arg_count(cmd, force_ARG) == PROMPT) &&
-		    !arg_count(cmd, yes_ARG) &&
+		    !arg_is_set(cmd, yes_ARG) &&
 		    lv_is_visible(cow) &&
 		    lv_is_active(cow)) {
 			if (yes_no_prompt("Do you really want to split off active "
@@ -1895,7 +1895,7 @@ static int _lvconvert_split_and_keep_cachevol(struct cmd_context *cmd,
 	 * This would generally be done to rescue data from
 	 * the origin if the cache could not be repaired.
 	 */
-	if (!lv_is_active(lv) && arg_count(cmd, force_ARG))
+	if (!lv_is_active(lv) && arg_is_set(cmd, force_ARG))
 		direct_detach = 1;
 
 	/*
@@ -1906,7 +1906,7 @@ static int _lvconvert_split_and_keep_cachevol(struct cmd_context *cmd,
 	 * detach the cache in this case.
 	 */
 	if ((cache_mode != CACHE_MODE_WRITETHROUGH) && lv_is_partial(lv_fast)) {
-		if (!arg_count(cmd, force_ARG)) {
+		if (!arg_is_set(cmd, force_ARG)) {
 			log_warn("WARNING: writeback cache on %s is not complete and cannot be flushed.", display_lvname(lv_fast));
 			log_warn("WARNING: cannot detach writeback cache from %s without --force.", display_lvname(lv));
 			log_error("Conversion aborted.");
@@ -1918,7 +1918,7 @@ static int _lvconvert_split_and_keep_cachevol(struct cmd_context *cmd,
 	if (direct_detach) {
 		log_warn("WARNING: Data may be lost by detaching writeback cache without flushing.");
 
-		if (!arg_count(cmd, yes_ARG) &&
+		if (!arg_is_set(cmd, yes_ARG) &&
 		    yes_no_prompt("Detach writeback cache %s from %s without flushing data?",
 				  display_lvname(lv_fast), display_lvname(lv)) == 'n') {
 			log_error("Conversion aborted.");
@@ -2022,7 +2022,7 @@ static int _lvconvert_split_and_remove_cachepool(struct cmd_context *cmd,
 	/* TODO: Check for failed cache as well to get prompting? */
 	if (lv_is_partial(lv)) {
 		if (first_seg(seg->pool_lv)->cache_mode != CACHE_MODE_WRITETHROUGH) {
-			if (!arg_count(cmd, force_ARG)) {
+			if (!arg_is_set(cmd, force_ARG)) {
 				log_error("Conversion aborted.");
 				log_error("Cannot uncache writeback cache volume %s without --force.",
 					  display_lvname(lv));
@@ -2032,7 +2032,7 @@ static int _lvconvert_split_and_remove_cachepool(struct cmd_context *cmd,
 				 cache_mode_num_to_str(first_seg(seg->pool_lv)->cache_mode), display_lvname(lv));
 		}
 
-		if (!arg_count(cmd, yes_ARG) &&
+		if (!arg_is_set(cmd, yes_ARG) &&
 		    yes_no_prompt("Do you really want to uncache %s with missing LVs? [y/n]: ",
 				  display_lvname(lv)) == 'n') {
 			log_error("Conversion aborted.");
@@ -2105,7 +2105,7 @@ static int _lvconvert_snapshot(struct cmd_context *cmd,
 		 snap_name);
 	log_warn("THIS WILL DESTROY CONTENT OF LOGICAL VOLUME (filesystem etc.)");
 
-	if (!arg_count(cmd, yes_ARG) &&
+	if (!arg_is_set(cmd, yes_ARG) &&
 	    yes_no_prompt("Do you really want to convert %s? [y/n]: ",
 			  snap_name) == 'n') {
 		log_error("Conversion aborted.");
@@ -2980,7 +2980,7 @@ static int _lvconvert_swap_pool_metadata(struct cmd_context *cmd,
 				 display_lvname(lv));
 
 			/* Ok, user has likely some serious reason for this */
-			if (!arg_count(cmd, yes_ARG) &&
+			if (!arg_is_set(cmd, yes_ARG) &&
 			    yes_no_prompt("Do you really want to change chunk size for %s pool volume? [y/n]: ",
 					  display_lvname(lv)) == 'n') {
 				log_error("Conversion aborted.");
@@ -2991,7 +2991,7 @@ static int _lvconvert_swap_pool_metadata(struct cmd_context *cmd,
 		seg->chunk_size = chunk_size;
 	}
 
-	if (!arg_count(cmd, yes_ARG) &&
+	if (!arg_is_set(cmd, yes_ARG) &&
 	    yes_no_prompt("Do you want to swap metadata of %s pool with metadata volume %s? [y/n]: ",
 			  display_lvname(lv),
 			  display_lvname(metadata_lv)) == 'n') {
@@ -3321,7 +3321,7 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 	} else if (to_cachepool)
 		log_warn("WARNING: Using mismatched cache pool metadata MAY DESTROY YOUR DATA!");
 
-	if (!arg_count(cmd, yes_ARG) &&
+	if (!arg_is_set(cmd, yes_ARG) &&
 	    yes_no_prompt("Do you really want to convert %s? [y/n]: ",
 			  converted_names) == 'n') {
 		log_error("Conversion aborted.");
@@ -3683,7 +3683,7 @@ static int _cache_vol_attach(struct cmd_context *cmd,
 	if (cache_mode == CACHE_MODE_WRITEBACK) {
 		log_warn("WARNING: repairing a damaged cachevol is not yet possible.");
 		log_warn("WARNING: cache mode writethrough is suggested for safe operation.");
-		if (!arg_count(cmd, yes_ARG) &&
+		if (!arg_is_set(cmd, yes_ARG) &&
 		    yes_no_prompt("Continue using writeback without repair?") == 'n')
 			goto_out;
 	}
@@ -3857,7 +3857,7 @@ static void _lvconvert_repair_pvs_raid_ask(struct cmd_context *cmd, int *do_it)
 		return;
 	}
 
-	if (!arg_count(cmd, yes_ARG) &&
+	if (!arg_is_set(cmd, yes_ARG) &&
 	    yes_no_prompt("Attempt to replace failed RAID images "
 			  "(requires full device resync)? [y/n]: ") == 'n') {
 		*do_it = 0;
@@ -5653,8 +5653,8 @@ static int _lvconvert_detach_writecache(struct cmd_context *cmd,
 	 */
 	active_begin = lv_is_active(lv);
 
-	if (lv_is_partial(lv_fast) || (!active_begin && arg_count(cmd, force_ARG))) {
-		if (!arg_count(cmd, force_ARG)) {
+	if (lv_is_partial(lv_fast) || (!active_begin && arg_is_set(cmd, force_ARG))) {
+		if (!arg_is_set(cmd, force_ARG)) {
 			log_warn("WARNING: writecache on %s is not complete and cannot be flushed.", display_lvname(lv_fast));
 			log_warn("WARNING: cannot detach writecache from %s without --force.", display_lvname(lv));
 			log_error("Conversion aborted.");
@@ -5663,7 +5663,7 @@ static int _lvconvert_detach_writecache(struct cmd_context *cmd,
 
 		log_warn("WARNING: Data may be lost by detaching writecache without flushing.");
 
-		if (!arg_count(cmd, yes_ARG) &&
+		if (!arg_is_set(cmd, yes_ARG) &&
 		     yes_no_prompt("Detach writecache %s from %s without flushing data?",
 				   display_lvname(lv_fast), display_lvname(lv)) == 'n') {
 			log_error("Conversion aborted.");

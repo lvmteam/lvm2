@@ -725,7 +725,7 @@ int lvmdevices(struct cmd_context *cmd, int argc, char **argv)
 		 * moved to a new WWID.
 		 */
 		cmd->search_for_devnames = "all";
-		device_ids_search(cmd, &found_devs, arg_is_set(cmd, refresh_ARG), 1, &update_needed);
+		device_ids_search(cmd, &found_devs, arg_count(cmd, refresh_ARG), 1, &update_needed);
 
 		_print_check(cmd);
 
@@ -908,7 +908,7 @@ int lvmdevices(struct cmd_context *cmd, int argc, char **argv)
 			 * and sets this flag is so.
 			 */
 			if (dev_is_used_by_active_lv(cmd, dev, NULL, NULL, NULL, NULL)) {
-				if (!arg_count(cmd, yes_ARG) &&
+				if (!arg_is_set(cmd, yes_ARG) &&
 			    	    yes_no_prompt("Device %s is used by an active LV, continue to remove? ", devname) == 'n') {
 					log_error("Device not removed.");
 					goto bad;
@@ -958,7 +958,7 @@ int lvmdevices(struct cmd_context *cmd, int argc, char **argv)
 		dev = du->dev;
 
 		if (dev && dev_is_used_by_active_lv(cmd, dev, NULL, NULL, NULL, NULL)) {
-			if (!arg_count(cmd, yes_ARG) &&
+			if (!arg_is_set(cmd, yes_ARG) &&
 			    yes_no_prompt("Device %s is used by an active LV, continue to remove? ", dev_name(dev)) == 'n') {
 				log_error("Device not removed.");
 				goto bad;
@@ -999,7 +999,7 @@ int lvmdevices(struct cmd_context *cmd, int argc, char **argv)
 		if (du->devname && (du->devname[0] != '.')) {
 			if ((dev = dev_cache_get(cmd, du->devname, NULL)) &&
 			    dev_is_used_by_active_lv(cmd, dev, NULL, NULL, NULL, NULL)) {
-				if (!arg_count(cmd, yes_ARG) &&
+				if (!arg_is_set(cmd, yes_ARG) &&
 			    	    yes_no_prompt("Device %s is used by an active LV, continue to remove? ", du->devname) == 'n') {
 					log_error("Device not removed.");
 					goto bad;
