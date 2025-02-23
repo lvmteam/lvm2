@@ -624,7 +624,7 @@ int update_thin_pool_lv(struct logical_volume *lv, int activate)
 
 	if (activate) {
 		/* If the pool is not active, do activate deactivate */
-		monitored = dmeventd_monitor_mode();
+		monitored = (dmeventd_monitor_mode() == 1) ? 1 : 0;
 		init_dmeventd_monitor(DMEVENTD_MONITOR_IGNORE);
 		if (!lv_is_active(lv)) {
 			/*
