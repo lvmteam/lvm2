@@ -1,4 +1,4 @@
-.TH DMSTATS 8 "Jun 23 2016" "Linux" "MAINTENANCE COMMANDS"
+.TH DMSTATS 8 "Jun 23 2016" Linux "MAINTENANCE COMMANDS"
 .
 .de OPT_PROGRAMS
 .  RB [ --allprograms | --programid
@@ -21,7 +21,7 @@
 .\" Print units suffix, use with arg to print human
 .\" man2html can't handle too many changes per command
 .de UNITS
-.  BR b | B | s | S | k | K | m | M | \c
+.  RB [ b | B | s | S | k | K | m | M |\c
 .  BR g | G | t | T | p | P | e | E ]
 ..
 .
@@ -35,9 +35,10 @@
 .  RB ( t )erabytes,
 .  RB ( p )etabytes,
 .  RB ( e )xabytes.
-.  nop Capitalise to use multiples of 1000 (S.I.) instead of 1024.
+.  nop Capitalise to use multiples of 1000 (S.I.\&) instead of 1024.
 ..
 .
+.as AD "\" define the string if not defined on the command line
 .SH NAME
 .
 dmstats \(em device-mapper statistics management
@@ -54,42 +55,42 @@ dmstats \(em device-mapper statistics management
 .HP
 .B dmstats
 .de CMD_COMMAND
-.  ad l
+.  na
 .  nh
-.  IR command
+.  I  command
 .  IR device_name \ |
-.  BR --major
-.  IR major
-.  BR --minor
+.  B  --major
+.  I  major
+.  B  --minor
 .  IR minor \ |
 .  BR -u | --uuid
-.  IR uuid
+.  I  uuid
 .  RB [ -v | --verbose ]
 .  hy
-.  ad b
+.  ad
 ..
 .CMD_COMMAND
 .
 .HP
 .B dmstats
 .de CMD_CLEAR
-.  ad l
+.  na
 .  nh
-.  BR clear
-.  IR device_name
+.  B clear
+.  I device_name
 .  OPT_PROGRAMS
 .  OPT_REGIONS
 .  hy
-.  ad b
+.  ad
 ..
 .CMD_CLEAR
 .
 .HP
 .B dmstats
 .de CMD_CREATE
-.  ad l
+.  na
 .  nh
-.  BR create
+.  B  create
 .  IR device_name ...| file_path ...| \fB--alldevices
 .  RB [ --areas
 .  IR nr_areas | \fB--areasize
@@ -104,63 +105,63 @@ dmstats \(em device-mapper statistics management
 .  RB [ --nogroup ]
 .  RB [ --precise ]
 .  RB [ --start
-.  IR start_sector
-.  BR --length
+.  I  start_sector
+.  B  --length
 .  IR length | \fB--segments ]
 .  RB [ --userdata
 .  IR user_data ]
 .  RB [ --programid
 .  IR id ]
 .  hy
-.  ad b
+.  ad
 ..
 .CMD_CREATE
 .
 .HP
 .B dmstats
 .de CMD_DELETE
-.  ad l
+.  na
 .  nh
-.  BR delete
+.  B  delete
 .  IR device_name | \fB--alldevices
 .  OPT_PROGRAMS
 .  OPT_REGIONS
 .  hy
-.  ad b
+.  ad
 ..
 .CMD_DELETE
 .
 .HP
 .B dmstats
 .de CMD_GROUP
-.  ad l
+.  na
 .  nh
-.  BR group
+.  B  group
 .  RI [ device_name | \fB--alldevices ]
 .  RB [ --alias
 .  IR name ]
 .  RB [ --regions
 .  IR regions ]
 .  hy
-.  ad b
+.  ad
 ..
 .CMD_GROUP
 .HP
 .B dmstats
 .de CMD_HELP
-.  ad l
-.  BR help
+.  na
+.  B  help
 .  RB [ -c | -C | --columns ]
-.  ad b
+.  ad
 ..
 .CMD_HELP
 .
 .HP
 .B dmstats
 .de CMD_LIST
-.  ad l
+.  na
 .  nh
-.  BR list
+.  B  list
 .  RI [ device_name ]
 .  RB [ --histogram ]
 .  OPT_PROGRAMS
@@ -171,31 +172,31 @@ dmstats \(em device-mapper statistics management
 .  RB [ --notimesuffix ]
 .  RB [ -v | --verbose ]
 .  hy
-.  ad b
+.  ad
 ..
 .CMD_LIST
 .
 .HP
 .B dmstats
 .de CMD_PRINT
-.  ad l
+.  na
 .  nh
-.  BR print
+.  B  print
 .  RI [ device_name ]
 .  RB [ --clear ]
 .  OPT_PROGRAMS
 .  OPT_REGIONS
 .  hy
-.  ad b
+.  ad
 ..
 .CMD_PRINT
 .
 .HP
 .B dmstats
 .de CMD_REPORT
-.  ad l
+.  na
 .  nh
-.  BR report
+.  B  report
 .  RI [ device_name ]
 .  RB [ --interval
 .  IR seconds ]
@@ -216,41 +217,40 @@ dmstats \(em device-mapper statistics management
 .  RB [ --nosuffix ]
 .  RB [ --notimesuffix ]
 .  hy
-.  ad b
+.  ad
 ..
 .CMD_REPORT
 .HP
 .B dmstats
 .de CMD_UNGROUP
-.  ad l
+.  na
 .  nh
-.  BR ungroup
+.  B  ungroup
 .  RI [ device_name | \fB--alldevices ]
 .  RB [ --groupid
 .  IR id ]
 .  hy
-.  ad b
+.  ad
 ..
 .CMD_UNGROUP
 .HP
 .B dmstats
 .de CMD_UPDATE_FILEMAP
-.  ad l
+.  na
 .  nh
-.  BR update_filemap
-.  IR file_path
+.  B  update_filemap
+.  I  file_path
 .  RB [ --groupid
 .  IR id ]
 .  RB [ --follow
 .  IR follow_mode ]
 .  OPT_FOREGROUND
 .  hy
-.  ad b
+.  ad
 ..
 .CMD_UPDATE_FILEMAP
 .
 .PD
-.ad b
 .
 .SH DESCRIPTION
 .
@@ -300,7 +300,7 @@ results.
 Specify the number of statistics areas to create within a new region.
 .
 .TP
-.B --areasize \fIarea_size\fR[\c
+.BI --areasize " area_size\c"
 .UNITS
 Specify the size of areas into which a new region should be divided. An
 optional suffix selects units of:
@@ -382,7 +382,7 @@ The daemon will not fork into the background, and will replace the
 Specify the group to operate on.
 .
 .TP
-.B --bounds \fIhistogram_boundaries\c
+.BI --bounds " histogram_boundaries\c"
 .RB [ ns | us | ms | s ]
 Specify the boundaries of a latency histogram to be tracked for the
 region as a comma separated list of latency values. Latency values are
@@ -404,7 +404,7 @@ repeating reports. If \fB--interval\fP is specified but
 reports will continue to repeat until interrupted.
 .
 .TP
-.B --length \fIlength\fR[\c
+.BI --length " length\c"
 .UNITS
 Specify the length of a new statistics region in sectors. An optional
 suffix selects units of:
@@ -467,7 +467,7 @@ Specify the region to operate on.
 .B --regions \fIregion_list
 Specify a list of regions to group. The group list is a comma-separated
 list of region identifiers. Continuous sequences of identifiers may be
-expressed as a hyphen separated range, for example: '1-10'.
+expressed as a hyphen separated range, for example: '1\(en10'.
 .
 .TP
 .B --relative
@@ -483,7 +483,7 @@ specifying column names and their valid values while making use of
 supported comparison operators.
 .
 .TP
-.B --start \fIstart\fR[\c
+.BI --start " start\c"
 .UNITS
 Specify the start offset of a new statistics region in sectors. An
 optional suffix selects units of:
@@ -500,15 +500,15 @@ the \fB--nogroup\fP option is given. When grouping is enabled a group
 alias may be specified using the \fB--alias\fP option.
 .
 .TP
-.B --units \c
-.RI [ units ] \c
-.RB [ h | H | \c
+.BR --units " \c"
+.RI [ units ]\c
+.RB [ h | H |\c
 .UNITS
 Set the display units for report output.
 All sizes are output in these units:
 .RB ( h )uman-readable,
 .HELP_UNITS
-Can also specify custom units e.g. \fB--units\ 3M\fP.
+Can also specify custom units e.g.\& \fB--units\ 3M\fP.
 .
 .TP
 .B --userdata \fIuser_data
@@ -556,8 +556,9 @@ configured interval duration) on the final bin.
 .sp
 Latencies are given in nanoseconds. An optional unit suffix of ns, us,
 ms, or s may be given after each value to specify units of nanoseconds,
-microseconds, milliseconds or seconds respectively, so for example, 10ms
-is equivalent to 10000000. Latency values with a precision of less than
+microseconds, milliseconds or seconds respectively, so for example,
+10\~ms is equivalent to 10,000,000.
+Latency values with a precision of less than
 one millisecond can only be used when precise timestamps are enabled: if
 \fB--precise\fP is not given and values less than one millisecond are
 used it will be enabled automatically.
@@ -584,7 +585,7 @@ machine images, swap areas, or large database files.
 .sp
 To work with the \fB--filemap\fP option, files must be located on a
 local file system, backed by a device-mapper device, that supports
-physical extent data using the FIEMAP ioctl (Ext4 and XFS for e.g.).
+physical extent data using the FIEMAP ioctl (e.g.\& Ext4 and XFS).
 .sp
 By default regions that map a file are placed into a group and the
 group alias is set to the basename of the file. This behaviour can be
@@ -795,7 +796,7 @@ of interest.
 To be able to use file mapping, the file must be backed by a
 device-mapper device, and in a file system that supports the FIEMAP
 ioctl (and which returns data describing the physical location of
-extents). This currently includes \fBxfs(5)\fP and \fBext4(5)\fP.
+extents). This currently includes \fBxfs\fP(5) and \fBext4\fP(5).
 .P
 By default the regions making up a file are placed together in a
 group, and the group alias is set to the \fBbasename(3)\fP of the
@@ -1111,7 +1112,7 @@ Create a whole-device region with one area on vg00/lvol1
 .br
 vg00/lvol1: Created new region with 1 area(s) as region ID 0
 .P
-Create a 32M region 1G into device d0
+Create a 32\~MiB region 1\~GiB into device d0
 .br
 #
 .B dmstats create --start 1G --length 32M d0
@@ -1119,7 +1120,6 @@ Create a 32M region 1G into device d0
 d0: Created new region with 1 area(s) as region ID 0
 .P
 Create a whole-device region with 8 areas on every device
-.br
 .br
 #
 .B dmstats create --areas 8
@@ -1138,20 +1138,18 @@ vg00-lvol2: Created new region with 8 area(s) as region ID 1
 .P
 Delete all regions on all devices
 .br
-.br
 #
 .B dmstats delete --alldevices --allregions
 .P
-Create a whole-device region with areas 10 GiB in size on vg00/lvol1
+Create a whole-device region with areas 10\~GiB in size on vg00/lvol1
 using dmsetup
-.br
 .br
 #
 .B dmsetup stats create --areasize 10G vg00/lvol1
 .br
 vg00-lvol1: Created new region with 5 area(s) as region ID 1
 .P
-Create a 1 GiB region with 16 areas at the start of vg00/lvol1
+Create a 1\~GiB region with 16 areas at the start of vg00/lvol1
 .br
 #
 .B dmstats create --start 0 --len 1G --areas=16 vg00/lvol1
@@ -1162,34 +1160,53 @@ List the statistics regions registered on vg00/lvol1
 .br
 #
 .B dmstats list vg00/lvol1
-.br
-Name             RgID  RStart RSize  #Areas ASize  ProgID
-.br
-vg00-lvol1           0      0 61.00g      1 61.00g dmstats
-.br
-vg00-lvol1           1 61.00g 19.20g      1 19.20g dmstats
-.br
-vg00-lvol1           2 80.20g  2.14g      1  2.14g dmstats
+.TS
+l l l l l l l
+l n n n n n l.
+Name	RgID	RStart	RSize	#Areas	ASize	ProgID
+vg00\-lvol1	0	0	61.00g	1	61.00g	dmstats
+vg00\-lvol1	1	61.00g	19.20g	1	19.20g	dmstats
+vg00\-lvol1	2	80.20g	2.14g	1	2.14g	dmstats
+.TE
 .P
 Display five statistics reports for vg00/lvol1 at an interval of one second
-.br
 .br
 #
 .B dmstats report --interval 1 --count 5 vg00/lvol1
 .br
 #
 .B dmstats report
+.nr ol \n(.l
+.nr oL \n(LL
+.ie n \{\
+.  ll 125m
+.  nr LL 125m
+.\}
+.el \{\
+.  ll 120m
+.  nr LL 120m
+.  nr oi \n(.i
+.  nr oo \n(.o
+.  in 0
+.  po 0
+.\}
+.TS
+l1 l1 l1 l1 l1 l1 l1 l1 l1 l1 l1 l1 l1 l1 l1 l1 l
+l1 n1 n1 n1 n1 n1 n1 n1 n1 n1 n1 n1 n1 n1 n1 n1 n.
+Name	RgID	ArID	AStart	ASize	RRqM/s	WRqM/s	R/s	W/s	RSz/s	WSz/s	AvRqSz	QSize	Util%	AWait	RdAWa	WrAWa
+vg_hex\-lv_home	0	0	0	61.00g	0.00	0.00	0.00	218.00	0	1.04m	4.50k	2.97	81.70	13.62	0.00	13.62
+vg_hex\-lv_home	1	0	61.00g	19.20g	0.00	0.00	0.00	5.00	0	548.00k	109.50k	0.14	11.00	27.40	0.00	27.40
+vg_hex\-lv_home	2	0	80.20g	2.14g	0.00	0.00	0.00	14.00	0	1.15m	84.00k	0.39	18.70	27.71	0.00	27.71
+.TE
 .br
-Name             RgID  ArID  AStart ASize  RRqM/s   WRqM/s   R/s   W/s    RSz/s WSz/s   AvRqSz  QSize Util%      AWait RdAWa WrAWa
-.br
-vg_hex-lv_home       0     0      0 61.00g     0.00     0.00  0.00 218.00     0   1.04m   4.50k  2.97      81.70 13.62  0.00 13.62
-.br
-vg_hex-lv_home       1     0 61.00g 19.20g     0.00     0.00  0.00   5.00     0 548.00k 109.50k  0.14      11.00 27.40  0.00 27.40
-.br
-vg_hex-lv_home       2     0 80.20g  2.14g     0.00     0.00  0.00  14.00     0   1.15m  84.00k  0.39      18.70 27.71  0.00 27.71
+.ll \n(olu
+.nr LL \n(oLu
+.if t \{\
+.po \n(oou
+.in \n(oiu
+.\}
 .P
 Create one region for reach target contained in device vg00/lvol1
-.br
 .br
 #
 .B dmstats create --segments vg00/lvol1
@@ -1201,7 +1218,7 @@ vg00-lvol1: Created new region with 1 area(s) as region ID 1
 vg00-lvol1: Created new region with 1 area(s) as region ID 2
 .P
 Create regions mapping each file in the directory images/ and place
-them into separate groups, each named after the corresponding file
+them into separate groups, each named after the corresponding file.
 .br
 #
 .B dmstats create --filemap images/*
@@ -1236,7 +1253,7 @@ LVM2 resource page:
 .UE
 .br
 Device-mapper resource page:
-.UR http://sources.redhat.com/dm
+.UR http://www.sourceware.org/dm
 .UE
 .P
 Device-mapper statistics kernel documentation
