@@ -19,7 +19,7 @@ SKIP_WITH_LVMLOCKD=1
 _create_lv()
 {
 	lvremove -f $vg
-	lvcreate -Zn -L4 -n $lv1 $vg "$dev1"
+	lvcreate -Zn -L8 -n $lv1 $vg "$dev1"
 	rm -f debug.log_DEBUG*
 }
 
@@ -32,11 +32,11 @@ _keep_open()
 		test "$i" -eq 0 && die "Failed to wait and open: $d!"
 		# try to keep device open for a while
 		exec 2>/dev/null 3<"$d" && break
-		sleep .1
+		sleep .1 || return 0
 	done
 
 	echo "Keeping open: $d."
-	sleep ${2-5} || true
+	sleep ${2-10} || true
 	exec 3<&-
 }
 
@@ -71,12 +71,11 @@ _create_lv
 _keep_open pvmove0_mimage_0 &
 
 # pvmove fails in such case
-not pvmove --atomic "$dev1" "$dev3" >out 2>&1
+not pvmove -i0 --atomic "$dev1" "$dev3" -vvvv |& tee out
 
 aux kill_tagged_processes
 wait
 
-cat out
 _check_msg "ABORTING: Failed" out
 
 lvs -ao+seg_pe_ranges $vg
@@ -98,23 +97,31 @@ _create_lv
 _keep_open pvmove0_mimage_1 &
 
 # with background mode - it's forking polling
-pvmove -b --atomic "$dev1" "$dev3" >out 2>&1
+pvmove -b -i1 --atomic -vvvv "$dev1" "$dev3"
 aux wait_pvmove_lv_ready "$vg-pvmove0"
 
-pvmove --abort >out1 2>&1
+not pvmove -i0 --abort -vvvv |& tee out
 
 aux kill_tagged_processes
 wait
+# FIXME: here we are waiting to let the 'original'
+# 'pvmove -b' to catch the knowledge about aborted pvmove
+# So 'pvmove --abort' itself does NOT abort potentially number
+# of monitoring processes
+# Temporarily resolve the issue with following sleep
+# that last longer then  1s interval used with '-b'
+sleep 1.5
+not pgrep -u root -lx lvm || {
+	ps aux
+	die "Some 'lvm' process keeps running!"
+	# Bad luck, if admin runs parallel lvm2 command with our testsuite
+}
 
-cat out
-cat out1
-if test -s out1 ; then
-	_check_msg "ABORTING: Failed" out1
+_check_msg "ABORTING: Failed" out
 
-	lvs -ao+seg_pe_ranges $vg
-	# hopefully we managed to abort before pvmove finished
-	check lv_on $vg $lv1 "$dev1"
-fi
+# hopefully we managed to abort before pvmove finished
+check lv_on $vg $lv1 "$dev1"
+
 check lv_field $vg/pvmove0_mimage_1 layout "error"
 check lv_field $vg/pvmove0_mimage_1 role "public"
 lvremove -f $vg/pvmove0_mimage_1
@@ -127,12 +134,11 @@ lvremove -f $vg/pvmove0_mimage_1
 _create_lv
 _keep_open pvmove0 &
 
-not pvmove --atomic "$dev1" "$dev3" >out 2>&1
+not pvmove -i0 --atomic "$dev1" "$dev3" |& tee out
 
 aux kill_tagged_processes
 wait
 
-cat out
 _check_msg "ABORTING: Unable to deactivate" out
 
 check lv_field $vg/pvmove0 layout "error"
@@ -149,12 +155,11 @@ _keep_open pvmove0_mimage_0 &
 _keep_open pvmove0_mimage_1 &
 _keep_open pvmove0 &
 
-not pvmove --atomic "$dev1" "$dev3" >out 2>&1
+not pvmove -i0 --atomic -vvvv "$dev1" "$dev3" |& tee out
 
 aux kill_tagged_processes
 wait
 
-cat out
 _check_msg "ABORTING: Unable to deactivate" out
 
 lvremove -f $vg/pvmove0_mimage_0
