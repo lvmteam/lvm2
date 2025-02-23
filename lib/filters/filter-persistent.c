@@ -73,7 +73,7 @@ static void _persistent_filter_wipe(struct cmd_context *cmd, struct dev_filter *
 		_init_hash(pf);
 	} else {
 		dm_list_iterate_items(sl, &dev->aliases)
-			radix_tree_remove(pf->devices, sl->str, strlen(sl->str));
+			(void) radix_tree_remove(pf->devices, sl->str, strlen(sl->str));
 	}
 }
 
