@@ -3222,9 +3222,15 @@ void lockd_lvremove_done(struct cmd_context *cmd, struct logical_volume *lv, str
 
 		if (!lockd_lv(cmd, lv, "un", LDLV_PERSISTENT))
 			goto_bad;
-
-		lockd_free_lv_after_update(cmd, vg, lv->name, &lv->lvid.id[1], lv->lock_args);
 	}
+
+	/*
+	 * In some cases the LV being removed will not have a lock itself to
+	 * free (no lock_args), e.g. when removing a thin LV.
+	 */
+	if (lv->lock_args)
+		lockd_free_lv_after_update(cmd, vg, lv->name, &lv->lvid.id[1], lv->lock_args);
+
 	return;
 bad:
 	log_warn("WARNING: Failed to unlock %s.", lv_other ? display_lvname(lv_other) : display_lvname(lv));
