@@ -624,8 +624,8 @@ int update_thin_pool_lv(struct logical_volume *lv, int activate)
 
 	if (activate) {
 		/* If the pool is not active, do activate deactivate */
-		monitored = (dmeventd_monitor_mode() == 1) ? 1 : 0;
-		init_dmeventd_monitor(DMEVENTD_MONITOR_IGNORE);
+		if (DMEVENTD_MONITOR_IGNORE != (monitored = dmeventd_monitor_mode()))
+			init_dmeventd_monitor(DMEVENTD_MONITOR_IGNORE);
 		if (!lv_is_active(lv)) {
 			/*
 			 * FIXME:
@@ -660,6 +660,9 @@ int update_thin_pool_lv(struct logical_volume *lv, int activate)
 			}
 		}
 
+		/* Unlock memory if possible */
+		memlock_unlock(lv->vg->cmd);
+
 		if (!sync_local_dev_names(lv->vg->cmd)) {
 			log_error("Failed to sync local devices LV %s.",
 				  display_lvname(lv));
@@ -673,11 +676,8 @@ int update_thin_pool_lv(struct logical_volume *lv, int activate)
 		}
 		init_dmeventd_monitor(monitored);
 
-		/* Unlock memory if possible */
-		memlock_unlock(lv->vg->cmd);
-
 		if (!ret)
-			return_0;
+			return 0;
 	}
 
 	dm_list_init(&(first_seg(lv)->thin_messages));
