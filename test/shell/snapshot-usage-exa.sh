@@ -40,8 +40,8 @@ lvcreate -s -l100%FREE -n $lv2 $vg1/$lv1
 check lv_field $vg1/$lv2 size "7.50p"
 lvremove -ff $vg1
 
-lvcreate --type snapshot -V15E -l1 -n $lv1 -s $vg1
-check lv_field $vg1/$lv1 origin_size "15.00e"
+lvcreate --type snapshot -V8191P -l1 -n $lv1 -s $vg1
+check lv_field $vg1/$lv1 origin_size "<8.00e"
 
 vgremove -ff $vg1
 vgremove -ff $vg
