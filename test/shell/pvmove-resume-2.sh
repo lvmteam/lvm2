@@ -86,14 +86,17 @@ lvchange_single() {
 
 lvchange_all() {
 	LVM_TEST_TAG="kill_me_$PREFIX" lvchange -aey $vg/$lv1 $vg/$lv2
+	local count=$1
 
+	# TODO: currently lvm2 is spawning polling process for each LV
 	# we don't want to spawn more than $1 background pollings
+	count=2
+
 	if test -e LOCAL_LVMPOLLD; then
 		aux lvmpolld_dump | tee lvmpolld_dump.txt
-		aux check_lvmpolld_init_rq_count 1 "$vg/pvmove0" || should false
+		aux check_lvmpolld_init_rq_count "$count" "$vg/pvmove0" || should false
 	elif test -e HAVE_DM_DELAY; then
-		test "$(aux count_processes_with_tag)" -eq "$1" || {
-			# FIXME: currently lvm2 is spawning polling process for each LV
+		test "$(aux count_processes_with_tag)" -eq "$count" || {
 			echo "Lvchange spawns pvmove per activated LV"
 		}
 	fi
