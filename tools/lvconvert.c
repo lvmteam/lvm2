@@ -422,7 +422,7 @@ static int _insert_lvconvert_layer(struct cmd_context *cmd,
 static int _failed_mirrors_count(struct logical_volume *lv)
 {
 	struct lv_segment *lvseg;
-	int ret = 0;
+	int ret = 0, r;
 	unsigned s;
 
 	dm_list_iterate_items(lvseg, &lv->segments) {
@@ -430,9 +430,10 @@ static int _failed_mirrors_count(struct logical_volume *lv)
 			return -1;
 		for (s = 0; s < lvseg->area_count; s++) {
 			if (seg_type(lvseg, s) == AREA_LV) {
-				if (is_temporary_mirror_layer(seg_lv(lvseg, s)))
-					ret += _failed_mirrors_count(seg_lv(lvseg, s));
-				else if (lv_is_partial(seg_lv(lvseg, s)))
+				if (is_temporary_mirror_layer(seg_lv(lvseg, s))) {
+					if ((r = _failed_mirrors_count(seg_lv(lvseg, s))) > 0)
+						ret += r;
+				} else if (lv_is_partial(seg_lv(lvseg, s)))
 					++ ret;
 			}
 			else if (seg_type(lvseg, s) == AREA_PV &&
@@ -446,19 +447,22 @@ static int _failed_mirrors_count(struct logical_volume *lv)
 
 static int _failed_logs_count(struct logical_volume *lv)
 {
-	int ret = 0;
+	int ret = 0, r;
 	unsigned s;
 	struct logical_volume *log_lv = first_seg(lv)->log_lv;
 	if (log_lv && lv_is_partial(log_lv)) {
-		if (lv_is_mirrored(log_lv))
-			ret += _failed_mirrors_count(log_lv);
-		else
+		if (lv_is_mirrored(log_lv)) {
+			if ((r = _failed_mirrors_count(log_lv)) > 0)
+				ret += r;
+		} else
 			ret += 1;
 	}
 	for (s = 0; s < first_seg(lv)->area_count; s++) {
 		if (seg_type(first_seg(lv), s) == AREA_LV &&
-		    is_temporary_mirror_layer(seg_lv(first_seg(lv), s)))
-			ret += _failed_logs_count(seg_lv(first_seg(lv), s));
+		    is_temporary_mirror_layer(seg_lv(first_seg(lv), s))) {
+                        if ((r = _failed_logs_count(seg_lv(first_seg(lv), s))) > 0)
+				ret += r;
+		}
 	}
 	return ret;
 }
@@ -1081,14 +1085,14 @@ static int _lvconvert_mirrors_repair(struct cmd_context *cmd,
 	if (!mirror_remove_missing(cmd, lv, 0))
 		return_0;
 
-	if (failed_mimages)
+	if (failed_mimages > 0)
 		log_print_unless_silent("Mirror status: %d of %d images failed.",
 					failed_mimages, original_mimages);
 
 	/*
 	 * Count the failed log devices
 	 */
-	if (failed_logs)
+	if (failed_logs > 0)
 		log_print_unless_silent("Mirror log status: %d of %d images failed.",
 					failed_logs, original_logs);
 
