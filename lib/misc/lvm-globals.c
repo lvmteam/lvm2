@@ -121,9 +121,9 @@ void init_dmeventd_monitor(int reg)
 		_dmeventd_monitor = reg;
 }
 
-void init_disable_dmeventd_monitoring(int reg)
+void init_disable_dmeventd_monitoring(int disable)
 {
-	_disable_dmeventd_monitoring = reg;
+	_disable_dmeventd_monitoring = disable;
 }
 
 void init_background_polling(int polling)
@@ -233,9 +233,9 @@ const char *log_command_file(void)
 	return _log_command_file;
 }
 
-void init_error_message_produced(int value)
+void init_error_message_produced(int produced)
 {
-	_error_message_produced = value;
+	_error_message_produced = produced;
 }
 
 int error_message_produced(void)
