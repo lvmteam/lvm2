@@ -1,5 +1,7 @@
 Version 2.03.31 - 
 ==================
+  Reduce 'mandoc -T lint' reported issues for man pages.
+  Restore support for LVM_SUPPRESS_FD_WARNINGS (2.03.24).
   Enhance error path resolving in polling code.
   Improve mirror split with opened temporary volumes.
   Improve pvmove finish with opened temporary volumes.
