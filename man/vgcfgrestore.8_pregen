@@ -11,9 +11,8 @@ vgcfgrestore \(em Restore volume group configuration
     [ \fIoption_args\fP ]
 .br
     [ \fIposition_args\fP ]
-.br
 .P
-.ad l
+.na
     \fB--commandprofile\fP \fIString\fP
 .br
     \fB--config\fP \fIString\fP
@@ -57,7 +56,7 @@ vgcfgrestore \(em Restore volume group configuration
     \fB--version\fP
 .br
  \fB-y\fP|\fB--yes\fP
-.ad b
+.ad
 .
 .SH DESCRIPTION
 .
@@ -81,9 +80,9 @@ Restore VG metadata from last backup.
 \fBvgcfgrestore\fP \fIVG\fP
 .br
 .RS 4
-.ad l
+.na
 [ COMMON_OPTIONS ]
-.ad b
+.ad
 .RE
 .P
 \(em
@@ -94,9 +93,9 @@ Restore VG metadata from specified file.
 \fBvgcfgrestore\fP \fB-f\fP|\fB--file\fP \fIString\fP \fIVG\fP
 .br
 .RS 4
-.ad l
+.na
 [ COMMON_OPTIONS ]
-.ad b
+.ad
 .RE
 .P
 \(em
@@ -107,9 +106,9 @@ List all VG metadata backups.
 \fBvgcfgrestore\fP \fB-l\fP|\fB--list\fP \fIVG\fP
 .br
 .RS 4
-.ad l
+.na
 [ COMMON_OPTIONS ]
-.ad b
+.ad
 .RE
 .P
 \(em
@@ -120,9 +119,9 @@ List one VG metadata backup file.
 \fBvgcfgrestore\fP \fB-l\fP|\fB--list\fP \fB-f\fP|\fB--file\fP \fIString\fP
 .br
 .RS 4
-.ad l
+.na
 [ COMMON_OPTIONS ]
-.ad b
+.ad
 .RE
 .RS 4
 [ \fIVG\fP ]
@@ -133,17 +132,17 @@ List one VG metadata backup file.
 Common options for command:
 .
 .RS 4
-.ad l
+.na
 [ \fB-M\fP|\fB--metadatatype\fP \fBlvm2\fP ]
 .br
 [    \fB--force\fP ]
-.ad b
+.ad
 .RE
 .P
 Common options for lvm:
 .
 .RS 4
-.ad l
+.na
 [ \fB-d\fP|\fB--debug\fP ]
 .br
 [ \fB-h\fP|\fB--help\fP ]
@@ -179,7 +178,7 @@ Common options for lvm:
 [    \fB--profile\fP \fIString\fP ]
 .br
 [    \fB--version\fP ]
-.ad b
+.ad
 .RE
 .
 .SH OPTIONS
@@ -365,10 +364,11 @@ is TiB,
 is PiB,
 .BR e | E
 is EiB.
-(This should not be confused with the output control --units, where
-capital letters mean multiple of 1000.)
+(This should not be confused with the output control --units,
+where capital letters mean multiple of 1000.)
 .
 .SH ENVIRONMENT VARIABLES
 .
 See \fBlvm\fP(8) for information about environment variables used by lvm.
-For example, LVM_VG_NAME can generally be substituted for a required VG parameter.
+For example, LVM_VG_NAME can generally be substituted
+for a required VG parameter.

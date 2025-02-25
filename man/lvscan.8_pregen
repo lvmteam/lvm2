@@ -9,7 +9,6 @@ lvscan \(em List all logical volumes in all volume groups
 \fBlvscan\fP
 .br
     [ \fIoption_args\fP ]
-.br
 .
 .SH DESCRIPTION
 .
@@ -24,7 +23,7 @@ comprehensive information about LVs.
 \fBlvscan\fP
 .br
 .RS 4
-.ad l
+.na
 [ \fB-a\fP|\fB--all\fP ]
 .br
 [ \fB-b\fP|\fB--blockdevice\fP ]
@@ -36,13 +35,13 @@ comprehensive information about LVs.
 [    \fB--reportformat\fP \fBbasic\fP|\fBjson\fP|\fBjson_std\fP ]
 .br
 [ COMMON_OPTIONS ]
-.ad b
+.ad
 .RE
 .P
 Common options for lvm:
 .
 .RS 4
-.ad l
+.na
 [ \fB-d\fP|\fB--debug\fP ]
 .br
 [ \fB-h\fP|\fB--help\fP ]
@@ -78,7 +77,7 @@ Common options for lvm:
 [    \fB--profile\fP \fIString\fP ]
 .br
 [    \fB--version\fP ]
-.ad b
+.ad
 .RE
 .
 .SH OPTIONS
@@ -269,10 +268,11 @@ is TiB,
 is PiB,
 .BR e | E
 is EiB.
-(This should not be confused with the output control --units, where
-capital letters mean multiple of 1000.)
+(This should not be confused with the output control --units,
+where capital letters mean multiple of 1000.)
 .
 .SH ENVIRONMENT VARIABLES
 .
 See \fBlvm\fP(8) for information about environment variables used by lvm.
-For example, LVM_VG_NAME can generally be substituted for a required VG parameter.
+For example, LVM_VG_NAME can generally be substituted
+for a required VG parameter.

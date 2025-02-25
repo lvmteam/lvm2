@@ -9,9 +9,8 @@ lvchange \(em Change the attributes of logical volume(s)
 \fBlvchange\fP \fIoption_args\fP \fIposition_args\fP
 .br
     [ \fIoption_args\fP ]
-.br
 .P
-.ad l
+.na
  \fB-a\fP|\fB--activate\fP \fBy\fP|\fBn\fP|\fBay\fP
 .br
     \fB--activationmode\fP \fBpartial\fP|\fBdegraded\fP|\fBcomplete\fP
@@ -142,7 +141,7 @@ lvchange \(em Change the attributes of logical volume(s)
  \fB-y\fP|\fB--yes\fP
 .br
  \fB-Z\fP|\fB--zero\fP \fBy\fP|\fBn\fP
-.ad b
+.ad
 .
 .SH DESCRIPTION
 .
@@ -151,9 +150,9 @@ kernel, and includes other utilities for LV maintenance.
 .
 .SH USAGE
 .
-Change a general LV attribute. 
+Change a general LV attribute.
 .br
-For options listed in parentheses, any one is 
+For options listed in parentheses, any one is
 .br
 required, after which the others are optional.
 .br
@@ -220,7 +219,7 @@ required, after which the others are optional.
 .RE
 .br
 .RS 4
-.ad l
+.na
 [ \fB-a\fP|\fB--activate\fP \fBy\fP|\fBn\fP|\fBay\fP ]
 .br
 [    \fB--poll\fP \fBy\fP|\fBn\fP ]
@@ -228,12 +227,12 @@ required, after which the others are optional.
 [    \fB--monitor\fP \fBy\fP|\fBn\fP ]
 .br
 [ COMMON_OPTIONS ]
-.ad b
+.ad
 .RE
 .P
 \(em
 .P
-Resynchronize a mirror or raid LV. 
+Resynchronize a mirror or raid LV.
 .br
 Use to reset 'R' attribute on a not initially synchronized LV.
 .br
@@ -241,11 +240,11 @@ Use to reset 'R' attribute on a not initially synchronized LV.
 \fBlvchange\fP \fB--resync\fP \fIVG\fP|\fILV1\fP|\fITag\fP|\fISelect\fP ...
 .br
 .RS 4
-.ad l
+.na
 [ \fB-a\fP|\fB--activate\fP \fBy\fP|\fBn\fP|\fBay\fP ]
 .br
 [ COMMON_OPTIONS ]
-.ad b
+.ad
 .RE
 .P
 .RS 4
@@ -260,9 +259,9 @@ Resynchronize or check a raid LV.
 \fBlvchange\fP \fB--\fP[\fBraid\fP]\fBsyncaction\fP \fBcheck\fP|\fBrepair\fP \fIVG\fP|\fILV1\fP|\fITag\fP|\fISelect\fP ...
 .br
 .RS 4
-.ad l
+.na
 [ COMMON_OPTIONS ]
-.ad b
+.ad
 .RE
 .P
 .RS 4
@@ -277,9 +276,9 @@ Reconstruct data on specific PVs of a raid LV.
 \fBlvchange\fP \fB--rebuild\fP \fIPV\fP \fIVG\fP|\fILV1\fP|\fITag\fP|\fISelect\fP ...
 .br
 .RS 4
-.ad l
+.na
 [ COMMON_OPTIONS ]
-.ad b
+.ad
 .RE
 .P
 .RS 4
@@ -294,7 +293,7 @@ Activate or deactivate an LV.
 \fBlvchange\fP \fB-a\fP|\fB--activate\fP \fBy\fP|\fBn\fP|\fBay\fP \fIVG\fP|\fILV\fP|\fITag\fP|\fISelect\fP ...
 .br
 .RS 4
-.ad l
+.na
 [ \fB-P\fP|\fB--partial\fP ]
 .br
 [ \fB-K\fP|\fB--ignoreactivationskip\fP ]
@@ -312,7 +311,7 @@ Activate or deactivate an LV.
 [    \fB--readonly\fP ]
 .br
 [ COMMON_OPTIONS ]
-.ad b
+.ad
 .RE
 .P
 \(em
@@ -323,7 +322,7 @@ Reactivate an LV using the latest metadata.
 \fBlvchange\fP \fB--refresh\fP \fIVG\fP|\fILV\fP|\fITag\fP|\fISelect\fP ...
 .br
 .RS 4
-.ad l
+.na
 [ \fB-P\fP|\fB--partial\fP ]
 .br
 [    \fB--activationmode\fP \fBpartial\fP|\fBdegraded\fP|\fBcomplete\fP ]
@@ -333,7 +332,7 @@ Reactivate an LV using the latest metadata.
 [    \fB--monitor\fP \fBy\fP|\fBn\fP ]
 .br
 [ COMMON_OPTIONS ]
-.ad b
+.ad
 .RE
 .P
 \(em
@@ -344,9 +343,9 @@ Start or stop monitoring an LV from dmeventd.
 \fBlvchange\fP \fB--monitor\fP \fBy\fP|\fBn\fP \fIVG\fP|\fILV\fP|\fITag\fP|\fISelect\fP ...
 .br
 .RS 4
-.ad l
+.na
 [ COMMON_OPTIONS ]
-.ad b
+.ad
 .RE
 .P
 \(em
@@ -357,11 +356,11 @@ Start or stop processing an LV conversion.
 \fBlvchange\fP \fB--poll\fP \fBy\fP|\fBn\fP \fIVG\fP|\fILV\fP|\fITag\fP|\fISelect\fP ...
 .br
 .RS 4
-.ad l
+.na
 [    \fB--monitor\fP \fBy\fP|\fBn\fP ]
 .br
 [ COMMON_OPTIONS ]
-.ad b
+.ad
 .RE
 .P
 \(em
@@ -372,7 +371,7 @@ Make the minor device number persistent for an LV.
 \fBlvchange\fP \fB-M\fP|\fB--persistent\fP \fBy\fP \fB--minor\fP \fINumber\fP \fILV\fP
 .br
 .RS 4
-.ad l
+.na
 [ \fB-j\fP|\fB--major\fP \fINumber\fP ]
 .br
 [ \fB-a\fP|\fB--activate\fP \fBy\fP|\fBn\fP|\fBay\fP ]
@@ -382,7 +381,7 @@ Make the minor device number persistent for an LV.
 [    \fB--monitor\fP \fBy\fP|\fBn\fP ]
 .br
 [ COMMON_OPTIONS ]
-.ad b
+.ad
 .RE
 .P
 \(em
@@ -390,7 +389,7 @@ Make the minor device number persistent for an LV.
 Common options for command:
 .
 .RS 4
-.ad l
+.na
 [ \fB-A\fP|\fB--autobackup\fP \fBy\fP|\fBn\fP ]
 .br
 [ \fB-f\fP|\fB--force\fP ]
@@ -402,13 +401,13 @@ Common options for command:
 [    \fB--noudevsync\fP ]
 .br
 [    \fB--reportformat\fP \fBbasic\fP|\fBjson\fP|\fBjson_std\fP ]
-.ad b
+.ad
 .RE
 .P
 Common options for lvm:
 .
 .RS 4
-.ad l
+.na
 [ \fB-d\fP|\fB--debug\fP ]
 .br
 [ \fB-h\fP|\fB--help\fP ]
@@ -444,7 +443,7 @@ Common options for lvm:
 [    \fB--profile\fP \fIString\fP ]
 .br
 [    \fB--version\fP ]
-.ad b
+.ad
 .RE
 .
 .SH OPTIONS
@@ -460,7 +459,8 @@ allowing data on the LV to be accessed.
 \fBn\fP makes LVs inactive, or unavailable.
 The block device for the LV is added or removed from the system
 using device-mapper in the kernel.
-A symbolic link /dev/VGName/LVName pointing to the device node is also added/removed.
+A symbolic link /dev/VGName/LVName pointing to the device node
+is also added/removed.
 All software and scripts should access the device through the symbolic
 link and present this as the name of the device.
 The location and name of the underlying device node may depend on
@@ -476,7 +476,8 @@ When auto_activation_volume_list is undefined (the default), it has no effect.
 If auto_activation_volume_list is defined and empty, no LVs are autoactivated.
 Items included by auto_activation_volume_list will not be autoactivated if
 the autoactivation property has been disabled.
-See \fBlvmlockd\fP(8) for more information about activation options \fBey\fP and \fBsy\fP for shared VGs.
+See \fBlvmlockd\fP(8) for more information about activation options
+\fBey\fP and \fBsy\fP for shared VGs.
 .
 .HP
 \fB--activationmode\fP \fBpartial\fP|\fBdegraded\fP|\fBcomplete\fP
@@ -499,12 +500,12 @@ Adds a tag to a PV, VG or LV. This option can be repeated to add
 multiple tags at once. See \fBlvm\fP(8) for information about tags.
 .
 .HP
-.ad l
+.ad
 \fB--alloc\fP \c
 .nh
 \%\fBcontiguous\fP|\:\fBcling\fP|\:\fBcling_by_tags\fP|\:\fBnormal\fP|\:\fBanywhere\fP|\:\fBinherit\fP
 .hy
-.ad b
+.ad
 .br
 Determines the allocation policy when a command needs to allocate
 Physical Extents (PEs) from the VG. Each VG and LV has an allocation policy
@@ -527,7 +528,8 @@ See \fBlvm\fP(8) for more information about allocation.
 \fB-A\fP|\fB--autobackup\fP \fBy\fP|\fBn\fP
 .br
 Specifies if metadata should be backed up automatically after a change.
-Enabling this is strongly advised! See \fBvgcfgbackup\fP(8) for more information.
+Enabling this is strongly advised!
+See \fBvgcfgbackup\fP(8) for more information.
 .
 .HP
 \fB--cachemode\fP \fBwritethrough\fP|\fBwriteback\fP|\fBpassthrough\fP
@@ -882,8 +884,10 @@ See \fBlvmraid\fP(7) for more information.
 \fB-S\fP|\fB--select\fP \fIString\fP
 .br
 Select objects for processing and reporting based on specified criteria.
-The criteria syntax is described by \fB--select help\fP and \fBlvmreport\fP(7).
-For reporting commands, one row is displayed for each object matching the criteria.
+The criteria syntax is described by \fB--select help\fP
+and \fBlvmreport\fP(7).
+For reporting commands, one row is displayed
+for each object matching the criteria.
 See \fB--options help\fP for selectable object fields.
 Rows can be displayed with an additional "selected" field (-o selected)
 showing 1 if the row matches the selection and 0 otherwise.
@@ -929,7 +933,8 @@ See \fBlvs\fP(8) for reporting discrepancies found or repaired.
 .HP
 \fB--sysinit\fP
 .br
-Indicates that vgchange/lvchange is being invoked from early system initialisation
+Indicates that vgchange/lvchange is being invoked
+from early system initialisation
 scripts (e.g. rc.sysinit or an initrd), before writable filesystems are
 available. As such, some functionality needs to be disabled and this option
 acts as a shortcut which selects an appropriate set of options. Currently,
@@ -1049,10 +1054,11 @@ is TiB,
 is PiB,
 .BR e | E
 is EiB.
-(This should not be confused with the output control --units, where
-capital letters mean multiple of 1000.)
+(This should not be confused with the output control --units,
+where capital letters mean multiple of 1000.)
 .
 .SH ENVIRONMENT VARIABLES
 .
 See \fBlvm\fP(8) for information about environment variables used by lvm.
-For example, LVM_VG_NAME can generally be substituted for a required VG parameter.
+For example, LVM_VG_NAME can generally be substituted
+for a required VG parameter.

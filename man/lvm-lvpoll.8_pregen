@@ -9,7 +9,6 @@ lvm lvpoll \(em Continue already initiated poll operation on a logical volume
 \fBlvm lvpoll\fP \fIoption_args\fP \fIposition_args\fP
 .br
     [ \fIoption_args\fP ]
-.br
 .
 .SH DESCRIPTION
 .
@@ -23,7 +22,7 @@ directly.
 \fBlvm lvpoll\fP \fB--polloperation\fP \fBpvmove\fP|\fBconvert\fP|\fBmerge\fP|\fBmerge_thin\fP \fILV\fP ...
 .br
 .RS 4
-.ad l
+.na
 [ \fB-A\fP|\fB--autobackup\fP \fBy\fP|\fBn\fP ]
 .br
 [ \fB-i\fP|\fB--interval\fP \fINumber\fP ]
@@ -33,13 +32,13 @@ directly.
 [    \fB--handlemissingpvs\fP ]
 .br
 [ COMMON_OPTIONS ]
-.ad b
+.ad
 .RE
 .P
 Common options for lvm:
 .
 .RS 4
-.ad l
+.na
 [ \fB-d\fP|\fB--debug\fP ]
 .br
 [ \fB-h\fP|\fB--help\fP ]
@@ -75,7 +74,7 @@ Common options for lvm:
 [    \fB--profile\fP \fIString\fP ]
 .br
 [    \fB--version\fP ]
-.ad b
+.ad
 .RE
 .
 .SH OPTIONS
@@ -90,7 +89,8 @@ Stop processing a poll operation in lvmpolld.
 \fB-A\fP|\fB--autobackup\fP \fBy\fP|\fBn\fP
 .br
 Specifies if metadata should be backed up automatically after a change.
-Enabling this is strongly advised! See \fBvgcfgbackup\fP(8) for more information.
+Enabling this is strongly advised!
+See \fBvgcfgbackup\fP(8) for more information.
 .
 .HP
 \fB--commandprofile\fP \fIString\fP
@@ -261,10 +261,11 @@ is TiB,
 is PiB,
 .BR e | E
 is EiB.
-(This should not be confused with the output control --units, where
-capital letters mean multiple of 1000.)
+(This should not be confused with the output control --units,
+where capital letters mean multiple of 1000.)
 .
 .SH ENVIRONMENT VARIABLES
 .
 See \fBlvm\fP(8) for information about environment variables used by lvm.
-For example, LVM_VG_NAME can generally be substituted for a required VG parameter.
+For example, LVM_VG_NAME can generally be substituted
+for a required VG parameter.

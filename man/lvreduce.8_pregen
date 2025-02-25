@@ -9,7 +9,6 @@ lvreduce \(em Reduce the size of a logical volume
 \fBlvreduce\fP \fIoption_args\fP \fIposition_args\fP
 .br
     [ \fIoption_args\fP ]
-.br
 .
 .SH DESCRIPTION
 .
@@ -37,7 +36,7 @@ the options section.
 \fBlvreduce\fP \fB-L\fP|\fB--size\fP [\fB-\fP]\fISize\fP[m|UNIT] \fILV\fP
 .br
 .RS 4
-.ad l
+.na
 [ \fB-l\fP|\fB--extents\fP [\fB-\fP]\fINumber\fP[PERCENT] ]
 .br
 [ \fB-A\fP|\fB--autobackup\fP \fBy\fP|\fBn\fP ]
@@ -57,13 +56,13 @@ the options section.
 [    \fB--fsmode\fP \fIString\fP ]
 .br
 [ COMMON_OPTIONS ]
-.ad b
+.ad
 .RE
 .P
 Common options for lvm:
 .
 .RS 4
-.ad l
+.na
 [ \fB-d\fP|\fB--debug\fP ]
 .br
 [ \fB-h\fP|\fB--help\fP ]
@@ -99,7 +98,7 @@ Common options for lvm:
 [    \fB--profile\fP \fIString\fP ]
 .br
 [    \fB--version\fP ]
-.ad b
+.ad
 .RE
 .
 .SH OPTIONS
@@ -109,7 +108,8 @@ Common options for lvm:
 \fB-A\fP|\fB--autobackup\fP \fBy\fP|\fBn\fP
 .br
 Specifies if metadata should be backed up automatically after a change.
-Enabling this is strongly advised! See \fBvgcfgbackup\fP(8) for more information.
+Enabling this is strongly advised!
+See \fBvgcfgbackup\fP(8) for more information.
 .
 .HP
 \fB--commandprofile\fP \fIString\fP
@@ -366,10 +366,11 @@ is TiB,
 is PiB,
 .BR e | E
 is EiB.
-(This should not be confused with the output control --units, where
-capital letters mean multiple of 1000.)
+(This should not be confused with the output control --units,
+where capital letters mean multiple of 1000.)
 .
 .SH ENVIRONMENT VARIABLES
 .
 See \fBlvm\fP(8) for information about environment variables used by lvm.
-For example, LVM_VG_NAME can generally be substituted for a required VG parameter.
+For example, LVM_VG_NAME can generally be substituted
+for a required VG parameter.

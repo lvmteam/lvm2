@@ -9,9 +9,8 @@ vgreduce \(em Remove physical volume(s) from a volume group
 \fBvgreduce\fP \fIoption_args\fP \fIposition_args\fP
 .br
     [ \fIoption_args\fP ]
-.br
 .P
-.ad l
+.na
  \fB-a\fP|\fB--all\fP
 .br
  \fB-A\fP|\fB--autobackup\fP \fBy\fP|\fBn\fP
@@ -59,7 +58,7 @@ vgreduce \(em Remove physical volume(s) from a volume group
     \fB--version\fP
 .br
  \fB-y\fP|\fB--yes\fP
-.ad b
+.ad
 .
 .SH DESCRIPTION
 .
@@ -73,9 +72,9 @@ Remove a PV from a VG.
 \fBvgreduce\fP \fIVG\fP \fIPV\fP ...
 .br
 .RS 4
-.ad l
+.na
 [ COMMON_OPTIONS ]
-.ad b
+.ad
 .RE
 .P
 \(em
@@ -86,9 +85,9 @@ Remove all unused PVs from a VG.
 \fBvgreduce\fP \fB-a\fP|\fB--all\fP \fIVG\fP
 .br
 .RS 4
-.ad l
+.na
 [ COMMON_OPTIONS ]
-.ad b
+.ad
 .RE
 .P
 \(em
@@ -99,11 +98,11 @@ Remove all missing PVs from a VG.
 \fBvgreduce\fP \fB--removemissing\fP \fIVG\fP
 .br
 .RS 4
-.ad l
+.na
 [    \fB--mirrorsonly\fP ]
 .br
 [ COMMON_OPTIONS ]
-.ad b
+.ad
 .RE
 .P
 \(em
@@ -111,19 +110,19 @@ Remove all missing PVs from a VG.
 Common options for command:
 .
 .RS 4
-.ad l
+.na
 [ \fB-A\fP|\fB--autobackup\fP \fBy\fP|\fBn\fP ]
 .br
 [ \fB-f\fP|\fB--force\fP ]
 .br
 [    \fB--reportformat\fP \fBbasic\fP|\fBjson\fP|\fBjson_std\fP ]
-.ad b
+.ad
 .RE
 .P
 Common options for lvm:
 .
 .RS 4
-.ad l
+.na
 [ \fB-d\fP|\fB--debug\fP ]
 .br
 [ \fB-h\fP|\fB--help\fP ]
@@ -159,7 +158,7 @@ Common options for lvm:
 [    \fB--profile\fP \fIString\fP ]
 .br
 [    \fB--version\fP ]
-.ad b
+.ad
 .RE
 .
 .SH OPTIONS
@@ -174,7 +173,8 @@ Removes all empty PVs if none are named on the command line.
 \fB-A\fP|\fB--autobackup\fP \fBy\fP|\fBn\fP
 .br
 Specifies if metadata should be backed up automatically after a change.
-Enabling this is strongly advised! See \fBvgcfgbackup\fP(8) for more information.
+Enabling this is strongly advised!
+See \fBvgcfgbackup\fP(8) for more information.
 .
 .HP
 \fB--commandprofile\fP \fIString\fP
@@ -346,8 +346,10 @@ For commands managing physical extents, a PV positional arg
 generally accepts a suffix indicating a range (or multiple ranges)
 of physical extents (PEs). When the first PE is omitted, it defaults
 to the start of the device, and when the last PE is omitted it defaults to end.
-Start and end range (inclusive): \fIPV\fP[\fB:\fP\fIPE\fP\fB-\fP\fIPE\fP]...
-Start and length range (counting from 0): \fIPV\fP[\fB:\fP\fIPE\fP\fB+\fP\fIPE\fP]...
+Start and end range (inclusive):
+\fIPV\fP[\fB:\fP\fIPE\fP\fB-\fP\fIPE\fP]...
+Start and length range (counting from 0):
+\fIPV\fP[\fB:\fP\fIPE\fP\fB+\fP\fIPE\fP]...
 .TP
 .I String
 See the option description for information about the string content.
@@ -374,10 +376,11 @@ is TiB,
 is PiB,
 .BR e | E
 is EiB.
-(This should not be confused with the output control --units, where
-capital letters mean multiple of 1000.)
+(This should not be confused with the output control --units,
+where capital letters mean multiple of 1000.)
 .
 .SH ENVIRONMENT VARIABLES
 .
 See \fBlvm\fP(8) for information about environment variables used by lvm.
-For example, LVM_VG_NAME can generally be substituted for a required VG parameter.
+For example, LVM_VG_NAME can generally be substituted
+for a required VG parameter.

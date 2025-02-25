@@ -11,9 +11,8 @@ pvscan \(em List all physical volumes
     [ \fIoption_args\fP ]
 .br
     [ \fIposition_args\fP ]
-.br
 .P
-.ad l
+.na
  \fB-a\fP|\fB--activate\fP \fBy\fP|\fBn\fP|\fBay\fP
 .br
  \fB-A\fP|\fB--allpvs\fP
@@ -85,7 +84,7 @@ pvscan \(em List all physical volumes
     \fB--vgonline\fP
 .br
  \fB-y\fP|\fB--yes\fP
-.ad b
+.ad
 .
 .SH DESCRIPTION
 .
@@ -119,7 +118,8 @@ and minor numbers.)
 .P
 .B pvscan --cache -aay
 .P
-Performs the --cache steps for all devices, then autoactivates any complete VGs.
+Performs the --cache steps for all devices,
+then autoactivates any complete VGs.
 .P
 .B pvscan --cache --listvg|--listlvs
 .I device
@@ -148,7 +148,7 @@ Display PV information.
 \fBpvscan\fP
 .br
 .RS 4
-.ad l
+.na
 [ \fB-e\fP|\fB--exported\fP ]
 .br
 [ \fB-n\fP|\fB--novolumegroup\fP ]
@@ -164,7 +164,7 @@ Display PV information.
 [    \fB--reportformat\fP \fBbasic\fP|\fBjson\fP|\fBjson_std\fP ]
 .br
 [ COMMON_OPTIONS ]
-.ad b
+.ad
 .RE
 .P
 \(em
@@ -175,7 +175,7 @@ Record that a PV is online or offline.
 \fBpvscan\fP \fB--cache\fP
 .br
 .RS 4
-.ad l
+.na
 [ \fB-j\fP|\fB--major\fP \fINumber\fP ]
 .br
 [    \fB--ignorelockingfailure\fP ]
@@ -187,7 +187,7 @@ Record that a PV is online or offline.
 [    \fB--noudevsync\fP ]
 .br
 [ COMMON_OPTIONS ]
-.ad b
+.ad
 .RE
 .RS 4
 [ \fIString\fP|\fIPV\fP ... ]
@@ -201,7 +201,7 @@ Record that a PV is online and autoactivate the VG if complete.
 \fBpvscan\fP \fB--cache\fP \fB-a\fP|\fB--activate\fP \fBay\fP
 .br
 .RS 4
-.ad l
+.na
 [ \fB-j\fP|\fB--major\fP \fINumber\fP ]
 .br
 [    \fB--ignorelockingfailure\fP ]
@@ -215,7 +215,7 @@ Record that a PV is online and autoactivate the VG if complete.
 [    \fB--autoactivation\fP \fIString\fP ]
 .br
 [ COMMON_OPTIONS ]
-.ad b
+.ad
 .RE
 .RS 4
 [ \fIString\fP|\fIPV\fP ... ]
@@ -229,7 +229,7 @@ Record that a PV is online and list the VG using the PV.
 \fBpvscan\fP \fB--cache\fP \fB--listvg\fP \fIPV\fP
 .br
 .RS 4
-.ad l
+.na
 [    \fB--ignorelockingfailure\fP ]
 .br
 [    \fB--checkcomplete\fP ]
@@ -241,7 +241,7 @@ Record that a PV is online and list the VG using the PV.
 [    \fB--autoactivation\fP \fIString\fP ]
 .br
 [ COMMON_OPTIONS ]
-.ad b
+.ad
 .RE
 .P
 \(em
@@ -252,7 +252,7 @@ Record that a PV is online and list LVs using the PV.
 \fBpvscan\fP \fB--cache\fP \fB--listlvs\fP \fIPV\fP
 .br
 .RS 4
-.ad l
+.na
 [    \fB--ignorelockingfailure\fP ]
 .br
 [    \fB--checkcomplete\fP ]
@@ -260,7 +260,7 @@ Record that a PV is online and list LVs using the PV.
 [    \fB--vgonline\fP ]
 .br
 [ COMMON_OPTIONS ]
-.ad b
+.ad
 .RE
 .P
 \(em
@@ -271,9 +271,9 @@ List LVs using the PV.
 \fBpvscan\fP \fB--listlvs\fP \fIPV\fP
 .br
 .RS 4
-.ad l
+.na
 [ COMMON_OPTIONS ]
-.ad b
+.ad
 .RE
 .P
 \(em
@@ -284,9 +284,9 @@ List the VG using the PV.
 \fBpvscan\fP \fB--listvg\fP \fIPV\fP
 .br
 .RS 4
-.ad l
+.na
 [ COMMON_OPTIONS ]
-.ad b
+.ad
 .RE
 .P
 \(em
@@ -294,7 +294,7 @@ List the VG using the PV.
 Common options for lvm:
 .
 .RS 4
-.ad l
+.na
 [ \fB-d\fP|\fB--debug\fP ]
 .br
 [ \fB-h\fP|\fB--help\fP ]
@@ -330,7 +330,7 @@ Common options for lvm:
 [    \fB--profile\fP \fIString\fP ]
 .br
 [    \fB--version\fP ]
-.ad b
+.ad
 .RE
 .
 .SH OPTIONS
@@ -577,8 +577,10 @@ For commands managing physical extents, a PV positional arg
 generally accepts a suffix indicating a range (or multiple ranges)
 of physical extents (PEs). When the first PE is omitted, it defaults
 to the start of the device, and when the last PE is omitted it defaults to end.
-Start and end range (inclusive): \fIPV\fP[\fB:\fP\fIPE\fP\fB-\fP\fIPE\fP]...
-Start and length range (counting from 0): \fIPV\fP[\fB:\fP\fIPE\fP\fB+\fP\fIPE\fP]...
+Start and end range (inclusive):
+\fIPV\fP[\fB:\fP\fIPE\fP\fB-\fP\fIPE\fP]...
+Start and length range (counting from 0):
+\fIPV\fP[\fB:\fP\fIPE\fP\fB+\fP\fIPE\fP]...
 .TP
 .I String
 See the option description for information about the string content.
@@ -605,10 +607,11 @@ is TiB,
 is PiB,
 .BR e | E
 is EiB.
-(This should not be confused with the output control --units, where
-capital letters mean multiple of 1000.)
+(This should not be confused with the output control --units,
+where capital letters mean multiple of 1000.)
 .
 .SH ENVIRONMENT VARIABLES
 .
 See \fBlvm\fP(8) for information about environment variables used by lvm.
-For example, LVM_VG_NAME can generally be substituted for a required VG parameter.
+For example, LVM_VG_NAME can generally be substituted
+for a required VG parameter.

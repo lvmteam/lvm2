@@ -11,9 +11,8 @@ lvresize \(em Resize a logical volume
     [ \fIoption_args\fP ]
 .br
     [ \fIposition_args\fP ]
-.br
 .P
-.ad l
+.na
     \fB--alloc\fP \c
 .nh
 \%\fBcontiguous\fP|\:\fBcling\fP|\:\fBcling_by_tags\fP|\:\fBnormal\fP|\:\fBanywhere\fP|\:\fBinherit\fP
@@ -87,7 +86,7 @@ lvresize \(em Resize a logical volume
     \fB--version\fP
 .br
  \fB-y\fP|\fB--yes\fP
-.ad b
+.ad
 .
 .SH DESCRIPTION
 .
@@ -106,7 +105,7 @@ Resize an LV by a specified size.
 \fBlvresize\fP \fB-L\fP|\fB--size\fP [\fB+\fP|\fB-\fP]\fISize\fP[m|UNIT] \fILV\fP
 .br
 .RS 4
-.ad l
+.na
 [ \fB-l\fP|\fB--extents\fP [\fB+\fP|\fB-\fP]\fINumber\fP[PERCENT] ]
 .br
 [ \fB-r\fP|\fB--resizefs\fP ]
@@ -118,7 +117,7 @@ Resize an LV by a specified size.
 [    \fB--fsmode\fP \fIString\fP ]
 .br
 [ COMMON_OPTIONS ]
-.ad b
+.ad
 .RE
 .RS 4
 [ \fIPV\fP ... ]
@@ -132,7 +131,7 @@ Resize an LV by specified PV extents.
 \fBlvresize\fP \fILV\fP \fIPV\fP ...
 .br
 .RS 4
-.ad l
+.na
 [ \fB-r\fP|\fB--resizefs\fP ]
 .br
 [    \fB--fs\fP \fIString\fP ]
@@ -140,7 +139,7 @@ Resize an LV by specified PV extents.
 [    \fB--fsmode\fP \fIString\fP ]
 .br
 [ COMMON_OPTIONS ]
-.ad b
+.ad
 .RE
 .P
 \(em
@@ -151,9 +150,9 @@ Resize a pool metadata SubLV by a specified size.
 \fBlvresize\fP \fB--poolmetadatasize\fP [\fB+\fP]\fISize\fP[m|UNIT] \fILV1\fP
 .br
 .RS 4
-.ad l
+.na
 [ COMMON_OPTIONS ]
-.ad b
+.ad
 .RE
 .RS 4
 [ \fIPV\fP ... ]
@@ -168,7 +167,7 @@ LV1 types: thinpool
 Common options for command:
 .
 .RS 4
-.ad l
+.na
 [ \fB-A\fP|\fB--autobackup\fP \fBy\fP|\fBn\fP ]
 .br
 [ \fB-f\fP|\fB--force\fP ]
@@ -196,13 +195,13 @@ Common options for command:
 \%\fBlinear\fP|\:\fBstriped\fP|\:\fBsnapshot\fP|\:\fBraid\fP|\:\fBmirror\fP|\:\fBthin\fP|\:\fBthin-pool\fP|\:\fBvdo\fP|\:\fBvdo-pool\fP|\:\fBcache\fP|\:\fBcache-pool\fP|\:\fBwritecache\fP
 .hy
 ]
-.ad b
+.ad
 .RE
 .P
 Common options for lvm:
 .
 .RS 4
-.ad l
+.na
 [ \fB-d\fP|\fB--debug\fP ]
 .br
 [ \fB-h\fP|\fB--help\fP ]
@@ -238,19 +237,19 @@ Common options for lvm:
 [    \fB--profile\fP \fIString\fP ]
 .br
 [    \fB--version\fP ]
-.ad b
+.ad
 .RE
 .
 .SH OPTIONS
 .
 .
 .HP
-.ad l
+.ad
 \fB--alloc\fP \c
 .nh
 \%\fBcontiguous\fP|\:\fBcling\fP|\:\fBcling_by_tags\fP|\:\fBnormal\fP|\:\fBanywhere\fP|\:\fBinherit\fP
 .hy
-.ad b
+.ad
 .br
 Determines the allocation policy when a command needs to allocate
 Physical Extents (PEs) from the VG. Each VG and LV has an allocation policy
@@ -273,7 +272,8 @@ See \fBlvm\fP(8) for more information about allocation.
 \fB-A\fP|\fB--autobackup\fP \fBy\fP|\fBn\fP
 .br
 Specifies if metadata should be backed up automatically after a change.
-Enabling this is strongly advised! See \fBvgcfgbackup\fP(8) for more information.
+Enabling this is strongly advised!
+See \fBvgcfgbackup\fP(8) for more information.
 .
 .HP
 \fB--commandprofile\fP \fIString\fP
@@ -526,23 +526,26 @@ error messages in multi-stage operations if a tool relies on reading
 back metadata it believes has changed but hasn't.
 .
 .HP
-.ad l
+.ad
 \fB--type\fP \c
 .nh
 \%\fBlinear\fP|\:\fBstriped\fP|\:\fBsnapshot\fP|\:\fBraid\fP|\:\fBmirror\fP|\:\fBthin\fP|\:\fBthin-pool\fP|\:\fBvdo\fP|\:\fBvdo-pool\fP|\:\fBcache\fP|\:\fBcache-pool\fP|\:\fBwritecache\fP
 .hy
-.ad b
+.ad
 .br
 The LV type, also known as "segment type" or "segtype".
 See usage descriptions for the specific ways to use these types.
-For more information about redundancy and performance (\fBraid\fP<N>, \fBmirror\fP, \fBstriped\fP, \fBlinear\fP) see \fBlvmraid\fP(7).
+For more information about redundancy and performance
+(\fBraid\fP<N>, \fBmirror\fP, \fBstriped\fP, \fBlinear\fP)
+see \fBlvmraid\fP(7).
 For thin provisioning (\fBthin\fP, \fBthin-pool\fP) see \fBlvmthin\fP(7).
 For performance caching (\fBcache\fP, \fBcache-pool\fP) see \fBlvmcache\fP(7).
 For copy-on-write snapshots (\fBsnapshot\fP) see usage definitions.
 For VDO (\fBvdo\fP) see \fBlvmvdo\fP(7).
 Several commands omit an explicit type option because the type
 is inferred from other options or shortcuts
-(e.g. --stripes, --mirrors, --snapshot, --virtualsize, --thin, --cache, --vdo).
+(e.g. --stripes, --mirrors, --snapshot, --virtualsize,
+--thin, --cache, --vdo).
 Use inferred types with care because it can lead to unexpected results.
 .
 .HP
@@ -578,8 +581,10 @@ For commands managing physical extents, a PV positional arg
 generally accepts a suffix indicating a range (or multiple ranges)
 of physical extents (PEs). When the first PE is omitted, it defaults
 to the start of the device, and when the last PE is omitted it defaults to end.
-Start and end range (inclusive): \fIPV\fP[\fB:\fP\fIPE\fP\fB-\fP\fIPE\fP]...
-Start and length range (counting from 0): \fIPV\fP[\fB:\fP\fIPE\fP\fB+\fP\fIPE\fP]...
+Start and end range (inclusive):
+\fIPV\fP[\fB:\fP\fIPE\fP\fB-\fP\fIPE\fP]...
+Start and length range (counting from 0):
+\fIPV\fP[\fB:\fP\fIPE\fP\fB+\fP\fIPE\fP]...
 .TP
 .I String
 See the option description for information about the string content.
@@ -606,10 +611,11 @@ is TiB,
 is PiB,
 .BR e | E
 is EiB.
-(This should not be confused with the output control --units, where
-capital letters mean multiple of 1000.)
+(This should not be confused with the output control --units,
+where capital letters mean multiple of 1000.)
 .
 .SH ENVIRONMENT VARIABLES
 .
 See \fBlvm\fP(8) for information about environment variables used by lvm.
-For example, LVM_VG_NAME can generally be substituted for a required VG parameter.
+For example, LVM_VG_NAME can generally be substituted
+for a required VG parameter.

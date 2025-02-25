@@ -9,7 +9,6 @@ vgrename \(em Rename a volume group
 \fBvgrename\fP \fIposition_args\fP
 .br
     [ \fIoption_args\fP ]
-.br
 .
 .SH DESCRIPTION
 .
@@ -31,9 +30,9 @@ Rename a VG.
 \fBvgrename\fP \fIVG\fP \fIVG\fP\fI_new\fP
 .br
 .RS 4
-.ad l
+.na
 [ COMMON_OPTIONS ]
-.ad b
+.ad
 .RE
 .P
 Rename a VG by specifying the VG UUID.
@@ -42,27 +41,27 @@ Rename a VG by specifying the VG UUID.
 \fBvgrename\fP \fIString\fP \fIVG\fP\fI_new\fP
 .br
 .RS 4
-.ad l
+.na
 [ COMMON_OPTIONS ]
-.ad b
+.ad
 .RE
 .P
 Common options for command:
 .
 .RS 4
-.ad l
+.na
 [ \fB-A\fP|\fB--autobackup\fP \fBy\fP|\fBn\fP ]
 .br
 [ \fB-f\fP|\fB--force\fP ]
 .br
 [    \fB--reportformat\fP \fBbasic\fP|\fBjson\fP|\fBjson_std\fP ]
-.ad b
+.ad
 .RE
 .P
 Common options for lvm:
 .
 .RS 4
-.ad l
+.na
 [ \fB-d\fP|\fB--debug\fP ]
 .br
 [ \fB-h\fP|\fB--help\fP ]
@@ -98,7 +97,7 @@ Common options for lvm:
 [    \fB--profile\fP \fIString\fP ]
 .br
 [    \fB--version\fP ]
-.ad b
+.ad
 .RE
 .
 .SH OPTIONS
@@ -108,7 +107,8 @@ Common options for lvm:
 \fB-A\fP|\fB--autobackup\fP \fBy\fP|\fBn\fP
 .br
 Specifies if metadata should be backed up automatically after a change.
-Enabling this is strongly advised! See \fBvgcfgbackup\fP(8) for more information.
+Enabling this is strongly advised!
+See \fBvgcfgbackup\fP(8) for more information.
 .
 .HP
 \fB--commandprofile\fP \fIString\fP
@@ -280,10 +280,11 @@ is TiB,
 is PiB,
 .BR e | E
 is EiB.
-(This should not be confused with the output control --units, where
-capital letters mean multiple of 1000.)
+(This should not be confused with the output control --units,
+where capital letters mean multiple of 1000.)
 .
 .SH ENVIRONMENT VARIABLES
 .
 See \fBlvm\fP(8) for information about environment variables used by lvm.
-For example, LVM_VG_NAME can generally be substituted for a required VG parameter.
+For example, LVM_VG_NAME can generally be substituted
+for a required VG parameter.

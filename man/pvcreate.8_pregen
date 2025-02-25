@@ -9,7 +9,6 @@ pvcreate \(em Initialize physical volume(s) for use by LVM
 \fBpvcreate\fP \fIposition_args\fP
 .br
     [ \fIoption_args\fP ]
-.br
 .
 .SH DESCRIPTION
 .
@@ -32,12 +31,12 @@ The LVM disk label begins 512 bytes from the start of the device, and is
 512 bytes in size.
 .P
 The LVM metadata area begins at an offset (from the start of the device)
-equal to the page size of the machine creating the PV (often 4 KiB.) The
+equal to the page size of the machine creating the PV (often 4\~KiB.) The
 metadata area contains a 512 byte header and a multi-KiB circular buffer
 that holds text copies of the VG metadata.
 .P
 With default settings, the first physical extent (PE), which contains LV
-data, is 1 MiB from the start of the device.  This location is controlled
+data, is 1\~MiB from the start of the device.  This location is controlled
 by \fBdefault_data_alignment\fP in lvm.conf, which is set to 1 (MiB) by
 default.  The pe_start will be a multiple of this many MiB.  This location
 can be checked with:
@@ -46,8 +45,8 @@ can be checked with:
 .I PV
 .P
 The size of the LVM metadata area is the space between the start of
-the metadata area and the first PE.  When metadata begins at 4 KiB and the
-first PE is at 1024 KiB, the metadata area size is 1020 KiB.  This can be
+the metadata area and the first PE.  When metadata begins at 4\~KiB and the
+first PE is at 1024\~KiB, the metadata area size is 1020\~KiB.  This can be
 checked with:
 .br
 .B pvs -o mda_size
@@ -64,10 +63,11 @@ is around half the mda_size.  This can be checked with:
 A larger metadata area can be set with --metadatasize.  The resulting
 mda_size may be larger than specified due to default_data_alignment
 placing pe_start on a MiB boundary, and the fact that the metadata area
-extends to the first PE.  With metadata starting at 4 KiB and
+extends to the first PE.  With metadata starting at 4\~KiB and
 default_data_alignment 1 (MiB), setting --metadatasize 2048k results in
-pe_start of 3 MiB and mda_size of 3068 KiB.  Alternatively, --metadatasize
-2044k results in pe_start at 2 MiB and mda_size of 2044 KiB.
+pe_start of 3\~MiB and mda_size of 3068\~KiB.
+Alternatively, --metadatasize 2044k results in pe_start at 2\~MiB
+and mda_size of 2044\~KiB.
 .P
 The alignment of pe_start described above may be automatically overridden
 based on md device properties or device i/o properties reported in sysfs.
@@ -80,10 +80,10 @@ because the metadata area size also determines the location of pe_start.
 When using these two options together, pe_start is calculated as:
 metadata area start (page size), plus the specified --metadatasize,
 rounded up to the next multiple of --dataalignment.
-With metadata starting at 4 KiB, --metadatasize 2048k, and --dataalignment 128k,
-pe_start is 2176 KiB and mda_size is 2172 KiB.
-The pe_start of 2176 KiB is the nearest even multiple of 128 KiB that
-provides at least 2048 KiB of metadata space.
+With metadata starting at 4\~KiB, --metadatasize 2048k,
+and --dataalignment 128k, pe_start is 2176\~KiB and mda_size is 2172\~KiB.
+The pe_start of 2176\~KiB is the nearest even multiple of 128\~KiB that
+provides at least 2048\~KiB of metadata space.
 Always check the resulting alignment and metadata size when using
 these options.
 .P
@@ -97,7 +97,7 @@ pe_start value.
 \fBpvcreate\fP \fIPV\fP ...
 .br
 .RS 4
-.ad l
+.na
 [ \fB-f\fP|\fB--force\fP ]
 .br
 [ \fB-M\fP|\fB--metadatatype\fP \fBlvm2\fP ]
@@ -129,13 +129,13 @@ pe_start value.
 [    \fB--restorefile\fP \fIString\fP ]
 .br
 [ COMMON_OPTIONS ]
-.ad b
+.ad
 .RE
 .P
 Common options for lvm:
 .
 .RS 4
-.ad l
+.na
 [ \fB-d\fP|\fB--debug\fP ]
 .br
 [ \fB-h\fP|\fB--help\fP ]
@@ -171,7 +171,7 @@ Common options for lvm:
 [    \fB--profile\fP \fIString\fP ]
 .br
 [    \fB--version\fP ]
-.ad b
+.ad
 .RE
 .
 .SH OPTIONS
@@ -436,8 +436,10 @@ For commands managing physical extents, a PV positional arg
 generally accepts a suffix indicating a range (or multiple ranges)
 of physical extents (PEs). When the first PE is omitted, it defaults
 to the start of the device, and when the last PE is omitted it defaults to end.
-Start and end range (inclusive): \fIPV\fP[\fB:\fP\fIPE\fP\fB-\fP\fIPE\fP]...
-Start and length range (counting from 0): \fIPV\fP[\fB:\fP\fIPE\fP\fB+\fP\fIPE\fP]...
+Start and end range (inclusive):
+\fIPV\fP[\fB:\fP\fIPE\fP\fB-\fP\fIPE\fP]...
+Start and length range (counting from 0):
+\fIPV\fP[\fB:\fP\fIPE\fP\fB+\fP\fIPE\fP]...
 .TP
 .I String
 See the option description for information about the string content.
@@ -464,10 +466,11 @@ is TiB,
 is PiB,
 .BR e | E
 is EiB.
-(This should not be confused with the output control --units, where
-capital letters mean multiple of 1000.)
+(This should not be confused with the output control --units,
+where capital letters mean multiple of 1000.)
 .
 .SH ENVIRONMENT VARIABLES
 .
 See \fBlvm\fP(8) for information about environment variables used by lvm.
-For example, LVM_VG_NAME can generally be substituted for a required VG parameter.
+For example, LVM_VG_NAME can generally be substituted
+for a required VG parameter.

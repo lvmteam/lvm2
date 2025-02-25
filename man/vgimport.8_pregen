@@ -9,7 +9,6 @@ vgimport \(em Register exported volume group with system
 \fBvgimport\fP \fIoption_args\fP \fIposition_args\fP
 .br
     [ \fIoption_args\fP ]
-.br
 .
 .SH DESCRIPTION
 .
@@ -27,11 +26,11 @@ Import specified VGs.
 \fBvgimport\fP \fIVG\fP|\fITag\fP|\fISelect\fP ...
 .br
 .RS 4
-.ad l
+.na
 [ \fB-S\fP|\fB--select\fP \fIString\fP ]
 .br
 [ COMMON_OPTIONS ]
-.ad b
+.ad
 .RE
 .P
 Import all VGs.
@@ -40,25 +39,25 @@ Import all VGs.
 \fBvgimport\fP \fB-a\fP|\fB--all\fP
 .br
 .RS 4
-.ad l
+.na
 [ COMMON_OPTIONS ]
-.ad b
+.ad
 .RE
 .P
 Common options for command:
 .
 .RS 4
-.ad l
+.na
 [ \fB-f\fP|\fB--force\fP ]
 .br
 [    \fB--reportformat\fP \fBbasic\fP|\fBjson\fP|\fBjson_std\fP ]
-.ad b
+.ad
 .RE
 .P
 Common options for lvm:
 .
 .RS 4
-.ad l
+.na
 [ \fB-d\fP|\fB--debug\fP ]
 .br
 [ \fB-h\fP|\fB--help\fP ]
@@ -94,7 +93,7 @@ Common options for lvm:
 [    \fB--profile\fP \fIString\fP ]
 .br
 [    \fB--version\fP ]
-.ad b
+.ad
 .RE
 .
 .SH OPTIONS
@@ -221,8 +220,10 @@ See \fBlvmreport\fP(7) for more information.
 \fB-S\fP|\fB--select\fP \fIString\fP
 .br
 Select objects for processing and reporting based on specified criteria.
-The criteria syntax is described by \fB--select help\fP and \fBlvmreport\fP(7).
-For reporting commands, one row is displayed for each object matching the criteria.
+The criteria syntax is described by \fB--select help\fP
+and \fBlvmreport\fP(7).
+For reporting commands, one row is displayed
+for each object matching the criteria.
 See \fB--options help\fP for selectable object fields.
 Rows can be displayed with an additional "selected" field (-o selected)
 showing 1 if the row matches the selection and 0 otherwise.
@@ -296,10 +297,11 @@ is TiB,
 is PiB,
 .BR e | E
 is EiB.
-(This should not be confused with the output control --units, where
-capital letters mean multiple of 1000.)
+(This should not be confused with the output control --units,
+where capital letters mean multiple of 1000.)
 .
 .SH ENVIRONMENT VARIABLES
 .
 See \fBlvm\fP(8) for information about environment variables used by lvm.
-For example, LVM_VG_NAME can generally be substituted for a required VG parameter.
+For example, LVM_VG_NAME can generally be substituted
+for a required VG parameter.

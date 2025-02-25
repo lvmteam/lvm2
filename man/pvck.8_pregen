@@ -9,9 +9,8 @@ pvck \(em Check metadata on physical volumes
 \fBpvck\fP \fIoption_args\fP \fIposition_args\fP
 .br
     [ \fIoption_args\fP ]
-.br
 .P
-.ad l
+.na
     \fB--commandprofile\fP \fIString\fP
 .br
     \fB--config\fP \fIString\fP
@@ -64,14 +63,14 @@ pvck \(em Check metadata on physical volumes
     \fB--version\fP
 .br
  \fB-y\fP|\fB--yes\fP
-.ad b
+.ad
 .
 .SH DESCRIPTION
 .
 pvck checks and repairs LVM metadata on PVs.
-.P
-.SS Dump options 
-.P
+.
+.SS Dump options
+.
 .B headers
 .br
 Print LVM on-disk headers and structures: label_header, pv_header,
@@ -112,15 +111,16 @@ metadata versions.
 .B metadata_area
 .br
 Save the entire text metadata area to a file without processing.
-.P
+.
 .SS Repair options
-.P
+.
 .B --repair
 .br
 Repair headers and metadata on a PV.  This uses a metadata input file that
-was extracted by --dump, or a backup file (from \fI#DEFAULT_BACKUP_DIR#\fP).  When
-possible, use metadata saved by --dump from another PV in the same VG (or
-from a second metadata area on the PV).
+was extracted by --dump, or a backup file
+(from \fI#DEFAULT_BACKUP_DIR#\fP).
+When possible, use metadata saved by --dump from another PV
+in the same VG (or from a second metadata area on the PV).
 .P
 There are cases where the PV UUID needs to be specified for the PV being
 repaired.  It is specified using --settings "pv_uuid=<UUID>".  In
@@ -157,9 +157,9 @@ correct (having been undamaged or already repaired).
 .br
 Repairs label_header fields, leaving the pv_header (in the same sector)
 unchanged.  (repairtype pv_header should usually be used instead.)
-.P
+.
 .SS Settings
-.P
+.
 The --settings option controls or overrides certain dump or repair
 behaviors.  All offset and size values in settings are in bytes (units are
 not recognized.)  These settings are subject to change.
@@ -213,9 +213,9 @@ Check for metadata on a device
 \fBpvck\fP \fIPV\fP ...
 .br
 .RS 4
-.ad l
+.na
 [ COMMON_OPTIONS ]
-.ad b
+.ad
 .RE
 .P
 \(em
@@ -230,7 +230,7 @@ Check and print LVM headers and metadata on a device
 \fIPV\fP
 .br
 .RS 4
-.ad l
+.na
 [ \fB-f\fP|\fB--file\fP \fIString\fP ]
 .br
 [    \fB--settings\fP \fIString\fP ]
@@ -238,7 +238,7 @@ Check and print LVM headers and metadata on a device
 [    \fB--\fP[\fBpv\fP]\fBmetadatacopies\fP \fB0\fP|\fB1\fP|\fB2\fP ]
 .br
 [ COMMON_OPTIONS ]
-.ad b
+.ad
 .RE
 .P
 \(em
@@ -249,13 +249,13 @@ Repair LVM headers or metadata on a device
 \fBpvck\fP \fB--repairtype\fP \fBpv_header\fP|\fBmetadata\fP|\fBlabel_header\fP \fIPV\fP
 .br
 .RS 4
-.ad l
+.na
 [ \fB-f\fP|\fB--file\fP \fIString\fP ]
 .br
 [    \fB--settings\fP \fIString\fP ]
 .br
 [ COMMON_OPTIONS ]
-.ad b
+.ad
 .RE
 .P
 \(em
@@ -266,11 +266,11 @@ Repair LVM headers and metadata on a device
 \fBpvck\fP \fB--repair\fP \fB-f\fP|\fB--file\fP \fIString\fP \fIPV\fP
 .br
 .RS 4
-.ad l
+.na
 [    \fB--settings\fP \fIString\fP ]
 .br
 [ COMMON_OPTIONS ]
-.ad b
+.ad
 .RE
 .P
 \(em
@@ -278,15 +278,15 @@ Repair LVM headers and metadata on a device
 Common options for command:
 .
 .RS 4
-.ad l
+.na
 [    \fB--labelsector\fP \fINumber\fP ]
-.ad b
+.ad
 .RE
 .P
 Common options for lvm:
 .
 .RS 4
-.ad l
+.na
 [ \fB-d\fP|\fB--debug\fP ]
 .br
 [ \fB-h\fP|\fB--help\fP ]
@@ -322,7 +322,7 @@ Common options for lvm:
 [    \fB--profile\fP \fIString\fP ]
 .br
 [    \fB--version\fP ]
-.ad b
+.ad
 .RE
 .
 .SH OPTIONS
@@ -372,12 +372,12 @@ If set to no, the command will not attempt to use device-mapper.
 For testing and debugging.
 .
 .HP
-.ad l
+.ad
 \fB--dump\fP \c
 .nh
 \%\fBheaders\fP|\:\fBmetadata\fP|\:\fBmetadata_all\fP|\:\fBmetadata_search\fP
 .hy
-.ad b
+.ad
 .br
 Dump headers and metadata from a PV for debugging and repair.
 Option values include: \fBheaders\fP to print and check LVM headers,
@@ -515,8 +515,10 @@ For commands managing physical extents, a PV positional arg
 generally accepts a suffix indicating a range (or multiple ranges)
 of physical extents (PEs). When the first PE is omitted, it defaults
 to the start of the device, and when the last PE is omitted it defaults to end.
-Start and end range (inclusive): \fIPV\fP[\fB:\fP\fIPE\fP\fB-\fP\fIPE\fP]...
-Start and length range (counting from 0): \fIPV\fP[\fB:\fP\fIPE\fP\fB+\fP\fIPE\fP]...
+Start and end range (inclusive):
+\fIPV\fP[\fB:\fP\fIPE\fP\fB-\fP\fIPE\fP]...
+Start and length range (counting from 0):
+\fIPV\fP[\fB:\fP\fIPE\fP\fB+\fP\fIPE\fP]...
 .TP
 .I String
 See the option description for information about the string content.
@@ -543,10 +545,11 @@ is TiB,
 is PiB,
 .BR e | E
 is EiB.
-(This should not be confused with the output control --units, where
-capital letters mean multiple of 1000.)
+(This should not be confused with the output control --units,
+where capital letters mean multiple of 1000.)
 .
 .SH ENVIRONMENT VARIABLES
 .
 See \fBlvm\fP(8) for information about environment variables used by lvm.
-For example, LVM_VG_NAME can generally be substituted for a required VG parameter.
+For example, LVM_VG_NAME can generally be substituted
+for a required VG parameter.

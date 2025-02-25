@@ -11,13 +11,12 @@ lvmconfig \(em Display and manipulate configuration information
     [ \fIoption_args\fP ]
 .br
     [ \fIposition_args\fP ]
-.br
 .
 .SH DESCRIPTION
 .
-lvmconfig, lvm config, lvm dumpconfig (for compatibility reasons, to be phased out) produce
-formatted output from the LVM configuration tree. The
-sources of the configuration data include \fBlvm.conf\fP(5) and command
+lvmconfig, lvm config, lvm dumpconfig (for compatibility reasons,
+to be phased out) produce formatted output from the LVM configuration tree.
+The sources of the configuration data include \fBlvm.conf\fP(5) and command
 line settings from --config.
 .
 .SH USAGE
@@ -25,7 +24,7 @@ line settings from --config.
 \fBlvmconfig\fP
 .br
 .RS 4
-.ad l
+.na
 [ \fB-f\fP|\fB--file\fP \fIString\fP ]
 .br
 [ \fB-l\fP|\fB--list\fP ]
@@ -73,7 +72,7 @@ line settings from --config.
 [    \fB--withversions\fP ]
 .br
 [ COMMON_OPTIONS ]
-.ad b
+.ad
 .RE
 .RS 4
 [ \fIString\fP ... ]
@@ -82,7 +81,7 @@ line settings from --config.
 Common options for lvm:
 .
 .RS 4
-.ad l
+.na
 [ \fB-d\fP|\fB--debug\fP ]
 .br
 [ \fB-h\fP|\fB--help\fP ]
@@ -118,7 +117,7 @@ Common options for lvm:
 [    \fB--profile\fP \fIString\fP ]
 .br
 [    \fB--version\fP ]
-.ad b
+.ad
 .RE
 .
 .SH OPTIONS
@@ -316,12 +315,12 @@ error messages in multi-stage operations if a tool relies on reading
 back metadata it believes has changed but hasn't.
 .
 .HP
-.ad l
+.ad
 \fB--typeconfig\fP \c
 .nh
 \%\fBcurrent\fP|\:\fBdefault\fP|\:\fBdiff\fP|\:\fBfull\fP|\:\fBlist\fP|\:\fBmissing\fP|\:\fBnew\fP|\:\fBprofilable\fP|\:\fBprofilable-command\fP|\:\fBprofilable-metadata\fP
 .hy
-.ad b
+.ad
 .br
 \fBcurrent\fP prints the config settings that would be applied
 to an lvm command (assuming the command does not override them
@@ -368,7 +367,8 @@ Validate current configuration used and exit with appropriate
 return code. The validation is done only for the configuration
 at the front of the "config cascade". To validate the whole
 merged configuration tree, also use --mergedconfig.
-The validation is done even if \fBlvm.conf\fP(5) \fBconfig/checks\fP is disabled.
+The validation is done even if \fBlvm.conf\fP(5) \fBconfig/checks\fP
+is disabled.
 .
 .HP
 \fB--valuesonly\fP
@@ -454,10 +454,11 @@ is TiB,
 is PiB,
 .BR e | E
 is EiB.
-(This should not be confused with the output control --units, where
-capital letters mean multiple of 1000.)
+(This should not be confused with the output control --units,
+where capital letters mean multiple of 1000.)
 .
 .SH ENVIRONMENT VARIABLES
 .
 See \fBlvm\fP(8) for information about environment variables used by lvm.
-For example, LVM_VG_NAME can generally be substituted for a required VG parameter.
+For example, LVM_VG_NAME can generally be substituted
+for a required VG parameter.
