@@ -1,7 +1,7 @@
 pvck checks and repairs LVM metadata on PVs.
-.P
-.SS Dump options 
-.P
+.
+.SS Dump options
+.
 .B headers
 .br
 Print LVM on-disk headers and structures: label_header, pv_header,
@@ -42,15 +42,16 @@ metadata versions.
 .B metadata_area
 .br
 Save the entire text metadata area to a file without processing.
-.P
+.
 .SS Repair options
-.P
+.
 .B --repair
 .br
 Repair headers and metadata on a PV.  This uses a metadata input file that
-was extracted by --dump, or a backup file (from \fI#DEFAULT_BACKUP_DIR#\fP).  When
-possible, use metadata saved by --dump from another PV in the same VG (or
-from a second metadata area on the PV).
+was extracted by --dump, or a backup file
+(from \fI#DEFAULT_BACKUP_DIR#\fP).
+When possible, use metadata saved by --dump from another PV
+in the same VG (or from a second metadata area on the PV).
 .P
 There are cases where the PV UUID needs to be specified for the PV being
 repaired.  It is specified using --settings "pv_uuid=<UUID>".  In
@@ -87,9 +88,9 @@ correct (having been undamaged or already repaired).
 .br
 Repairs label_header fields, leaving the pv_header (in the same sector)
 unchanged.  (repairtype pv_header should usually be used instead.)
-.P
+.
 .SS Settings
-.P
+.
 The --settings option controls or overrides certain dump or repair
 behaviors.  All offset and size values in settings are in bytes (units are
 not recognized.)  These settings are subject to change.

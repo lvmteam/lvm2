@@ -1,4 +1,4 @@
-.TH "LVMVDO" "7" "LVM TOOLS #VERSION#" "Red Hat, Inc" "\""
+.TH "LVMVDO" "7" "LVM TOOLS #VERSION#" "Red Hat, Inc" \" -*- nroff -*-
 .
 .SH NAME
 .
@@ -18,8 +18,8 @@ physical blocks. Thin provisioning manages the mapping from logical blocks
 presented by VDO to where the data has actually been physically stored,
 and also eliminates any blocks of all zeroes.
 .P
-With deduplication, instead of writing the same data more than once, VDO detects and records each
-duplicate block as a reference to the original
+With deduplication, instead of writing the same data more than once,
+VDO detects and records each duplicate block as a reference to the original
 block. VDO maintains a mapping from Logical Block Addresses (LBA) (used by the
 storage layer above VDO) to physical block addresses (used by the storage
 layer under VDO). After deduplication, multiple logical block addresses
@@ -86,7 +86,8 @@ The primary methods for using VDO with lvm2:
 .SS \n[step]. Create a VDOPoolLV and a VDOLV
 .
 Create a VDOPoolLV that will hold VDO data, and a
-virtual size VDOLV that the user can use. If you do not specify the virtual size,
+virtual size VDOLV that the user can use.
+If you do not specify the virtual size,
 then the VDOLV is created with the maximum size that
 always fits into data volume even if no
 deduplication or compression can happen
@@ -96,8 +97,8 @@ the sequence of vpool0, vpool1 ...
 .P
 Note: The performance of TRIM/Discard operations is slow for large
 volumes of VDO type. Please try to avoid sending discard requests unless
-necessary because it might take considerable amount of time to finish the discard
-operation.
+necessary because it might take considerable amount of time
+to finish the discard operation.
 .P
 .nf
 .B lvcreate --type vdo -n VDOLV -L DataSize -V LargeVirtualSize VG/VDOPoolLV
@@ -193,7 +194,8 @@ So i.e. vdo_use_deduplication=1 and deduplication=1 are equivalent.
 To change the option for an already existing VDOPoolLV use
 .BR lvchange (8)
 command. However not all option can be changed.
-Only compression and deduplication options can be also changed for an active VDO LV.
+Only compression and deduplication options can be also changed
+for an active VDO LV.
 Lowest priority options are specified with configuration file,
 then with --vdosettings and highest are explicit option --compression
 and --deduplication.
@@ -213,7 +215,8 @@ in the content of the virtual data for the VDOLV and how much space is already
 consumed with all the data and metadata blocks in the VDOPoolLV.
 For a detailed description, use the \fBvdostats\fP(8) command.
 .P
-Note: \fBvdostats\fP(8) currently understands only \fI/dev/mapper\fP device names.
+Note: \fBvdostats\fP(8) currently understands only
+\fI/dev/mapper\fP device names.
 .P
 .I Example
 .nf
@@ -279,10 +282,12 @@ a long time.
 .SS \n+[step]. Component activation of a VDODataLV
 .
 You can activate a VDODataLV separately as a component LV for examination
-purposes. The activation of the VDODataLV activates the data LV in read-only mode,
+purposes.
+The activation of the VDODataLV activates the data LV in read-only mode,
 and the data LV cannot be modified.
-If the VDODataLV is active as a component, any upper LV using this volume CANNOT
-be activated. You have to deactivate the VDODataLV first to continue to use the VDOPoolLV.
+If the VDODataLV is active as a component,
+any upper LV using this volume CANNOT be activated.
+You have to deactivate the VDODataLV first to continue to use the VDOPoolLV.
 .P
 .I Example
 .nf
@@ -359,28 +364,28 @@ Unless you really need it, you should avoid using discard.
 .P
 When a block device is going to be rewritten,
 its blocks will be automatically reused for new data.
-Discard is useful in situations when user knows that the given portion of a VDO LV
-is not going to be used and the discarded space can be used for block
-provisioning in other regions of the VDO LV.
+Discard is useful in situations when user knows that the given portion of
+a VDO LV is not going to be used and the discarded space
+can be used for block provisioning in other regions of the VDO LV.
 For the same reason, you should avoid using mkfs with discard for
 a freshly created VDO LV to save a lot of time that this operation would
 take otherwise as device is already expected to be empty.
 .
 .SS \n+[step]. Memory usage
 .
-The VDO target requires 38 MiB of RAM and several variable amounts:
+The VDO target requires 38\~MiB of RAM and several variable amounts:
 .IP \(bu 2
-1.15 MiB of RAM for each 1 MiB of configured block map cache size.
-The block map cache requires a minimum of 150 MiB RAM.
+1.15\~MiB of RAM for each 1\~MiB of configured block map cache size.
+The block map cache requires a minimum of 150\~MiB RAM.
 .br
 .IP \(bu
-1.6 MiB of RAM for each 1 TiB of logical space.
+1.6\~MiB of RAM for each 1\~TiB of logical space.
 .br
 .IP \(bu
-268 MiB of RAM for each 1 TiB of physical storage managed by the volume.
+268\~MiB of RAM for each 1\~TiB of physical storage managed by the volume.
 .br
 .P
-UDS requires a minimum of 250 MiB of RAM,
+UDS requires a minimum of 250\~MiB of RAM,
 which is also the default amount that deduplication uses.
 .P
 The memory required for the UDS index is determined by the index type
@@ -398,35 +403,36 @@ For most workloads, given the same amount of memory,
 the difference in deduplication rates between dense
 and sparse indexes is negligible.
 .P
-A dense index with 1 GiB of RAM maintains a 1 TiB deduplication window,
-while a sparse index with 1 GiB of RAM maintains a 10 TiB deduplication window.
-In general, 1 GiB is sufficient for 4 TiB of physical space with
-a dense index and 40 TiB with a sparse index.
+A dense index with 1\~GiB of RAM maintains a 1\~TiB deduplication window,
+while a sparse index with 1\~GiB of RAM maintains a 10\~TiB deduplication window.
+In general, 1\~GiB is sufficient for 4\~TiB of physical space with
+a dense index and 40\~TiB with a sparse index.
 .
 .SS \n+[step]. Storage space requirements
 .
-You can configure a VDOPoolLV to use up to 256 TiB of physical storage.
+You can configure a VDOPoolLV to use up to 256\~TiB of physical storage.
 Only a certain part of the physical storage is usable to store data.
 This section provides the calculations to determine the usable size
 of a VDO-managed volume.
 .P
-The VDO target requires storage for two types of VDO metadata and for the UDS index:
+The VDO target requires storage for two types of VDO metadata
+and for the UDS index:
 .IP \(bu 2
-The first type of VDO metadata uses approximately 1 MiB for each 4 GiB
-of physical storage plus an additional 1 MiB per slab.
+The first type of VDO metadata uses approximately 1\~MiB for each 4\~GiB
+of physical storage plus an additional 1\~MiB per slab.
 .IP \(bu
-The second type of VDO metadata consumes approximately 1.25 MiB
-for each 1 GiB of logical storage, rounded up to the nearest slab.
+The second type of VDO metadata consumes approximately 1.25\~MiB
+for each 1\~GiB of logical storage, rounded up to the nearest slab.
 .IP \(bu
 The amount of storage required for the UDS index depends on the type of index
-and the amount of RAM allocated to the index. For each 1 GiB of RAM,
-a dense UDS index uses 17 GiB of storage and a sparse UDS index will use
-170 GiB of storage.
+and the amount of RAM allocated to the index. For each 1\~GiB of RAM,
+a dense UDS index uses 17\~GiB of storage and a sparse UDS index will use
+170\~GiB of storage.
 .
 .SH SEE ALSO
 .
 .nh
-.ad l
+.na
 .BR lvm (8),
 .BR lvm.conf (5),
 .BR lvmconfig (8),

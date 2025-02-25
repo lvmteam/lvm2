@@ -680,7 +680,7 @@ and the existing main LV is being converted to type cache.)
 .SH SEE ALSO
 .
 .nh
-.ad l
+.na
 .BR lvm.conf (5),
 .BR lvchange (8),
 .BR lvcreate (8),

@@ -28,7 +28,8 @@ and minor numbers.)
 .P
 .B pvscan --cache -aay
 .P
-Performs the --cache steps for all devices, then autoactivates any complete VGs.
+Performs the --cache steps for all devices,
+then autoactivates any complete VGs.
 .P
 .B pvscan --cache --listvg|--listlvs
 .I device

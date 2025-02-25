@@ -1,4 +1,4 @@
-.TH "LVMLOCKD" "8" "LVM TOOLS #VERSION#" "Red Hat, Inc" "\""
+.TH "LVMLOCKD" "8" "LVM TOOLS #VERSION#" "Red Hat, Inc" \" -*- nroff -*-
 .
 .SH NAME
 .
@@ -282,7 +282,7 @@ special attention.  This is because sanlock locks exist on storage within
 the VG, so they are not available until after the VG is created.  The
 first sanlock VG that is created will automatically contain the "global
 lock".  Be aware of the following special considerations:
-.P
+.
 .IP \[bu] 2
 The first vgcreate command needs to be given the path to a device that has
 not yet been initialized with pvcreate.  The pvcreate initialization will
@@ -495,7 +495,7 @@ device, then use vgextend to add other devices.
 .
 In a shared VG, LV activation involves locking through lvmlockd, and the
 following values are possible with lvchange/vgchange -a:
-.P
+.
 .IP \fBy\fP|\fBey\fP
 The command activates the LV in exclusive mode, allowing a single host
 to activate the LV.  Before activating the LV, the command uses lvmlockd
@@ -654,7 +654,7 @@ vgs -o+locktype,lockargs <vgname>
 .P
 To change the dlm cluster name in the VG when the VG is still used by the
 original cluster:
-.P
+.
 .IP \[bu] 2
 Start the VG on the host changing the lock type
 .br
@@ -739,7 +739,7 @@ vgchange --locktype sanlock|dlm \-\-lockopt force <vgname>
 .SS Changing a shared VG to a local VG
 .
 All LVs must be inactive to change the lock type.
-.P
+.
 .IP \[bu] 2
 Start the VG on the host making the change:
 .br

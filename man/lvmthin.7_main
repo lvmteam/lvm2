@@ -1,4 +1,4 @@
-.TH "LVMTHIN" "7" "LVM TOOLS #VERSION#" "Red Hat, Inc" "\""
+.TH "LVMTHIN" "7" "LVM TOOLS #VERSION#" "Red Hat, Inc" \" -*- nroff -*-
 .
 .SH NAME
 .
@@ -42,9 +42,9 @@ may be too fragmented to make available.
 On-demand block allocation can cause thin LV blocks to be fragmented in
 the thin pool, which can cause reduced performance compared to standard
 fully provisioned LV.
-.P
+.
 .SH DEFINITIONS
-.P
+.
 Thin LV
 .br
 A thin LV is an LVM logical volume for which storage is allocated on
@@ -85,7 +85,7 @@ External Origin
 .br
 A read-only LV that is used as a snapshot origin for thin LVs.
 Unwritten portions of the thin LVs are read from the external origin.
-.P
+.
 .SH USAGE
 .
 .SS Thin Pool Creation
@@ -95,7 +95,7 @@ metadata component LVs are each allocated from the VG, and combined into a
 thin pool.  The lvcreate -L|--size will be the size of the thin pool data
 LV, and the size of the metadata LV will be calculated automatically (or,
 can be optionally specified with --poolmetadatasize.)
-
+.
 .nf
 $ lvcreate --type thin-pool -n ThinPool -L Size VG
 .fi
@@ -203,7 +203,7 @@ metadata LV may be extended in response.  System messages will show when
 these extensions have happened.
 .P
 To enable thin pool automatic extension, set lvm.conf:
-.P
+.
 .IP \[bu] 2
 .BR thin_pool_autoextend_threshold
 .br
@@ -212,7 +212,7 @@ chosen value should depend on the rate at which new data may be written.
 If space is consumed more quickly, then a lower threshold will provide
 dmeventd and lvextend more time to react and extend the pool.  The minimum
 is 50.  Setting to 100 disables autoextend.
-.P
+.
 .IP \[bu] 2
 .BR thin_pool_autoextend_percent
 .br
@@ -355,7 +355,7 @@ external origin LV can be used for multiple thin snapshots.
 $ lvcreate --snapshot -n SnapLV --thinpool ThinPool VG/ExternalOrigin
 .fi
 .
-.SS Thin Snapshot and External Origin Conversion 
+.SS Thin Snapshot and External Origin Conversion
 .
 In this case, an existing, non-thin LV is converted to a read-only
 external origin, and a new thin LV is created as a snapshot of that
@@ -389,18 +389,18 @@ activated.
 .nf
 $ lvconvert --merge VG/SnapLV
 .fi
-.P
+.
 .SH EXAMPLES
 .
 .SS Thin Pool Creation
 .nf
 # lvcreate --type thin-pool -n pool0 -L 500M vg
 # lvs -a vg
-  LV              VG Attr       LSize   Data%  Meta%  
-  [lvol0_pmspare] vg ewi-------   4.00m              
-  pool0           vg twi-a-tz-- 500.00m 0.00   10.84 
-  [pool0_tdata]   vg Twi-ao---- 500.00m              
-  [pool0_tmeta]   vg ewi-ao----   4.00m              
+  LV              VG Attr       LSize   Data%  Meta%
+  [lvol0_pmspare] vg ewi-------   4.00m
+  pool0           vg twi-a-tz-- 500.00m 0.00   10.84
+  [pool0_tdata]   vg Twi-ao---- 500.00m
+  [pool0_tmeta]   vg ewi-ao----   4.00m
 .fi
 .
 .SS Thin Pool Conversion
@@ -409,11 +409,11 @@ $ lvconvert --merge VG/SnapLV
 # lvcreate -n pool0_meta -L 100M vg
 # lvconvert --type thin-pool --poolmetadata pool0_meta vg/pool0
 # lvs -a vg
-  LV              VG Attr       LSize   Data%  Meta%  
-  [lvol0_pmspare] vg ewi------- 100.00m              
-  pool0           vg twi-a-tz-- 500.00m 0.00   10.04 
-  [pool0_tdata]   vg Twi-ao---- 500.00m              
-  [pool0_tmeta]   vg ewi-ao---- 100.00m              
+  LV              VG Attr       LSize   Data%  Meta%
+  [lvol0_pmspare] vg ewi------- 100.00m
+  pool0           vg twi-a-tz-- 500.00m 0.00   10.04
+  [pool0_tdata]   vg Twi-ao---- 500.00m
+  [pool0_tmeta]   vg ewi-ao---- 100.00m
 .fi
 .
 .SS Thin LV Creation
@@ -421,12 +421,12 @@ $ lvconvert --merge VG/SnapLV
 # lvcreate --type thin-pool -n pool0 -L 500M vg
 # lvcreate --type thin -n vol -V 1G --thinpool pool0 vg
 # lvs -a vg
-  LV              VG Attr       LSize   Pool  Data%  Meta%  
-  [lvol0_pmspare] vg ewi-------   4.00m                    
-  pool0           vg twi-aotz-- 500.00m       0.00   10.94 
-  [pool0_tdata]   vg Twi-ao---- 500.00m                    
-  [pool0_tmeta]   vg ewi-ao----   4.00m                    
-  vol             vg Vwi-a-tz--   1.00g pool0 0.00         
+  LV              VG Attr       LSize   Pool  Data%  Meta%
+  [lvol0_pmspare] vg ewi-------   4.00m
+  pool0           vg twi-aotz-- 500.00m       0.00   10.94
+  [pool0_tdata]   vg Twi-ao---- 500.00m
+  [pool0_tmeta]   vg ewi-ao----   4.00m
+  vol             vg Vwi-a-tz--   1.00g pool0 0.00
 .fi
 .
 .SS Thin Snapshot Creation
@@ -436,14 +436,14 @@ $ lvconvert --merge VG/SnapLV
 # lvcreate --snapshot -n snap1 vg/vol
 # lvcreate --snapshot -n snap2 vg/snap1
 # lvs -a vg
-  LV              VG Attr       LSize   Pool  Origin Data%  Meta%  
-  [lvol0_pmspare] vg ewi-------   4.00m                           
-  pool0           vg twi-aotz-- 500.00m              0.00   10.94 
-  [pool0_tdata]   vg Twi-ao---- 500.00m                           
-  [pool0_tmeta]   vg ewi-ao----   4.00m                           
-  snap1           vg Vwi---tz-k   1.00g pool0 vol                 
-  snap2           vg Vwi---tz-k   1.00g pool0 snap1               
-  vol             vg Vwi-a-tz--   1.00g pool0        0.00         
+  LV              VG Attr       LSize   Pool  Origin Data%  Meta%
+  [lvol0_pmspare] vg ewi-------   4.00m
+  pool0           vg twi-aotz-- 500.00m              0.00   10.94
+  [pool0_tdata]   vg Twi-ao---- 500.00m
+  [pool0_tmeta]   vg ewi-ao----   4.00m
+  snap1           vg Vwi---tz-k   1.00g pool0 vol
+  snap2           vg Vwi---tz-k   1.00g pool0 snap1
+  vol             vg Vwi-a-tz--   1.00g pool0        0.00
 .fi
 .
 .SS Thin Pool Extension
@@ -451,18 +451,18 @@ $ lvconvert --merge VG/SnapLV
 # lvcreate --type thin-pool -n pool0 -L 500M vg
 # lvextend -L+100M vg/pool0
 # lvs -a vg
-  LV              VG Attr       LSize   Data%  Meta%  
-  [lvol0_pmspare] vg ewi-------   4.00m              
-  pool0           vg twi-a-tz-- 600.00m 0.00   10.84 
-  [pool0_tdata]   vg Twi-ao---- 600.00m              
-  [pool0_tmeta]   vg ewi-ao----   4.00m              
+  LV              VG Attr       LSize   Data%  Meta%
+  [lvol0_pmspare] vg ewi-------   4.00m
+  pool0           vg twi-a-tz-- 600.00m 0.00   10.84
+  [pool0_tdata]   vg Twi-ao---- 600.00m
+  [pool0_tmeta]   vg ewi-ao----   4.00m
 # lvextend -L+100M --poolmetadatasize 8M vg/pool0
 # lvs -a vg
-  LV              VG Attr       LSize   Data%  Meta%  
-  [lvol0_pmspare] vg ewi-------   8.00m              
-  pool0           vg twi-a-tz-- 700.00m 0.00   10.40 
-  [pool0_tdata]   vg Twi-ao---- 700.00m              
-  [pool0_tmeta]   vg ewi-ao----   8.00m              
+  LV              VG Attr       LSize   Data%  Meta%
+  [lvol0_pmspare] vg ewi-------   8.00m
+  pool0           vg twi-a-tz-- 700.00m 0.00   10.40
+  [pool0_tdata]   vg Twi-ao---- 700.00m
+  [pool0_tmeta]   vg ewi-ao----   8.00m
 .fi
 .
 .SS Thick LV to Thin LV Conversion
@@ -470,20 +470,20 @@ $ lvconvert --merge VG/SnapLV
 # lvcreate -n vol -L500M vg
 # lvconvert --type thin vg/vol
 # lvs -a vg
-  LV                 VG Attr       LSize   Pool       Data%  Meta%  
-  [lvol0_pmspare]    vg ewi-------   4.00m                         
-  vol                vg Vwi-a-tz-- 500.00m vol_tpool0 100.00       
-  vol_tpool0         vg twi-aotz-- 500.00m            100.00 14.06 
-  [vol_tpool0_tdata] vg Twi-ao---- 500.00m                         
-  [vol_tpool0_tmeta] vg ewi-ao----   4.00m                         
+  LV                 VG Attr       LSize   Pool       Data%  Meta%
+  [lvol0_pmspare]    vg ewi-------   4.00m
+  vol                vg Vwi-a-tz-- 500.00m vol_tpool0 100.00
+  vol_tpool0         vg twi-aotz-- 500.00m            100.00 14.06
+  [vol_tpool0_tdata] vg Twi-ao---- 500.00m
+  [vol_tpool0_tmeta] vg ewi-ao----   4.00m
 # lvextend -L1G vg/vol
 # lvs -a vg
-  LV                 VG Attr       LSize    Pool       Data%  Meta%  
-  [lvol0_pmspare]    vg ewi-------    4.00m                         
-  vol                vg Vwi-a-tz--    1.00g vol_tpool0 48.83        
-  vol_tpool0         vg twi-aotz-- 1000.00m            50.00  14.06 
-  [vol_tpool0_tdata] vg Twi-ao---- 1000.00m                         
-  [vol_tpool0_tmeta] vg ewi-ao----    4.00m                         
+  LV                 VG Attr       LSize    Pool       Data%  Meta%
+  [lvol0_pmspare]    vg ewi-------    4.00m
+  vol                vg Vwi-a-tz--    1.00g vol_tpool0 48.83
+  vol_tpool0         vg twi-aotz-- 1000.00m            50.00  14.06
+  [vol_tpool0_tdata] vg Twi-ao---- 1000.00m
+  [vol_tpool0_tmeta] vg ewi-ao----    4.00m
 .fi
 .P
 (Extending the virtual size of the thin LV triggered autoextend of the
@@ -494,45 +494,45 @@ thin pool.)
 # lvcreate --type raid1 -n pool0 -m1 -L500M vg
 # lvcreate --type raid1 -n pool0_meta -m1 -L8M vg
 # lvs -a vg
-  LV                    VG Attr       LSize   Cpy%Sync 
-  pool0                 vg rwi-a-r--- 500.00m 100.00  
-  pool0_meta            vg rwi-a-r---   8.00m 100.00  
-  [pool0_meta_rimage_0] vg iwi-aor---   8.00m         
-  [pool0_meta_rimage_1] vg iwi-aor---   8.00m         
-  [pool0_meta_rmeta_0]  vg ewi-aor---   4.00m         
-  [pool0_meta_rmeta_1]  vg ewi-aor---   4.00m         
-  [pool0_rimage_0]      vg iwi-aor--- 500.00m         
-  [pool0_rimage_1]      vg iwi-aor--- 500.00m         
-  [pool0_rmeta_0]       vg ewi-aor---   4.00m         
-  [pool0_rmeta_1]       vg ewi-aor---   4.00m         
+  LV                    VG Attr       LSize   Cpy%Sync
+  pool0                 vg rwi-a-r--- 500.00m 100.00
+  pool0_meta            vg rwi-a-r---   8.00m 100.00
+  [pool0_meta_rimage_0] vg iwi-aor---   8.00m
+  [pool0_meta_rimage_1] vg iwi-aor---   8.00m
+  [pool0_meta_rmeta_0]  vg ewi-aor---   4.00m
+  [pool0_meta_rmeta_1]  vg ewi-aor---   4.00m
+  [pool0_rimage_0]      vg iwi-aor--- 500.00m
+  [pool0_rimage_1]      vg iwi-aor--- 500.00m
+  [pool0_rmeta_0]       vg ewi-aor---   4.00m
+  [pool0_rmeta_1]       vg ewi-aor---   4.00m
 # lvconvert --type thin-pool --poolmetadata pool0_meta vg/pool0
 # lvs -a vg
-  LV                     VG Attr       LSize   Data%  Meta%  Cpy%Sync 
-  [lvol0_pmspare]        vg ewi-------   8.00m                       
-  pool0                  vg twi-a-tz-- 500.00m 0.00   10.40          
-  [pool0_tdata]          vg rwi-aor--- 500.00m               100.00  
-  [pool0_tdata_rimage_0] vg iwi-aor--- 500.00m                       
-  [pool0_tdata_rimage_1] vg iwi-aor--- 500.00m                       
-  [pool0_tdata_rmeta_0]  vg ewi-aor---   4.00m                       
-  [pool0_tdata_rmeta_1]  vg ewi-aor---   4.00m                       
-  [pool0_tmeta]          vg ewi-aor---   8.00m               100.00  
-  [pool0_tmeta_rimage_0] vg iwi-aor---   8.00m                       
-  [pool0_tmeta_rimage_1] vg iwi-aor---   8.00m                       
-  [pool0_tmeta_rmeta_0]  vg ewi-aor---   4.00m                       
-  [pool0_tmeta_rmeta_1]  vg ewi-aor---   4.00m                       
+  LV                     VG Attr       LSize   Data%  Meta%  Cpy%Sync
+  [lvol0_pmspare]        vg ewi-------   8.00m
+  pool0                  vg twi-a-tz-- 500.00m 0.00   10.40
+  [pool0_tdata]          vg rwi-aor--- 500.00m               100.00
+  [pool0_tdata_rimage_0] vg iwi-aor--- 500.00m
+  [pool0_tdata_rimage_1] vg iwi-aor--- 500.00m
+  [pool0_tdata_rmeta_0]  vg ewi-aor---   4.00m
+  [pool0_tdata_rmeta_1]  vg ewi-aor---   4.00m
+  [pool0_tmeta]          vg ewi-aor---   8.00m               100.00
+  [pool0_tmeta_rimage_0] vg iwi-aor---   8.00m
+  [pool0_tmeta_rimage_1] vg iwi-aor---   8.00m
+  [pool0_tmeta_rmeta_0]  vg ewi-aor---   4.00m
+  [pool0_tmeta_rmeta_1]  vg ewi-aor---   4.00m
 .fi
 .
 .SS Thin Pool on LVM VDO Creation
 .nf
 # lvcreate --type thin-pool -n pool0 -L5G --pooldatavdo y vg
 # lvs -a vg
-  LV                   VG Attr       LSize Pool         Data%  Meta%  
-  [lvol0_pmspare]      vg ewi------- 8.00m                           
-  pool0                vg twi-a-tz-- 5.00g              0.00   10.64 
-  [pool0_tdata]        vg vwi-aov--- 5.00g pool0_vpool0 0.00         
-  [pool0_tmeta]        vg ewi-ao---- 8.00m                           
-  pool0_vpool0         vg dwi------- 5.00g              60.03        
-  [pool0_vpool0_vdata] vg Dwi-ao---- 5.00g                           
+  LV                   VG Attr       LSize Pool         Data%  Meta%
+  [lvol0_pmspare]      vg ewi------- 8.00m
+  pool0                vg twi-a-tz-- 5.00g              0.00   10.64
+  [pool0_tdata]        vg vwi-aov--- 5.00g pool0_vpool0 0.00
+  [pool0_tmeta]        vg ewi-ao---- 8.00m
+  pool0_vpool0         vg dwi------- 5.00g              60.03
+  [pool0_vpool0_vdata] vg Dwi-ao---- 5.00g
 .fi
 .
 .SS Thin Pool on LVM VDO Conversion
@@ -540,13 +540,13 @@ thin pool.)
 # lvcreate -n pool0 -L5G vg
 # lvconvert --type thin-pool --pooldatavdo y vg/pool0
 # lvs -a vg
-  LV                   VG Attr       LSize Pool         Data%  Meta%  
-  [lvol0_pmspare]      vg ewi------- 8.00m                           
-  pool0                vg twi-a-tz-- 5.00g              0.00   10.64 
-  [pool0_tdata]        vg vwi-aov--- 5.00g pool0_vpool0 0.00         
-  [pool0_tmeta]        vg ewi-ao---- 8.00m                           
-  pool0_vpool0         vg dwi------- 5.00g              60.03        
-  [pool0_vpool0_vdata] vg Dwi-ao---- 5.00g                           
+  LV                   VG Attr       LSize Pool         Data%  Meta%
+  [lvol0_pmspare]      vg ewi------- 8.00m
+  pool0                vg twi-a-tz-- 5.00g              0.00   10.64
+  [pool0_tdata]        vg vwi-aov--- 5.00g pool0_vpool0 0.00
+  [pool0_tmeta]        vg ewi-ao---- 8.00m
+  pool0_vpool0         vg dwi------- 5.00g              60.03
+  [pool0_vpool0_vdata] vg Dwi-ao---- 5.00g
 .fi
 .
 .SS Thin Snapshot Creation of an External Origin
@@ -557,25 +557,25 @@ thin pool.)
 # lvcreate --type thin-pool -n pool0 -L 500M vg
 # lvcreate --snapshot -n snap --thinpool pool0 vg/vol
 # lvs -a vg
-  LV              VG Attr       LSize   Pool  Origin Data%  Meta%  
-  [lvol0_pmspare] vg ewi-------   4.00m                           
-  pool0           vg twi-aotz-- 500.00m              0.00   10.94 
-  [pool0_tdata]   vg Twi-ao---- 500.00m                           
-  [pool0_tmeta]   vg ewi-ao----   4.00m                           
-  snap            vg Vwi-a-tz-- 500.00m pool0 vol    0.00         
-  vol             vg ori------- 500.00m                           
+  LV              VG Attr       LSize   Pool  Origin Data%  Meta%
+  [lvol0_pmspare] vg ewi-------   4.00m
+  pool0           vg twi-aotz-- 500.00m              0.00   10.94
+  [pool0_tdata]   vg Twi-ao---- 500.00m
+  [pool0_tmeta]   vg ewi-ao----   4.00m
+  snap            vg Vwi-a-tz-- 500.00m pool0 vol    0.00
+  vol             vg ori------- 500.00m
 .fi
 .
 .SS Thin Pool and Thin LV Combined Creation
 .nf
 # lvcreate --type thin -n vol -V 1G --thinpool pool0 -L500M vg
 # lvs -a vg
-  LV              VG Attr       LSize   Pool  Data%  Meta%  
-  [lvol0_pmspare] vg ewi-------   4.00m                    
-  pool0           vg twi-aotz-- 500.00m       0.00   10.94 
-  [pool0_tdata]   vg Twi-ao---- 500.00m                    
-  [pool0_tmeta]   vg ewi-ao----   4.00m                    
-  vol             vg Vwi-a-tz--   1.00g pool0 0.00         
+  LV              VG Attr       LSize   Pool  Data%  Meta%
+  [lvol0_pmspare] vg ewi-------   4.00m
+  pool0           vg twi-aotz-- 500.00m       0.00   10.94
+  [pool0_tdata]   vg Twi-ao---- 500.00m
+  [pool0_tmeta]   vg ewi-ao----   4.00m
+  vol             vg Vwi-a-tz--   1.00g pool0 0.00
 .fi
 .
 .SS Thin Snapshot Merge
@@ -584,21 +584,21 @@ thin pool.)
 # lvcreate --type thin -n vol -V 1G --thinpool pool0 vg
 # lvcreate --snapshot -n snap vg/vol
 # lvs -a vg
-  LV              VG Attr       LSize   Pool  Origin Data%  Meta%  
-  [lvol0_pmspare] vg ewi-------   4.00m                           
-  pool0           vg twi-aotz-- 500.00m              0.00   10.94 
-  [pool0_tdata]   vg Twi-ao---- 500.00m                           
-  [pool0_tmeta]   vg ewi-ao----   4.00m                           
-  snap            vg Vwi---tz-k   1.00g pool0 vol                 
-  vol             vg Vwi-a-tz--   1.00g pool0        0.00         
+  LV              VG Attr       LSize   Pool  Origin Data%  Meta%
+  [lvol0_pmspare] vg ewi-------   4.00m
+  pool0           vg twi-aotz-- 500.00m              0.00   10.94
+  [pool0_tdata]   vg Twi-ao---- 500.00m
+  [pool0_tmeta]   vg ewi-ao----   4.00m
+  snap            vg Vwi---tz-k   1.00g pool0 vol
+  vol             vg Vwi-a-tz--   1.00g pool0        0.00
 # lvconvert --merge vg/snap
 # lvs -a vg
-  LV              VG Attr       LSize   Pool  Data%  Meta%  
-  [lvol0_pmspare] vg ewi-------   4.00m                    
-  pool0           vg twi-aotz-- 500.00m       0.00   10.94 
-  [pool0_tdata]   vg Twi-ao---- 500.00m                    
-  [pool0_tmeta]   vg ewi-ao----   4.00m                    
-  vol             vg Vwi-a-tz--   1.00g pool0 0.00         
+  LV              VG Attr       LSize   Pool  Data%  Meta%
+  [lvol0_pmspare] vg ewi-------   4.00m
+  pool0           vg twi-aotz-- 500.00m       0.00   10.94
+  [pool0_tdata]   vg Twi-ao---- 500.00m
+  [pool0_tmeta]   vg ewi-ao----   4.00m
+  vol             vg Vwi-a-tz--   1.00g pool0 0.00
 .fi
 .
 .SS Thin Snapshot Merge Delayed
@@ -642,7 +642,7 @@ file1  file2  file3
 # ls /mnt
 file1  file2  file3  file4  file5  file6
 .fi
-.P
+.
 .SH SPECIAL TOPICS
 . SS Physical Devices for Thin Pool Data and Metadata
 .
@@ -712,7 +712,7 @@ $ lvconvert --repair VG/ThinPool
 .fi
 .P
 Repair performs the following steps:
-.P
+.
 .nr step 1 1
 .IP \n[step] 3
 Creates a new, repaired copy of the metadata.
@@ -820,7 +820,6 @@ Filesystem            Size  Used Avail Use% Mounted on
   pool0         vg   twi-a-tz--  10.00g         47.01  21.03
   thin1         vg   Vwi-aotz-- 100.00g pool0    2.70
 .fi
-.P
 .
 .SS Thin Pool Data Exhaustion
 .
@@ -1119,8 +1118,8 @@ for more information.
 A thin pool allocates physical storage for thin LVs in units of "chunks".
 The current chunk size of a thin pool is reported with lvs -o chunksize.
 The option --chunksize is used to specify the value for a new thin pool
-(default units are KiB.)  The value must be a multiple of 64KiB, between
-64KiB and 1GiB.
+(default units are KiB.)  The value must be a multiple of 64\~KiB, between
+64\~KiB and 1\~GiB.
 .P
 When a thin pool is used primarily for the thin provisioning feature, a
 larger value is optimal.  To optimize for many snapshots, a smaller value
@@ -1141,7 +1140,7 @@ $ lvmconfig --type default allocation/thin_pool_chunk_size
 The amount of thin pool metadata depends on how many blocks are shared
 between thin LVs (i.e. through snapshots).  A thin pool with many
 snapshots may need a larger metadata LV.  Thin pool metadata LV sizes can
-be from 2MiB to approximately 16GiB.
+be from 2\~MiB to approximately 16\~GiB.
 .P
 When an LVM command automatically creates a thin pool metadata LV, the
 size is specified with the --poolmetadatasize option.  When this option is
@@ -1149,13 +1148,13 @@ not given, LVM automatically chooses a size based on the data size and
 chunk size.
 .P
 It can be hard to predict the amount of metadata space that will be
-needed, so it is recommended to start with a size of 1GiB which should be
+needed, so it is recommended to start with a size of 1\~GiB which should be
 enough for all practical purposes.  A thin pool metadata LV can later be
 manually or automatically extended if needed.
 .P
 (For purposes of backward compatibility, lvm.conf setting
 allocation/thin_pool_crop_metadata controls cropping the metadata LV size
-to 15.81GiB to be backward compatible with older versions of lvm.  With
+to 15.81\~GiB to be backward compatible with older versions of lvm.  With
 cropping, there can be problems with volumes above this size when used
 with thin tools, i.e. thin_repair.  Cropping should be enabled only when
 compatibility is required.)
@@ -1190,7 +1189,7 @@ skipped while mounting readonly:
 .SH SEE ALSO
 .
 .nh
-.ad l
+.na
 .BR lvm (8),
 .BR lvm.conf (5),
 .BR lvmconfig (8),

@@ -1,4 +1,4 @@
-.TH "FSADM" "8" "LVM TOOLS #VERSION#" "Red Hat, Inc" "\""
+.TH "FSADM" "8" "LVM TOOLS #VERSION#" "Red Hat, Inc" \" -*- nroff -*-
 .
 .SH "NAME"
 .
@@ -6,14 +6,9 @@ lvm_import_vdo \(em utility to import VDO volumes into a new volume group.
 .
 .SH SYNOPSIS
 .
-.PD 0
-.ad l
-.TP 10
 .B lvm_import_vdo
 .RI [ options ]
-.IR device
-.
-.PD
+.I device
 .
 .SH DESCRIPTION
 .
@@ -22,7 +17,8 @@ lvm_import_vdo utility imports VDO volumes created and managed by
 manager into
 .BR lvm2 (8)
 managed VDO LV. This is realized by moving VDO superblock by 2MiB
-and creating lvm2 metadata at the front of this device. The operation is not reversible,
+and creating lvm2 metadata at the front of this device.
+The operation is not reversible,
 thus after conversion to lvm2 the access to VDO data is only possible with
 .BR lvm2 (8)
 commands,
@@ -58,22 +54,24 @@ Be more verbose.
 Answer "yes" at any prompts.
 .
 .TP
-.BR --dry-run
+.B --dry-run
 Print verbosely commands without running them.
 .
 .TP
-.BR --no-snapshot
-With this option conversion tool will not use snapshot (COW storage) for conversion
-in your $TMPDIR filesystem and it will directly manipulate with VDO device in-place.
-Warning: the snapshot usage makes the whole conversion transactional and 
+.B --no-snapshot
+With this option conversion tool will not use snapshot (COW storage)
+for conversion in your $TMPDIR filesystem and it will directly manipulate
+with VDO device in-place.
+Warning: the snapshot usage makes the whole conversion transactional and
 the snapshot can be just simply merged once the whole conversion
 has successfully proceeded. In the case of error the snapshot is just removed.
-Without the use of snapshot there is higher risk of problems with recoverability in
-case some unexpected error occurs.
+Without the use of snapshot there is higher risk of problems
+with recoverability in case some unexpected error occurs.
 .
 .TP
-.BR --vdo-config
-Configuration file for VDO manager. Can be used to specify configuration for vdo manager.
+.B --vdo-config
+Configuration file for VDO manager.
+Can be used to specify configuration for vdo manager.
 .
 .
 .SH DIAGNOSTICS
@@ -83,7 +81,8 @@ A status code of 1 is used for failure.
 .
 .SH EXAMPLES
 .
-Convert VDO volume created by vdo manager into logical volume LV1 with within volume group VG1.
+Convert VDO volume created by vdo manager into logical volume LV1
+with within volume group VG1.
 .P
 #
 .B lvm_import_vdo --name VG1/LV1 /dev/mapper/vdo-volume
@@ -110,7 +109,7 @@ Allow to override command called from vdo. Defaults to "\fIvdo\fP".
 .SH SEE ALSO
 .
 .nh
-.ad l
+.na
 .BR lvm (8),
 .BR lvm.conf (5),
 .P

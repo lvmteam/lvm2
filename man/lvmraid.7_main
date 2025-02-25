@@ -24,10 +24,12 @@ single Volume Group (VG).
 How LV data blocks are placed onto PVs is determined by the RAID level.
 RAID levels are commonly referred to as 'raid' followed by a number, e.g.
 raid1, raid5 or raid6.  Selecting a RAID level involves making tradeoffs
-among: physical device requirements, fault tolerance, and performance.  A
-description of the RAID levels can be found at
-.br
-.I www.snia.org/sites/default/files/SNIA_DDF_Technical_Position_v2.0.pdf
+among: physical device requirements, fault tolerance, and performance.
+A description of the RAID levels can be found at
+.UR https://www.snia.org/sites/\%default/files/\
+\%SNIA_DDF_Te\%chni\%cal_Posi\%tion_v2.0.pdf
+.UE
+\.
 .P
 LVM RAID uses both Device Mapper (DM) and Multiple Device (MD) drivers
 from the Linux kernel.  DM is used to create and manage visible LVM
@@ -1234,7 +1236,7 @@ Convert it from 3-way striped to 5-way-striped.
 .P
 .nf
 # lvconvert --stripes 5 vg/lv
-  Using default stripesize 64.00 KiB.
+  Using default stripesize 64.00\~KiB.
   WARNING: Adding stripes to active logical volume vg/lv will \\
   grow it from 99 to 165 extents!
   Run "lvresize -l99 vg/lv" to shrink it or use the additional \\
@@ -1278,9 +1280,9 @@ The force option needs to be used, because removing stripes
 .P
 .nf
 # lvconvert --stripes 4 vg/lv
-  Using default stripesize 64.00 KiB.
+  Using default stripesize 64.00\~KiB.
   WARNING: Removing stripes from active logical volume vg/lv will \\
-  shrink it from 660.00 MiB to 528.00 MiB!
+  shrink it from 660.00\~MiB to 528.00\~MiB!
   THIS MAY DESTROY (PARTS OF) YOUR DATA!
   If that leaves the logical volume larger than 206 extents due \\
   to stripe rounding,
@@ -1344,7 +1346,7 @@ This is achieved by repeating the command ("lvconvert --stripes 4 vg/lv" would b
 .P
 .nf
 # lvconvert --stripes 4 vg/lv
-  Using default stripesize 64.00 KiB.
+  Using default stripesize 64.00\~KiB.
   Logical volume vg/lv successfully converted.
 .P
 # lvs -a -o lv_name,attr,segtype,seg_pe_ranges,dataoffset vg
@@ -1395,7 +1397,7 @@ If the reshape space shall be removed any lvconvert command not changing the lay
 .P
 .nf
 # lvconvert --stripes 4 vg/lv
-  Using default stripesize 64.00 KiB.
+  Using default stripesize 64.00\~KiB.
   No change in RAID LV vg/lv layout, freeing reshape space.
   Logical volume vg/lv successfully converted.
 .P
@@ -1441,7 +1443,7 @@ changing the raid6 layout from raid6_nr to raid6_n_6).
 .P
 .nf
 # lvconvert --type raid6_n_6
-  Using default stripesize 64.00 KiB.
+  Using default stripesize 64.00\~KiB.
   Converting raid6_nr LV vg/lv to raid6_n_6.
 Are you sure you want to convert raid6_nr LV vg/lv? [y/n]: y
   Logical volume vg/lv successfully converted.
@@ -1469,7 +1471,7 @@ From striped we can convert to raid10
 .P
 .nf
 # lvconvert --type raid10 vg/lv
-  Using default stripesize 64.00 KiB.
+  Using default stripesize 64.00\~KiB.
   Logical volume vg/lv successfully converted.
 .P
 # lvs -o lv_name,attr,segtype,seg_pe_ranges,dataoffset vg
@@ -1548,7 +1550,7 @@ conversion.
 .P
 .nf
 # lvconvert --type raid5_n vg/lv
-  Using default stripesize 64.00 KiB.
+  Using default stripesize 64.00\~KiB.
   Logical volume vg/lv successfully converted.
 .P
 # lvs -a -o name,size,segtype,syncpercent,datastripes,\\
@@ -1569,7 +1571,7 @@ or the LV can be reduced in size after the reshaping conversion has finished.
 .P
 .nf
 # lvconvert --stripesize 128k --stripes 5 vg/lv
-  Converting stripesize 64.00 KiB of raid5_n LV vg/lv to 128.00 KiB.
+  Converting stripesize 64.00\~KiB of raid5_n LV vg/lv to 128.00\~KiB.
   WARNING: Adding stripes to active logical volume vg/lv will grow \\
   it from 32 to 160 extents!
   Run "lvresize -l32 vg/lv" to shrink it or use the additional capacity.
@@ -1873,7 +1875,7 @@ instead of mirror.  raid1 became the default for mirroring in LVM version
 .SH SEE ALSO
 .
 .nh
-.ad l
+.na
 .BR lvm (8),
 .BR lvm.conf (5),
 .BR lvcreate (8),

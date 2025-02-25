@@ -2,7 +2,7 @@
 .SH SEE ALSO
 .
 .nh
-.ad l
+.na
 .BR lvm (8),
 .BR lvm.conf (5),
 .BR lvmconfig (8),
@@ -71,4 +71,3 @@
 .BR lvmthin (7),
 .BR lvmvdo (7),
 .BR lvmautoactivation (7)
-

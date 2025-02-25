@@ -367,7 +367,7 @@ system ID.  The same is true of any block device that is not a PV.
 .SH SEE ALSO
 .
 .nh
-.ad l
+.na
 .BR vgcreate (8),
 .BR vgchange (8),
 .BR vgimport (8),

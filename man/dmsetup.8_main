@@ -419,7 +419,7 @@ The second argument is the logical device name or uuid.
 Invoking the dmsetup tool as \fBdevmap_name\fP
 (which is not normally distributed and is supported
 only for historical reasons) is equivalent to
-.BI \%dmsetup\ info\ -c\ --noheadings\ -j \ major\  -m \ minor \fR.
+.B \%dmsetup info -c --noheadings -j \fImajor\fP -m \fIminor\fP.
 .
 .SH OPTIONS
 .

@@ -1,4 +1,4 @@
-.TH "BLKDEACTIVATE" "8" "LVM TOOLS #VERSION#" "Red Hat, Inc" "\""
+.TH "BLKDEACTIVATE" "8" "LVM TOOLS #VERSION#" "Red Hat, Inc" \" -*- nroff -*-
 .
 .SH NAME
 .
@@ -6,7 +6,7 @@ blkdeactivate \(em utility to deactivate block devices
 .
 .SH SYNOPSIS
 .
-.ad l
+.na
 .nh
 .B blkdeactivate
 .RB [ -d
@@ -25,7 +25,7 @@ blkdeactivate \(em utility to deactivate block devices
 .RB [ -v ]
 .RI [ device ]
 .hy
-.ad b
+.ad
 .
 .SH DESCRIPTION
 .
@@ -154,7 +154,7 @@ of a device-mapper device fails, retry it and force removal.
 .SH SEE ALSO
 .
 .nh
-.ad l
+.na
 .BR dmsetup (8),
 .BR lsblk (8),
 .BR lvm (8),

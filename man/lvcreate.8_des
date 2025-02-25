@@ -28,8 +28,9 @@ to improve performance.
 .P
 VDO LVs are also provisioned volumes from a VDO pool, and are created with a
 virtual size rather than a physical size (see \fBlvmvdo\fP(7)).
-.P
+.
 .SS Usage notes
+.
 In the usage section below, \fB--size\fP \fISize\fP can be replaced
 with \fB--extents\fP \fINumber\fP. See descriptions in the options section.
 .P

@@ -170,19 +170,19 @@ Command can also read status with tools like \fBlvs\fP(8).
 .
 .TP
 .B DMEVENTD_THIN_POOL_DATA
-Variable is set by thin plugin and is available to executed program. Value present
-actual usage of thin pool data volume. Variable is not set when error event
-is processed.
+Variable is set by thin plugin and is available to executed program.
+Value present actual usage of thin pool data volume.
+Variable is not set when error event is processed.
 .TP
 .B DMEVENTD_THIN_POOL_METADATA
-Variable is set by thin plugin and is available to executed program. Value present
-actual usage of thin pool metadata volume. Variable is not set when error event
-is processed.
+Variable is set by thin plugin and is available to executed program.
+Value present actual usage of thin pool metadata volume.
+Variable is not set when error event is processed.
 .TP
 .B DMEVENTD_VDO_POOL
-Variable is set by vdo plugin and is available to executed program. Value present
-actual usage of VDO pool data volume. Variable is not set when error event
-is processed.
+Variable is set by vdo plugin and is available to executed program.
+Value present actual usage of VDO pool data volume.
+Variable is not set when error event is processed.
 .TP
 .B LVM_RUN_BY_DMEVENTD
 Variable is set by thin and vdo plugin to prohibit recursive interaction

@@ -246,9 +246,9 @@ device-mapper driver used by LVM directly, use \fBdmsetup\fP(8).
 .SH VALID NAMES
 .
 The valid characters for VG and LV names are:
-.BR a - z
-.BR A - Z
-.BR 0 - 9
+.BR a \(en z
+.BR A \(en Z
+.BR 0 \(en 9
 .B + _ . -
 .P
 VG names cannot begin with a hyphen.
@@ -302,7 +302,6 @@ Other software and scripts should use the
 amendment when the software is updated.  Should you need to process the node
 names in /dev/mapper, you may use \fBdmsetup splitname\fP to separate out the
 original VG, LV and internal layer names.
-.P
 .
 .SH UNIQUE NAMES
 .
@@ -333,11 +332,10 @@ Tags are user-defined strings that can be attached to PVs, VGs and LVs.
 Tags can be displayed with commands pvs/vgs/lvs -o tags.  Certain commands
 will accept a tag name in place of a PV, VG, or LV name.  In these cases,
 the command will operate on each PV/VG/LV with the given tag.  Tags
-should be prefixed with @ to avoid ambiguity.  
+should be prefixed with @ to avoid ambiguity.
 .br
 Characters allowed in tags are:
-.B A-Z a-z 0-9 _ + . - / = ! : # &
-.P
+.B A\(enZ a\(enz 0\(en9 _ + . - / = ! : # &
 .
 .SH ALLOCATION
 .
@@ -512,12 +510,14 @@ Prepends source file name and code line number with libdm debugging.
 .
 .I #DEFAULT_SYS_DIR#/lvm.conf
 .br
+.I #DEFAULT_SYS_DIR#/lvmlocal.conf
+.br
 .I $HOME/.lvm_history
 .
 .SH SEE ALSO
 .
 .nh
-.ad l
+.na
 .BR lvm (8),
 .BR lvm.conf (5),
 .BR lvmconfig (8),

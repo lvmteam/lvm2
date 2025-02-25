@@ -1,4 +1,4 @@
-.TH "LVMSADC" "8" "LVM TOOLS #VERSION#" "Red Hat, Inc" "\""
+.TH "LVMSADC" "8" "LVM TOOLS #VERSION#" "Red Hat, Inc" \" -*- nroff -*-
 .
 .SH NAME
 .

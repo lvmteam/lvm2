@@ -62,7 +62,7 @@ of them, separated into groups based on their use.
 .
 .SS Common configuration settings
 .
-.ad l
+.na
 .TP
 Changing report output format, composition and other output modifiers:
 - global/suffix
@@ -100,7 +100,7 @@ Changing report output format, composition and other output modifiers:
 .TP
 Special settings
 - report/buffered
-.ad b
+.ad
 .P
 This document does not describe these settings in more detail - if you need
 detailed information, including values which are accepted for the settings,
@@ -252,7 +252,7 @@ representative command that uses the main report subtype by default.
 Each subtype has its own configuration setting for global field set definition
 as well as sort field definition (listed below each individual \fIReportName\fP):
 .
-.ad l
+.na
 .nh
 .RS
 .TP
@@ -341,7 +341,7 @@ representing report about device types
 - report/devtypes_sort
 .RE
 .RE
-.ad b
+.ad
 .hy
 .P
 Use \fBpvs, vgs, lvs -o help\fP or \fBlvm devtypes -o help\fP to get complete

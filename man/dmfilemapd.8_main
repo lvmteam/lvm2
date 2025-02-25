@@ -27,7 +27,7 @@ dmfilemapd \(em device-mapper filemap monitoring daemon
 .SH SYNOPSIS
 .
 .de CMD_DMFILEMAPD
-.  ad l
+.  na
 .  nh
 .  BR dmfilemapd
 .  OPT_FD
@@ -36,7 +36,7 @@ dmfilemapd \(em device-mapper filemap monitoring daemon
 .  OPT_MODE
 .  OPT_DEBUG
 .  hy
-.  ad b
+.  ad
 ..
 .CMD_DMFILEMAPD
 .
@@ -171,7 +171,7 @@ Start the daemon in the background, in follow-path mode
 Start the daemon in follow-inode mode, disable forking and enable
 verbose logging
 .br
-.ad l
+.na
 #
 .B dmfilemapd 3 0 /var/tmp/data inode 1 3 3< /var/tmp/data
 .nf
@@ -186,7 +186,7 @@ starting stats walk with   GROUP
 exiting _filemap_monitor_get_events() with deleted=0, check=0
 Waiting for check interval
 .fi
-.ad b
+.ad
 
 .
 .SH AUTHORS
@@ -202,5 +202,5 @@ LVM2 resource page:
 .UE
 .br
 Device-mapper resource page:
-.UR http://sources.redhat.com/dm
+.UR http://www.sourceware.org/lvm2
 .UE

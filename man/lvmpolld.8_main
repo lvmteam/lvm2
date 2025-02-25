@@ -8,7 +8,7 @@ lvmpolld \(em LVM poll daemon
 .
 .B lvmpolld
 .nh
-.ad l
+.na
 .RB [ -l | --log
 .BR all | wire | debug ]
 .RB [ -p | --pidfile
@@ -22,7 +22,7 @@ lvmpolld \(em LVM poll daemon
 .RB [ -f | --foreground ]
 .RB [ -h | --help ]
 .RB [ -V | --version ]
-.ad b
+.ad
 .hy
 .P
 .B lvmpolld
@@ -62,7 +62,8 @@ Show help information.
 Select the type of log messages to generate.
 Messages are logged by syslog.
 Additionally, when \fB-f\fP is given they are also sent to standard error.
-There are two classes of messages: wire and debug. Selecting '\fBall\fP' supplies both
+There are two classes of messages: wire and debug.
+Selecting '\fBall\fP' supplies both
 and is equivalent to a comma-separated list \fB-l wire,debug\fP.
 .
 .TP
@@ -80,13 +81,14 @@ Path to the socket file. This overrides both the built-in default
 .
 .TP
 .BR -t | --timeout " " \fItimeout_value
-The daemon may shutdown after being idle for the given time (in seconds). When the
-option is omitted or the value given is zero the daemon never shutdowns on idle.
+The daemon may shutdown after being idle for the given time (in seconds).
+When the option is omitted or the value given is zero
+the daemon never shutdowns on idle.
 .
 .TP
 .BR -B | --binary " " \fIlvm_binary_path
-Optional path to alternative LVM binary (default: \fI#LVM_PATH#\fP). Use for
-testing purposes only.
+Optional path to alternative LVM binary (default: \fI#LVM_PATH#\fP).
+Use for testing purposes only.
 .
 .TP
 .BR -V | --version

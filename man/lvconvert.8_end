@@ -46,8 +46,8 @@ Convert a mirror LV to a raid1 LV with the same number of images.
 .br
 .B lvconvert --type raid1 vg/lvol1
 .P
-Convert a linear LV to a two-way mirror LV, allocating new extents from specific
-PV ranges.
+Convert a linear LV to a two-way mirror LV, allocating new extents
+from specific PV ranges.
 .br
 .B lvconvert --mirrors 1 vg/lvol1 /dev/sda:0-15 /dev/sdb:0-15
 .P
@@ -92,7 +92,7 @@ through thinLV and for the conversion set the pool metadata size to 1GiB.
 Convert an LV into a thin-pool with VDO deduplication and compression
 for storing its data.
 .br
-.B lvconvert --type thin-pool --pooldatavdo y vg/lvol1 
+.B lvconvert --type thin-pool --pooldatavdo y vg/lvol1
 .P
 Convert an LV into a thin LV in the specified thin pool.  The existing LV
 is used as an external read-only origin for the new thin LV.

@@ -12,6 +12,7 @@ E(\fBx\fP)ported
 (\fBp\fP)artial: one or more physical volumes belonging to the volume group
 are missing from the system
 .IP 5 3
-Allocation policy: (\fBc\fP)ontiguous, c(\fBl\fP)ing, (\fBn\fP)ormal, (\fBa\fP)nywhere
+Allocation policy: (\fBc\fP)ontiguous, c(\fBl\fP)ing,
+(\fBn\fP)ormal, (\fBa\fP)nywhere
 .IP 6 3
 (\fBc\fP)lustered, (\fBs\fP)hared
