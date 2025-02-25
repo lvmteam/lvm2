@@ -275,7 +275,7 @@ Version 1.02.136 - 5th November 2016
   Still produce output when dmsetup dependency tree building finds dev missing.
   Check and report pthread_sigmask() failure in dmeventd.
   Check mem alloc fail in _canonicalize_field_ids().
-  Use unsigned math when checking more then 31 legs of raid.
+  Use unsigned math when checking more than 31 legs of raid.
   Fix 'dmstats delete' with dmsetup older than v1.02.129
   Fix stats walk segfault with dmsetup older than v1.02.129
 

@@ -376,15 +376,15 @@ struct lv_segment *find_pool_seg(const struct lv_segment *seg)
 	struct seg_list *sl;
 
 	dm_list_iterate_items(sl, &seg->lv->segs_using_this_lv) {
-		/* Needs to be he only item in list */
+		/* Needs to be the only item in list */
 		if (lv_is_pending_delete(sl->seg->lv))
 			continue;
 
 		if (pool_seg) {
-			log_error("%s is referenced by more then one segments (%s, %s).",
+			log_error("%s is referenced by more than one segment (%s, %s).",
 				  display_lvname(seg->lv), display_lvname(pool_seg->lv),
 				  display_lvname(sl->seg->lv));
-			return NULL; /* More then one segment */
+			return NULL; /* More than one segment */
 		}
 
 		pool_seg = sl->seg;

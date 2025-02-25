@@ -111,7 +111,7 @@ it gets umounted if possible.
 .B Thin
 Monitors how full a thin pool data and metadata is becoming and emits
 a warning to syslog when it exceeds 80% full.
-The warning is repeated when more then 85%, 90% and 95%
+The warning is repeated when more than 85%, 90% and 95%
 of the thin pool is filled. See
 .BR lvm.conf (5).
 When a thin pool fills over 50% (data or metadata) thin plugin calls
@@ -141,7 +141,7 @@ Command can also read status with tools like \fBlvs\fP(8).
 .B Vdo
 Monitors how full a VDO pool data is becoming and emits
 a warning to syslog when it exceeds 80% full.
-The warning is repeated when more then 85%, 90% and 95%
+The warning is repeated when more than 85%, 90% and 95%
 of the VDO pool is filled. See
 .BR lvm.conf (5).
 When a VDO pool fills over 50% vdo plugin calls

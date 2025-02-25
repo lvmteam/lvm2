@@ -152,7 +152,7 @@ fi
 echo "$TESTNAME" >TESTNAME
 # Require 50M of free space in testdir
 test "$(df -k -P . | awk '/\// {print $4}')" -gt $(( SKIP_WITH_LOW_SPACE * 1024 )) || \
-	skip "Testing requires more then ${SKIP_WITH_LOW_SPACE}M of free space in directory $TESTDIR!\\n$(df -H | sed -e 's,^,## DF:   ,')"
+	skip "Testing requires more than ${SKIP_WITH_LOW_SPACE}M of free space in directory $TESTDIR!\\n$(df -H | sed -e 's,^,## DF:   ,')"
 
 echo "Kernel is $(uname -a)"
 # Report SELinux mode

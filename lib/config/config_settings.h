@@ -681,7 +681,7 @@ cfg(allocation_thin_pool_metadata_require_separate_pvs_CFG, "thin_pool_metadata_
 
 cfg(allocation_thin_pool_crop_metadata_CFG, "thin_pool_crop_metadata", allocation_CFG_SECTION, CFG_DEFAULT_COMMENTED, CFG_TYPE_BOOL, DEFAULT_THIN_POOL_CROP_METADATA, vsn(2, 3, 12), NULL, 0, NULL,
 	"Older version of lvm2 cropped pool's metadata size to 15.81 GiB.\n"
-	"This is slightly less then the actual maximum 15.88 GiB.\n"
+	"This is slightly less than the actual maximum 15.88 GiB.\n"
 	"For compatibility with older version and use of cropped size set to 1.\n")
 
 cfg(allocation_thin_pool_zero_CFG, "thin_pool_zero", allocation_CFG_SECTION, CFG_PROFILABLE | CFG_PROFILABLE_METADATA | CFG_DEFAULT_COMMENTED, CFG_TYPE_BOOL, DEFAULT_THIN_POOL_ZERO, vsn(2, 2, 99), NULL, 0, NULL,

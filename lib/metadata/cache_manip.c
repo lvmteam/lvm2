@@ -222,7 +222,7 @@ int update_cache_pool_params(struct cmd_context *cmd,
 		}
 		if (*chunk_size < min_chunk_size) {
 			/*
-			 * When using more then 'standard' default,
+			 * When using more than 'standard' default,
 			 * keep user informed he might be using things in unintended direction
 			 */
 			log_print_unless_silent("Using %s chunk size instead of default %s, "

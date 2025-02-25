@@ -146,7 +146,7 @@ static int daemon_close_stray_fds(const char *command, int suppress_warnings,
 		if (getrlimit(RLIMIT_NOFILE, &rlim) < 0)
 			fd = 256; /* just have to guess */
 		else if ((fd = (int)rlim.rlim_cur) > 65536)
-			fd = 65536; /* do not bother with more then 64K fds */
+			fd = 65536; /* do not bother with more than 64K fds */
 
 		while (--fd > from_fd) {
 			if ((fd != custom_fds->out) &&

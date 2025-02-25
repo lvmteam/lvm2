@@ -303,7 +303,7 @@ static int _add_log(struct dm_pool *mem, struct lv_segment *seg,
 			log_warn_suppress(seg->lv->vg->cmd->mirror_warn_printed,
 					  "WARNING: Mirror %s without monitoring will not react on failures.",
 					  display_lvname(seg->lv));
-			seg->lv->vg->cmd->mirror_warn_printed = 1; /* Do not print this more then once */
+			seg->lv->vg->cmd->mirror_warn_printed = 1; /* Do not print this more than once */
 		} else
 			log_flags |= DM_BLOCK_ON_ERROR;
 	}

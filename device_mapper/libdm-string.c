@@ -169,7 +169,7 @@ int dm_vasprintf(char **result, const char *format, va_list aq)
 	}
 
 	if (i > 1) {
-		/* Reallocating more then once? */
+		/* Reallocating more than once? */
 		if (!(*result = strdup(buf))) {
 			free(buf);
 			return -1;
@@ -591,7 +591,7 @@ const char *dm_size_to_string(struct dm_pool *mem, uint64_t size,
 		if ((s < NUM_UNIT_PREFIXES) &&
 		    ((unit_type == 'R') || (unit_type == 'r'))) {
 			/* When the rounding would cause difference, add '<' prefix
-			 * i.e.  2043M is more then 1.9949G prints <2.00G
+			 * i.e.  2043M is more than 1.9949G prints <2.00G
 			 * This version is for 2 digits fixed precision */
 			d = 100. * (double) size / byte;
 			if (!_close_enough(floorl(d), nearbyintl(d)))

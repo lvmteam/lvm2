@@ -415,7 +415,7 @@ int thin_pool_check_overprovisioning(const struct logical_volume *lv)
 		/* Thin sum size is above VG size */
 		txt = " and the size of whole volume group";
 	else if ((sz = vg_free(lv->vg)) < thinsum)
-		/* Thin sum size is more then free space in a VG */
+		/* Thin sum size is more than free space in a VG */
 		txt = !sz ? "" : " and the amount of free space in volume group";
 	else if ((max_threshold > 99) || !min_percent)
 		/* There is some free space in VG, but it is not configured
@@ -922,7 +922,7 @@ int update_thin_pool_params(struct cmd_context *cmd,
 	*crop_metadata = get_thin_pool_crop_metadata(cmd, *crop_metadata, pool_metadata_size);
 
 	if ((max_pool_data_size / extent_size) < pool_data_extents) {
-		log_error("Selected chunk size %s cannot address more then %s of thin pool data space.",
+		log_error("Selected chunk size %s cannot address more than %s of thin pool data space.",
 			  display_size(cmd, *chunk_size), display_size(cmd, max_pool_data_size));
 		return 0;
 	}

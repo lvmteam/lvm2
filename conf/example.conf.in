@@ -586,7 +586,7 @@ allocation {
 
 	# Configuration option allocation/thin_pool_crop_metadata.
 	# Older version of lvm2 cropped pool's metadata size to 15.81 GiB.
-	# This is slightly less then the actual maximum 15.88 GiB.
+	# This is slightly less than the actual maximum 15.88 GiB.
 	# For compatibility with older version and use of cropped size set to 1.
 	# This configuration option has an automatic default value.
 	# thin_pool_crop_metadata = 0

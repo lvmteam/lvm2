@@ -643,7 +643,7 @@ static int _lv_update_reload_fns_reset_eliminate_lvs(struct logical_volume *lv, 
  * Assisted excl_local activation of lvl listed LVs before resume
  *
  * FIXME: code which needs to use this function is usually unsafe
- *	  against crashes as it's doing more then 1 operation per commit
+ *	  against crashes as it's doing more than 1 operation per commit
  *	  and as such is currently irreversible on error path.
  *
  * Function is not making backup as this is usually not the last

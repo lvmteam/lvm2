@@ -120,7 +120,7 @@ int dm_get_status_raid(struct dm_pool *mem, const char *params,
 	if (!(pp = _skip_fields(p, 1)))
 		goto_bad;
 
-	/* Raid target can actually report more then real number of legs in a case
+	/* Raid target can actually report more than real number of legs in a case
 	 * raid legs have been removed during initial raid array resynchronization */
 	if (i > (pp - p - 1))
 		i = pp - p - 1;
@@ -571,7 +571,7 @@ int dm_get_status_mirror(struct dm_pool *mem, const char *params,
 	pos += used;
 
 	if (num_devs > DM_MIRROR_MAX_IMAGES) {
-		log_error(INTERNAL_ERROR "More then " DM_TO_STRING(DM_MIRROR_MAX_IMAGES)
+		log_error(INTERNAL_ERROR "More than " DM_TO_STRING(DM_MIRROR_MAX_IMAGES)
 			  " reported in mirror status.");
 		goto out;
 	}
