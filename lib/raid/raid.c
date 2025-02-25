@@ -299,7 +299,7 @@ bool raid_is_available(const struct logical_volume *lv)
 		    lv_is_partial(seg_lv(seg, s)))
 			missing_legs++;
 
-	/* Degradation: segtype raid1 may miss legs-1, raid0/4/5/6 may loose parity devices. */
+	/* Degradation: segtype raid1 may miss legs-1, raid0/4/5/6 may lose parity devices. */
 	return missing_legs <= (seg_is_raid1(seg) ? seg->area_count - 1 : seg->segtype->parity_devs);
 }
 
