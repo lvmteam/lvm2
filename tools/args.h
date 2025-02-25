@@ -664,8 +664,9 @@ arg(raidintegrityblocksize_ARG, '\0', "raidintegrityblocksize", number_VAL, 0, 0
 
 arg(raidintegritymode_ARG, '\0', "raidintegritymode", string_VAL, 0, 0,
     "Use a journal (default) or bitmap for keeping integrity checksums consistent\n"
-    "in case of a crash. The bitmap areas are recalculated after a crash, so corruption\n"
-    "in those areas would not be detected. A journal does not have this problem.\n"
+    "in case of a crash. The bitmap areas are recalculated after a crash,\n"
+    "so corruption in those areas would not be detected.\n"
+    "A journal does not have this problem.\n"
     "The journal mode doubles writes to storage, but can improve performance for\n"
     "scattered writes packed into a single journal write.\n"
     "bitmap mode can in theory achieve full write throughput of the device,\n"
@@ -869,7 +870,8 @@ arg(syncaction_ARG, '\0', "syncaction", syncaction_VAL, 0, 0,
     "See \\fBlvs\\fP(8) for reporting discrepancies found or repaired.\n")
     
 arg(sysinit_ARG, '\0', "sysinit", 0, 0, 0,
-    "Indicates that vgchange/lvchange is being invoked from early system initialisation\n"
+    "Indicates that vgchange/lvchange is being invoked\n"
+    "from early system initialisation\n"
     "scripts (e.g. rc.sysinit or an initrd), before writable filesystems are\n"
     "available. As such, some functionality needs to be disabled and this option\n"
     "acts as a shortcut which selects an appropriate set of options. Currently,\n"
@@ -911,14 +913,17 @@ arg(trustcache_ARG, '\0', "trustcache", 0, 0, 0,
 arg(type_ARG, '\0', "type", segtype_VAL, 0, 0,
     "The LV type, also known as \"segment type\" or \"segtype\".\n"
     "See usage descriptions for the specific ways to use these types.\n"
-    "For more information about redundancy and performance (\\fBraid\\fP<N>, \\fBmirror\\fP, \\fBstriped\\fP, \\fBlinear\\fP) see \\fBlvmraid\\fP(7).\n"
+    "For more information about redundancy and performance\n"
+    "(\\fBraid\\fP<N>, \\fBmirror\\fP, \\fBstriped\\fP, \\fBlinear\\fP)\n"
+    "see \\fBlvmraid\\fP(7).\n"
     "For thin provisioning (\\fBthin\\fP, \\fBthin-pool\\fP) see \\fBlvmthin\\fP(7).\n"
     "For performance caching (\\fBcache\\fP, \\fBcache-pool\\fP) see \\fBlvmcache\\fP(7).\n"
     "For copy-on-write snapshots (\\fBsnapshot\\fP) see usage definitions.\n"
     "For VDO (\\fBvdo\\fP) see \\fBlvmvdo\\fP(7).\n"
     "Several commands omit an explicit type option because the type\n"
     "is inferred from other options or shortcuts\n"
-    "(e.g. --stripes, --mirrors, --snapshot, --virtualsize, --thin, --cache, --vdo).\n"
+    "(e.g. --stripes, --mirrors, --snapshot, --virtualsize,\n"
+    "--thin, --cache, --vdo).\n"
     "Use inferred types with care because it can lead to unexpected results.\n")
 
 arg(udevoutput_ARG, '\0', "udevoutput", 0, 0, 0,
@@ -972,7 +977,8 @@ arg(validate_ARG, '\0', "validate", 0, 0, 0,
     "return code. The validation is done only for the configuration\n"
     "at the front of the \"config cascade\". To validate the whole\n"
     "merged configuration tree, also use --mergedconfig.\n"
-    "The validation is done even if \\fBlvm.conf\\fP(5) \\fBconfig/checks\\fP is disabled.\n")
+    "The validation is done even if \\fBlvm.conf\\fP(5) \\fBconfig/checks\\fP\n"
+    "is disabled.\n")
 
 arg(valuesonly_ARG, '\0', "valuesonly", 0, 0, 0,
     "When printing config settings, print only values without keys.\n")
@@ -1101,7 +1107,8 @@ arg(activate_ARG, 'a', "activate", activation_VAL, 0, 0,
     "\\fBn\\fP makes LVs inactive, or unavailable.\n"
     "The block device for the LV is added or removed from the system\n"
     "using device-mapper in the kernel.\n"
-    "A symbolic link /dev/VGName/LVName pointing to the device node is also added/removed.\n"
+    "A symbolic link /dev/VGName/LVName pointing to the device node\n"
+    "is also added/removed.\n"
     "All software and scripts should access the device through the symbolic\n"
     "link and present this as the name of the device.\n"
     "The location and name of the underlying device node may depend on\n"
@@ -1117,7 +1124,8 @@ arg(activate_ARG, 'a', "activate", activation_VAL, 0, 0,
     "If auto_activation_volume_list is defined and empty, no LVs are autoactivated.\n"
     "Items included by auto_activation_volume_list will not be autoactivated if\n"
     "the autoactivation property has been disabled.\n"
-    "See \\fBlvmlockd\\fP(8) for more information about activation options \\fBey\\fP and \\fBsy\\fP for shared VGs.\n"
+    "See \\fBlvmlockd\\fP(8) for more information about activation options\n"
+    "\\fBey\\fP and \\fBsy\\fP for shared VGs.\n"
     "#lvcreate\n"
     "Controls the active state of the new LV.\n"
     "\\fBy\\fP makes the LV active, or available.\n"
@@ -1128,9 +1136,11 @@ arg(activate_ARG, 'a', "activate", activation_VAL, 0, 0,
     "be created in the active state (this does not apply to thin snapshots).\n"
     "The --zero option normally requires the LV to be active.\n"
     "If autoactivation \\fBay\\fP is used, the LV is only activated\n"
-    "if it matches an item in \\fBlvm.conf\\fP(5) \\fBactivation/auto_activation_volume_list\\fP.\n"
+    "if it matches an item in \\fBlvm.conf\\fP(5)\n"
+    "\\fBactivation/auto_activation_volume_list\\fP.\n"
     "\\fBay\\fP implies --zero n and --wipesignatures n.\n"
-    "See \\fBlvmlockd\\fP(8) for more information about activation options for shared VGs.\n")
+    "See \\fBlvmlockd\\fP(8) for more information about activation options\n"
+    "for shared VGs.\n")
 
 arg(all_ARG, 'a', "all", 0, 0, 0,
     "#vgreduce\n"
@@ -1155,7 +1165,8 @@ arg(all_ARG, 'a', "all", 0, 0, 0,
 
 arg(autobackup_ARG, 'A', "autobackup", bool_VAL, 0, 0,
     "Specifies if metadata should be backed up automatically after a change.\n"
-    "Enabling this is strongly advised! See \\fBvgcfgbackup\\fP(8) for more information.\n")
+    "Enabling this is strongly advised!\n"
+    "See \\fBvgcfgbackup\\fP(8) for more information.\n")
 
 arg(activevolumegroups_ARG, 'A', "activevolumegroups", 0, 0, 0,
     "Only select active VGs. The VG is considered active\n"
@@ -1539,13 +1550,14 @@ arg(oldpath_ARG, 'n', "oldpath", 0, 0, 0, NULL)
 
 arg(options_ARG, 'o', "options", string_VAL, ARG_GROUPABLE, 0,
     "Comma-separated, ordered list of fields to display in columns.\n"
-    "String arg syntax is: [\\fB+\\fP|\\fB-\\fP|\\fB#\\fP]\\fIField1\\fP[\\fB,\\fP\\fIField2\\fP ...]\n"
+    "String arg syntax is:\n"
+    "[\\fB+\\fP|\\fB-\\fP|\\fB#\\fP]\\fIField1\\fP[\\fB,\\fP\\fIField2\\fP ...]\n"
     "The prefix \\fB+\\fP will append the specified fields to the default fields,\n"
     "\\fB-\\fP will remove the specified fields from the default fields, and\n"
     "\\fB#\\fP will compact specified fields (removing them when empty for all rows.)\n"
     "Use \\fB-o help\\fP to view the list of all available fields.\n"
-    "Use separate lists of fields to add, remove or compact by repeating the -o option:\n"
-    "-o+field1,field2 -o-field3,field4 -o#field5.\n"
+    "Use separate lists of fields to add, remove or compact by repeating\n"
+    "the -o option: -o+field1,field2 -o-field3,field4 -o#field5.\n"
     "These lists are evaluated from left to right.\n"
     "Use field name \\fBlv_all\\fP to view all LV fields,\n"
     "\\fBvg_all\\fP all VG fields,\n"
@@ -1619,7 +1631,8 @@ arg(physicalextentsize_ARG, 's', "physicalextentsize", sizemb_VAL, 0, 0,
     "without recreating the VG, unless no extents need moving.\n"
     "Before increasing the physical extent size, you might need to use lvresize,\n"
     "pvresize and/or pvmove so that everything fits. For example, every\n"
-    "contiguous range of extents used in a LV must start and end on an extent boundary.\n")
+    "contiguous range of extents used in a LV must start\n"
+    "and end on an extent boundary.\n")
 
 arg(snapshot_ARG, 's', "snapshot", 0, 0, 0,
     "#lvcreate\n"
@@ -1665,8 +1678,10 @@ arg(stdin_ARG, 's', "stdin", 0, 0, 0, NULL)
 
 arg(select_ARG, 'S', "select", string_VAL, ARG_GROUPABLE, 0,
     "Select objects for processing and reporting based on specified criteria.\n"
-    "The criteria syntax is described by \\fB--select help\\fP and \\fBlvmreport\\fP(7).\n"
-    "For reporting commands, one row is displayed for each object matching the criteria.\n"
+    "The criteria syntax is described by \\fB--select help\\fP\n"
+    "and \\fBlvmreport\\fP(7).\n"
+    "For reporting commands, one row is displayed\n"
+    "for each object matching the criteria.\n"
     "See \\fB--options help\\fP for selectable object fields.\n"
     "Rows can be displayed with an additional \"selected\" field (-o selected)\n"
     "showing 1 if the row matches the selection and 0 otherwise.\n"
