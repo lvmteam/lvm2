@@ -555,14 +555,13 @@ static void _print_man_usage(char *lvmname, struct command *cmd)
 
 	if (cmd->oo_count) {
 		printf(".RS 4\n");
-		printf(".ad l\n");
+		printf(".na\n");
 
 		if (cmd->autotype) {
 			if (!cmd->autotype2)
 				printf("[ \\fB--type %s\\fP ] (implied)\n", cmd->autotype);
 			else
 				printf("[ \\fB--type %s\\fP|\\fB%s\\fP ] (implied)\n", cmd->autotype, cmd->autotype2);
-			printf(".br\n");
 			sep = 1;
 		}
 
@@ -643,7 +642,7 @@ static void _print_man_usage(char *lvmname, struct command *cmd)
 			/* printf("   "); */
 		}
 		printf("[ COMMON_OPTIONS ]\n");
-		printf(".ad b\n");
+		printf(".ad\n");
 		printf(".RE\n");
 	}
 
@@ -713,7 +712,7 @@ static void _print_man_usage_common_lvm(struct command *cmd)
 	sep = 0;
 
 	printf(".RS 4\n");
-	printf(".ad l\n");
+	printf(".na\n");
 
 	/* print those with short opts */
 	for (i = 0; i < ARG_COUNT; i++) {
@@ -778,7 +777,7 @@ static void _print_man_usage_common_lvm(struct command *cmd)
 		}
 	}
 
-	printf(".ad b\n");
+	printf(".ad\n");
 	printf(".RE\n");
 }
 
@@ -811,7 +810,7 @@ static void _print_man_usage_common_cmd(struct command *cmd)
 	sep = 0;
 
 	printf(".RS 4\n");
-	printf(".ad l\n");
+	printf(".na\n");
 
 	/* print those with short opts */
 	for (i = 0; i < ARG_COUNT; i++) {
@@ -881,7 +880,7 @@ static void _print_man_usage_common_cmd(struct command *cmd)
 		}
 	}
 
-	printf(".ad b\n");
+	printf(".ad\n");
 	printf(".RE\n");
 	printf(".P\n");
 }
@@ -979,7 +978,7 @@ static void _print_man_all_options_list(const struct command_name *cname)
 			printf(".br\n");
 
 		if (!adl) {
-			printf(".ad l\n");
+			printf(".na\n");
 			adl = 1;
 		}
 
@@ -1002,7 +1001,7 @@ static void _print_man_all_options_list(const struct command_name *cname)
 	}
 
 	if (adl)
-		printf(".ad b\n");
+		printf(".ad\n");
 
 }
 
@@ -1030,7 +1029,7 @@ static void _print_man_all_options_desc(const struct command_name *cname)
 		if (val_names[val_enum].usage &&
 		    (strlen(val_names[val_enum].usage) > _LONG_LINE)) {
 			printf(".\n.HP\n");
-			printf(".ad l\n");
+			printf(".ad\n");
 			adl = 1;
 		} else {
 			/* printf(".\n.TP\n");
@@ -1058,7 +1057,7 @@ static void _print_man_all_options_desc(const struct command_name *cname)
 
 		printf("\n");
 		if (adl) {
-			printf(".ad b\n");
+			printf(".ad\n");
 		}
 		printf(".br\n");
 
@@ -1160,8 +1159,10 @@ static void _print_man_all_positions_desc(const struct command_name *cname)
 		       "generally accepts a suffix indicating a range (or multiple ranges)\n"
 		       "of physical extents (PEs). When the first PE is omitted, it defaults\n"
 		       "to the start of the device, and when the last PE is omitted it defaults to end.\n"
-		       "Start and end range (inclusive): \\fIPV\\fP[\\fB:\\fP\\fIPE\\fP\\fB-\\fP\\fIPE\\fP]...\n"
-		       "Start and length range (counting from 0): \\fIPV\\fP[\\fB:\\fP\\fIPE\\fP\\fB+\\fP\\fIPE\\fP]...\n");
+		       "Start and end range (inclusive):\n"
+		       "\\fIPV\\fP[\\fB:\\fP\\fIPE\\fP\\fB-\\fP\\fIPE\\fP]...\n"
+		       "Start and length range (counting from 0):\n"
+		       "\\fIPV\\fP[\\fB:\\fP\\fIPE\\fP\\fB+\\fP\\fIPE\\fP]...\n");
 	}
 
 	if (has_tag_val) {
@@ -1203,12 +1204,13 @@ static void _print_man_all_positions_desc(const struct command_name *cname)
 	       ".BR b | B\nis bytes,\n.BR s | S\nis sectors of 512 bytes,\n.BR k | K\nis KiB,\n"
 	       ".BR m | M\nis MiB,\n.BR g | G\nis GiB,\n.BR t | T\nis TiB,\n"
 	       ".BR p | P\nis PiB,\n.BR e | E\nis EiB.\n"
-	       "(This should not be confused with the output control --units, where\n"
-	       "capital letters mean multiple of 1000.)\n");
+	       "(This should not be confused with the output control --units,\n"
+	       "where capital letters mean multiple of 1000.)\n");
 
 	printf(".\n.SH ENVIRONMENT VARIABLES\n.\n");
 	printf("See \\fBlvm\\fP(8) for information about environment variables used by lvm.\n"
-	       "For example, LVM_VG_NAME can generally be substituted for a required VG parameter.\n");
+	       "For example, LVM_VG_NAME can generally be substituted\n"
+	       "for a required VG parameter.\n");
 }
 
 static void _print_desc_man(const char *desc)
@@ -1371,16 +1373,14 @@ static int _print_man(char *name, char *des_file, int secondary)
 			else if (!cna->variant_has_ro && !cna->variant_has_rp)
 				printf("\\fB%s\\fP\n", lvmname);
 
-			printf(".br\n");
-
 			if (cna->variant_has_oo) {
-				printf("    [ \\fIoption_args\\fP ]\n");
 				printf(".br\n");
+				printf("    [ \\fIoption_args\\fP ]\n");
 			}
 
 			if (cna->variant_has_op) {
-				printf("    [ \\fIposition_args\\fP ]\n");
 				printf(".br\n");
+				printf("    [ \\fIposition_args\\fP ]\n");
 			}
 
 			/* listing them all when there's only 1 or 2 is just repetitive */
@@ -1446,10 +1446,12 @@ static void _print_man_secondary(char *name)
 
 		if (!header) {
 			printf(".\n.SH ADVANCED USAGE\n.\n");
-			printf("Alternate command forms, advanced command usage, and listing of all valid syntax for completeness.\n");
-			printf(".P\n");
+			printf("Alternate command forms, advanced command usage,\n"
+			       "and listing of all valid syntax for completeness.\n");
 			header = 1;
 		}
+
+		printf(".P\n");
 
 		if (cmd->desc) {
 			_print_desc_man(cmd->desc);
@@ -1459,7 +1461,6 @@ static void _print_man_secondary(char *name)
 		_print_man_usage(lvmname, cmd);
 
 		printf("\\(em\n");
-		printf(".P\n");
 	}
 }
 

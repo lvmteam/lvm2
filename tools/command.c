@@ -1370,7 +1370,7 @@ int define_commands(struct cmd_context *cmdtool, const char *run_name)
 					return 0;
 				}
 
-				snprintf(newdesc, newlen, "%s %s", cmd->desc, line_orig);
+				snprintf(newdesc, newlen, "%s%s", cmd->desc, line_orig);
 #ifdef MAN_PAGE_GENERATOR
 				free((void*)cmd->desc);
 #endif
@@ -2130,7 +2130,7 @@ void print_usage_notes(const struct command_name *cname)
 	       "capitalization, e.g. 'k' and 'K' both refer to 1024.\n\t"
 	       "The default input unit is specified by letter, followed by |UNIT.\n\t"
 	       "UNIT represents other possible input units: BbBsSkKmMgGtTpPeE.\n\t"
-	       "(This should not be confused with the output control --units, where\n\t"
-	       "capital letters mean multiple of 1000.)\n"
+	       "(This should not be confused with the output control --units,\n\t"
+	       "where capital letters mean multiple of 1000.)\n"
 	       "\n");
 }
