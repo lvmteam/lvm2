@@ -276,7 +276,6 @@ static inline int lockd_free_lv(struct cmd_context *cmd, struct volume_group *vg
 static inline void lockd_free_lv_queue(struct cmd_context *cmd, struct volume_group *vg,
 		  const char *lv_name, struct id *lv_id, const char *lock_args)
 {
-	return 1;
 }
 
 static inline void lockd_free_removed_lvs(struct cmd_context *cmd, struct volume_group *vg, int remove_success)
