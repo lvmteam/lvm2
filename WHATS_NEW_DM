@@ -1,3 +1,6 @@
+Version 1.02.206 - 
+===================
+
 Version 1.02.205 - 27th February 2025
 =====================================
   Restore missing symbol dm_tree_node_size_changed@Base (1.02.175).

@@ -1,3 +1,6 @@
+Version 2.03.32 - 
+==================
+
 Version 2.03.31 - 27th February 2025
 ====================================
   Reduce 'mandoc -T lint' reported issues for man pages.
