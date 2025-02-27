@@ -24,10 +24,10 @@ Bugfix release:
 * Improve use of lvmlockd for usecases involving thin volumes and pools.
 
 <!-- remove the pending tag on release, remove draft tag once editing is complete -->
-[[!tag draft pending]]
+[[!tag]]
 <!--
 For old releases add Release Timestamp like this, date from git show $COMMIT is fine.
-\[[!meta date="Thu Feb 27 16:44:00 2025 +0100"]]
+[[!meta date="Thu Feb 27 16:51:29 2025 +0100"]]
 -->
 
 
