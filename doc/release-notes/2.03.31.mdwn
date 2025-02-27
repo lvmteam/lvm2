@@ -1,0 +1,33 @@
+<!-- Page title -->
+[[!meta title="Version 2.03.31 - Bug Fix Release"]]
+
+Version 2.03.31
+===============
+
+Bugfix release:
+
+* Disallow shared activation of LV with CoW snapshot.
+* Ignore reported `optimal_io_size` not divisible by 4096.
+* Restore support for `LVM_SUPPRESS_FD_WARNINGS` (2.03.24).
+* Fix DM cache preserving logic (2.03.28).
+* Restore missing symbol `dm_tree_node_size_changed@Base` (1.02.175).
+* Restore missing symbol `dm_bitset_parse_list@@DM_1_02_138` (1.02.175).
+* Fix uncache and split cache restoring original state of volume.
+* Extend use of lockopt skip to more scenarios.
+* Reduce `mandoc -T lint` reported issues for man pages.
+* Enhance error path resolving in polling code.
+* Fix lvmlockd use in lvremove of CoW snapshot, VDO pool, and uncache.
+* Improve mirror split with opened temporary volumes.
+* Improve pvmove finish with opened temporary volumes.
+* Fix backup limit for devices file, handle over 10,000 files.
+* Fix busy-loop in config reading when read returned 0.
+* Improve use of lvmlockd for usecases involving thin volumes and pools.
+
+<!-- remove the pending tag on release, remove draft tag once editing is complete -->
+[[!tag draft pending]]
+<!--
+For old releases add Release Timestamp like this, date from git show $COMMIT is fine.
+\[[!meta date="Thu Feb 27 16:44:00 2025 +0100"]]
+-->
+
+
