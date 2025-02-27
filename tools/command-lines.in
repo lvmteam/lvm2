@@ -1594,7 +1594,7 @@ DESC: Change properties of specified PVs.
 ---
 
 pvresize PV ...
-OO: --setphysicalvolumesize SizeMB, --reportformat ReportFmt
+OO: --setphysicalvolumesize SizeMB, --reportformat ReportFmt, --autobackup Bool
 ID: pvresize_general
 
 ---
