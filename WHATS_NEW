@@ -1,5 +1,5 @@
-Version 2.03.31 - 
-==================
+Version 2.03.31 - 27th February 2025
+====================================
   Reduce 'mandoc -T lint' reported issues for man pages.
   Restore support for LVM_SUPPRESS_FD_WARNINGS (2.03.24).
   Fix uncache and split cache restoring original state of volume.
