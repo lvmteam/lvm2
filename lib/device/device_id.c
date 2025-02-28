@@ -1583,6 +1583,10 @@ static void devices_file_backup(struct cmd_context *cmd, char *fc, char *fb, tim
 
 	/* Remove the n oldest files by sorting system.devices-*. */
 	setlocale(LC_COLLATE, "C"); /* Avoid sorting by locales */
+	#ifndef HAVE_VERSIONSORT
+	/* fallback to alphasort when versionsort is not defined */
+	#define versionsort     alphasort
+	#endif /* !HAVE_VERSIONSORT */
 	sort_count = scandir(dirpath, &namelist, _filter_backup_files, versionsort);
 	setlocale(LC_COLLATE, "");
 	if (sort_count < 0) {
