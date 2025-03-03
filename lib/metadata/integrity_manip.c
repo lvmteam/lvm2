@@ -132,6 +132,12 @@ static int _lv_create_integrity_metadata(struct cmd_context *cmd,
 	meta_sectors = meta_bytes / 512;
 	lp_meta.extents = meta_sectors / vg->extent_size;
 
+	/* Use one extent if the VG extent size is larger than the number of sectors needed. */
+	if (!lp_meta.extents) {
+		log_debug("Round integrity meta size up to one extent.");
+		lp_meta.extents = 1;
+	}
+
 	log_verbose("Creating integrity metadata LV %s with size %s.",
 		    metaname, display_size(cmd, meta_sectors));
 
@@ -197,6 +203,8 @@ int lv_extend_integrity_in_raid(struct logical_volume *lv, struct dm_list *pvh)
 		meta_bytes = _lv_size_bytes_to_integrity_meta_bytes(lv_size_bytes, 0, 0);
 		meta_sectors = meta_bytes / 512;
 		meta_extents = meta_sectors / vg->extent_size;
+		if (!meta_extents)
+			meta_extents = 1;
 
 		prev_meta_sectors = lv_imeta->size;
 		prev_meta_extents = prev_meta_sectors / vg->extent_size;
