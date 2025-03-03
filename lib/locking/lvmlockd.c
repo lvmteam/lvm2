@@ -1231,6 +1231,9 @@ static int _free_vg_sanlock(struct cmd_context *cmd, struct volume_group *vg)
 	if (result == -EBUSY) {
 		log_error("Lockspace for \"%s\" not stopped on other hosts", vg->name);
 		goto out;
+	} else if (result == -ENOLS) {
+		log_error("Lockspace for \"%s\" is not started.", vg->name);
+		goto out;
 	}
 
 	if (!ret) {
