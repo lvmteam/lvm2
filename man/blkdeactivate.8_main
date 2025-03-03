@@ -1,31 +1,45 @@
 .TH "BLKDEACTIVATE" "8" "LVM TOOLS #VERSION#" "Red Hat, Inc" \" -*- nroff -*-
 .
+.de NSY
+.  ie t .SY \\$1
+.  el \{\
+.    ie \\n(.$>1 \{\
+.      PD 0
+.      TP \\w'\\$1\ 'u
+.    \}
+.    el .TP
+.    B \\$1
+.    nh
+.    na
+.  \}
+..
+.
 .SH NAME
 .
 blkdeactivate \(em utility to deactivate block devices
 .
 .SH SYNOPSIS
 .
-.na
-.nh
-.B blkdeactivate
-.RB [ -d
+.NSY blkdeactivate 1
+.RB [ -d | --dmoptions\ \c
 .IR dm_options ]
-.RB [ -e ]
-.RB [ -h ]
-.RB [ -l
+.RB [ -e | --errors ]
+.RB [ -h | --help ]
+.RB [ -l | --lvmoptions\ \c
 .IR lvm_options ]
-.RB [ -m
-.IR mpath_options ]
-.RB [ -r
+.RB [ -r | --mdraidoptions\ \c
 .IR mdraid_options ]
-.RB [ -o
+.RB [ -m | --mpathoptions\ \c
+.IR mpath_options ]
+.RB [ -u | --umount ]
+.RB [ -o | --vdooptions\ \c
 .IR vdo_options ]
-.RB [ -u ]
-.RB [ -v ]
+.RB [ -v | --verbose ]
 .RI [ device ]
-.hy
+.
+.PD
 .ad
+.hy
 .
 .SH DESCRIPTION
 .
@@ -41,16 +55,23 @@ MD devices are handled using the \fBmdadm\fP(8) command.
 .SH OPTIONS
 .
 .TP
-.BR -d | --dmoptions " " \fIdm_options
+\fB-d\fP|\fB--dmoptions\fP \fIdm_options\fP
 Comma separated list of device-mapper specific options.
-Accepted \fBdmsetup\fP(8) options are:
+.br
+Accepted
+.BR dmsetup (8)
+options are:
+.
 .RS
+.
 .TP
 .B retry
 Retry removal several times in case of failure.
+.
 .TP
 .B force
 Force device removal.
+.
 .RE
 .
 .TP
@@ -65,12 +86,14 @@ the device was skipped.
 Display the help text.
 .
 .TP
-.BR -l | --lvmoptions " " \fIlvm_options
+\fB-l\fP|\fB--lvmoptions\fP \fIlvm_options\fP
 Comma-separated list of LVM specific options:
 .RS
+.
 .TP
 .B retry
 Retry removal several times in case of failure.
+.
 .TP
 .B wholevg
 Deactivate the whole LVM Volume Group when processing a Logical Volume.
@@ -79,34 +102,31 @@ each Logical Volume separately.
 .RE
 .
 .TP
-.BR -r | --mdraidoptions " " \fImdraid_options
+\fB-r\fP|\fB--mdraidoptions\fP \fImdraid_options\fP
 Comma-separated list of MD RAID specific options:
+.
 .RS
+.
 .TP
 .B wait
 Wait MD device's resync, recovery or reshape action to complete
 before deactivation.
+.
 .RE
 .
 .TP
-.BR -m | --mpathoptions " " \fImpath_options
+\fB-m\fP|\fB--mpathoptions\fP \fImpath_options\fP
 Comma-separated list of device-mapper multipath specific options:
+.
 .RS
+.
 .TP
 .B disablequeueing
 Disable queueing on all multipath devices before deactivation.
 This avoids a situation where blkdeactivate may end up waiting if
 all the paths are unavailable for any underlying device-mapper multipath
 device.
-.RE
 .
-.TP
-.BR -o | --vdooptions " " \fIvdo_options
-Comma-separated list of VDO specific options:
-.RS
-.TP
-.BR configfile = \fIfile
-Use specified VDO configuration file.
 .RE
 .
 .TP
@@ -115,7 +135,19 @@ Unmount a mounted device before trying to deactivate it.
 Without this option used, a device that is mounted is not deactivated.
 .
 .TP
-.BR -v ", " --verbose
+\fB-o\fP|\fB--vdooptions\fP \fIvdo_options\fP
+Comma-separated list of VDO specific options:
+.
+.RS
+.
+.TP
+\fBconfigfile\fP=\fIfile\fP
+Use specified VDO configuration file.
+.
+.RE
+.
+.TP
+.BR -v | --verbose
 Run in verbose mode. Use \fB-vv\fP for even more verbose mode.
 .
 .SH EXAMPLES
@@ -123,41 +155,40 @@ Run in verbose mode. Use \fB-vv\fP for even more verbose mode.
 Deactivate all supported block devices found in the system, skipping mounted
 devices.
 .br
-#
 .B blkdeactivate
 .P
 Deactivate all supported block devices found in the system, unmounting any
 mounted devices first, if possible.
 .br
-#
 .B blkdeactivate -u
 .P
 Deactivate the device /dev/vg/lvol0 together with all its holders, unmounting
 any mounted devices first, if possible.
 .br
-#
+.na
 .B blkdeactivate -u /dev/vg/lvol0
 .P
 Deactivate all supported block devices found in the system. If the deactivation
 of a device-mapper device fails, retry it. Deactivate the whole
 Volume Group at once when processing an LVM Logical Volume.
 .br
-#
+.na
 .B blkdeactivate -u -d retry -l wholevg
 .P
 Deactivate all supported block devices found in the system. If the deactivation
 of a device-mapper device fails, retry it and force removal.
 .br
-#
 .B blkdeactivate -d force,retry
 .
 .SH SEE ALSO
 .
 .nh
 .na
-.BR dmsetup (8),
-.BR lsblk (8),
 .BR lvm (8),
+.P
+.BR dmsetup (8),
+.P
+.BR lsblk (8),
 .BR mdadm (8),
 .BR multipathd (8),
 .BR vdo (8),

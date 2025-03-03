@@ -1,5 +1,14 @@
 .TH "LVMVDO" "7" "LVM TOOLS #VERSION#" "Red Hat, Inc" \" -*- nroff -*-
 .
+.if !dEX \{\
+.de EX
+.nf
+..
+.de EE
+.fi
+..
+\}
+.
 .SH NAME
 .
 lvmvdo \(em Support for Virtual Data Optimizer in LVM
@@ -52,30 +61,20 @@ for extracting statistics from VDO volumes.
 .SH VDO TERMS
 .
 .TP
-VDODataLV
-.br
-VDO data LV
-.br
-A large hidden LV with the _vdata suffix. It is created in a VG
-.br
-used by the VDO kernel target to store all data and metadata blocks.
+.B VDODataLV
+VDO data LV is large hidden LV with the _vdata suffix.
+It is created in a VG used by the VDO kernel target
+to store all data and metadata blocks.
 .
 .TP
-VDOPoolLV
-.br
-VDO pool LV
-.br
-A pool for virtual VDOLV(s), which are the size of used VDODataLV.
-.br
+.B VDOPoolLV
+VDO pool LV is pool for virtual VDOLV(s),
+which are the size of used VDODataLV.
 Only a single VDOLV is currently supported.
 .
 .TP
-VDOLV
-.br
-VDO LV
-.br
-Created from VDOPoolLV.
-.br
+.B VDOLV
+VDO LV is a virtual LV created from VDOPoolLV.
 Appears blank after creation.
 .
 .SH VDO USAGE
@@ -100,16 +99,22 @@ volumes of VDO type. Please try to avoid sending discard requests unless
 necessary because it might take considerable amount of time
 to finish the discard operation.
 .P
-.nf
-.B lvcreate --type vdo -n VDOLV -L DataSize -V LargeVirtualSize VG/VDOPoolLV
-.B lvcreate --vdo -L DataSize VG
-.fi
+.B lvcreate --type vdo -n
+.I VDOLV
+.B -L
+.I DataSize
+.B -V
+.I LargeVirtualSize VG/VDOPoolLV
+.br
+.B lvcreate --vdo -L
+.I DataSize VG
 .P
 .I Example
-.nf
+.P
+.EX
 # lvcreate --type vdo -n vdo0 -L 10G -V 100G vg/vdopool0
 # mkfs.ext4 -E nodiscard /dev/vg/vdo0
-.fi
+.EE
 .
 .SS \n+[step]. Convert an existing LV into VDOPoolLV
 .
@@ -122,40 +127,51 @@ specify the virtual size of the VDOLV associated with this VDOPoolLV.
 If you do not specify the virtual size, it will be set to the maximum size
 that can keep 100% incompressible data there.
 .P
-.nf
-.B lvconvert --type vdo-pool -n VDOLV -V VirtualSize VG/VDOPoolLV
-.B lvconvert --vdopool VG/VDOPoolLV
-.fi
+.B lvconvert --type vdo-pool -n
+.I VDOLV
+.B -V
+.I VirtualSize VG/VDOPoolLV
+.br
+.B lvconvert --vdopool
+.I VG/VDOPoolLV
 .P
 .I Example
-.nf
+.P
+.EX
 # lvconvert --type vdo-pool -n vdo0 -V10G vg/ExistingLV
-.fi
+.EE
 .
 .SS \n+[step]. Change the compression and deduplication of a VDOPoolLV
 .
 Disable or enable the compression and deduplication for VDOPoolLV
 (the volume that maintains all VDO LV(s) associated with it).
 .P
-.B lvchange --compression y|n --deduplication y|n VG/VDOPoolLV
+.B lvchange --compression
+.BR y | n
+.B --deduplication
+.BR y | n
+.I VG/VDOPoolLV
 .P
 .I Example
-.nf
+.P
+.EX
 # lvchange --compression n  vg/vdopool0
 # lvchange --deduplication y vg/vdopool1
-.fi
+.EE
 .
 .SS \n+[step]. Change the default settings used for creating a VDOPoolLV
 .
 VDO allows to set a large variety of options. Lots of these settings
 can be specified in lvm.conf or profile settings. You can prepare
-a number of different profiles in the \fI#DEFAULT_SYS_DIR#/profile\fP directory
-and just specify the profile file name.
+a number of different profiles in the
+\fI#DEFAULT_SYS_DIR#/profile\fP
+directory and just specify the profile file name.
 Check the output of \fBlvmconfig --type default --withcomments\fP
 for a detailed description of all individual VDO settings.
 .P
 .I Example
-.nf
+.P
+.EX
 # cat <<EOF > #DEFAULT_SYS_DIR#/profile/vdo_create.profile
 allocation {
 .RS
@@ -181,7 +197,7 @@ EOF
 .P
 # lvcreate --vdo -L10G --metadataprofile vdo_create vg/vdopool0
 # lvcreate --vdo -L10G --config 'allocation/vdo_cpu_threads=4' vg/vdopool1
-.fi
+.EE
 .
 .SS \n+[step]. Set or change VDO settings with option --vdosettings
 .
@@ -202,10 +218,10 @@ and --deduplication.
 .P
 .I Example
 .P
-.nf
+.EX
 # lvcreate --vdo -L10G --vdosettings 'ack_threads=1 hash_zone_threads=2' vg/vdopool0
 # lvchange --vdosettings 'bio_threads=2 deduplication=1' vg/vdopool0
-.fi
+.EE
 .
 .SS \n+[step]. Checking the usage of VDOPoolLV
 .
@@ -219,23 +235,24 @@ Note: \fBvdostats\fP(8) currently understands only
 \fI/dev/mapper\fP device names.
 .P
 .I Example
-.nf
+.P
+.EX
 # lvcreate --type vdo -L10G -V20G -n vdo0 vg/vdopool0
 # mkfs.ext4 -E nodiscard /dev/vg/vdo0
 # lvs -a vg
 .P
-  LV               VG Attr       LSize  Pool     Origin Data%
-  vdo0             vg vwi-a-v--- 20.00g vdopool0        0.01
-  vdopool0         vg dwi-ao---- 10.00g                 30.16
-  [vdopool0_vdata] vg Dwi-ao---- 10.00g
+\  LV               VG Attr       LSize  Pool     Origin Data%
+\  vdo0             vg vwi-a-v--- 20.00g vdopool0        0.01
+\  vdopool0         vg dwi-ao---- 10.00g                 30.16
+\  [vdopool0_vdata] vg Dwi-ao---- 10.00g
 .P
 # vdostats --all /dev/mapper/vg-vdopool0-vpool
 /dev/mapper/vg-vdopool0 :
-  version                             : 30
-  release version                     : 133524
-  data blocks used                    : 79
-  ...
-.fi
+\  version                             : 30
+\  release version                     : 133524
+\  data blocks used                    : 79
+\  ...
+.EE
 .
 .SS \n+[step]. Extending the VDOPoolLV size
 .
@@ -251,13 +268,15 @@ with the \fBactivation/vdo_pool_autoextend_percent\fP and
 .P
 Note: You cannot reduce the size of a VDOPoolLV.
 .P
-.B lvextend -L+AddingSize VG/VDOPoolLV
+.B lvextend -L+\c
+.I AddingSize VG/VDOPoolLV
 .P
 .I Example
-.nf
+.P
+.EX
 # lvextend -L+50G vg/vdopool0
 # lvresize -L300G vg/vdopool1
-.fi
+.EE
 .
 .SS \n+[step]. Extending or reducing the VDOLV size
 .
@@ -268,16 +287,19 @@ Note: The reduction needs to process TRIM for reduced disk area
 to unmap used data blocks from the VDOPoolLV, which might take
 a long time.
 .P
-.B lvextend -L+AddingSize VG/VDOLV
+.B lvextend -L+\c
+.I AddingSize VG/VDOLV
 .br
-.B lvreduce -L-ReducingSize VG/VDOLV
+.B lvreduce -L-\c
+.I ReducingSize VG/VDOLV
 .P
 .I Example
-.nf
+.P
+.EX
 # lvextend -L+50G vg/vdo0
 # lvreduce -L-50G vg/vdo1
 # lvresize -L200G vg/vdo2
-.fi
+.EE
 .
 .SS \n+[step]. Component activation of a VDODataLV
 .
@@ -290,10 +312,11 @@ any upper LV using this volume CANNOT be activated.
 You have to deactivate the VDODataLV first to continue to use the VDOPoolLV.
 .P
 .I Example
-.nf
+.P
+.EX
 # lvchange -ay vg/vpool0_vdata
 # lvchange -an vg/vpool0_vdata
-.fi
+.EE
 .
 .SH VDO TOPICS
 .
@@ -312,21 +335,23 @@ with thin-pool named after original LV name LV_tpool0.
 See \fBlvmthin\fP(7) for more details.
 .P
 .I Example
-.nf
+.P
+.EX
 # lvcreate --type vdo -L 5G -V 10G -n vdo1 vg/vdopool
 # lvconvert --type thin vg/vdo1
 # lvcreate -V20 vg/vdo1_tpool0
-.fi
+.EE
 .
 .SS \n+[step]. VDOPoolLV on top of raid
 .
 Using a raid type LV for a VDODataLV.
 .P
 .I Example
-.nf
+.P
+.EX
 # lvcreate --type raid1 -L 5G -n vdopool vg
 # lvconvert --type vdo-pool -V 10G vg/vdopool
-.fi
+.EE
 .
 .SS \n+[step]. Caching a VDOPoolLV
 .
@@ -335,12 +360,13 @@ to accelerate reads and writes of already compressed and deduplicated
 data blocks together with VDO metadata.
 .P
 .I Example
-.nf
+.P
+.EX
 # lvcreate --type vdo -L 5G -V 10G -n vdo1 vg/vdopool
 # lvcreate --type cache-pool -L 1G -n cachepool vg
 # lvconvert --cache --cachepool vg/cachepool vg/vdopool
 # lvconvert --uncache vg/vdopool
-.fi
+.EE
 .
 .SS \n+[step]. Caching a VDOLV
 .
@@ -348,12 +374,13 @@ VDO LV cache allow you to 'cache' a device for better performance before
 it hits the processing of the VDO Pool LV layer.
 .P
 .I Example
-.nf
+.P
+.EX
 # lvcreate --type vdo -L 5G -V 10G -n vdo1 vg/vdopool
 # lvcreate --type cache-pool -L 1G -n cachepool vg
 # lvconvert --cache --cachepool vg/cachepool vg/vdo1
 # lvconvert --uncache vg/vdo1
-.fi
+.EE
 .
 .SS \n+[step]. Usage of Discard/TRIM with a VDOLV
 .
@@ -373,19 +400,20 @@ take otherwise as device is already expected to be empty.
 .
 .SS \n+[step]. Memory usage
 .
-The VDO target requires 38\~MiB of RAM and several variable amounts:
+The VDO target requires 38\ MiB of RAM and several variable amounts:
+.
 .IP \(bu 2
-1.15\~MiB of RAM for each 1\~MiB of configured block map cache size.
-The block map cache requires a minimum of 150\~MiB RAM.
-.br
+1.15\ MiB of RAM for each 1\ MiB of configured block map cache size.
+The block map cache requires a minimum of 150\ MiB RAM.
+.
 .IP \(bu
-1.6\~MiB of RAM for each 1\~TiB of logical space.
-.br
+1.6\ MiB of RAM for each 1\ TiB of logical space.
+.
 .IP \(bu
-268\~MiB of RAM for each 1\~TiB of physical storage managed by the volume.
-.br
+268\ MiB of RAM for each 1\ TiB of physical storage managed by the volume.
+.
 .P
-UDS requires a minimum of 250\~MiB of RAM,
+UDS requires a minimum of 250\ MiB of RAM,
 which is also the default amount that deduplication uses.
 .P
 The memory required for the UDS index is determined by the index type
@@ -403,31 +431,35 @@ For most workloads, given the same amount of memory,
 the difference in deduplication rates between dense
 and sparse indexes is negligible.
 .P
-A dense index with 1\~GiB of RAM maintains a 1\~TiB deduplication window,
-while a sparse index with 1\~GiB of RAM maintains a 10\~TiB deduplication window.
-In general, 1\~GiB is sufficient for 4\~TiB of physical space with
-a dense index and 40\~TiB with a sparse index.
+A dense index with 1\ GiB of RAM maintains a 1\ TiB deduplication window,
+while a sparse index with 1\ GiB of RAM maintains
+a 10\ TiB deduplication window.
+In general, 1\ GiB is sufficient for 4\ TiB of physical space with
+a dense index and 40\ TiB with a sparse index.
 .
 .SS \n+[step]. Storage space requirements
 .
-You can configure a VDOPoolLV to use up to 256\~TiB of physical storage.
+You can configure a VDOPoolLV to use up to 256\ TiB of physical storage.
 Only a certain part of the physical storage is usable to store data.
 This section provides the calculations to determine the usable size
 of a VDO-managed volume.
 .P
 The VDO target requires storage for two types of VDO metadata
 and for the UDS index:
+.
 .IP \(bu 2
-The first type of VDO metadata uses approximately 1\~MiB for each 4\~GiB
-of physical storage plus an additional 1\~MiB per slab.
+The first type of VDO metadata uses approximately 1\ MiB for each 4\ GiB
+of physical storage plus an additional 1\ MiB per slab.
+.
 .IP \(bu
-The second type of VDO metadata consumes approximately 1.25\~MiB
-for each 1\~GiB of logical storage, rounded up to the nearest slab.
+The second type of VDO metadata consumes approximately 1.25\ MiB
+for each 1\ GiB of logical storage, rounded up to the nearest slab.
+.
 .IP \(bu
 The amount of storage required for the UDS index depends on the type of index
-and the amount of RAM allocated to the index. For each 1\~GiB of RAM,
-a dense UDS index uses 17\~GiB of storage and a sparse UDS index will use
-170\~GiB of storage.
+and the amount of RAM allocated to the index. For each 1\ GiB of RAM,
+a dense UDS index uses 17\ GiB of storage and a sparse UDS index will use
+170\ GiB of storage.
 .
 .SH SEE ALSO
 .

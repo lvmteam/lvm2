@@ -92,16 +92,20 @@ with within volume group VG1.
 .TP
 .B TMPDIR
 The temporary directory name for mount points. Defaults to "\fI/tmp\fP".
+.
 .TP
 .B DM_DEV_DIR
 The device directory name.
 Defaults to "\fI/dev\fP" and must be an absolute path.
+.
 .TP
 .B DM_UUID_PREFIX
 Specify uuid prefix for snapshot volume used during vdo conversion.
+.
 .TP
 .B LVM_BINARY
 Allow to override command called from lvm. Defaults to "\fIlvm\fP".
+.
 .TP
 .B VDO_BINARY
 Allow to override command called from vdo. Defaults to "\fIvdo\fP".
@@ -113,4 +117,4 @@ Allow to override command called from vdo. Defaults to "\fIvdo\fP".
 .BR lvm (8),
 .BR lvm.conf (5),
 .P
-.BR vdo (8),
+.BR vdo (8)

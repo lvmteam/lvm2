@@ -6,7 +6,8 @@ lvmlockctl \(em Control for lvmlockd
 .
 .SH SYNOPSIS
 .
-.BR lvmlockctl " [" \fIoptions ]
+.B lvmlockctl
+.RI [ Ioptions ]
 .
 .SH DESCRIPTION
 .
@@ -40,19 +41,19 @@ Wait option for other commands.
 Force option for other commands.
 .
 .TP
-.BR -k | --kill " " \fIvgname
+\fB-k\fP|\fB--kill\fP \fIvgname\fP
 Kill access to the VG when sanlock cannot renew lease.
 .
 .TP
-.BR -r | --drop " " \fIvgname
+\fB-r\fP|\fB--drop\fP \fIvgname\fP
 Clear locks for the VG when it is unused after kill (-k).
 .
 .TP
-.BR -E | --gl-enable " " \fIvgname
+\fB-E\fP|\fB--gl-enable\fP \fIvgname\fP
 Tell lvmlockd to enable the global lock in a sanlock VG.
 .
 .TP
-.BR -D | --gl-disable " " \fIvgname
+\fB-D\fP|\fB--gl-disable\fP \fIvgname\fP
 Tell lvmlockd to disable the global lock in a sanlock VG.
 .
 .TP

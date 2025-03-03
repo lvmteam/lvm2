@@ -61,41 +61,53 @@ The following commands are built into lvm without links
 normally being created in the filesystem for them.
 .sp
 .PD 0
+.
 .TP 16
 .B config
 The same as \fBlvmconfig\fP(8) below.
+.
 .TP
 .B devtypes
 Display the recognised built-in block device types.
+.
 .TP
 .B dumpconfig
 The same as \fBlvmconfig\fP(8) below.
+.
 .TP
 .B formats
 Display recognised metadata formats.
+.
 .TP
 .B fullreport
 Report information about PVs, PV segments, VGs, LVs and LV segments,
 all at once.
+.
 .TP
 .B help
 Display the help text.
+.
 .TP
 .B lastlog
 Display log report of last command run in LVM shell
 if command log reporting is enabled.
+.
 .TP
 .B lvpoll
 Complete lvmpolld operations (Internal command).
+.
 .TP
 .B segtypes
 Display recognised Logical Volume segment types.
+.
 .TP
 .B systemid
 Display any system ID currently set on this host.
+.
 .TP
 .B tags
 Display any tags defined on this host.
+.
 .TP
 .B version
 Display version information.
@@ -106,135 +118,178 @@ Display version information.
 The following commands implement the core LVM functionality.
 .sp
 .PD 0
+.
 .TP 16
 .B pvchange
 Change attributes of a Physical Volume.
+.
 .TP
 .B pvck
 Check Physical Volume metadata.
+.
 .TP
 .B pvcreate
 Initialize a disk or partition for use by LVM.
+.
 .TP
 .B pvdisplay
 Display attributes of a Physical Volume.
+.
 .TP
 .B pvmove
 Move Physical Extents.
+.
 .TP
 .B pvremove
 Remove a Physical Volume.
+.
 .TP
 .B pvresize
 Resize a disk or partition in use by LVM.
+.
 .TP
 .B pvs
 Report information about Physical Volumes.
+.
 .TP
 .B pvscan
 List Physical Volumes.
+.
 .TP
 .B vgcfgbackup
 Backup Volume Group descriptor area.
+.
 .TP
 .B vgcfgrestore
 Restore Volume Group descriptor area.
+.
 .TP
 .B vgchange
 Change attributes of a Volume Group.
+.
 .TP
 .B vgck
 Check Volume Group metadata.
+.
 .TP
 .B vgcreate
 Create a Volume Group.
+.
 .TP
 .B vgdisplay
 Display attributes of Volume Groups.
+.
 .TP
 .B vgexport
 Make volume Groups unknown to the system.
+.
 .TP
 .B vgextend
 Add Physical Volumes to a Volume Group.
+.
 .TP
 .B vgimport
 Make exported Volume Groups known to the system.
+.
 .TP
 .B vgimportclone
 Import and rename duplicated Volume Group (e.g. a hardware snapshot).
+.
 .TP
 .B vgimportdevices
 Add PVs from a VG to the devices file.
+.
 .TP
 .B vgmerge
 Merge two Volume Groups.
+.
 .TP
 .B vgmknodes
 Recreate Volume Group directory and Logical Volume special files
+.
 .TP
 .B vgreduce
 Reduce a Volume Group by removing one or more Physical Volumes.
+.
 .TP
 .B vgremove
 Remove a Volume Group.
+.
 .TP
 .B vgrename
 Rename a Volume Group.
+.
 .TP
 .B vgs
 Report information about Volume Groups.
+.
 .TP
 .B vgscan
 List Volume Groups.
+.
 .TP
 .B vgsplit
-Split a Volume Group into two, moving any logical
-volumes from one Volume Group to another by moving entire Physical
+Split a Volume Group into two, moving any logical volumes
+from one Volume Group to another by moving entire Physical
 Volumes.
+.
 .TP
 .B lvchange
 Change attributes of a Logical Volume.
+.
 .TP
 .B lvconvert
 Convert a Logical Volume from linear to mirror or snapshot.
+.
 .TP
 .B lvcreate
 Create a Logical Volume in an existing Volume Group.
+.
 .TP
 .B lvdisplay
 Display attributes of a Logical Volume.
+.
 .TP
 .B lvextend
 Extend the size of a Logical Volume.
+.
 .TP
 .B lvmconfig
 Display the configuration information after
 loading \fBlvm.conf\fP(5) and any other configuration files.
+.
 .TP
 .B lvmdevices
 Manage the devices file.
+.
 .TP
 .B lvmdiskscan
 Scan for all devices visible to LVM.
+.
 .TP
 .B lvmdump
 Create LVM information dumps for diagnostic purposes.
+.
 .TP
 .B lvreduce
 Reduce the size of a Logical Volume.
+.
 .TP
 .B lvremove
 Remove a Logical Volume.
+.
 .TP
 .B lvrename
 Rename a Logical Volume.
+.
 .TP
 .B lvresize
 Resize a Logical Volume.
+.
 .TP
 .B lvs
 Report information about Logical Volumes.
+.
 .TP
 .B lvscan
 List Logical Volumes.
@@ -433,55 +488,69 @@ Message text may also change.
 .B HOME
 Directory containing \fI.lvm_history\fP if the internal #DEFAULT_LIBLINE#
 shell is invoked.
+.
 .TP
 .B LVM_OUT_FD
 File descriptor to use for common output from LVM commands.
+.
 .TP
 .B LVM_ERR_FD
 File descriptor to use for error output from LVM commands.
+.
 .TP
 .B LVM_REPORT_FD
 File descriptor to use for report output from LVM commands.
+.
 .TP
 .B LVM_COMMAND_PROFILE
 Name of default command profile to use for LVM commands. This profile
 is overridden by direct use of \fB--commandprofile\fP command line option.
+.
 .TP
 .B LVM_RUN_BY_DMEVENTD
 This variable is normally set by dmeventd plugin to inform lvm command
 it is running from dmeventd plugin so lvm takes some extra action
 to avoid communication and deadlocks with dmeventd.
+.
 .TP
 .B LVM_SYSTEM_DIR
 Directory containing \fBlvm.conf\fP(5) and other LVM system files.
 Defaults to "\fI#DEFAULT_SYS_DIR#\fP".
+.
 .TP
 .B LVM_SUPPRESS_FD_WARNINGS
 Suppress warnings about unexpected file descriptors passed into LVM.
+.
 .TP
 .B LVM_SUPPRESS_SYSLOG
 Suppress contacting syslog.
+.
 .TP
 .B LVM_VG_NAME
 The Volume Group name that is assumed for
 any reference to a Logical Volume that doesn't specify a path.
 Not set by default.
+.
 .TP
 .B LVM_LVMPOLLD_PIDFILE
 Path to the file that stores the lvmpolld process ID.
+.
 .TP
 .B LVM_LVMPOLLD_SOCKET
 Path to the socket used to communicate with lvmpolld..
+.
 .TP
 .B LVM_LOG_FILE_EPOCH
 A string of up to 32 letters appended to the log filename and
 followed by the process ID and a startup timestamp using
 this format string "_%s_%d_%llu".  When set, each process logs to a
 separate file.
+.
 .TP
 .B LVM_LOG_FILE_MAX_LINES
 If more than this number of lines are sent to the log file, the command gets
 aborted.  Automated tests use this to terminate looping commands.
+.
 .TP
 .B LVM_EXPECTED_EXIT_STATUS
 The status anticipated when the process exits.  Use ">N" to match any
@@ -491,17 +560,21 @@ file got produced, it is deleted.
 and
 .B LVM_EXPECTED_EXIT_STATUS
 together allow automated test scripts to discard uninteresting log data.
+.
 .TP
 .B LVM_SUPPRESS_LOCKING_FAILURE_MESSAGES
 Used to suppress warning messages when the configured locking is known
 to be unavailable.
+.
 .TP
 .B DM_ABORT_ON_INTERNAL_ERRORS
 Abort processing if the code detects a non-fatal internal error.
+.
 .TP
 .B DM_DISABLE_UDEV
 Avoid interaction with udev.  LVM will manage the relevant nodes in /dev
 directly.
+.
 .TP
 .B DM_DEBUG_WITH_LINE_NUMBERS
 Prepends source file name and code line number with libdm debugging.

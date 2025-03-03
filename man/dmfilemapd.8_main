@@ -1,5 +1,28 @@
 .TH DMFILEMAPD 8 "Dec 17 2016" "Linux" "MAINTENANCE COMMANDS"
 .
+.if !dEX \{\
+.de EX
+.nf
+..
+.de EE
+.fi
+..
+\}
+.
+.de NSY
+.  ie t .SY \\$1
+.  el \{\
+.    ie \\n(.$>1 \{\
+.      PD 0
+.      TP \\w'\\$1\ 'u
+.    \}
+.    el .TP
+.    B \\$1
+.    nh
+.    na
+.  \}
+..
+.
 .de OPT_FD
 .  I file_descriptor
 ..
@@ -26,21 +49,16 @@ dmfilemapd \(em device-mapper filemap monitoring daemon
 .
 .SH SYNOPSIS
 .
-.de CMD_DMFILEMAPD
-.  na
-.  nh
-.  BR dmfilemapd
-.  OPT_FD
-.  OPT_GROUP
-.  OPT_PATH
-.  OPT_MODE
-.  OPT_DEBUG
-.  hy
-.  ad
-..
-.CMD_DMFILEMAPD
+.NSY dmfilemapd 1
+.OPT_FD
+.OPT_GROUP
+.OPT_PATH
+.OPT_MODE
+.OPT_DEBUG
 .
 .PD
+.ad
+.hy
 .
 .SH DESCRIPTION
 .
@@ -83,11 +101,15 @@ and the \fImode\fP option for more information.
 .OPT_MODE
 The filemap monitoring mode the daemon.
 Use either
+.na
+.nh
 .B inode
 (\fBDM_FILEMAP_FOLLOW_INODE\fP), or
 .B path
-(\fBDM_FILEMAP_FOLLOW_PATH\fP), to enable follow-inode or
-follow-path mode respectively.
+(\fBDM_FILEMAP_FOLLOW_PATH\fP),
+to enable follow-inode or follow-path mode respectively.
+.hy
+.ad
 .
 .TP
 .RI [ foreground ]
@@ -113,26 +135,26 @@ cause the daemon to terminate.
 .P
 In both modes, the daemon will always shut down when the group
 being monitored is deleted.
-.P
+.
+.TP
 .B Follow inode
-.P
 The daemon follows the inode of the file, as it was at the time the
 daemon started. The file descriptor referencing the file is kept
 open at all times, and the daemon will exit when it detects that
 the file has been unlinked and it is the last holder of a reference
 to the file.
-.P
+.sp
 This mode is useful if the file is expected to be renamed, or moved
 within the file system, while it is being monitored.
-.P
+.
+.TP
 .B Follow path
-.P
 The daemon follows the path that was given on the daemon command
 line. The file descriptor referencing the file is re-opened on each
 iteration of the daemon, and the daemon will exit if no file exists
 at this location (a tolerance is allowed so that a brief delay
 between removal and replacement is permitted).
-.P
+.sp
 This mode is useful if the file is updated by unlinking the original
 and placing a new file at the same path.
 .
@@ -143,7 +165,9 @@ extents and the regions contained in the group, however, since the
 daemon can only react to new allocations once they have been written,
 there are inevitably some IO events that cannot be counted when a
 file is growing, particularly if the file is being extended by a
-single thread writing beyond EOF (for example, the \fBdd\fP program).
+single thread writing beyond EOF (for example, the
+.BR dd (1)
+program).
 .P
 There is a further loss of events in that there is currently no way
 to atomically resize a \fBdmstats\fP region and preserve its current
@@ -164,17 +188,14 @@ manually for debugging or testing purposes.
 .P
 Start the daemon in the background, in follow-path mode
 .br
-#
 .B dmfilemapd 3 0 /srv/images/vm.img path 0 0 3< /srv/images/vm.img
-.br
 .P
 Start the daemon in follow-inode mode, disable forking and enable
 verbose logging
 .br
-.na
-#
 .B dmfilemapd 3 0 /var/tmp/data inode 1 3 3< /var/tmp/data
-.nf
+.P
+.EX
 Starting dmfilemapd with fd=3, group_id=0 mode=inode, path=/var/tmp/data
 dm version   [ opencount flush ]   [16384] (*1)
 dm info   (253:0) [ opencount flush ]   [16384] (*1)
@@ -185,22 +206,24 @@ dm_stats_walk_init: initialized flags to 4000000000000
 starting stats walk with   GROUP
 exiting _filemap_monitor_get_events() with deleted=0, check=0
 Waiting for check interval
-.fi
-.ad
-
+.EE
 .
 .SH AUTHORS
 .
-Bryn M. Reeves <bmr@redhat.com>
+.MT bmr@redhat.com
+Bryn M. Reeves
+.ME
 .
 .SH SEE ALSO
 .
+.nh
+.na
 .BR dmstats (8)
 .P
-LVM2 resource page:
 .UR https://www.sourceware.org/lvm2
+LVM2 resource page:
 .UE
 .br
-Device-mapper resource page:
 .UR http://www.sourceware.org/lvm2
+Device-mapper resource page:
 .UE

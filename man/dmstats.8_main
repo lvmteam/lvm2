@@ -1,40 +1,111 @@
-.TH DMSTATS 8 "Jun 23 2016" Linux "MAINTENANCE COMMANDS"
+.TH DMSTATS 8 "Mar 23 2025" Linux "MAINTENANCE COMMANDS"
+.
+.if !dEX \{\
+.de EX
+.nf
+..
+.de EE
+.fi
+..
+\}
+.
+.\" So use .SY only for graphical rendering (postscript/pdf)
+.\" and keep using .TP for ascii renderers
+.
+.de NSY
+.  ie t .SY \\$1
+.  el \{\
+.    ie \\n(.$>1 \{\
+.      PD 0
+.      TP \\w'\\$1\ 'u
+.    \}
+.    el .TP
+.    B \\$1
+.  \}
+..
+.
+.\" Check with use of .SY
+.de _NSY
+.  SY \\$1
+..
+.
+.\" Start paragraph with option
+.\" Note: Disabling line adjusting after the 1st. keyword!
+.de CMS
+.  na
+.  nh
+..
+.
+.ds CBR \&
+.
+.de CME
+\\*[CBR]
+.  hy
+.  ad
+..
+.
+.\" Html rendering is giving rather poor results with .HP
+.\" So with envvar HTML set to 1, .TP will be used.
+.\" e.g.   HTML=1 man -Thtml
+.\" Macro to easily switch to .TP if .HP would go away
+.de NTP
+.\".  sp
+.  ie t .HP
+.  el .HP    \" Give slightly better results
+..
+.
+.de NSP
+.  br
+\&
+.  br
+..
 .
 .de OPT_PROGRAMS
-.  RB [ --allprograms | --programid
-.  IR id ]
+.  RB [ --allprograms |\: --programid\ \c
+.  IR id ] " "\c
 ..
 .
 .de OPT_REGIONS
-.  RB [ --allregions | --regionid
-.  IR id ]
+.  RB [ --allregions |\: --regionid\ \c
+.  IR id ] " "\c
 ..
 .de OPT_OBJECTS
-.  RB [ --area ]
-.  RB [ --region ]
-.  RB [ --group ]
+.  RB [ --area ] " "\c
+.  RB [ --group ] " "\c
+.  RB [ --region ] " "\c
 ..
 .de OPT_FOREGROUND
-.  RB [ --foreground ]
+.  RB [ --foreground ] " "\c
+..
+.de OPT_HISTOGRAM
+.  RB [ --histogram ] " "\c
+.  RB [ --nosuffix ] " "\c
+.  RB [ --notimesuffix ] " "\c
+.  RB [ --units\ \c
+.  IR units ] " "\c
 ..
 .
 .\" Print units suffix, use with arg to print human
 .\" man2html can't handle too many changes per command
 .de UNITS
-.  RB [ b | B | s | S | k | K | m | M |\c
-.  BR g | G | t | T | p | P | e | E ]
+[\c
+.  if \\n(.$ .BR h | H |\:\c
+.  BR b | B |\: s | S |\: k | K |\: m | M |\c
+.  BR g | G |\: t | T |\: p | P |\: e | E ]
 ..
 .
 .\" Print help text for units, use with arg to print human
 .de HELP_UNITS
+.  na
 .  RB ( b )ytes,
 .  RB ( s )ectors,
-.  RB ( k )ilobytes,
-.  RB ( m )egabytes,
-.  RB ( g )igabytes,
-.  RB ( t )erabytes,
-.  RB ( p )etabytes,
-.  RB ( e )xabytes.
+.  RB ( k )ilo\%bytes,
+.  RB ( m )ega\%bytes,
+.  RB ( g )iga\%bytes,
+.  RB ( t )era\%bytes,
+.  RB ( p )eta\%bytes,
+.  RB ( e )xa\%bytes.
+.  ad
 .  nop Capitalise to use multiples of 1000 (S.I.\&) instead of 1024.
 ..
 .
@@ -45,212 +116,189 @@ dmstats \(em device-mapper statistics management
 .
 .SH SYNOPSIS
 .
-.B dmsetup
+.NSY dmsetup 1
+.CMS
 .B stats
 .I command
-[OPTIONS]
-.sp
+.RI [ OPTIONS ]
+.CME
+.PD
 .
-.PD 0
-.HP
-.B dmstats
-.de CMD_COMMAND
-.  na
-.  nh
-.  I  command
-.  IR device_name \ |
-.  B  --major
-.  I  major
-.  B  --minor
-.  IR minor \ |
-.  BR -u | --uuid
-.  I  uuid
-.  RB [ -v | --verbose ]
-.  hy
-.  ad
-..
-.CMD_COMMAND
+.P
+.NSY dmstats 1
+.CMS
+.I command
+.IR device_name |\:\c
+.BR --major \ \c
+.IR major " "
+.BR --minor \ \c
+.IR minor |\:\c
+.BR -u | --uuid \ \c
+.IR uuid " "\c
+.RB [ -v | --verbose ]
+.CME
+.PD
 .
-.HP
-.B dmstats
+.P
+.NSY dmstats 1
 .de CMD_CLEAR
-.  na
-.  nh
-.  B clear
-.  I device_name
+.  CMS
+.  BR clear " "\c
+.  IR device_name " "\c
 .  OPT_PROGRAMS
 .  OPT_REGIONS
-.  hy
-.  ad
+\&
+.  CME
 ..
 .CMD_CLEAR
 .
-.HP
-.B dmstats
+.NSY dmstats
 .de CMD_CREATE
-.  na
-.  nh
-.  B  create
-.  IR device_name ...| file_path ...| \fB--alldevices
-.  RB [ --areas
-.  IR nr_areas | \fB--areasize
-.  IR area_size ]
-.  RB [ --bounds
-.  IR histogram_boundaries ]
-.  RB [ --filemap ]
-.  RB [ --follow
-.  IR follow_mode ]
+.  CMS
+.  BR create " "\c
+.  IR device_name \ .\|.\|.|\: file_path \ .\|.\|.|\:\c
+.  BR --alldevices " "\c
+.  RB [ --areas\ \c
+.  IR nr_areas |\:\c
+.  BR --areasize \ \c
+.  IR area_size ] " "\c
+.  RB [ --bounds\ \c
+.  IR histo\%gram_bounda\%ries ] " "\c
+.  RB [ --filemap ] " "\c
+.  RB [ --follow\ \c
+.  IR follow_mode ] " "\c
 .  OPT_FOREGROUND
-.  RB [ --nomonitor ]
-.  RB [ --nogroup ]
-.  RB [ --precise ]
-.  RB [ --start
-.  I  start_sector
-.  B  --length
-.  IR length | \fB--segments ]
-.  RB [ --userdata
-.  IR user_data ]
-.  RB [ --programid
+.  RB [ --nogroup ] " "\c
+.  RB [ --nomonitor ] " "\c
+.  RB [ --precise ] " "\c
+.  RB [ --start\ \c
+.  IR start_sector " "\c
+.  BR --length \ \c
+.  IR length |\:\c
+.  BR --segments ] " "\c
+.  RB [ --userdata\ \c
+.  IR user_data ] " "\c
+.  RB [ --programid\ \c
 .  IR id ]
-.  hy
-.  ad
+.  CME
 ..
 .CMD_CREATE
 .
-.HP
-.B dmstats
+.NSY dmstats
 .de CMD_DELETE
-.  na
-.  nh
-.  B  delete
-.  IR device_name | \fB--alldevices
+.  CMS
+.  BR delete " "\c
+.  IR device_name |\:\c
+.  BR --alldevices " "\c
 .  OPT_PROGRAMS
 .  OPT_REGIONS
-.  hy
-.  ad
+\&
+.  CME
 ..
 .CMD_DELETE
 .
-.HP
-.B dmstats
+.NSY dmstats
 .de CMD_GROUP
-.  na
-.  nh
-.  B  group
-.  RI [ device_name | \fB--alldevices ]
-.  RB [ --alias
-.  IR name ]
-.  RB [ --regions
+.  CMS
+.  BR group " "\c
+.  RI [ device_name |\:\c
+.  BR --alldevices ] " "\c
+.  RB [ --alias\ \c
+.  IR name ] " "\c
+.  RB [ --regions\ \c
 .  IR regions ]
-.  hy
-.  ad
+.  CME
 ..
 .CMD_GROUP
-.HP
-.B dmstats
+.
+.NSY dmstats
 .de CMD_HELP
-.  na
-.  B  help
-.  RB [ -c | -C | --columns ]
-.  ad
+.  CMS
+.  BR help " "\c
+.  RB [ -c | -C |\: --columns ]
+.  CME
 ..
 .CMD_HELP
 .
-.HP
-.B dmstats
+.NSY dmstats
 .de CMD_LIST
-.  na
-.  nh
-.  B  list
-.  RI [ device_name ]
-.  RB [ --histogram ]
+.  CMS
+.  BR list " "\c
+.  RI [ device_name ] " "\c
 .  OPT_PROGRAMS
-.  RB [ --units
-.  IR units ]
 .  OPT_OBJECTS
-.  RB [ --nosuffix ]
-.  RB [ --notimesuffix ]
-.  RB [ -v | --verbose ]
-.  hy
-.  ad
+.  OPT_HISTOGRAM
+\&
+.  CME
 ..
 .CMD_LIST
 .
-.HP
-.B dmstats
+.NSY dmstats
 .de CMD_PRINT
-.  na
-.  nh
-.  B  print
-.  RI [ device_name ]
-.  RB [ --clear ]
+.  CMS
+.  BR print " "\c
+.  RI [ device_name ] " "\c
+.  RB [ --clear ] " "\c
 .  OPT_PROGRAMS
 .  OPT_REGIONS
-.  hy
-.  ad
+\&
+.  CME
 ..
 .CMD_PRINT
 .
-.HP
-.B dmstats
+.NSY dmstats
 .de CMD_REPORT
-.  na
-.  nh
-.  B  report
-.  RI [ device_name ]
-.  RB [ --interval
-.  IR seconds ]
-.  RB [ --count
-.  IR count ]
-.  RB [ --units
-.  IR units ]
-.  RB [ --histogram ]
+.  CMS
+.  BR report " "\c
+.  RI [ device_name ] " "\c
+.  RB [ --interval\ \c
+.  IR seconds ] " "\c
+.  RB [ --count\ \c
+.  IR count ] " "\c
+.  RB [ --units\ \c
+.  IR units ] " "\c
 .  OPT_PROGRAMS
 .  OPT_REGIONS
 .  OPT_OBJECTS
-.  RB [ -O | --sort
-.  IR sort_fields ]
-.  RB [ -S | --select
+.  OPT_HISTOGRAM
+.  RB [ -O | --sort\ \c
+.  IR sort_fields ] " "\c
+.  RB [ -S | --select\ \c
 .  IR selection ]
-.  RB [ --units
-.  IR units ]
-.  RB [ --nosuffix ]
-.  RB [ --notimesuffix ]
-.  hy
-.  ad
+.  CME
 ..
 .CMD_REPORT
-.HP
-.B dmstats
+.
+.NSY dmstats
 .de CMD_UNGROUP
-.  na
-.  nh
-.  B  ungroup
-.  RI [ device_name | \fB--alldevices ]
-.  RB [ --groupid
+.  CMS
+.  BR ungroup " "\c
+.  RI [ device_name |\:\c
+.  BR --alldevices ] " "\c
+.  RB [ --groupid\ \c
 .  IR id ]
-.  hy
-.  ad
+.  CME
 ..
 .CMD_UNGROUP
-.HP
-.B dmstats
+.
+.NSY dmstats
 .de CMD_UPDATE_FILEMAP
-.  na
-.  nh
-.  B  update_filemap
-.  I  file_path
-.  RB [ --groupid
-.  IR id ]
-.  RB [ --follow
-.  IR follow_mode ]
+.  CMS
+.  BR update_filemap " "\c
+.  IR file_path " "\c
+.  RB [ --follow\ \c
+.  IR follow_mode ] " "\c
 .  OPT_FOREGROUND
-.  hy
-.  ad
+.  RB [ --groupid\ \c
+.  IR id ] " "\c
+.  RB [ --nomonitor ]
+.  CME
 ..
 .CMD_UPDATE_FILEMAP
 .
 .PD
+.ad
+.hy
 .
 .SH DESCRIPTION
 .
@@ -273,7 +321,7 @@ commands require the use of \fB--alldevices\fP when used in this way.
 .SH OPTIONS
 .
 .TP
-.B --alias \fIname
+\fB--alias\fP \fIname\fP
 Specify an alias name for a group.
 .
 .TP
@@ -296,22 +344,34 @@ When performing a list or report, include objects of type area in the
 results.
 .
 .TP
-.B --areas \fInr_areas
+\fB--areas\fP \fInr_areas\fP
 Specify the number of statistics areas to create within a new region.
 .
 .TP
-.BI --areasize " area_size\c"
+\fB--areasize\fP \fIarea_size\fP\c
 .UNITS
-Specify the size of areas into which a new region should be divided. An
-optional suffix selects units of:
+Specify the size of areas into which a new region should be divided.
+An optional suffix selects units of:
 .HELP_UNITS
+.
+.TP
+\fB--bounds\fP\ \fIhistogram_boundaries\fP\c
+.RB [ ns | us | ms | s ]
+Specify the boundaries of a latency histogram to be tracked for the
+region as a comma separated list of latency values. Latency values are
+given in nanoseconds. An optional unit suffix of
+.BR ns ,
+.BR us ,
+.B ms
+or \fBs\fP may be given after each value to specify units of
+nanoseconds, microseconds, milliseconds or seconds respectively.
 .
 .TP
 .B --clear
 When printing statistics counters, also atomically reset them to zero.
 .
 .TP
-.B --count \fIcount
+\fB--count\fP \fIcount\fP
 Specify the iteration count for repeating reports. If the count
 argument is zero reports will continue to repeat until interrupted.
 .
@@ -323,73 +383,57 @@ results.
 .TP
 .B --filemap
 Instead of creating regions on a device as specified by command line
-options, open the file found at each \fBfile_path\fP argument, and
-create regions corresponding to the locations of the on-disk extents
+options, open the file found at each \fIfile_path\fP argument,
+and create regions corresponding to the locations of the on-disk extents
 allocated to the file(s).
 .
 .TP
-.B --nomonitor
-Disable the \fBdmfilemapd\fP daemon when creating new file mapped
-groups. Normally the device-mapper filemap monitoring daemon,
-\fBdmfilemapd\fP, is started for each file mapped group to update the
-set of regions as the file changes on-disk: use of this option
-disables this behaviour.
-.sp
-Regions in the group may still be updated with the
-\fBupdate_filemap\fP command, or by starting the daemon manually.
-.
-.TP
-.B --follow \fIfollow_mode
-Specify the \fBdmfilemapd\fP file following mode. The file map
-monitoring daemon can monitor files in two distinct ways: the mode
-affects the behaviour of the daemon when a file under monitoring is
-renamed or unlinked, and the conditions which cause the daemon to
-terminate.
-.sp
-The \fBfollow_mode\fP argument is either "inode", for follow-inode
-mode, or "path", for follow-path.
-.sp
-If follow-inode mode is used, the daemon will hold the file open, and
-continue to update regions from the same file descriptor. This means
-that the mapping will follow rename, move (within the same file
-system), and unlink operations. This mode is useful if the file is
-expected to be moved, renamed, or unlinked while it is being
-monitored.
-.sp
+\fB--follow\fP \fIfollow_mode\fP
+Specify the
+.BR dmfilemapd (8)
+file following mode.
+The file map monitoring daemon can monitor files in two distinct ways:
+the mode affects the behaviour of the daemon
+when a file under monitoring is renamed or unlinked,
+and the conditions which cause the daemon to terminate.
+.NSP
+The \fIfollow_mode\fP argument is either "\fBinode\fP",
+for follow-inode mode,
+or "\fBpath\fP", for follow-path.
+.NSP
+If follow-inode mode is used, the daemon will hold the file open,
+and continue to update regions from the same file descriptor.
+This means that the mapping will follow rename,
+move (within the same file system), and unlink operations.
+This mode is useful if the file is expected to be moved,
+renamed, or unlinked while it is being monitored.
+.NSP
 In follow-inode mode, the daemon will exit once it detects that the
 file has been unlinked and it is the last holder of a reference to it.
-.sp
+.NSP
 If follow-path is used, the daemon will re-open the provided path on
 each monitoring iteration. This means that the group will be updated
 to reflect a new file being moved to the same path as the original
 file. This mode is useful for files that are expected to be updated
 via unlink and rename.
-.sp
+.NSP
 In follow-path mode, the daemon will exit if the file is removed and
 not replaced within a brief tolerance interval.
-.sp
+.NSP
 In either mode, the daemon exits automatically if the monitored group
 is removed.
 .
 .TP
 .B --foreground
-Specify that the \fBdmfilemapd\fP daemon should run in the foreground.
+Specify that the
+.BR dmfilemapd (8)
+daemon should run in the foreground.
 The daemon will not fork into the background, and will replace the
 \fBdmstats\fP command that started it.
 .
 .TP
-.B --groupid \fIid
+\fB--groupid\fP \fIid\fP
 Specify the group to operate on.
-.
-.TP
-.BI --bounds " histogram_boundaries\c"
-.RB [ ns | us | ms | s ]
-Specify the boundaries of a latency histogram to be tracked for the
-region as a comma separated list of latency values. Latency values are
-given in nanoseconds. An optional unit suffix of
-.BR ns , us , ms ,
-or \fBs\fP may be given after each value to specify units of
-nanoseconds, microseconds, milliseconds or seconds respectively.
 .
 .TP
 .B --histogram
@@ -397,50 +441,59 @@ When used with the \fBreport\fP and \fBlist\fP commands select default
 fields that emphasize latency histogram data.
 .
 .TP
-.B --interval \fIseconds
+\fB--interval\fP \fIseconds\fP
 Specify the interval in seconds between successive iterations for
 repeating reports. If \fB--interval\fP is specified but
 \fB--count\fP is not,
 reports will continue to repeat until interrupted.
 .
 .TP
-.BI --length " length\c"
+\fB--length\fP \fIlength\fP\c
 .UNITS
-Specify the length of a new statistics region in sectors. An optional
-suffix selects units of:
+Specify the length of a new statistics region in sectors.
+An optional suffix selects units of:
 .HELP_UNITS
 .
 .TP
-.BR -j | --major " " \fImajor
+\fB-j\fP|\fB--major\fP \fImajor\fP
 Specify the major number.
 .
 .TP
-.BR -m | --minor " " \fIminor
+\fB-m\fP|\fB--minor\fP \fIminor\fP
 Specify the minor number.
 .
 .TP
 .B --nogroup
-When creating regions mapping the extents of a file in the file
-system, do not create a group or set an alias.
+When creating regions mapping the extents of a file in the file system,
+do not create a group or set an alias.
+.
+.TP
+.B --nomonitor
+Disable the
+.BR dmfilemapd (8)
+daemon when creating new file mapped groups.
+Normally the device-mapper filemap monitoring daemon
+.BR dmfilemapd (8),
+is started for each file mapped group to update the
+set of regions as the file changes on-disk: use of this option
+disables this behaviour.
+.NSP
+Regions in the group may still be updated with the
+\fBupdate_filemap\fP command, or by starting the daemon manually.
 .
 .TP
 .B --nosuffix
-Suppress the suffix on output sizes.  Use with \fB--units\fP
-(except h and H) if processing the output.
+Suppress the suffix on output sizes.
+Use with \fB--units\fP (except h and H) if processing the output.
 .
 .TP
 .B --notimesuffix
-Suppress the suffix on output time values. Histogram boundary values
-will be reported in units of nanoseconds.
+Suppress the suffix on output time values.
+Histogram boundary values will be reported in units of nanoseconds.
 .
 .TP
 .BR -o | --options
 Specify which report fields to display.
-.
-.TP
-.BR -O | --sort " " \fIsort_fields
-Sort output according to the list of fields given. Precede any
-sort field with '\fB-\fP' for a reverse sort on that column.
 .
 .TP
 .B --precise
@@ -448,7 +501,7 @@ Attempt to use nanosecond precision counters when creating new
 statistics regions.
 .
 .TP
-.B --programid \fIid
+\fB--programid\fP \fIid\fP
 Specify a program ID string. When creating new statistics regions this
 string is stored with the region. Subsequent operations may supply a
 program ID in order to select only regions with a matching value. The
@@ -460,11 +513,11 @@ When performing a list or report, include objects of type region in the
 results.
 .
 .TP
-.B --regionid \fIid
+\fB--regionid\fP \fIid\fP
 Specify the region to operate on.
 .
 .TP
-.B --regions \fIregion_list
+\fB--regions\fP \fIregion_list\fP
 Specify a list of regions to group. The group list is a comma-separated
 list of region identifiers. Continuous sequences of identifiers may be
 expressed as a hyphen separated range, for example: '1\(en10'.
@@ -475,7 +528,17 @@ If displaying the histogram report show relative (percentage) values
 instead of absolute counts.
 .
 .TP
-.BR -S | --select " " \fIselection
+.B --segments
+When used with \fBcreate\fP, create a new statistics region for each
+target contained in the given device(s). This causes a separate region
+to be allocated for each segment of the device.
+.NSP
+The newly created regions are automatically placed into a group unless
+the \fB--nogroup\fP option is given. When grouping is enabled a group
+alias may be specified using the \fB--alias\fP option.
+.
+.TP
+\fB-S\fP|\fB--select\fP \fIselection\fP
 Display only rows that match \fIselection\fP criteria. All rows with the
 additional "selected" column (\fB-o selected\fP) showing 1 if the row matches
 the \fIselection\fP and 0 otherwise. The selection criteria are defined by
@@ -483,27 +546,20 @@ specifying column names and their valid values while making use of
 supported comparison operators.
 .
 .TP
-.BI --start " start\c"
+\fB-O\fP|\fB--sort\fP \fIsort_fields\fP
+Sort output according to the list of fields given. Precede any
+sort field with '\fB-\fP' for a reverse sort on that column.
+.
+.TP
+\fB--start\fP \fIstart\fP\c
 .UNITS
 Specify the start offset of a new statistics region in sectors. An
 optional suffix selects units of:
 .HELP_UNITS
 .
 .TP
-.B --segments
-When used with \fBcreate\fP, create a new statistics region for each
-target contained in the given device(s). This causes a separate region
-to be allocated for each segment of the device.
-.sp
-The newly created regions are automatically placed into a group unless
-the \fB--nogroup\fP option is given. When grouping is enabled a group
-alias may be specified using the \fB--alias\fP option.
-.
-.TP
-.BR --units " \c"
-.RI [ units ]\c
-.RB [ h | H |\c
-.UNITS
+\fB--units\fP [\fIunits\fP]\c
+.UNITS h
 Set the display units for report output.
 All sizes are output in these units:
 .RB ( h )uman-readable,
@@ -511,7 +567,7 @@ All sizes are output in these units:
 Can also specify custom units e.g.\& \fB--units\ 3M\fP.
 .
 .TP
-.B --userdata \fIuser_data
+\fB--userdata\fP \fIuser_data\fP
 Specify user data (a word) to be stored with a new region. The value
 is added to any internal auxiliary data (for example, group
 information), and stored with the region in the aux_data field provided
@@ -526,34 +582,33 @@ Specify the uuid.
 Produce additional output.
 .
 .SH COMMANDS
+.ds CBR .br
 .
-.HP
+.NTP
 .CMD_CLEAR
-.br
 Instructs the kernel to clear statistics counters for the specified
 regions (with the exception of in-flight IO counters).
 .
-.HP
+.NTP
 .CMD_CREATE
-.br
 Creates one or more new statistics regions on the specified device(s).
-.sp
+.NSP
 The region will span the entire device unless \fB--start\fP and
 \fB--length\fP or \fB--segments\fP are given. The \fB--start\fP an
 \fB--length\fP options allow a region of arbitrary length to be placed
 at an arbitrary offset into the device. The \fB--segments\fP option
 causes a new region to be created for each target in the corresponding
 device-mapper device's table.
-.sp
+.NSP
 If the \fB--precise\fP option is used the command will attempt to
 create a region using nanosecond precision counters.
-.sp
+.NSP
 If \fB--bounds\fP is given a latency histogram will be tracked for
 the new region. The boundaries of the histogram bins are given as a
 comma separated list of latency values. There is an implicit lower bound
 of zero on the first bin and an implicit upper bound of infinity (or the
 configured interval duration) on the final bin.
-.sp
+.NSP
 Latencies are given in nanoseconds. An optional unit suffix of ns, us,
 ms, or s may be given after each value to specify units of nanoseconds,
 microseconds, milliseconds or seconds respectively, so for example,
@@ -562,19 +617,19 @@ Latency values with a precision of less than
 one millisecond can only be used when precise timestamps are enabled: if
 \fB--precise\fP is not given and values less than one millisecond are
 used it will be enabled automatically.
-.sp
+.NSP
 An optional \fBprogram_id\fP or \fBuser_data\fP string may be associated
 with the region. A \fBprogram_id\fP may then be used to select regions
 for subsequent list, print, and report operations. The \fBuser_data\fP
 stores an arbitrary string and is not used by dmstats or the
 device-mapper kernel statistics subsystem.
-.sp
+.NSP
 By default dmstats creates regions with a \fBprogram_id\fP of
 "dmstats".
-.sp
+.NSP
 On success the \fBregion_id\fP of the newly created region is printed
 to stdout.
-.sp
+.NSP
 If the \fB--filemap\fP option is given with a regular file, or list
 of files, as the \fBfile_path\fP argument, instead of creating regions
 with parameters specified on the command line, \fBdmstats\fP will open
@@ -582,147 +637,142 @@ the files located at \fBfile_path\fP and create regions corresponding to
 the physical extents allocated to the file. This can be used to monitor
 statistics for individual files in the file system, for example, virtual
 machine images, swap areas, or large database files.
-.sp
+.NSP
 To work with the \fB--filemap\fP option, files must be located on a
 local file system, backed by a device-mapper device, that supports
 physical extent data using the FIEMAP ioctl (e.g.\& Ext4 and XFS).
-.sp
+.NSP
 By default regions that map a file are placed into a group and the
 group alias is set to the basename of the file. This behaviour can be
 overridden with the \fB--alias\fP and \fB--nogroup\fP options.
-.sp
+.NSP
 Creating a group that maps a file automatically starts a daemon,
-\fBdmfilemapd\fP to monitor the file and update the mapping as the
+.BR dmfilemapd (8)
+to monitor the file and update the mapping as the
 extents allocated to the file change. This behaviour can be disabled
 using the \fB--nomonitor\fP option.
-.sp
+.NSP
 Use the \fB--group\fP option to only display information for groups
 when listing and reporting.
 .
-.HP
+.NTP
 .CMD_DELETE
-.br
 Delete the specified statistics region. All counters and resources used
 by the region are released and the region will not appear in the output
 of subsequent list, print, or report operations.
-.sp
+.NSP
 All regions registered on a device may be removed using
 \fB--allregions\fP.
-.sp
+.NSP
 To remove all regions on all devices both \fB--allregions\fP and
 \fB--alldevices\fP must be used.
-.sp
+.NSP
 If a \fB--groupid\fP is given instead of a \fB--regionid\fP the
 command will attempt to delete the group and all regions that it
 contains.
-.sp
+.NSP
 If a deleted region is the first member of a group of regions the group
 will also be removed.
 .
-.HP
+.NTP
 .CMD_GROUP
-.br
 Combine one or more statistics regions on the specified device into a
 group.
-.sp
+.NSP
 The list of regions to be grouped is specified with \fB--regions\fP
 and an optional alias may be assigned with \fB--alias\fP. The set of
 regions is given as a comma-separated list of region identifiers. A
 continuous range of identifiers spanning from \fBR1\fP to \fBR2\fP may
 be expressed as '\fBR1\fP-\fBR2\fP'.
-.sp
+.NSP
 Regions that have a histogram configured can be grouped: in this case
 the number of histogram bins and their bounds must match exactly.
-.sp
+.NSP
 On success the group list and newly created \fBgroup_id\fP are
 printed to stdout.
-.sp
+.NSP
 The group metadata is stored with the first (lowest numbered)
 \fBregion_id\fP in the group: deleting this region will also delete
 the group and other group members will be returned to their prior
 state.
 .
-.HP
+.NTP
 .CMD_HELP
-.br
 Outputs a summary of the commands available, optionally including
 the list of report fields.
 .
-.HP
+.NTP
 .CMD_LIST
-.br
 List the statistics regions, areas, or groups registered on the device.
 If the \fB--allprograms\fP switch is given all regions will be listed
 regardless of region program ID values.
-.sp
+.NSP
 By default only regions and groups are included in list output. If
 \fB-v\fP or \fB--verbose\fP is given the report will also include a
 row of information for each configured group and for each area contained
 in each region displayed.
-.sp
+.NSP
 Regions that contain a single area are by default omitted from the
 verbose list since their properties are identical to the area that they
 contain - to view all regions regardless of the number of areas present
-use \fB--region\fP). To also view the areas contained within regions
+use \fB--region\fP. To also view the areas contained within regions
 use \fB--area\fP.
-.sp
+.NSP
 If \fB--histogram\fP is given the report will include the bin count
 and latency boundary values for any configured histograms.
 .
-.HP
+.NTP
 .CMD_PRINT
-.br
 Print raw statistics counters for the specified region or for all
 present regions.
 .
-.HP
+.NTP
 .CMD_REPORT
-.br
 Start a report for the specified object or for all present objects. If
 the count argument is specified, the report will repeat at a fixed
 interval set by the \fB--interval\fP option. The default interval is
 one second.
-.sp
+.NSP
 If the \fB--allprograms\fP switch is given, all regions will be
 listed, regardless of region program ID values.
-.sp
+.NSP
 If the \fB--histogram\fP is given the report will include the histogram
 values and latency boundaries.
-.sp
+.NSP
 If the \fB--relative\fP is used the default histogram field displays
 bin values as a percentage of the total number of I/Os.
-.sp
+.NSP
 Object types (areas, regions and groups) to include in the report are
 selected using the \fB--area\fP, \fB--region\fP, and \fB--group\fP
 options.
 .
-.HP
+.NTP
 .CMD_UNGROUP
-.br
 Remove an existing group and return all the group's regions to their
 original state.
-.sp
+.NSP
 The group to be removed is specified using \fB--groupid\fP.
 .
-.HP
+.NTP
 .CMD_UPDATE_FILEMAP
-.br
 Update a group of \fBdmstats\fP regions specified by \fBgroup_id\fP,
 that were previously created with \fB--filemap\fP, either directly,
-or by starting the monitoring daemon, \fBdmfilemapd\fP.
-.sp
+or by starting the monitoring daemon
+.BR dmfilemapd (8).
+.NSP
 This will add and remove regions to reflect changes in the allocated
 extents of the file on-disk, since the time that it was created or last
 updated.
-.sp
-Use of this command is not normally needed since the \fBdmfilemapd\fP
+.NSP
+Use of this command is not normally needed since the
+.BR dmfilemapd (8)
 daemon will automatically monitor filemap groups and perform these
 updates when required.
-.sp
+.NSP
 If a filemapped group was created with \fB--nomonitor\fP, or the
 daemon has been killed, the \fBupdate_filemap\fP can be used to
 manually force an update or start a new daemon.
-.sp
+.NSP
 Use \fB--nomonitor\fP to force a direct update and disable starting
 the monitoring daemon.
 .
@@ -807,7 +857,8 @@ commands, use \fB--group\fP.
 .P
 Since it is possible for the file to change after the initial
 group of regions is created, the \fBupdate_filemap\fP command, and
-\fBdmfilemapd\fP daemon are provided to update file mapped groups
+.BR dmfilemapd (8)
+daemon are provided to update file mapped groups
 either manually or automatically.
 .
 .SS File follow modes
@@ -857,7 +908,9 @@ extents and the regions contained in the group, however, since it can
 only react to new allocations once they have been written, there are
 inevitably some IO events that cannot be counted when a file is
 growing, particularly if the file is being extended by a single thread
-writing beyond end-of-file (for example, the \fBdd\fP program).
+writing beyond end-of-file (for example, the
+.BR dd (1)
+program).
 .P
 There is a further loss of events in that there is currently no way
 to atomically resize a \fBdmstats\fP region and preserve its current
@@ -1109,32 +1162,34 @@ Create a whole-device region with one area on vg00/lvol1
 .br
 #
 .B dmstats create vg00/lvol1
-.br
+.
+.EX
 vg00/lvol1: Created new region with 1 area(s) as region ID 0
+.EE
 .P
 Create a 32\~MiB region 1\~GiB into device d0
 .br
 #
 .B dmstats create --start 1G --length 32M d0
-.br
+.
+.EX
 d0: Created new region with 1 area(s) as region ID 0
+.EE
 .P
 Create a whole-device region with 8 areas on every device
 .br
 #
 .B dmstats create --areas 8
-.br
+.
+.EX
 vg00-lvol1: Created new region with 8 area(s) as region ID 0
-.br
 vg00-lvol2: Created new region with 8 area(s) as region ID 0
-.br
 vg00-lvol3: Created new region with 8 area(s) as region ID 0
-.br
 vg01-lvol0: Created new region with 8 area(s) as region ID 2
-.br
 vg01-lvol1: Created new region with 8 area(s) as region ID 0
-.br
 vg00-lvol2: Created new region with 8 area(s) as region ID 1
+.EE
+.
 .P
 Delete all regions on all devices
 .br
@@ -1146,28 +1201,32 @@ using dmsetup
 .br
 #
 .B dmsetup stats create --areasize 10G vg00/lvol1
-.br
+.
+.EX
 vg00-lvol1: Created new region with 5 area(s) as region ID 1
+.EE
 .P
 Create a 1\~GiB region with 16 areas at the start of vg00/lvol1
 .br
 #
 .B dmstats create --start 0 --len 1G --areas=16 vg00/lvol1
-.br
+.
+.EX
 vg00-lvol1: Created new region with 16 area(s) as region ID 0
+.EE
 .P
 List the statistics regions registered on vg00/lvol1
 .br
 #
 .B dmstats list vg00/lvol1
-.TS
-l l l l l l l
-l n n n n n l.
-Name	RgID	RStart	RSize	#Areas	ASize	ProgID
-vg00\-lvol1	0	0	61.00g	1	61.00g	dmstats
-vg00\-lvol1	1	61.00g	19.20g	1	19.20g	dmstats
-vg00\-lvol1	2	80.20g	2.14g	1	2.14g	dmstats
-.TE
+.
+.EX
+Name         RgID RStart  RSize  #Areas ASize  ProgID
+vg00\-lvol1    0    0      61.00g  1     61.00g dmstats
+vg00\-lvol1    1   61.00g  19.20g  1     19.20g dmstats
+vg00\-lvol1    2   80.20g   2.14g  1      2.14g dmstats
+.EE
+.
 .P
 Display five statistics reports for vg00/lvol1 at an interval of one second
 .br
@@ -1176,86 +1235,79 @@ Display five statistics reports for vg00/lvol1 at an interval of one second
 .br
 #
 .B dmstats report
-.nr ol \n(.l
-.nr oL \n(LL
-.ie n \{\
-.  ll 125m
-.  nr LL 125m
-.\}
-.el \{\
-.  ll 120m
-.  nr LL 120m
-.  nr oi \n(.i
-.  nr oo \n(.o
-.  in 0
-.  po 0
-.\}
-.TS
-l1 l1 l1 l1 l1 l1 l1 l1 l1 l1 l1 l1 l1 l1 l1 l1 l
-l1 n1 n1 n1 n1 n1 n1 n1 n1 n1 n1 n1 n1 n1 n1 n1 n.
-Name	RgID	ArID	AStart	ASize	RRqM/s	WRqM/s	R/s	W/s	RSz/s	WSz/s	AvRqSz	QSize	Util%	AWait	RdAWa	WrAWa
-vg_hex\-lv_home	0	0	0	61.00g	0.00	0.00	0.00	218.00	0	1.04m	4.50k	2.97	81.70	13.62	0.00	13.62
-vg_hex\-lv_home	1	0	61.00g	19.20g	0.00	0.00	0.00	5.00	0	548.00k	109.50k	0.14	11.00	27.40	0.00	27.40
-vg_hex\-lv_home	2	0	80.20g	2.14g	0.00	0.00	0.00	14.00	0	1.15m	84.00k	0.39	18.70	27.71	0.00	27.71
-.TE
-.br
-.ll \n(olu
-.nr LL \n(oLu
-.if t \{\
-.po \n(oou
-.in \n(oiu
-.\}
+.
+.EX
+Name        RgID ArID AStart ASize  RRqM/s WRqM/s R/s \[->]
+vg00\-lvol1   0    0    0    61.00g  0.00   0.00  0.00
+vg00\-lvol1   1    0  61.00g 19.20g  0.00   0.00  0.00
+vg00\-lvol1   2    0  80.20g  2.14g  0.00   0.00  0.00
+.sp
+\[->] W/s  RSz/s  WSz/s   AvRqSz  QSize Util% AWait RdAWa WrAWa
+218.00 0.00     1.04m   4.50k 2.97  81.70 13.62 0.00  13.62
+\  5.00 0.00   548.00k 109.50k 0.14  11.00 27.40 0.00  27.40
+\ 14.00 0.00     1.15m  84.00k 0.39  18.70 27.71 0.00  27.71
+.EE
+.
 .P
 Create one region for reach target contained in device vg00/lvol1
 .br
 #
 .B dmstats create --segments vg00/lvol1
-.br
+.
+.EX
 vg00-lvol1: Created new region with 1 area(s) as region ID 0
-.br
 vg00-lvol1: Created new region with 1 area(s) as region ID 1
-.br
 vg00-lvol1: Created new region with 1 area(s) as region ID 2
+.EE
 .P
 Create regions mapping each file in the directory images/ and place
 them into separate groups, each named after the corresponding file.
 .br
 #
 .B dmstats create --filemap images/*
-.br
+.
+.EX
 images/vm1.qcow2: Created new group with 87 region(s) as group ID 0.
-.br
 images/vm1-1.qcow2: Created new group with 8 region(s) as group ID 87.
-.br
 images/vm2.qcow2: Created new group with 11 region(s) as group ID 95.
-.br
 images/vm2-1.qcow2: Created new group with 1454 region(s) as group ID 106.
-.br
 images/vm3.img: Created new group with 2 region(s) as group ID 1560.
+.EE
+.
 .P
 Print raw counters for region 4 on device d0
 .br
 #
 .B dmstats print --regionid 4 d0
-.br
+.
+.EX
 2097152+65536 0 0 0 0 29 0 264 701 0 41 701 0 41
+.EE
 .
 .SH AUTHORS
 .
-Bryn M. Reeves <bmr@redhat.com>
+.MT bmr@redhat.com
+Bryn M. Reeves
+.ME
 .
 .SH SEE ALSO
 .
-.BR dmsetup (8)
+.nh
+.na
+.BR dmfilemapd (8),
+.BR dmsetup (8),
 .P
+.BR ext4 (5),
+.BR xfs (5)
+.P
+.UR https://\:www.sourceware.org/lvm2
 LVM2 resource page:
-.UR https://www.sourceware.org/lvm2
 .UE
 .br
+.UR http://\:www.sourceware.org/dm
 Device-mapper resource page:
-.UR http://www.sourceware.org/dm
 .UE
 .P
 Device-mapper statistics kernel documentation
 .br
-.I Documentation/device-mapper/statistics.txt
+.I Documentation/\:device-mapper/\:statistics.txt

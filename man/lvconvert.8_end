@@ -51,7 +51,8 @@ from specific PV ranges.
 .br
 .B lvconvert --mirrors 1 vg/lvol1 /dev/sda:0-15 /dev/sdb:0-15
 .P
-Convert a mirror LV to a linear LV, freeing physical extents from a specific PV.
+Convert a mirror LV to a linear LV,
+freeing physical extents from a specific PV.
 .br
 .B lvconvert --type linear vg/lvol1 /dev/sda
 .P
@@ -75,10 +76,8 @@ Replace PV /dev/sdb1 with PV /dev/sdf1 in a raid1/4/5/6/10 LV.
 .P
 Replace 3 PVs /dev/sd[b-d]1 with PVs /dev/sd[f-h]1 in a raid1 LV.
 .br
-.B lvconvert --replace /dev/sdb1 --replace /dev/sdc1 --replace /dev/sdd1
-.RS
-.B vg/lvol1 /dev/sd[fgh]1
-.RE
+.B lvconvert --replace /dev/sdb1 --replace /dev/sdc1 \
+--replace /dev/sdd1 vg/lvol1 /dev/sd[fgh]1
 .P
 Replace the maximum of 2 PVs /dev/sd[bc]1 with PVs /dev/sd[gh]1 in a raid6 LV.
 .br
@@ -103,10 +102,7 @@ Convert an LV into a thin LV in the specified thin pool.  The existing LV
 is used as an external read-only origin for the new thin LV, and is
 renamed "external".
 .br
-.B lvconvert --type thin --thinpool vg/tpool1
-.RS
-.B --originname external vg/lvol1
-.RE
+.B lvconvert --type thin --thinpool vg/tpool1 --originname external vg/lvol1
 .P
 Convert an LV to a cache pool LV using another specified LV for cache pool
 metadata.

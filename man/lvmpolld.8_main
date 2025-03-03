@@ -1,32 +1,45 @@
 .TH LVMPOLLD 8 "LVM TOOLS #VERSION#" "Red Hat Inc" \" -*- nroff -*-
 .
+.de NSY
+.  ie t .SY \\$1
+.  el \{\
+.    ie \\n(.$>1 \{\
+.      PD 0
+.      TP \\w'\\$1\ 'u
+.    \}
+.    el .TP
+.    B \\$1
+.    na
+.    nh
+.  \}
+..
+.
 .SH NAME
 .
 lvmpolld \(em LVM poll daemon
 .
 .SH SYNOPSIS
 .
-.B lvmpolld
-.nh
-.na
-.RB [ -l | --log
-.BR all | wire | debug ]
-.RB [ -p | --pidfile
-.IR pidfile_path ]
-.RB [ -s | --socket
-.IR socket_path ]
-.RB [ -B | --binary
-.IR lvm_binary_path ]
-.RB [ -t | --timeout
-.IR timeout_value ]
+.NSY lvmpolld 1
+.RB [ -B | --binary\ \c
+.IR lvm_bi\%nary_path ]
 .RB [ -f | --foreground ]
 .RB [ -h | --help ]
+.RB [ -l | --log\ \c
+.BR all |\: wire | debug ]
+.RB [ -p | --pidfile\ \c
+.IR pidfile_path ]
+.RB [ -s | --socket\ \c
+.IR socket_path ]
+.RB [ -t | --timeout\ \c
+.IR timeout_value ]
 .RB [ -V | --version ]
+.sp
+.NSY lvmpolld
+.RB [ --dump ]
 .ad
 .hy
-.P
-.B lvmpolld
-.RB [ --dump ]
+.PD
 .
 .SH DESCRIPTION
 .
@@ -51,8 +64,20 @@ To run the daemon in a test environment both the pidfile_path and the
 socket_path should be changed from the defaults.
 .
 .TP
+\fB-B\fP|\fB--binary\fP \fIlvm_binary_path\fP
+Optional path to alternative LVM binary
+(default: \fI#LVM_PATH#\fP).
+Use for testing purposes only.
+.
+.TP
+.B --dump
+Contact the running lvmpolld daemon to obtain the complete state
+and print it out in a raw format.
+.
+.TP
 .BR -f | --foreground
 Don't fork, but run in the foreground.
+.
 .TP
 .BR -h | --help
 Show help information.
@@ -67,36 +92,29 @@ Selecting '\fBall\fP' supplies both
 and is equivalent to a comma-separated list \fB-l wire,debug\fP.
 .
 .TP
-.BR -p | --pidfile " " \fIpidfile_path
+\fB-p\fP|\fB--pidfile\fP \fIpidfile_path\fP
 Path to the pidfile. This overrides both the built-in default
-(\fI#DEFAULT_PID_DIR#/lvmpolld.pid\fP) and the environment variable
-\fBLVM_LVMPOLLD_PIDFILE\fP.  This file is used to prevent more
-than one instance of the daemon running simultaneously.
+(\fI#DEFAULT_PID_DIR#/lvmpolld.pid\fP)
+and the environment variable
+\fBLVM_LVMPOLLD_PIDFILE\fP.
+This file is used to prevent more than one instance
+of the daemon running simultaneously.
 .
 .TP
-.BR -s | --socket " " \fIsocket_path
+\fB-s\fP|\fB--socket\fP \fIsocket_path\fP
 Path to the socket file. This overrides both the built-in default
 (\fI#DEFAULT_RUN_DIR#/lvmpolld.socket\fP) and the environment variable
 \fBLVM_LVMPOLLD_SOCKET\fP.
 .
 .TP
-.BR -t | --timeout " " \fItimeout_value
+\fB-t\fP|\fB--timeout\fP \fItimeout_value\fP
 The daemon may shutdown after being idle for the given time (in seconds).
 When the option is omitted or the value given is zero
 the daemon never shutdowns on idle.
 .
 .TP
-.BR -B | --binary " " \fIlvm_binary_path
-Optional path to alternative LVM binary (default: \fI#LVM_PATH#\fP).
-Use for testing purposes only.
-.
-.TP
 .BR -V | --version
 Display the version of lvmpolld daemon.
-.TP
-.B --dump
-Contact the running lvmpolld daemon to obtain the complete state and print it
-out in a raw format.
 .
 .SH ENVIRONMENT VARIABLES
 .
@@ -111,4 +129,8 @@ Path for the socket file.
 .SH SEE ALSO
 .
 .BR lvm (8),
-.BR lvm.conf (5)
+.BR lvm.conf (5),
+.BR lvchange (8),
+.BR lvconvert (8),
+.BR pvmove (8),
+.BR vgchange (8)

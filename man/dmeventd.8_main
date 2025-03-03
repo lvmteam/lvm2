@@ -1,17 +1,31 @@
 .TH DMEVENTD 8 "DM TOOLS #VERSION#" "Red Hat Inc" \" -*- nroff -*-
 .
+.de NSY
+.  ie t .SY \\$1
+.  el \{\
+.    ie \\n(.$>1 \{\
+.      PD 0
+.      TP \\w'\\$1\ 'u
+.    \}
+.    el .TP
+.    B \\$1
+.    nh
+.    na
+.  \}
+..
+.
 .SH NAME
 .
 dmeventd \(em Device-mapper event daemon
 .
 .SH SYNOPSIS
 .
-.B dmeventd
+.NSY dmeventd 1
 .RB [ -d
 .RB [ -d
 .RB [ -d ]]]
-.RB [ -e
-.BR exit_on_path ]
+.RB [ -e\ \c
+.IR exit_on_path ]
 .RB [ -f ]
 .RB [ -h ]
 .RB [ -i ]
@@ -19,6 +33,10 @@ dmeventd \(em Device-mapper event daemon
 .RB [ -R ]
 .RB [ -V ]
 .RB [ -? ]
+.
+.PD
+.ad
+.hy
 .
 .SH DESCRIPTION
 .
@@ -39,7 +57,7 @@ debug messages sent to syslog.
 Each extra d adds more debugging information.
 .
 .TP
-.B -e exit_on_path
+\fB-e\fP \fIexit_on_path\fP
 Specifies the file path whose presence is checked by the daemon when it
 receives a signal (SIGINT, SIGTERM) and allows to exit even if there are still
 monitored devices.
@@ -86,14 +104,12 @@ Show version of dmeventd.
 .TP
 .B Mirror
 Attempts to handle device failure automatically.
-.br
 See
 .BR lvm.conf (5).
 .
 .TP
 .B Raid
 Attempts to handle device failure automatically.
-.br
 See
 .BR lvm.conf (5).
 .
@@ -115,11 +131,11 @@ The warning is repeated when more than 85%, 90% and 95%
 of the thin pool is filled. See
 .BR lvm.conf (5).
 When a thin pool fills over 50% (data or metadata) thin plugin calls
-configured \fBdmeventd/thin_command\fP with every 5% increase.
+configured \fBdmeventd/\:thin_command\fP with every 5% increase.
 With default setting it calls internal
 \fBlvm lvextend --use-policies\fP to resize thin pool
 when it's been filled above configured threshold
-\fBactivation/thin_pool_autoextend_threshold\fP.
+\fBactivation/\:thin_pool\%_auto\%extend\%_threshold\fP.
 If the command fails, dmeventd thin plugin will keep
 retrying execution with increasing time delay between
 retries up to 42 minutes.
@@ -130,11 +146,13 @@ use \fBfstrim\fP(8) to free recover space in a thin pool,
 but also can use \fBlvextend --use-policies\fP if other actions
 have not released enough space.
 Command is executed with environmental variable
-\fBLVM_RUN_BY_DMEVENTD=1\fP so any lvm2 command executed
-in this environment will not try to interact with dmeventd.
-To see the fullness of a thin pool command may check these
-two environmental variables
-\fBDMEVENTD_THIN_POOL_DATA\fP and \fBDMEVENTD_THIN_POOL_\:METADATA\fP.
+\fBLVM_RUN_BY\%_DM\%EVENTD=1\fP
+so any lvm2 command executed in this environment
+will not try to interact with dmeventd.
+To see the fullness of a thin pool command
+may check these two environmental variables
+\fBDMEVENTD\%_THIN\%_POOL\%_DATA\fP and
+\fBDMEVENTD\%_THIN\%_POOL\%_METADATA\fP.
 Command can also read status with tools like \fBlvs\fP(8).
 .
 .TP
@@ -145,11 +163,11 @@ The warning is repeated when more than 85%, 90% and 95%
 of the VDO pool is filled. See
 .BR lvm.conf (5).
 When a VDO pool fills over 50% vdo plugin calls
-configured \fBdmeventd/vdo_command\fP with every 5% increase.
+configured \fBdmeventd/\:vdo_command\fP with every 5% increase.
 With default setting it calls internal
 \fBlvm lvextend --use-policies\fP to resize VDO pool
 when it's been filled above the configured threshold
-\fBactivation/vdo_pool_autoextend_threshold\fP.
+\fBactivation/\:vdo_pool\%_auto\%extend\%_threshold\fP.
 If the command fails, dmeventd vdo plugin will keep
 retrying execution with increasing time delay between
 retries up to 42 minutes.
@@ -157,10 +175,10 @@ User may also configure external command to support more advanced
 maintenance operations of a VDO pool.
 Such external command can e.g. remove some unneeded space
 with \fBfstrim\fP(8),
-but also can use \fBlvextend --use-policies\fP if other actions
-have not released enough space.
+but also can use \fBlvextend --use-policies\fP
+if other actions have not released enough space.
 Command is executed with environmental variable
-\fBLVM_RUN_BY_DMEVENTD=1\fP so any lvm2 command executed
+\fBLVM_RUN_BY\%_DMEVENTD=1\fP so any lvm2 command executed
 in this environment will not try to interact with dmeventd.
 To see the fullness of a VDO pool command may check this
 environmental variable \fBDMEVENTD_VDO_POOL\fP.
@@ -173,16 +191,19 @@ Command can also read status with tools like \fBlvs\fP(8).
 Variable is set by thin plugin and is available to executed program.
 Value present actual usage of thin pool data volume.
 Variable is not set when error event is processed.
+.
 .TP
 .B DMEVENTD_THIN_POOL_METADATA
 Variable is set by thin plugin and is available to executed program.
 Value present actual usage of thin pool metadata volume.
 Variable is not set when error event is processed.
+.
 .TP
 .B DMEVENTD_VDO_POOL
 Variable is set by vdo plugin and is available to executed program.
 Value present actual usage of VDO pool data volume.
 Variable is not set when error event is processed.
+.
 .TP
 .B LVM_RUN_BY_DMEVENTD
 Variable is set by thin and vdo plugin to prohibit recursive interaction
@@ -191,8 +212,10 @@ a thin_command, vdo_command environment.
 .
 .SH SEE ALSO
 .
+.nh
+.na
 .BR lvm (8),
 .BR lvm.conf (5),
 .BR lvextend (8),
-.br
+.P
 .BR fstrim (8)

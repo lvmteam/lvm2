@@ -71,35 +71,35 @@ Possible device ID types are:
 .IP \[bu] 2
 .B sys_wwid
 uses the wwid reported by the wwid sysfs file. This is the first choice.
-.IP \[bu] 2
+.IP \[bu]
 .B wwid_naa
 uses the naa wwid decoded from the vpd_pg83 sysfs file.
-.IP \[bu] 2
+.IP \[bu]
 .B wwid_eui
 uses the eui wwid decoded from the vpd_pg83 sysfs file.
-.IP \[bu] 2
+.IP \[bu]
 .B wwid_t10
 uses the t10 wwid decoded from the vpd_pg83 sysfs file.
-.IP \[bu] 2
+.IP \[bu]
 .B sys_serial
 uses the serial number reported by the serial sysfs file or the vpd_pg80
 file. A serial number is used if no wwid is available.
-.IP \[bu] 2
+.IP \[bu]
 .B mpath_uuid
 is used for dm multipath devices, reported by sysfs.
-.IP \[bu] 2
+.IP \[bu]
 .B crypt_uuid
 is used for dm crypt devices, reported by sysfs.
-.IP \[bu] 2
+.IP \[bu]
 .B md_uuid
 is used for md devices, reported by sysfs.
-.IP \[bu] 2
+.IP \[bu]
 .B lvmlv_uuid
 is used if a PV is placed on top of an lvm LV, reported by sysfs.
-.IP \[bu] 2
+.IP \[bu]
 .B loop_file
 is used for loop devices, the backing file name reported by sysfs.
-.IP \[bu] 2
+.IP \[bu]
 .B devname
 the device name is used if no other type applies.
 .P
@@ -126,6 +126,11 @@ existing PVIDs (assuming the original device IDs are also no longer
 found.)
 .P
 The machine identifier used in system.devices will be either the DMI
-product_uuid from /sys/devices/virtual/dmi/id/product_uuid, or the
-hostname from uname(2). See lvm.conf device_ids_refresh_checks to
+product_uuid from
+.IR /sys/devices/virtual/dmi/id/product_uuid ,
+or the hostname from
+.BR uname (2).
+See
+.BR lvm.conf (5)
+.B device_ids_refresh_checks to
 configure this.

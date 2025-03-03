@@ -1,14 +1,32 @@
 .TH CMIRRORD 8 "LVM TOOLS #VERSION#" "Red Hat Inc" \" -*- nroff -*-
 .
+.de NSY
+.  ie t .SY \\$1
+.  el \{\
+.    ie \\n(.$>1 \{\
+.      PD 0
+.      TP \\w'\\$1\ 'u
+.    \}
+.    el .TP
+.    B \\$1
+.    nh
+.    na
+.  \}
+..
+.
 .SH NAME
 .
 cmirrord \(em cluster mirror log daemon
 .
 .SH SYNOPSIS
 .
-.B cmirrord
+.NSY cmirrord 1
 .RB [ -f | --foreground ]
 .RB [ -h | --help ]
+.
+.PD
+.ad
+.hy
 .
 .SH DESCRIPTION
 .
@@ -34,13 +52,17 @@ mirror log daemon.
 .TP
 .BR -f | --foreground
 Do not fork and log to the terminal.
+.
 .TP
 .BR -h | --help
 Print usage.
 .
 .SH SEE ALSO
 .
+.nh
+.na
 .BR lvmlockd (8),
 .BR lvm (8),
+.P
 .BR syslog (3),
 .BR signal (7)

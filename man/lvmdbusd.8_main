@@ -32,5 +32,8 @@ Use udev events to trigger updates
 .
 .SH SEE ALSO
 .
-.BR dbus-send (1),
-.BR lvm (8)
+.nh
+.na
+.BR lvm (8),
+.P
+.BR dbus-send (1)

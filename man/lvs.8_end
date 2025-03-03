@@ -2,6 +2,7 @@
 .SH NOTES
 .
 The lv_attr bits are:
+.
 .IP 1 3
 Volume type: (\fBC\fP)ache, (\fBm\fP)irrored,
 (\fBM\fP)irrored without initial sync,
@@ -13,18 +14,22 @@ mirror (\fBl\fP)og device, under (\fBc\fP)onversion, thin (\fBV\fP)olume,
 (\fBt\fP)hin pool, (\fBT\fP)hin pool data,
 v(\fBd\fP)o pool, v(\fBD\fP)o pool data,
 raid or pool m(\fBe\fP)tadata or pool metadata spare.
-.IP 2 3
+.
+.IP 2
 Permissions: (\fBw\fP)riteable, (\fBr\fP)ead-only, (\fBR\fP)ead-only activation
 of non-read-only volume
-.IP 3 3
+.
+.IP 3
 Allocation policy:  (\fBa\fP)nywhere, (\fBc\fP)ontiguous, (\fBi\fP)nherited,
 c(\fBl\fP)ing, (\fBn\fP)ormal
 This is capitalised if the volume is currently locked against allocation
 changes, for example during
 .BR pvmove (8).
-.IP 4 3
+.
+.IP 4
 fixed (\fBm\fP)inor
-.IP 5 3
+.
+.IP 5
 State: (\fBa\fP)ctive, (\fBh\fP)istorical, (\fBs\fP)uspended,
 (\fBI\fP)nvalid snapshot, invalid (\fBS\fP)uspended snapshot,
 snapshot (\fBm\fP)erge failed, suspended snapshot (\fBM\fP)erge failed,
@@ -32,9 +37,11 @@ mapped (\fBd\fP)evice present without tables,
 mapped device present with (\fBi\fP)nactive table,
 thin-pool (\fBc\fP)heck needed,
 suspended thin-pool (\fBC\fP)heck needed, (\fBX\fP) unknown
-.IP 6 3
+.
+.IP 6
 device (\fBo\fP)pen, (\fBX\fP) unknown
-.IP 7 3
+.
+.IP 7
 Target type: (\fBC\fP)ache, (\fBm\fP)irror, (\fBr\fP)aid,
 (\fBs\fP)napshot, (\fBt\fP)hin, (\fBu\fP)nknown, (\fBv\fP)irtual.
 This groups logical volumes related to the same kernel target together.  So,
@@ -45,17 +52,21 @@ all appear as (\fBr\fP).
 Snapshots using the original device-mapper driver appear as (\fBs\fP);
 whereas snapshots of thin volumes using the new thin provisioning
 driver appear as (\fBt\fP).
-.IP 8 3
+.
+.IP 8
 Newly-allocated data blocks are overwritten with blocks
 of (\fBz\fP)eroes before use.
-.IP 9 3
+.
+.IP 9
 Volume Health, where there are currently three groups of attributes identified:
+.
 .IP
 Common ones for all Logical Volumes: (\fBp\fP)artial, (\fBX\fP) unknown.
 .br
 (\fBp\fP)artial signifies that one or more of the Physical Volumes this Logical
 Volume uses is missing from the system. (\fBX\fP) unknown signifies the status
 is unknown.
+.
 .IP
 Related to RAID Logical Volumes: (\fBr\fP)efresh needed,
 (\fBm\fP)ismatches exist, (\fBw\fP)ritemostly.
@@ -73,6 +84,7 @@ devices in a RAID 1 logical volume that have been marked write-mostly.
 Re(\fBs\fP)haping signifies a RAID Logical Volume is either undergoing
 a stripe addition/removal, a stripe size or RAID algorithm change.
 (\fBR\fP)emove after reshape signifies freed striped raid images to be removed.
+.
 .IP
 Related to Thin pool Logical Volumes: (\fBF\fP)ailed, out of (\fBD\fP)ata space,
 (\fBM\fP)etadata read only.
@@ -83,14 +95,17 @@ The out of (\fBD\fP)ata space is set if thin pool has run out of data space.
 (\fBM\fP)etadata read only signifies that thin pool encounters certain
 types of failures but it's still possible to do reads at least,
 but no metadata changes are allowed.
+.
 .IP
 Related to Thin Logical Volumes: (\fBF\fP)ailed.
 .br
 (\fBF\fP)ailed is set when related thin pool enters Failed state and
 no further I/O is permitted at all.
+.
 .IP
 Related to writecache logical volumes: (\fBE\fP)rror.
 .br
 (\fBE\fP)rror is set dm-writecache reports an error.
-.IP 10 3
+.
+.IP 10
 s(\fBk\fP)ip activation: this volume is flagged to be skipped during activation.

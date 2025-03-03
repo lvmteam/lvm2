@@ -11,7 +11,8 @@ lvm.conf \(em Configuration file for LVM2
 .SH DESCRIPTION
 .
 \fBlvm.conf\fP is loaded during the initialisation phase of
-\fBlvm\fP(8).  This file can in turn lead to other files
+.BR lvm (8).
+This file can in turn lead to other files
 being loaded - settings read in later override earlier
 settings.  File timestamps are checked between commands and if
 any have changed, all the files are reloaded.
@@ -45,8 +46,8 @@ The \fBcommand profile\fP is used to override selected configuration
 settings at global LVM command level - it is applied at the very beginning
 of LVM command execution and it is used throughout the whole time of LVM
 command execution. The command profile is applied by using the
-\fB--commandprofile ProfileName\fP command line option that is recognised by
-all LVM2 commands.
+\fB--commandprofile ProfileName\fP command line option
+that is recognised by all LVM2 commands.
 .P
 The \fBmetadata profile\fP is used to override selected configuration
 settings at Volume Group/Logical Volume level - it is applied independently
@@ -83,7 +84,9 @@ can be used to generate a configuration with profilable settings in either
 of the type for given section and save it to new ProfileName.profile
 (if the section is not specified, all profilable settings are reported).
 .P
-The profiles are stored in \fI#DEFAULT_PROFILE_DIR#\fP directory by default.
+The profiles are stored in
+.I #DEFAULT_PROFILE_DIR#
+directory by default.
 This location can be changed by using the \fBconfig/profile_dir\fP setting.
 Each profile configuration is stored in \fBProfileName.profile\fP file
 in the profile directory. When referencing the profile, the \fB.profile\fP
@@ -98,12 +101,17 @@ When several configuration methods are used at the same time
 and when LVM looks for the value of a particular setting, it traverses
 this \fBconfig cascade\fP from left to right:
 .P
-\fBdirect config override on command line\fP \[->]
-\fBcommand profile config\fP \[->]
-\fBmetadata profile config\fP \[->]
-\fBtag config\fP \[->]
-\fBlvmlocal.conf\fP \[->]
-\fBlvm.conf\fP
+.B direct config override on command line
+\[->]
+.B command profile config
+\[->]
+.B metadata profile config
+\[->]
+.B tag config
+\[->]
+.B lvmlocal.conf
+\[->]
+.B lvm.conf
 .P
 No part of this cascade is compulsory. If there's no setting value found at
 the end of the cascade, a default value is used for that setting.
@@ -113,32 +121,38 @@ the default values are.
 .SH SYNTAX
 .
 This section describes the configuration file syntax.
-.LP
+.P
 Whitespace is not significant unless it is within quotes.
 This provides a wide choice of acceptable indentation styles.
 Comments begin with # and continue to the end of the line.
 They are treated as whitespace.
-.LP
+.P
 Here is an informal grammar:
+.
 .TP
 .BR file " = " value *
 A configuration file consists of a set of values.
+.
 .TP
 .BR value " = " section " | " assignment
 A value can either be a new section, or an assignment.
+.
 .TP
 .BR section " = " identifier " '" { "' " value "* '" } '
 A section groups associated values together. If the same section is
 encountered multiple times, the contents of all instances are concatenated
 together in the order of appearance.
 .br
-It is denoted by a name and delimited by curly brackets.
+It is denoted by a name and delimited by curly brackets. e.g.
 .br
-e.g.	backup {
-.br
-		...
-.br
-	}
+backup {
+.RS
+.RS
+\|\.\|.\|.
+.RE
+}
+.RE
+.
 .TP
 .BR assignment " = " identifier " '" = "' ( " array " | " type " )"
 .br
@@ -148,8 +162,9 @@ forward slashes, those are interpreted as path delimiters. The statement
 multiple instances of the same key are encountered, only the last value is used
 (and a warning is issued).
 .br
-e.g.	\fBlevel = 7\fP
+e.g.\&   \fBlevel = 7\fP
 .br
+.
 .TP
 .BR array " =  '" [ "' ( " type " '" , "')* " type " '" ] "' | '" [ "' '" ] '
 Inhomogeneous arrays are supported.
@@ -160,13 +175,16 @@ An empty array is acceptable.
 .br
 An array with one element will be correctly interpreted if the array brackets
 are missing.
+.
 .TP
-.BR type " = " integer | float | string
+.BR type " = "
+.BR integer | float | string
 .BR integer " = [" 0 - 9 "]*"
 .br
 .BR float " = [" 0 - 9 "]*'" . "'[" 0 - 9 ]*
 .br
 .BR string " = '" \(dq "' .* '" \(dq '
+.
 .IP
 Strings with spaces must be enclosed in double quotes, single words that start
 with a letter can be left unquoted.
@@ -208,6 +226,7 @@ e.g. umask:
 .B lvmconfig --type default --withcomments Section/Setting
 .
 .SH FILES
+.
 .I #DEFAULT_SYS_DIR#/lvm.conf
 .br
 .I #DEFAULT_SYS_DIR#/lvmlocal.conf
