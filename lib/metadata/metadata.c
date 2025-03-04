@@ -67,6 +67,13 @@ static int _check_pv_ext(struct cmd_context *cmd, struct volume_group *vg)
 		if (!(info = lvmcache_info_from_pvid(pvl->pv->dev->pvid, pvl->pv->dev, 0)))
 			continue;
 
+		/*
+		 * If this vg metadata is old/outdated, it may no longer reflect the
+		 * actual VG containing this PV, in which case we ignore this check.
+		 */
+		if (!lvmcache_verify_info_in_vg(vg, info))
+			continue;
+
 		ext_version = lvmcache_ext_version(info);
 		if (ext_version < PV_HEADER_EXTENSION_VSN) {
 			log_warn("WARNING: PV %s in VG %s is using an old PV header, modify the VG to update.",
@@ -3636,29 +3643,6 @@ int pv_write(struct cmd_context *cmd,
 	return 1;
 }
 
-int pv_write_orphan(struct cmd_context *cmd, struct physical_volume *pv)
-{
-	const char *old_vg_name = pv->vg_name;
-
-	pv->vg_name = cmd->fmt->orphan_vg_name;
-	pv->status = ALLOCATABLE_PV;
-	pv->pe_alloc_count = 0;
-
-	if (!dev_get_size(pv->dev, &pv->size)) {
-		log_error("%s: Couldn't get size.", pv_dev_name(pv));
-		return 0;
-	}
-
-	if (!pv_write(cmd, pv, 0)) {
-		log_error("Failed to clear metadata from physical "
-			  "volume \"%s\" after removal from \"%s\"",
-			  pv_dev_name(pv), old_vg_name);
-		return 0;
-	}
-
-	return 1;
-}
-
 /**
  * is_orphan_vg - Determine whether a vg_name is an orphan
  * @vg_name: pointer to the vg_name
@@ -4915,7 +4899,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 	 * Also, outdated PVs that have been removed from the VG were incorrectly
 	 * attached to the vginfo during label_scan, and now need to be detached.
 	 */
-	lvmcache_update_vg_from_read(vg_ret, vg_ret->status & PRECOMMITTED);
+	lvmcache_update_vg_from_read(vg_ret);
 
 	/*
 	 * lvmcache_update_vg identified outdated mdas that we read above that
@@ -5117,6 +5101,22 @@ struct volume_group *vg_read(struct cmd_context *cmd, const char *vg_name, const
 			log_error(INTERNAL_ERROR "LV segments corrupted in %s.", lvl->lv->name);
 			failure |= FAILED_INTERNAL_ERROR;
 			goto bad;
+		}
+	}
+
+	/*
+	 * If the VG metadata is referencing PVs that don't belong to it,
+	 * then don't allow the VG to be modified or activated, to avoid
+	 * damanging those PVs.
+	 */
+	if (!is_orphan_vg(vg->name) && (writing || activating)) {
+		dm_list_iterate_items(pvl, &vg->pvs) {
+			if (!lvmcache_verify_pv_in_vg(vg, pvl->pv)) {
+				log_error("Cannot use VG %s referencing incorrect PVs.", vg->name);
+				log_error("(See vgreduce --removemissing with --devices options.)");
+				failure |= FAILED_NOT_ENABLED;
+				goto bad;
+			}
 		}
 	}
 

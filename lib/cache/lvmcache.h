@@ -83,7 +83,7 @@ void lvmcache_del_dev(struct device *dev);
 /* Update things */
 int lvmcache_update_vgname_and_id(struct cmd_context *cmd, struct lvmcache_info *info,
 				  struct lvmcache_vgsummary *vgsummary);
-int lvmcache_update_vg_from_read(struct volume_group *vg, unsigned precommitted);
+int lvmcache_update_vg_from_read(struct volume_group *vg);
 
 void lvmcache_lock_vgname(const char *vgname, int read_only);
 void lvmcache_unlock_vgname(const char *vgname);
@@ -189,6 +189,9 @@ uint64_t lvmcache_max_metadata_size(void);
 void lvmcache_save_metadata_size(uint64_t val);
 
 bool lvmcache_has_old_metadata(struct cmd_context *cmd, const char *vgname, const char *vgid, struct device *dev);
+
+int lvmcache_verify_pv_in_vg(struct volume_group *vg, struct physical_volume *pv);
+int lvmcache_verify_info_in_vg(struct volume_group *vg, struct lvmcache_info *info);
 
 void lvmcache_get_outdated_devs(struct cmd_context *cmd,
                                 const char *vgname, const char *vgid,

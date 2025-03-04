@@ -2097,12 +2097,17 @@ int lvmcache_update_vgname_and_id(struct cmd_context *cmd, struct lvmcache_info 
 		vgid = vgname;
 	}
 
-	/* FIXME: remove this, it shouldn't be needed */
-	/* If PV without mdas is already in a real VG, don't make it orphan */
-	if (is_orphan_vg(vgname) && info->vginfo &&
-	    mdas_empty_or_ignored(&info->mdas) &&
-	    !is_orphan_vg(info->vginfo->vgname) && critical_section())
+	/*
+	 * This happens when vgremove does pv_write to make a PV
+	 * that was previously part of a VG into a new orphan.
+	 * FIXME: change pv_write to not use or update lvmcache,
+	 * which should only be updated by label_scan.
+	 */
+	if (is_orphan_vg(vgname) && info->vginfo && !is_orphan_vg(info->vginfo->vgname)) {
+		log_debug("lvmcache change %s to orphan from previous VG %s.",
+			   dev_name(info->dev), info->vginfo->vgname);
 		return 1;
+	}
 
 	/*
 	 * Creates a new vginfo struct for this vgname/vgid if none exists,
@@ -2265,7 +2270,7 @@ int lvmcache_update_vgname_and_id(struct cmd_context *cmd, struct lvmcache_info 
  * using the 'vg'.
  */
 
-int lvmcache_update_vg_from_read(struct volume_group *vg, unsigned precommitted)
+int lvmcache_update_vg_from_read(struct volume_group *vg)
 {
 	char pvid[ID_LEN + 1] __attribute__((aligned(8))) = { 0 };
 	char vgid[ID_LEN + 1] __attribute__((aligned(8))) = { 0 };
@@ -2287,6 +2292,8 @@ int lvmcache_update_vg_from_read(struct volume_group *vg, unsigned precommitted)
 		log_error(INTERNAL_ERROR "lvmcache_update_vg %s no vginfo", vg->name);
 		return 0;
 	}
+
+	log_debug_cache("lvmcache_update_vg %s vginfo from metadata", vg->name);
 
 	/*
 	 * The label scan doesn't know when a PV with old metadata has been
@@ -2326,8 +2333,21 @@ int lvmcache_update_vg_from_read(struct volume_group *vg, unsigned precommitted)
 			continue;
 		}
 
-		log_debug_cache("lvmcache_update_vg %s for info %s",
-				vg->name, dev_name(info->dev));
+		/*
+		 * If this PV info is already attached to a different VG, don't
+		 * override that.  The info/vginfo map a PV to a VG based on the
+		 * metadata which appears on the PV itself.  That has precedence
+		 * over a different mapping of PV to another VG (the vg arg here)
+		 * which is likely outdated metadata from some other device.
+		 */
+		if (info->vginfo && !is_orphan_vg(info->vginfo->vgname) &&
+		    (strcmp(info->vginfo->vgname, vg->name) || memcmp(info->vginfo->vgid, &vg->id, ID_LEN))) {
+			log_warn("WARNING: PV %s %s belongs to VG %s, ignoring claim from VG %s.",
+				 dev_name(info->dev), pvid, info->vginfo->vgname, vg->name);
+			continue;
+		}
+
+		log_debug_cache("lvmcache_update_vg %s for %s", vg->name, dev_name(info->dev));
 		
 		/*
 		 * FIXME: use a different function that just attaches info's that
@@ -3201,6 +3221,73 @@ bool lvmcache_is_outdated_dev(struct cmd_context *cmd,
 	}
 
 	return false;
+}
+
+/*
+ * Metadata is being processed which shows 'vg' containing 'pv'.
+ * Verify that this is consistent with the headers/metadata that
+ * were scanned from PV.  The headers/metadata scanned from the
+ * actual PV could be different from what 'vg' metadata claims,
+ * if the 'vg' metadata is old/outdated.
+ */
+
+int lvmcache_verify_info_in_vg(struct volume_group *vg, struct lvmcache_info *info)
+{
+	char vgid[ID_LEN + 1] __attribute__((aligned(8))) = { 0 };
+
+	memcpy(vgid, &vg->id, ID_LEN);
+
+	if (!info->dev) {
+		log_error(INTERNAL_ERROR "Verify PV info in %s: skip, no dev", vg->name);
+		return 1;
+	}
+
+	if (!info->dev->pvid) {
+		log_debug("Verify PV %s in %s: uncertain, no pvid",
+			  dev_name(info->dev), vg->name);
+		return 1;
+	}
+
+	if (!info->vginfo) {
+		log_debug("Verify PV %s %s in %s: uncertain, no vginfo",
+			  info->dev->pvid, dev_name(info->dev), vg->name);
+		return 1;
+	}
+
+	if (strcmp(vg->name, info->vginfo->vgname)) {
+		log_debug("Verify PV %s %s in %s: fail, other VG %s",
+			  info->dev->pvid, dev_name(info->dev), vg->name, info->vginfo->vgname);
+		return 0;
+	}
+
+	if (memcmp(vgid, info->vginfo->vgid, ID_LEN)) {
+		log_debug("Verify PV %s %s in %s: fail, other vgid %s",
+			  info->dev->pvid, dev_name(info->dev), vg->name, info->vginfo->vgid);
+		return 0;
+	}
+
+	return 1;
+}
+
+
+int lvmcache_verify_pv_in_vg(struct volume_group *vg, struct physical_volume *pv)
+{
+	struct lvmcache_info *info;
+	char pvid[ID_LEN + 1] __attribute__((aligned(8))) = { 0 };
+
+	memcpy(&pvid, &pv->id.uuid, ID_LEN);
+
+	if (!(info = lvmcache_info_from_pvid(pvid, NULL, 0))) {
+		log_debug("Verify PV %s in %s: skip, no info", pvid, vg->name);
+		return 1;
+	}
+
+	if (pv->dev != info->dev) {
+		log_debug("Verify PV %s in %s: skip, different devs", info->dev->pvid, vg->name);
+		return 1;
+	}
+
+	return lvmcache_verify_info_in_vg(vg, info);
 }
 
 const char *dev_filtered_reason(struct device *dev)

@@ -381,8 +381,6 @@ int get_default_pvmetadatasize_sectors(void);
 void set_pe_align(struct physical_volume *pv, uint64_t data_alignment);
 void set_pe_align_offset(struct physical_volume *pv, uint64_t data_alignment_offset);
 
-int pv_write_orphan(struct cmd_context *cmd, struct physical_volume *pv);
-
 int check_dev_block_size_for_vg(struct device *dev, const struct volume_group *vg,
 				unsigned int *max_logical_block_size_found);
 int check_pv_dev_sizes(struct volume_group *vg);

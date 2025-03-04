@@ -4527,6 +4527,23 @@ static int _process_pvs_in_vg(struct cmd_context *cmd,
 		pv = pvl->pv;
 		pv_name = pv_dev_name(pv);
 
+		/*
+		 * The VG metadata being processed here believes that this PV
+		 * is part of the VG, but the headers/metadata on the PV may
+		 * say differently.  This can happen if the VG metadata being
+		 * processed here is outdated, e.g. from an old device that
+		 * has been reattached and has outdated metadata that no longer
+		 * reflects how other PVs are used.
+		 *
+		 * So, before processing PV as part of VG, check that the
+		 * metadata from PV shows the same.  Info about what's on
+		 * PV is kept in lvmcache info struct for PV.
+		 */
+		if (!is_orphan_vg(vg->name) && !lvmcache_verify_pv_in_vg(vg, pv)) {
+			log_debug("ignoring claim of PV %s by VG %s.", pv_name, vg->name);
+			continue;
+		}
+
 		log_set_report_object_name_and_id(pv_name, &pv->id);
 
 		process_pv = process_all_pvs;

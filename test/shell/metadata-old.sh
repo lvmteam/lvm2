@@ -219,3 +219,114 @@ grep $lv1 out
 grep $lv2 out
 
 vgremove -ff $vg
+
+# Old metadata is reattached that references PVs
+# which are now used by other VGs.  Commands run
+# on the VG from the old metadata should not
+# clobber the other PVs.
+
+vgcreate $SHARED $vg1 "$dev1" "$dev2" "$dev3"
+aux disable_dev "$dev1"
+vgreduce --removemissing $vg1
+vgremove $vg1
+vgcreate $vg2 "$dev2"
+vgcreate $vg3 "$dev3"
+aux enable_dev "$dev1"
+pvs | tee out
+grep "$dev1" out | tee out1
+grep "$dev2" out | tee out2
+grep "$dev3" out | tee out3
+grep $vg1 out1
+grep $vg2 out2
+grep $vg3 out3
+
+# The old VG cannot be used until the invalid PV references
+# are removed from it.
+not lvcreate -l1 $vg1
+not vgextend --restoremissing $vg1 "$dev1"
+not vgextend --restoremissing $vg1 "$dev2"
+not vgmerge $vg1 $vg2
+not vgrename $vg1 foo
+not vgremove $vg1
+not vgremove -ff $vg1
+not vgreduce $vg1 "$dev2"
+not vgreduce $vg1 "$dev3"
+not vgreduce --removemissing $vg1
+not vgreduce --removemissing --force $vg1
+not vgchange -ay $vg1
+
+# To modify the old VG on the reattached device,
+# removemissing together with --devices so the
+# command only sees the old device.
+vgreduce --removemissing --devices "$dev1" $vg1
+pvs | tee out
+grep "$dev1" out | tee out1
+grep "$dev2" out | tee out2
+grep "$dev3" out | tee out3
+grep $vg1 out1
+grep $vg2 out2
+grep $vg3 out3
+
+vgremove $vg1
+pvs | tee out
+not grep $vg1 out
+grep "$dev2" out | tee out2
+grep "$dev3" out | tee out3
+grep $vg2 out2
+grep $vg3 out3
+vgremove $vg2
+vgremove $vg3
+
+# Repeat the previous, but with two reattached/old PVs
+# referencing one other PV that's been reused for something
+# else.
+
+vgcreate $SHARED $vg1 "$dev1" "$dev2" "$dev3"
+aux disable_dev "$dev1"
+aux disable_dev "$dev2"
+vgreduce --removemissing $vg1
+vgremove $vg1
+vgcreate $vg3 "$dev3"
+aux enable_dev "$dev1"
+aux enable_dev "$dev2"
+pvs | tee out
+grep "$dev1" out | tee out1
+grep "$dev2" out | tee out2
+grep "$dev3" out | tee out3
+grep $vg1 out1
+grep $vg1 out2
+grep $vg3 out3
+
+# The old VG cannot be used until the invalid PV references
+# are removed from it.
+not lvcreate -l1 $vg1
+not vgextend --restoremissing $vg1 "$dev3"
+not vgmerge $vg1 $vg3
+not vgrename $vg1 foo
+not vgremove $vg1
+not vgremove -ff $vg1
+not vgreduce $vg1 "$dev2"
+not vgreduce $vg1 "$dev3"
+not vgreduce --removemissing $vg1
+not vgreduce --removemissing --force $vg1
+not vgchange -ay $vg1
+
+# To modify the old VG on the reattached device,
+# removemissing together with the correct PVs
+# specified with --devices.
+vgreduce --removemissing --devices "$dev1","$dev2" $vg1
+pvs | tee out
+grep "$dev1" out | tee out1
+grep "$dev2" out | tee out2
+grep "$dev3" out | tee out3
+grep $vg1 out1
+grep $vg1 out2
+grep $vg3 out3
+
+vgremove $vg1
+pvs | tee out
+not grep $vg1 out
+grep "$dev3" out | tee out3
+grep $vg3 out3
+vgremove $vg3
+
