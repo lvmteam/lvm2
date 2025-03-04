@@ -61,7 +61,7 @@ arg(delpvid_ARG, '\0', "delpvid", string_VAL, 0, 0,
     "Remove a device with the PVID from the devices file.\n")
 
 arg(aligned_ARG, '\0', "aligned", 0, 0, 0,
-    "Use with --separator to align the output columns\n")
+    "Use with --separator to align the output columns.\n")
 
 arg(alloc_ARG, '\0', "alloc", alloc_VAL, 0, 0,
     "Determines the allocation policy when a command needs to allocate\n"
@@ -780,6 +780,7 @@ arg(segments_ARG, '\0', "segments", 0, 0, 0,
     "PV, showing the start (pvseg_start) and length (pvseg_size) in units of\n"
     "physical extents.\n"
     "#lvs\n"
+    "#lvdisplay\n"
     "Use default columns that emphasize segment information.\n")
 
 arg(separator_ARG, '\0', "separator", string_VAL, 0, 0,
@@ -1149,15 +1150,18 @@ arg(all_ARG, 'a', "all", 0, 0, 0,
     "Change all visible PVs.\n"
     "#vgimport\n"
     "Import all visible VGs.\n"
+    "#fullreport\n"
     "#lvscan\n"
     "#lvdisplay\n"
     "#lvs\n"
     "Show information about internal LVs.\n"
     "These are components of normal LVs, such as mirrors,\n"
     "which are not independently accessible, e.g. not mountable.\n"
+    "#fullreport\n"
     "#vgs\n"
     "#vgdisplay\n"
     "List all VGs. Equivalent to not specifying any VGs.\n"
+    "#fullreport\n"
     "#pvs\n"
     "#pvdisplay\n"
     "Show information about devices that have not been initialized\n"
