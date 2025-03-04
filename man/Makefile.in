@@ -146,7 +146,7 @@ SEE_ALSO=$(srcdir)/see_also.end
 
 .PRECIOUS: %.8_gen
 
-%.8_gen: $(srcdir)/%.8_des $(srcdir)/%.8_end $(MANGENERATOR) $(TESTMAN)
+%.8_gen: $(srcdir)/%.8_des $(srcdir)/%.8_end $(MANGENERATOR) $(TESTMAN) $(SEE_ALSO)
 	$(Q)set -e ; ( \
 	    if [ ! -s $(TESTMAN) ] ; then \
 		cat $(srcdir)/$(@:%.8_gen=%.8_pregen) \
