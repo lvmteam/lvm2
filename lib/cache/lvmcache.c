@@ -3242,7 +3242,7 @@ int lvmcache_verify_info_in_vg(struct volume_group *vg, struct lvmcache_info *in
 		return 1;
 	}
 
-	if (!info->dev->pvid) {
+	if (!info->dev->pvid[0]) {
 		log_debug("Verify PV %s in %s: uncertain, no pvid",
 			  dev_name(info->dev), vg->name);
 		return 1;
