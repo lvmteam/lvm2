@@ -4655,7 +4655,8 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 				     const char *vgname,
 				     const char *vgid,
 				     unsigned precommitted,
-				     int writing)
+				     int writing,
+				     int *incorrect_pv_claim)
 {
 	const struct format_type *fmt = cmd->fmt;
 	struct format_instance *fid = NULL;
@@ -4899,7 +4900,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 	 * Also, outdated PVs that have been removed from the VG were incorrectly
 	 * attached to the vginfo during label_scan, and now need to be detached.
 	 */
-	lvmcache_update_vg_from_read(vg_ret);
+	lvmcache_update_vg_from_read(vg_ret, incorrect_pv_claim);
 
 	/*
 	 * lvmcache_update_vg identified outdated mdas that we read above that
@@ -4933,6 +4934,7 @@ struct volume_group *vg_read(struct cmd_context *cmd, const char *vg_name, const
 	int original_vgid_set = vgid ? 1 : 0;
 	int writing = (vg_read_flags & READ_FOR_UPDATE);
 	int activating = (vg_read_flags & READ_FOR_ACTIVATE);
+	int incorrect_pv_claim = 0;
 
 	*error_flags = SUCCESS;
 	if (error_vg)
@@ -5015,7 +5017,7 @@ struct volume_group *vg_read(struct cmd_context *cmd, const char *vg_name, const
 	if (activating && original_vgid_set && lvmcache_has_duplicate_local_vgname(vgid, vg_name))
 		log_warn("WARNING: activating multiple VGs with the same name is dangerous and may fail.");
 
-	if (!(vg = _vg_read(cmd, vg_name, vgid, 0, writing))) {
+	if (!(vg = _vg_read(cmd, vg_name, vgid, 0, writing, &incorrect_pv_claim))) {
 		unlock_vg(cmd, NULL, vg_name);
 		/* Some callers don't care if the VG doesn't exist and don't want an error message. */
 		if (!(vg_read_flags & READ_OK_NOTFOUND))
@@ -5104,22 +5106,6 @@ struct volume_group *vg_read(struct cmd_context *cmd, const char *vg_name, const
 		}
 	}
 
-	/*
-	 * If the VG metadata is referencing PVs that don't belong to it,
-	 * then don't allow the VG to be modified or activated, to avoid
-	 * damanging those PVs.
-	 */
-	if (!is_orphan_vg(vg->name) && (writing || activating)) {
-		dm_list_iterate_items(pvl, &vg->pvs) {
-			if (!lvmcache_verify_pv_in_vg(vg, pvl->pv)) {
-				log_error("Cannot use VG %s referencing incorrect PVs.", vg->name);
-				log_error("(See vgreduce --removemissing with --devices options.)");
-				failure |= FAILED_NOT_ENABLED;
-				goto bad;
-			}
-		}
-	}
-
 	if (!check_pv_dev_sizes(vg))
 		log_warn("WARNING: One or more devices used as PVs in VG %s have changed sizes.", vg->name);
 
@@ -5155,6 +5141,18 @@ struct volume_group *vg_read(struct cmd_context *cmd, const char *vg_name, const
 		if (!(vg->status & LVM_WRITE)) {
 			log_error("Volume group %s is read-only.", vg->name);
 			failure |= FAILED_READ_ONLY;
+			goto bad;
+		}
+
+		/*
+		 * If the VG metadata is referencing PVs that don't belong to it,
+		 * then don't allow the VG to be modified or activated, to avoid
+		 * damanging those PVs.
+		 */
+		if (incorrect_pv_claim) {
+			log_error("Cannot use VG %s referencing incorrect PVs.", vg->name);
+			log_error("(See vgreduce --removemissing with --devices options.)");
+			failure |= FAILED_NOT_ENABLED;
 			goto bad;
 		}
 

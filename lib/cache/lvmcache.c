@@ -2270,7 +2270,7 @@ int lvmcache_update_vgname_and_id(struct cmd_context *cmd, struct lvmcache_info 
  * using the 'vg'.
  */
 
-int lvmcache_update_vg_from_read(struct volume_group *vg)
+void lvmcache_update_vg_from_read(struct volume_group *vg, int *incorrect_pv_claim)
 {
 	char pvid[ID_LEN + 1] __attribute__((aligned(8))) = { 0 };
 	char vgid[ID_LEN + 1] __attribute__((aligned(8))) = { 0 };
@@ -2290,7 +2290,7 @@ int lvmcache_update_vg_from_read(struct volume_group *vg)
 
 	if (!(vginfo = lvmcache_vginfo_from_vgname(vg->name, vgid))) {
 		log_error(INTERNAL_ERROR "lvmcache_update_vg %s no vginfo", vg->name);
-		return 0;
+		return;
 	}
 
 	log_debug_cache("lvmcache_update_vg %s vginfo from metadata", vg->name);
@@ -2344,6 +2344,8 @@ int lvmcache_update_vg_from_read(struct volume_group *vg)
 		    (strcmp(info->vginfo->vgname, vg->name) || memcmp(info->vginfo->vgid, &vg->id, ID_LEN))) {
 			log_warn("WARNING: PV %s %s belongs to VG %s, ignoring claim from VG %s.",
 				 dev_name(info->dev), pvid, info->vginfo->vgname, vg->name);
+			pvl->pv->status |= WRONG_VG;
+			*incorrect_pv_claim = 1;
 			continue;
 		}
 
@@ -2379,8 +2381,6 @@ int lvmcache_update_vg_from_read(struct volume_group *vg)
 			break;
 		}
 	}
-
-	return 1;
 }
 
 /*
