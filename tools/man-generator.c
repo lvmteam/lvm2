@@ -288,7 +288,7 @@ static const char *_man_long_opt_name(const char *cmdname, int opt_enum)
 	const char *long_opt;
 	unsigned i;
 
-	memset(&_long_opt_name, 0, sizeof(_long_opt_name));
+	memset(_long_opt_name, 0, sizeof(_long_opt_name));
 
 	switch (opt_enum) {
 	case syncaction_ARG:
@@ -492,6 +492,7 @@ static void _print_man_usage(char *lvmname, struct command *cmd)
 	}
 
 	printf(".br\n");
+
 	goto oo_count;
 
  ro_normal:
@@ -743,7 +744,6 @@ static void _print_man_usage_common_lvm(struct command *cmd)
 			sep = 1;
 			break;
 		}
-
 	}
 
 	/* print those without short opts */
@@ -1202,15 +1202,15 @@ static void _print_man_all_positions_desc(const struct command_name *cname)
 	       "capitalization, e.g. 'k' and 'K' both refer to 1024.\n"
 	       "The default input unit is specified by letter, followed by |UNIT.\n"
 	       "UNIT represents other possible input units:\n"
-	       ".BR b | B\nis bytes,\n.BR s | S\nis sectors of 512 bytes,\n.BR k | K\nis KiB,\n"
-	       ".BR m | M\nis MiB,\n.BR g | G\nis GiB,\n.BR t | T\nis TiB,\n"
-	       ".BR p | P\nis PiB,\n.BR e | E\nis EiB.\n"
+	       ".BR b | B\nis bytes,\n.BR s | S\nis sectors of 512 bytes,\n"
+	       ".BR k | K\nis KiB,\n.BR m | M\nis MiB,\n.BR g | G\nis GiB,\n"
+	       ".BR t | T\nis TiB,\n.BR p | P\nis PiB,\n.BR e | E\nis EiB.\n"
 	       "(This should not be confused with the output control --units,\n"
 	       "where capital letters mean multiple of 1000.)\n");
 
 	printf(".\n.SH ENVIRONMENT VARIABLES\n.\n");
 	printf("See \\fBlvm\\fP(8) for information about environment variables used by lvm.\n"
-	       "For example, LVM_VG_NAME can generally be substituted\n"
+	       "For example, \\fBLVM_VG_NAME\\fP can generally be substituted\n"
 	       "for a required VG parameter.\n");
 }
 
@@ -1309,6 +1309,18 @@ out_close:
 	return r;
 }
 
+static void _print_cmd_usage_option(const struct command_name *cname,
+				    struct command *cmd)
+{
+	_print_man_usage_common_cmd(cmd);
+	_print_man_usage_common_lvm(cmd);
+
+	printf(".\n.SH OPTIONS\n");
+	_print_man_all_options_desc(cname);
+	printf(".\n.SH VARIABLES\n.\n");
+	_print_man_all_positions_desc(cname);
+}
+
 static int _print_man(char *name, char *des_file, int secondary)
 {
 	const struct command_name *cname;
@@ -1332,14 +1344,7 @@ static int _print_man(char *name, char *des_file, int secondary)
 		cmd = &commands[i];
 
 		if (prev_cmd && strcmp(prev_cmd->name, cmd->name)) {
-			_print_man_usage_common_cmd(prev_cmd);
-			_print_man_usage_common_lvm(prev_cmd);
-
-			printf(".\n.SH OPTIONS\n.\n");
-			_print_man_all_options_desc(cname);
-			printf(".\n.SH VARIABLES\n.\n");
-			_print_man_all_positions_desc(cname);
-
+			_print_cmd_usage_option(cname, prev_cmd);
 			prev_cmd = NULL;
 		}
 
@@ -1359,29 +1364,32 @@ static int _print_man(char *name, char *des_file, int secondary)
 			else
 				printf("%s\n", lvmname);
 
-			printf(".\n.SH SYNOPSIS\n.\n");
+			printf(".\n.SH SYNOPSIS\n.\n"
+			       ".nh\n"
+			       ".TP\n");
 			prev_cmd = cmd;
 
 			cname = &command_names[cmd->lvm_command_enum];
 			cna = &command_names_args[cmd->lvm_command_enum];
 
-			if (cna->variant_has_ro && cna->variant_has_rp)
-				printf("\\fB%s\\fP \\fIoption_args\\fP \\fIposition_args\\fP\n", lvmname);
-			else if (cna->variant_has_ro && !cna->variant_has_rp)
-				printf("\\fB%s\\fP \\fIoption_args\\fP\n", lvmname);
-			else if (!cna->variant_has_ro && cna->variant_has_rp)
-				printf("\\fB%s\\fP \\fIposition_args\\fP\n", lvmname);
-			else if (!cna->variant_has_ro && !cna->variant_has_rp)
-				printf("\\fB%s\\fP\n", lvmname);
+			printf("\\fB%s\\fP", lvmname);
 
-			if (cna->variant_has_oo) {
-				printf(".br\n");
-				printf("    [ \\fIoption_args\\fP ]\n");
-			}
+			if (cna->variant_has_ro)
+				printf(" \\fIoption_args\\fP");
+
+			if (cna->variant_has_rp)
+				printf(" \\fIposition_args\\fP");
+
+			printf("\n");
+
+			if (cna->variant_has_oo)
+				printf("[ \\fIoption_args\\fP ]\n");
 
 			if (cna->variant_has_op) {
-				printf(".br\n");
-				printf("    [ \\fIposition_args\\fP ]\n");
+				if (cna->variant_has_oo)
+					printf(".br\n");
+
+				printf("[ \\fIposition_args\\fP ]\n");
 			}
 
 			/* listing them all when there's only 1 or 2 is just repetitive */
@@ -1404,13 +1412,7 @@ static int _print_man(char *name, char *des_file, int secondary)
 		_print_man_usage(lvmname, cmd);
 
 		if (i == (COMMAND_COUNT - 1)) {
-			_print_man_usage_common_cmd(cmd);
-			_print_man_usage_common_lvm(cmd);
-
-			printf(".\n.SH OPTIONS\n.\n");
-			_print_man_all_options_desc(cname);
-			printf(".\n.SH VARIABLES\n.\n");
-			_print_man_all_positions_desc(cname);
+			_print_cmd_usage_option(cname, cmd);
 		} else {
 			if (cna->variants > 2) {
 				printf("\\(em\n");
