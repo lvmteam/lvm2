@@ -4539,7 +4539,7 @@ static int _process_pvs_in_vg(struct cmd_context *cmd,
 		 * metadata from PV shows the same.  Info about what's on
 		 * PV is kept in lvmcache info struct for PV.
 		 */
-		if (pv->status & WRONG_VG) {
+		if (pv->wrong_vg) {
 			log_debug("ignoring claim of PV %s by VG %s.", pv_name, vg->name);
 			continue;
 		}

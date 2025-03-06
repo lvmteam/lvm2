@@ -4906,7 +4906,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 	/* Undo set_pv_devices for PVs that are incorrectly claimed. */
 	if (incorrect_pv_claim) {
 		dm_list_iterate_items(pvl, &vg_ret->pvs) {
-			if (pvl->pv->status & WRONG_VG)
+			if (pvl->pv->wrong_vg)
 				pvl->pv->dev = NULL;
 		}
 	}

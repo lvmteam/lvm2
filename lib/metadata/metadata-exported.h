@@ -90,7 +90,6 @@
 #define PV_MOVED_VG		UINT64_C(0x4000000000000000)	/* PV - Moved to a new VG */
 #define PARTIAL_LV		UINT64_C(0x0000000001000000)	/* LV - derived flag, not
 							   written out in metadata*/
-#define WRONG_VG		UINT64_C(0x0000000001000000)	/* PV - Internal use only */
 
 #define WRITECACHE_ORIGIN	UINT64_C(0x0000000002000000)
 #define INTEGRITY_METADATA	UINT64_C(0x0000000004000000)    /* LV - Internal use only */

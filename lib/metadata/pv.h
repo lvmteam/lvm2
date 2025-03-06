@@ -63,6 +63,7 @@ struct physical_volume {
         /* This is true whenever the represented PV has a label associated. */
         uint64_t is_labelled:1;
         uint64_t unused_missing_cleared:1;
+	uint64_t wrong_vg:1; /* vg metadata includes this PVID but the PV is actually in a different vg */
 
         /* NB. label_sector is valid whenever is_labelled is true */
 	uint64_t label_sector;

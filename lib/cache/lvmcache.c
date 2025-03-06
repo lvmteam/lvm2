@@ -2353,7 +2353,7 @@ void lvmcache_update_vg_from_read(struct volume_group *vg, int *incorrect_pv_cla
 			else
 				log_warn("WARNING: PV %s %s belongs to VG %s, ignoring claim from VG %s.",
 					 dev_name(info->dev), pvid, info->vginfo->vgname, vg->name);
-			pvl->pv->status |= WRONG_VG;
+			pvl->pv->wrong_vg = 1;
 			*incorrect_pv_claim = 1;
 			continue;
 		}
