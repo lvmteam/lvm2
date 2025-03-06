@@ -4663,6 +4663,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 	struct format_instance_ctx fic;
 	struct volume_group *vg, *vg_ret = NULL;
 	struct metadata_area *mda, *mda2;
+	struct pv_list *pvl;
 	unsigned use_precommitted = precommitted;
 	struct device *mda_dev, *dev_ret = NULL;
 	struct cached_vg_fmtdata *vg_fmtdata = NULL;	/* Additional format-specific data about the vg */
@@ -4902,6 +4903,14 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 	 */
 	lvmcache_update_vg_from_read(vg_ret, incorrect_pv_claim);
 
+	/* Undo set_pv_devices for PVs that are incorrectly claimed. */
+	if (incorrect_pv_claim) {
+		dm_list_iterate_items(pvl, &vg_ret->pvs) {
+			if (pvl->pv->status & WRONG_VG)
+				pvl->pv->dev = NULL;
+		}
+	}
+
 	/*
 	 * lvmcache_update_vg identified outdated mdas that we read above that
 	 * are not actually part of the VG.  Remove those outdated mdas from
@@ -4934,6 +4943,7 @@ struct volume_group *vg_read(struct cmd_context *cmd, const char *vg_name, const
 	int original_vgid_set = vgid ? 1 : 0;
 	int writing = (vg_read_flags & READ_FOR_UPDATE);
 	int activating = (vg_read_flags & READ_FOR_ACTIVATE);
+	int is_duplicate_vgname;
 	int incorrect_pv_claim = 0;
 
 	*error_flags = SUCCESS;
@@ -5010,11 +5020,13 @@ struct volume_group *vg_read(struct cmd_context *cmd, const char *vg_name, const
 		}
 	}
 
+	is_duplicate_vgname = lvmcache_has_duplicate_local_vgname(vgid, vg_name);
+
 	/*
 	 * vgchange -ay (no vgname arg) will activate multiple local VGs with the same
 	 * name, but if the vgs have the same lv name, activating those lvs will fail.
 	 */
-	if (activating && original_vgid_set && lvmcache_has_duplicate_local_vgname(vgid, vg_name))
+	if (activating && original_vgid_set && is_duplicate_vgname)
 		log_warn("WARNING: activating multiple VGs with the same name is dangerous and may fail.");
 
 	if (!(vg = _vg_read(cmd, vg_name, vgid, 0, writing, &incorrect_pv_claim))) {
@@ -5066,11 +5078,14 @@ struct volume_group *vg_read(struct cmd_context *cmd, const char *vg_name, const
 			/* The obvious and common case of a missing device. */
 
 			if ((vg_is_foreign(vg) && !cmd->include_foreign_vgs) || cmd->expect_missing_vg_device)
-				log_debug("VG %s is missing PV %s (last written to %s)", vg_name, uuidstr, pvl->pv->device_hint ?: "na");
+				log_debug("VG %s is missing PV %s (last written to %s)",
+					  is_duplicate_vgname ? vgid : vg_name, uuidstr, pvl->pv->device_hint ?: "na");
 			else if (pvl->pv->device_hint)
-				log_warn("WARNING: VG %s is missing PV %s (last written to %s).", vg_name, uuidstr, pvl->pv->device_hint);
+				log_warn("WARNING: VG %s is missing PV %s (last written to %s).",
+					 is_duplicate_vgname ? vgid : vg_name, uuidstr, pvl->pv->device_hint);
 			else
-				log_warn("WARNING: VG %s is missing PV %s.", vg_name, uuidstr);
+				log_warn("WARNING: VG %s is missing PV %s.",
+					 is_duplicate_vgname ? vgid : vg_name, uuidstr);
 			missing_pv_dev++;
 
 		} else if (pvl->pv->status & MISSING_PV) {

@@ -1954,7 +1954,7 @@ static int _lvmcache_update_vgname(struct cmd_context *cmd,
 
 				log_warn("WARNING: VG name %s is used by VGs %s and %s.",
 					 vgname, vgid_dashed, other_dashed);
-				log_warn("Fix duplicate VG names with vgrename uuid, a device filter, or system IDs.");
+				log_warn("WARNING: fix duplicate VG names with vgrename uuid, or vgrename --devices");
 			}
 
 			if (!vginfo_is_allowed && !other_is_allowed) {
@@ -2342,8 +2342,17 @@ void lvmcache_update_vg_from_read(struct volume_group *vg, int *incorrect_pv_cla
 		 */
 		if (info->vginfo && !is_orphan_vg(info->vginfo->vgname) &&
 		    (strcmp(info->vginfo->vgname, vg->name) || memcmp(info->vginfo->vgid, &vg->id, ID_LEN))) {
-			log_warn("WARNING: PV %s %s belongs to VG %s, ignoring claim from VG %s.",
-				 dev_name(info->dev), pvid, info->vginfo->vgname, vg->name);
+			char vgid_old[ID_LEN + 1] __attribute__((aligned(8))) = { 0 };
+			char vgid_new[ID_LEN + 1] __attribute__((aligned(8))) = { 0 };
+			memcpy(vgid_old, &vg->id, ID_LEN);
+			memcpy(vgid_new, info->vginfo->vgid, ID_LEN);
+
+			if (!strcmp(info->vginfo->vgname, vg->name))
+				log_warn("WARNING: PV %s %s belongs to VGID %s, ignoring claim from VGID %s (%s).",
+					 dev_name(info->dev), pvid, vgid_new, vgid_old, vg->name);
+			else
+				log_warn("WARNING: PV %s %s belongs to VG %s, ignoring claim from VG %s.",
+					 dev_name(info->dev), pvid, info->vginfo->vgname, vg->name);
 			pvl->pv->status |= WRONG_VG;
 			*incorrect_pv_claim = 1;
 			continue;
