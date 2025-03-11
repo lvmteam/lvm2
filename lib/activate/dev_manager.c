@@ -2773,9 +2773,10 @@ static int _add_cvol_subdev_to_dtree(struct dev_manager *dm, struct dm_tree *dtr
 	const struct logical_volume *pool_lv = lvseg->pool_lv;
 	struct dm_info info;
 	char *name ,*dlid;
-	union lvid lvid = { { lv->vg->id, _get_id_for_meta_or_data(lvseg, meta_or_data) } };
+	union lvid lvid = { .id = { lv->vg->id, _get_id_for_meta_or_data(lvseg, meta_or_data) } };
+	lvid.s[sizeof(lvid.id)] = 0;
 
-	if (!(dlid = dm_build_dm_uuid(mem, UUID_PREFIX, (const char *)&lvid.s, layer)))
+	if (!(dlid = dm_build_dm_uuid(mem, UUID_PREFIX, lvid.s, layer)))
 		return_0;
 
 	/* Name is actually not really needed here, but aids debugging... */
@@ -3426,9 +3427,10 @@ static int _add_new_cvol_subdev_to_dtree(struct dev_manager *dm,
 	const struct logical_volume *pool_lv = lvseg->pool_lv;
 	struct dm_tree_node *dnode;
 	char *dlid, *dlid_pool, *name;
-	union lvid lvid = { { lv->vg->id, _get_id_for_meta_or_data(lvseg, meta_or_data) } };
+	union lvid lvid = { .id = { lv->vg->id, _get_id_for_meta_or_data(lvseg, meta_or_data) } };
+	lvid.s[sizeof(lvid.id)] = 0;
 
-	if (!(dlid = dm_build_dm_uuid(dm->mem, UUID_PREFIX, (const char *)&lvid.s, layer)))
+	if (!(dlid = dm_build_dm_uuid(dm->mem, UUID_PREFIX, lvid.s, layer)))
 		return_0;
 
 	if (!(name = dm_build_dm_name(dm->mem, lv->vg->name, pool_lv->name, layer)))
