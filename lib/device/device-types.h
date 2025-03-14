@@ -70,6 +70,7 @@ static const dev_known_type_t _dev_known_types[] = {
 	{"nvme", 64, "NVM Express"},
 	{"zvol", 16, "ZFS Zvols"},
 	{"VxDMP", 16, "Veritas Dynamic Multipathing"},
+	{"zram", 1, "zram block device"},
 	{"", 0, ""}
 };
 
