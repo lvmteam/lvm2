@@ -47,7 +47,11 @@ static const struct val_name val_names[VAL_COUNT + 1] = {
 /* create table of option names, e.g. --foo, and corresponding enum from args.h */
 
 static const struct opt_name opt_names[ARG_COUNT + 1] = {
+#ifndef MAN_PAGE_GENERATOR
+#define arg(a, b, c, d, e, f, g) { NULL, "--" c, b, a, d, e, f },
+#else
 #define arg(a, b, c, d, e, f, g) { g, "--" c, b, a, d, e, f },
+#endif
 #include "args.h"
 #undef arg
 };
