@@ -160,6 +160,8 @@ def call_lvm(command, debug=False, line_cb=None,
 
 			# Check to see if process has terminated, None when running
 			if process.poll() is not None:
+				stdout_text += read_decoded(process.stdout)
+				stderr_text += read_decoded(process.stderr)
 				break
 		except IOError as ioe:
 			log_debug("call_lvm:" + str(ioe))
