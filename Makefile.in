@@ -172,7 +172,7 @@ help:
 	@echo "  lcov-dated		Generate lcov with timedate suffix."
 	@echo "  lcov-reset		Reset lcov counters"
 	@echo "  man			Build man pages."
-	@echo "  print-VARIABLE		Resolve make variable."
+	@echo "  print-VARIABLE 	Resolve make variable."
 	@echo "  rpm			Build rpm."
 	@echo "  run-unit-test		Run unit tests."
 	@echo "  tags			Generate c/etags."
