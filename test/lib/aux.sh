@@ -320,15 +320,13 @@ prepare_lvmdbusd() {
 	unset LVM_EXPECTED_EXIT_STATUS
 	export LVM_DBUSD_TEST_SKIP_SIGNAL=1
 
-	local pid=-1
+	"$daemon" $lvmdbusdebug > debug.log_LVMDBUSD_out 2>&1 &
+	local pid=$!
+
 	echo -n "## checking lvmdbusd IS running..."
 	if which dbus-send &>/dev/null ; then
 	for i in {100..0}; do
-		if test ! -d "/proc/$pid" ; then
-			cat debug.log_LVMDBUSD_out || true
-			"$daemon" $lvmdbusdebug > debug.log_LVMDBUSD_out 2>&1 &
-			pid=$!
-		fi
+		test -d "/proc/$pid" || die "lvmdbusd died!"
 		dbus-send --system --dest=org.freedesktop.DBus --type=method_call --print-reply /org/freedesktop/DBus org.freedesktop.DBus.ListNames > dbus_services
 		grep -q com.redhat.lvmdbus1 dbus_services && break
 		sleep .1
@@ -342,7 +340,6 @@ prepare_lvmdbusd() {
 	else
 		sleep 2
 	fi
-
 
 	comm=
 	# TODO: Is there a better check than wait 1 second and check pid?
