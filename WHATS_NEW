@@ -1,5 +1,7 @@
 Version 2.03.32 - 
 ==================
+  Fix lvmdbusd read of executed lvm commands output.
+  Fix construction of DM UUID for cachevol _cdata and _cmeta devices.
 
 Version 2.03.31 - 27th February 2025
 ====================================
