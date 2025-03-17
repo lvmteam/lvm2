@@ -204,7 +204,7 @@ static const struct op_def _op_log[] = {
 
 struct selection_str_list {
 	struct dm_str_list str_list;
-	unsigned type;			/* either SEL_AND or SEL_OR */
+	unsigned type; /* either SEL_LIST_LS or SEL_LIST_SUBSET_LS with either SEL_AND or SEL_OR */
 };
 
 struct field_selection_value {
@@ -3334,6 +3334,8 @@ static const char *_tok_value(struct dm_report *rh,
 		else if (expected_type == DM_REPORT_FIELD_TYPE_NUMBER)
 			*flags &= ~FLD_CMP_TIME;
 		*flags |= expected_type;
+
+		/* if we matched a reserved value, skip further processing of this token */
 		return s;
 	}
 
@@ -3557,6 +3559,9 @@ static struct field_selection *_create_field_selection(struct dm_report *rh,
 	field_id = fields[found->field_num].id;
 
 	if (!(found->flags & flags & DM_REPORT_FIELD_TYPE_MASK)) {
+		/*
+		 * FIXME: See if this is ever reachable here and if not, remove this check.
+		 *        It looks like we already checked this in _parse_selection.*/
 		log_error("dm_report: incompatible comparison "
 			  "type for selection field %s", field_id);
 		return NULL;
@@ -3871,7 +3876,7 @@ static struct selection_node *_parse_selection(struct dm_report *rh,
 	char *tmp;
 	char c;
 
-	/* field name */
+	/* get field name */
 	if (!(last = _tok_field_name(s, &ws, &we))) {
 		log_error("Expecting field name");
 		goto bad;
@@ -3904,7 +3909,7 @@ static struct selection_node *_parse_selection(struct dm_report *rh,
 	} else
 		ft = &rh->fields[field_num];
 
-	/* comparison operator */
+	/* get comparison operator */
 	if (!(flags = _tok_op_cmp(we, &last))) {
 		_display_selection_help(rh);
 		log_error("Unrecognised comparison operator: %s", we);
@@ -3916,7 +3921,7 @@ static struct selection_node *_parse_selection(struct dm_report *rh,
 		goto bad;
 	}
 
-	/* comparison value */
+	/* check we can use the operator with the field */
 	if (flags & FLD_CMP_REGEX) {
 		if (!(ft->flags & (DM_REPORT_FIELD_TYPE_STRING))) {
 			_display_selection_help(rh);
@@ -3940,6 +3945,7 @@ static struct selection_node *_parse_selection(struct dm_report *rh,
 		}
 	}
 
+	/* assign custom structures to hold extra information for specific value types */
 	if (ft->flags == DM_REPORT_FIELD_TYPE_SIZE ||
 	    ft->flags == DM_REPORT_FIELD_TYPE_NUMBER ||
 	    ft->flags == DM_REPORT_FIELD_TYPE_PERCENT)
@@ -3951,6 +3957,7 @@ static struct selection_node *_parse_selection(struct dm_report *rh,
 	else
 		custom = NULL;
 
+	/* get value to compare with */
 	if (!(last = _tok_value(rh, ft, field_num, implicit,
 				last, &vs, &ve, &flags,
 				&rvw, rh->selection->mem, custom)))
