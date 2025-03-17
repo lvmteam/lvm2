@@ -273,7 +273,7 @@ if at least one of its LVs is active.
 .HP
 \fB--aligned\fP
 .br
-Use with --separator to align the output columns
+Use with --separator to align the output columns.
 .
 .HP
 \fB-a\fP|\fB--all\fP
@@ -293,40 +293,44 @@ the "unknown" value which denotes that the value could not be determined).
 Generate colon separated output for easier parsing in scripts or programs.
 Also see \fBvgs\fP(8) which provides considerably more control over the output.
 The values are:
-.br
-  \[bu] volume group name
-.br
-  \[bu] volume group access
-.br
-  \[bu] volume group status
-.br
-  \[bu] internal volume group number
-.br
-  \[bu] maximum number of logical volumes
-.br
-  \[bu] current number of logical volumes
-.br
-  \[bu] open count of all logical volumes in this volume group
-.br
-  \[bu] maximum logical volume size
-.br
-  \[bu] maximum number of physical volumes
-.br
-  \[bu] current number of physical volumes
-.br
-  \[bu] actual number of physical volumes
-.br
-  \[bu] size of volume group in kilobytes
-.br
-  \[bu] physical extent size
-.br
-  \[bu] total number of physical extents for this volume group
-.br
-  \[bu] allocated number of physical extents for this volume group
-.br
-  \[bu] free number of physical extents for this volume group
-.br
-  \[bu] uuid of volume group
+.PD 0
+.RS 8
+.IP \(bu 2
+Volume group name
+.IP \(bu
+Volume group access
+.IP \(bu
+Volume group status
+.IP \(bu
+Internal volume group number
+.IP \(bu
+Maximum number of logical volumes
+.IP \(bu
+Current number of logical volumes
+.IP \(bu
+Open count of all logical volumes in this volume group
+.IP \(bu
+Maximum logical volume size
+.IP \(bu
+Maximum number of physical volumes
+.IP \(bu
+Current number of physical volumes
+.IP \(bu
+Actual number of physical volumes
+.IP \(bu
+Size of volume group in kilobytes
+.IP \(bu
+Physical extent size
+.IP \(bu
+Total number of physical extents for this volume group
+.IP \(bu
+Allocated number of physical extents for this volume group
+.IP \(bu
+Free number of physical extents for this volume group
+.IP \(bu
+Uuid of volume group
+.RE
+.PD
 .
 .HP
 \fB-C\fP|\fB--columns\fP

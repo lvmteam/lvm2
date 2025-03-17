@@ -270,7 +270,7 @@ Common options for lvm:
 .HP
 \fB--aligned\fP
 .br
-Use with --separator to align the output columns
+Use with --separator to align the output columns.
 .
 .HP
 \fB-a\fP|\fB--all\fP
@@ -291,28 +291,32 @@ the "unknown" value which denotes that the value could not be determined).
 Generate colon separated output for easier parsing in scripts or programs.
 Also see \fBpvs\fP(8) which provides considerably more control over the output.
 The values are:
-.br
-  \[bu] physical volume device name
-.br
-  \[bu] volume group name
-.br
-  \[bu] physical volume size in sectors
-.br
-  \[bu] internal physical volume number (obsolete)
-.br
-  \[bu] physical volume status
-.br
-  \[bu] physical volume (not) allocatable
-.br
-  \[bu] current number of logical volumes on this physical volume
-.br
-  \[bu] physical extent size in kilobytes
-.br
-  \[bu] total number of physical extents
-.br
-  \[bu] free number of physical extents
-.br
-  \[bu] allocated number of physical extents
+.PD 0
+.RS 8
+.IP \(bu 2
+Physical volume device name
+.IP \(bu
+Volume group name
+.IP \(bu
+Physical volume size in sectors
+.IP \(bu
+Internal physical volume number (obsolete)
+.IP \(bu
+Physical volume status
+.IP \(bu
+Physical volume (not) allocatable
+.IP \(bu
+Current number of logical volumes on this physical volume
+.IP \(bu
+Physical extent size in kilobytes
+.IP \(bu
+Total number of physical extents
+.IP \(bu
+Free number of physical extents
+.IP \(bu
+Allocated number of physical extents
+.RE
+.PD
 .
 .HP
 \fB-C\fP|\fB--columns\fP

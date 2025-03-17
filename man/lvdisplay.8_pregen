@@ -270,7 +270,7 @@ Common options for lvm:
 .HP
 \fB--aligned\fP
 .br
-Use with --separator to align the output columns
+Use with --separator to align the output columns.
 .
 .HP
 \fB-a\fP|\fB--all\fP
@@ -292,32 +292,36 @@ the "unknown" value which denotes that the value could not be determined).
 Generate colon separated output for easier parsing in scripts or programs.
 Also see \fBlvs\fP(8) which provides considerably more control over the output.
 The values are:
-.br
-  \[bu] logical volume name
-.br
-  \[bu] volume group name
-.br
-  \[bu] logical volume access
-.br
-  \[bu] logical volume status
-.br
-  \[bu] internal logical volume number
-.br
-  \[bu] open count of logical volume
-.br
-  \[bu] logical volume size in sectors
-.br
-  \[bu] current logical extents associated to logical volume
-.br
-  \[bu] allocated logical extents of logical volume
-.br
-  \[bu] allocation policy of logical volume
-.br
-  \[bu] read ahead sectors of logical volume
-.br
-  \[bu] major device number of logical volume
-.br
-  \[bu] minor device number of logical volume
+.PD 0
+.RS 8
+.IP \(bu 2
+Logical volume name
+.IP \(bu
+Volume group name
+.IP \(bu
+Logical volume access
+.IP \(bu
+Logical volume status
+.IP \(bu
+Internal logical volume number
+.IP \(bu
+Open count of logical volume
+.IP \(bu
+Logical volume size in sectors
+.IP \(bu
+Current logical extents associated to logical volume
+.IP \(bu
+Allocated logical extents of logical volume
+.IP \(bu
+Allocation policy of logical volume
+.IP \(bu
+Read ahead sectors of logical volume
+.IP \(bu
+Major device number of logical volume
+.IP \(bu
+Minor device number of logical volume
+.RE
+.PD
 .
 .HP
 \fB-C\fP|\fB--columns\fP
@@ -531,6 +535,7 @@ Output columns as rows.
 .HP
 \fB--segments\fP
 .br
+Use default columns that emphasize segment information.
 .
 .HP
 \fB-S\fP|\fB--select\fP \fIString\fP

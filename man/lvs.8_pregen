@@ -129,7 +129,7 @@ Common options for lvm:
 .HP
 \fB--aligned\fP
 .br
-Use with --separator to align the output columns
+Use with --separator to align the output columns.
 .
 .HP
 \fB-a\fP|\fB--all\fP

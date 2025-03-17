@@ -129,11 +129,17 @@ Common options for lvm:
 .HP
 \fB--aligned\fP
 .br
-Use with --separator to align the output columns
+Use with --separator to align the output columns.
 .
 .HP
 \fB-a\fP|\fB--all\fP
 .br
+Show information about internal LVs.
+These are components of normal LVs, such as mirrors,
+which are not independently accessible, e.g. not mountable.
+List all VGs. Equivalent to not specifying any VGs.
+Show information about devices that have not been initialized
+by LVM, i.e. they are not PVs.
 .
 .HP
 \fB--binary\fP
