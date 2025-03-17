@@ -225,7 +225,7 @@ vgremove -ff $vg
 # on the VG from the old metadata should not
 # clobber the other PVs.
 
-vgcreate $SHARED $vg1 "$dev1" "$dev2" "$dev3"
+vgcreate $vg1 "$dev1" "$dev2" "$dev3"
 aux disable_dev "$dev1"
 vgreduce --removemissing $vg1
 vgremove $vg1
@@ -281,7 +281,7 @@ vgremove $vg3
 # referencing one other PV that's been reused for something
 # else.
 
-vgcreate $SHARED $vg1 "$dev1" "$dev2" "$dev3"
+vgcreate $vg1 "$dev1" "$dev2" "$dev3"
 aux disable_dev "$dev1"
 aux disable_dev "$dev2"
 vgreduce --removemissing $vg1
