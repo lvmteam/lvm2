@@ -3340,11 +3340,16 @@ static const char *_tok_value(struct dm_report *rh,
 	switch (expected_type) {
 
 		case DM_REPORT_FIELD_TYPE_STRING:
-			c = _get_and_skip_quote_char(&s);
-			if (!(s = _tok_value_string(s, begin, end, c, SEL_AND | SEL_OR | SEL_PRECEDENCE_PE, NULL))) {
-				log_error("Failed to parse string value "
-					  "for selection field %s.", ft->id);
-				return NULL;
+			if (*flags & FLD_CMP_REGEX) {
+				if (!(s = _tok_value_regex(rh, ft, s, begin, end, flags, rvw)))
+					return NULL;
+			} else {
+				c = _get_and_skip_quote_char(&s);
+				if (!(s = _tok_value_string(s, begin, end, c, SEL_AND | SEL_OR | SEL_PRECEDENCE_PE, NULL))) {
+					log_error("Failed to parse string value "
+						  "for selection field %s.", ft->id);
+					return NULL;
+				}
 			}
 			*flags |= DM_REPORT_FIELD_TYPE_STRING;
 			break;
@@ -3913,47 +3918,43 @@ static struct selection_node *_parse_selection(struct dm_report *rh,
 
 	/* comparison value */
 	if (flags & FLD_CMP_REGEX) {
-		/*
-		 * REGEX value
-		 */
-		if (!(last = _tok_value_regex(rh, ft, last, &vs, &ve, &flags, &rvw)))
-			goto_bad;
-	} else {
-		/*
-		 * STRING, NUMBER, SIZE, PERCENT, STRING_LIST, TIME value
-		 */
-		if (flags & FLD_CMP_NUMBER) {
-			if (!(ft->flags & (DM_REPORT_FIELD_TYPE_NUMBER |
-					   DM_REPORT_FIELD_TYPE_SIZE |
-					   DM_REPORT_FIELD_TYPE_PERCENT |
-					   DM_REPORT_FIELD_TYPE_TIME))) {
-				_display_selection_help(rh);
-				log_error("Operator can be used only with number, size, time or percent fields: %s", ws);
-				goto bad;
-			}
-		} else if (flags & FLD_CMP_TIME) {
-			if (!(ft->flags & DM_REPORT_FIELD_TYPE_TIME)) {
-				_display_selection_help(rh);
-				log_error("Operator can be used only with time fields: %s", ws);
-				goto bad;
-			}
+		if (!(ft->flags & (DM_REPORT_FIELD_TYPE_STRING))) {
+			_display_selection_help(rh);
+			log_error("Operator can be used only with string fields: %s", ws);
+			goto bad;
 		}
-
-		if (ft->flags == DM_REPORT_FIELD_TYPE_SIZE ||
-		    ft->flags == DM_REPORT_FIELD_TYPE_NUMBER ||
-		    ft->flags == DM_REPORT_FIELD_TYPE_PERCENT)
-			custom = &factor;
-		else if (ft->flags & DM_REPORT_FIELD_TYPE_TIME)
-			custom = &tval;
-		else if (ft->flags == DM_REPORT_FIELD_TYPE_STRING_LIST)
-			custom = &str_list;
-		else
-			custom = NULL;
-		if (!(last = _tok_value(rh, ft, field_num, implicit,
-					last, &vs, &ve, &flags,
-					&rvw, rh->selection->mem, custom)))
-			goto_bad;
+	} else if (flags & FLD_CMP_NUMBER) {
+		if (!(ft->flags & (DM_REPORT_FIELD_TYPE_NUMBER |
+				   DM_REPORT_FIELD_TYPE_SIZE |
+				   DM_REPORT_FIELD_TYPE_PERCENT |
+				   DM_REPORT_FIELD_TYPE_TIME))) {
+			_display_selection_help(rh);
+			log_error("Operator can be used only with number, size, time or percent fields: %s", ws);
+			goto bad;
+		}
+	} else if (flags & FLD_CMP_TIME) {
+		if (!(ft->flags & DM_REPORT_FIELD_TYPE_TIME)) {
+			_display_selection_help(rh);
+			log_error("Operator can be used only with time fields: %s", ws);
+			goto bad;
+		}
 	}
+
+	if (ft->flags == DM_REPORT_FIELD_TYPE_SIZE ||
+	    ft->flags == DM_REPORT_FIELD_TYPE_NUMBER ||
+	    ft->flags == DM_REPORT_FIELD_TYPE_PERCENT)
+		custom = &factor;
+	else if (ft->flags & DM_REPORT_FIELD_TYPE_TIME)
+		custom = &tval;
+	else if (ft->flags == DM_REPORT_FIELD_TYPE_STRING_LIST)
+		custom = &str_list;
+	else
+		custom = NULL;
+
+	if (!(last = _tok_value(rh, ft, field_num, implicit,
+				last, &vs, &ve, &flags,
+				&rvw, rh->selection->mem, custom)))
+		goto_bad;
 
 	*next = _skip_space(last);
 
