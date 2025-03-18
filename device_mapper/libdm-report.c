@@ -2630,11 +2630,9 @@ static int _check_reserved_values_supported(const struct dm_report_field_type fi
 static const char *_tok_value_regex(struct dm_report *rh,
 				    const struct dm_report_field_type *ft,
 				    const char *s, const char **begin,
-				    const char **end, uint32_t *flags,
-				    struct reserved_value_wrapper *rvw)
+				    const char **end, uint32_t *flags)
 {
 	char c;
-	rvw->reserved = NULL;
 
 	s = _skip_space(s);
 
@@ -3344,7 +3342,7 @@ static const char *_tok_value(struct dm_report *rh,
 
 		case DM_REPORT_FIELD_TYPE_STRING:
 			if (*flags & FLD_CMP_REGEX) {
-				if (!(s = _tok_value_regex(rh, ft, s, begin, end, flags, rvw)))
+				if (!(s = _tok_value_regex(rh, ft, s, begin, end, flags)))
 					return NULL;
 			} else {
 				c = _get_and_skip_quote_char(&s);
