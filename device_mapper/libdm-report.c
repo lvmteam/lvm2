@@ -205,6 +205,8 @@ static const struct op_def _op_log[] = {
 
 struct selection_str_list {
 	struct dm_str_list str_list;
+	struct dm_regex *regex;
+	size_t regex_num_patterns;
 	unsigned type; /* either SEL_LIST_LS or SEL_LIST_SUBSET_LS with either SEL_AND or SEL_OR */
 };
 
@@ -1948,7 +1950,16 @@ static int _compare_selection_field(struct dm_report *rh,
 	}
 
 	if (fs->flags & FLD_CMP_REGEX)
-		r = _cmp_field_regex((const char *) f->sort_value, fs);
+		switch (f->props->flags & DM_REPORT_FIELD_TYPE_MASK) {
+			case DM_REPORT_FIELD_TYPE_STRING:
+					r = _cmp_field_regex((const char *) f->sort_value, fs);
+					break;
+			case DM_REPORT_FIELD_TYPE_STRING_LIST:
+					break;
+			default:
+				log_error(INTERNAL_ERROR "_compare_selection_field: regex: incorrect type %" PRIu32 " for field %s",
+					  f->props->flags & DM_REPORT_FIELD_TYPE_MASK, field_id);
+		}
 	else {
 		switch(f->props->flags & DM_REPORT_FIELD_TYPE_MASK) {
 			case DM_REPORT_FIELD_TYPE_PERCENT:
@@ -2733,7 +2744,8 @@ static int _add_item_to_string_list(struct dm_pool *mem, const char *begin,
 static const char *_tok_value_string_list(const struct dm_report_field_type *ft,
 					  struct dm_pool *mem, const char *s,
 					  const char **begin, const char **end,
-					  struct selection_str_list **sel_str_list)
+					  struct selection_str_list **sel_str_list,
+					  uint32_t *flags)
 {
 	static const char _str_list_item_parsing_failed[] = "Failed to parse string list value "
 							    "for selection field %s.";
@@ -2839,12 +2851,17 @@ static const char *_tok_value_string_list(const struct dm_report_field_type *ft,
 	else
 		ssl->type |= SEL_LIST_SUBSET_LS;
 
-	/* Sort the list. */
 	if (!(list_size = dm_list_size(&ssl->str_list.list))) {
 		log_error(INTERNAL_ERROR "_tok_value_string_list: list has no items");
 		goto bad;
 	} else if (list_size == 1)
 		goto out;
+
+	if (*flags & FLD_CMP_REGEX)
+		/* No need to sort the list for regex. */
+		goto out;
+
+	/* Sort the list. */
 	if (!(arr = malloc(sizeof(item) * list_size))) {
 		log_error("_tok_value_string_list: memory allocation failed for sort array");
 		goto bad;
@@ -3360,7 +3377,10 @@ static const char *_tok_value(struct dm_report *rh,
 
 	s = _skip_space(s);
 
-	s = _get_reserved(rh, expected_type, field_num, implicit, s, begin, end, rvw);
+	/* recognize possible reserved value (but not in a regex) */
+	if (!(*flags & FLD_CMP_REGEX))
+		s = _get_reserved(rh, expected_type, field_num, implicit, s, begin, end, rvw);
+
 	if (rvw->reserved) {
 		/*
 		 * FLD_CMP_NUMBER shares operators with FLD_CMP_TIME,
@@ -3397,7 +3417,7 @@ static const char *_tok_value(struct dm_report *rh,
 			if (!(str_list = (struct selection_str_list **) custom))
 				goto_bad;
 
-			s = _tok_value_string_list(ft, mem, s, begin, end, str_list);
+			s = _tok_value_string_list(ft, mem, s, begin, end, str_list, flags);
 			if (!(*str_list)) {
 				log_error("Failed to parse string list value "
 					  "for selection field %s.", ft->id);
@@ -3582,7 +3602,11 @@ static struct field_selection *_create_field_selection(struct dm_report *rh,
 	struct time_value *tval;
 	uint64_t factor;
 	char *s;
-	const char *s_array[2] = { 0 };
+	const char *s_arr_single[2] = { 0 };
+	const char **s_arr;
+	size_t s_arr_size;
+	struct dm_str_list *sl;
+	size_t i;
 
 	dm_list_iterate_items(fp, &rh->field_props) {
 		if ((fp->implicit == implicit) && (fp->field_num == field_num)) {
@@ -3650,21 +3674,53 @@ static struct field_selection *_create_field_selection(struct dm_report *rh,
 	/* store comparison operand */
 	if (flags & FLD_CMP_REGEX) {
 		/* REGEX */
-		if (!(s = malloc(len + 1))) {
-			log_error("dm_report: malloc failed to store "
-				  "regex value for selection field %s", field_id);
-			goto error;
-		}
-		memcpy(s, v, len);
-		s[len] = '\0';
-		s_array[0] = s;
+		switch (flags & DM_REPORT_FIELD_TYPE_MASK) {
+			case DM_REPORT_FIELD_TYPE_STRING:
+				if (!(s = malloc(len + 1))) {
+					log_error("dm_report: malloc failed to store "
+						  "regex value for selection field %s", field_id);
+					goto error;
+				}
+				memcpy(s, v, len);
+				s[len] = '\0';
+				s_arr_single[0] = s;
 
-		fs->value->v.r = _selection_regex_create(rh->selection, s_array, 1);
-		free(s);
-		if (!fs->value->v.r) {
-			log_error("dm_report: failed to create regex "
-				  "matcher for selection field %s", field_id);
-			goto error;
+				fs->value->v.r = _selection_regex_create(rh->selection, s_arr_single, 1);
+				free(s);
+				if (!fs->value->v.r) {
+					log_error("dm_report: failed to create regex "
+						  "matcher for selection field %s", field_id);
+					goto error;
+				}
+				break;
+			case DM_REPORT_FIELD_TYPE_STRING_LIST:
+				if (!custom)
+					goto bad;
+				fs->value->v.l = *((struct selection_str_list **) custom);
+
+				s_arr_size = dm_list_size(&fs->value->v.l->str_list.list);
+				if (!(s_arr = malloc(sizeof(char *) * s_arr_size))) {
+					log_error("dm_report: malloc failed for regex array "
+						  "for selection field %s", field_id);
+					goto error;
+				}
+				i = 0;
+				dm_list_iterate_items(sl, &fs->value->v.l->str_list.list)
+					s_arr[i++] = sl->str;
+
+				fs->value->v.l->regex = _selection_regex_create(rh->selection, s_arr, s_arr_size);
+				fs->value->v.l->regex_num_patterns = s_arr_size;
+				free(s_arr);
+				if (!fs->value->v.l->regex) {
+					log_error("dm_report: failed to create regex "
+						  "matcher for selection field %s", field_id);
+					goto error;
+				}
+				break;
+			default:
+				log_error(INTERNAL_ERROR "_create_field_selection: regex: incorrect type %" PRIu32 " for field %s",
+					  flags & DM_REPORT_FIELD_TYPE_MASK, field_id);
+				goto error;
 		}
 	} else {
 		/* STRING, NUMBER, SIZE, PERCENT, STRING_LIST, TIME */
@@ -3973,9 +4029,10 @@ static struct selection_node *_parse_selection(struct dm_report *rh,
 
 	/* check we can use the operator with the field */
 	if (flags & FLD_CMP_REGEX) {
-		if (!(ft->flags & (DM_REPORT_FIELD_TYPE_STRING))) {
+		if (!(ft->flags & (DM_REPORT_FIELD_TYPE_STRING |
+				   DM_REPORT_FIELD_TYPE_STRING_LIST))) {
 			_display_selection_help(rh);
-			log_error("Operator can be used only with string fields: %s", ws);
+			log_error("Operator can be used only with string or string list fields: %s", ws);
 			goto bad;
 		}
 	} else if (flags & FLD_CMP_NUMBER) {
