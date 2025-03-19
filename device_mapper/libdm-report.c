@@ -1758,8 +1758,74 @@ static int _cmp_field_time(struct dm_report *rh,
 	return 0;
 }
 
+static int _str_list_item_match_regex(const struct str_list_sort_value *val, unsigned int i, struct dm_regex *regex)
+{
+	struct pos_len *item = val->items + i;
+	char *s = (char *) (val->value + item->pos);
+	char c = s[item->len];
+	int r;
+
+	/*
+	 * The val->items contains the whole string list in the form of a single string,
+	 * where each item is delimited by a delimiter.
+	 *
+	 * The item->pos + item->len pair then points to the exact item within the val->items.
+	 *
+	 * The dm_regex_match accepts a string, not the pos + len pair, so we need to adapt here:
+	 * replace the delimiter with '\0' temporarily so the item is a proper string.
+	 */
+	s[item->len] = '\0';
+	r = dm_regex_match(regex, s);
+	s[item->len] = c;
+
+	return r;
+}
+
+static size_t _bitset_count_set(dm_bitset_t bs)
+{
+	size_t i, size = bs[0]/DM_BITS_PER_INT + 1;
+	size_t count = 0;
+
+	for (i = 1; i <= size; i++)
+		count += hweight32(bs[i]);
+
+	return count;
+}
+
 /* Matches if all items from selection string list match list value strictly 1:1. */
-static int _cmp_field_string_list_strict_all(const struct str_list_sort_value *val,
+static int _cmp_field_string_list_strict_regex_all(const struct dm_report *rh,
+						   const struct str_list_sort_value *val,
+						   const struct selection_str_list *sel)
+{
+	unsigned int i;
+	dm_bitset_t bs;
+	int r;
+
+	if (!val->items)
+		return (sel->regex_num_patterns == 1) && dm_regex_match(sel->regex, "") >= 0;
+
+	if (!(bs = dm_bitset_create(rh->selection->mem, sel->regex_num_patterns))) {
+		log_error("Failed to create bitset for regex match counter.");
+		return 0;
+	}
+
+	for (i = 1; i <= val->items[0].pos; i++) {
+		if ((r = _str_list_item_match_regex(val, i, sel->regex)) < 0) {
+			r = 0;
+			goto out;
+		}
+		dm_bit_set(bs, r);
+	}
+
+	r = _bitset_count_set(bs) == sel->regex_num_patterns;
+out:
+	dm_pool_free(rh->selection->mem, bs);
+	return r;
+}
+
+/* Matches if all items from selection string list match list value strictly 1:1. */
+static int _cmp_field_string_list_strict_all(const struct dm_report *rh,
+					     const struct str_list_sort_value *val,
 					     const struct selection_str_list *sel)
 {
 	unsigned int sel_list_size = dm_list_size(&sel->str_list.list);
@@ -1791,7 +1857,36 @@ static int _cmp_field_string_list_strict_all(const struct str_list_sort_value *v
 }
 
 /* Matches if all items from selection string list match a subset of list value. */
-static int _cmp_field_string_list_subset_all(const struct str_list_sort_value *val,
+static int _cmp_field_string_list_subset_regex_all(const struct dm_report *rh,
+						   const struct str_list_sort_value *val,
+						   const struct selection_str_list *sel)
+{
+	dm_bitset_t bs;
+	unsigned int i;
+	int r;
+
+	if (!val->items)
+		return (sel->regex_num_patterns == 1) && dm_regex_match(sel->regex, "") >= 0;
+
+	if (!(bs = dm_bitset_create(rh->selection->mem, sel->regex_num_patterns))) {
+		log_error("Failed to create bitset for regex match counter.");
+		return 0;
+	}
+
+	for (i = 1; i <= val->items[0].pos; i++) {
+		if ((r = _str_list_item_match_regex(val, i, sel->regex)) < 0)
+			continue;
+		dm_bit_set(bs, r);
+	}
+
+	r = _bitset_count_set(bs) == sel->regex_num_patterns;
+	dm_pool_free(rh->selection->mem, bs);
+	return r;
+}
+
+/* Matches if all items from selection string list match a subset of list value. */
+static int _cmp_field_string_list_subset_all(const struct dm_report *rh __attribute__((unused)),
+					     const struct str_list_sort_value *val,
 					     const struct selection_str_list *sel)
 {
 	unsigned int sel_list_size = dm_list_size(&sel->str_list.list);
@@ -1826,8 +1921,26 @@ static int _cmp_field_string_list_subset_all(const struct str_list_sort_value *v
 }
 
 /* Matches if any item from selection string list matches list value. */
-static int _cmp_field_string_list_subset_any(const struct str_list_sort_value *val,
-				      const struct selection_str_list *sel)
+static int _cmp_field_string_list_subset_regex_any(const struct dm_report *rh __attribute__((unused)),
+						   const struct str_list_sort_value *val,
+						   const struct selection_str_list *sel)
+{
+	unsigned int i;
+
+	if (!val->items)
+		return dm_regex_match(sel->regex, "") >= 0;
+
+	for (i = 1; i <= val->items[0].pos; i++) {
+		if (_str_list_item_match_regex(val, i, sel->regex) >= 0)
+			return 1;
+	}
+	return 0;
+}
+
+/* Matches if any item from selection string list matches list value. */
+static int _cmp_field_string_list_subset_any(const struct dm_report *rh __attribute__((unused)),
+					     const struct str_list_sort_value *val,
+					     const struct selection_str_list *sel)
 {
 	struct dm_str_list *sel_item;
 	unsigned int i;
@@ -1857,8 +1970,27 @@ static int _cmp_field_string_list_subset_any(const struct str_list_sort_value *v
 }
 
 /* Matches if all items from list value can be matched by any item from selection list. */
-static int _cmp_field_string_list_strict_any(const struct str_list_sort_value *val,
-				      const struct selection_str_list *sel)
+static int _cmp_field_string_list_strict_regex_any(const struct dm_report *rh __attribute__((unused)),
+						   const struct str_list_sort_value *val,
+						   const struct selection_str_list *sel)
+{
+	unsigned int i;
+
+	if (!val->items)
+		return dm_regex_match(sel->regex, "") >= 0;
+
+	for (i = 1; i <= val->items[0].pos; i++) {
+		if (_str_list_item_match_regex(val, i, sel->regex) < 0)
+			return 0;
+	}
+
+	return 1;
+}
+
+/* Matches if all items from list value can be matched by any item from selection list. */
+static int _cmp_field_string_list_strict_any(const struct dm_report *rh __attribute__((unused)),
+					     const struct str_list_sort_value *val,
+					     const struct selection_str_list *sel)
 {
 	struct dm_str_list *sel_item;
 	unsigned int i;
@@ -1889,7 +2021,7 @@ static int _cmp_field_string_list_strict_any(const struct str_list_sort_value *v
 	return 1;
 }
 
-static int _cmp_field_string_list(struct dm_report *rh __attribute__((unused)),
+static int _cmp_field_string_list(struct dm_report *rh,
 				  uint32_t field_num, const char *field_id,
 				  const struct str_list_sort_value *val,
 				  struct field_selection *fs)
@@ -1911,12 +2043,16 @@ static int _cmp_field_string_list(struct dm_report *rh __attribute__((unused)),
 
 	switch (sel->type & SEL_MASK) {
 		case SEL_AND:
-			r = subset ? _cmp_field_string_list_subset_all(val, sel)
-				   : _cmp_field_string_list_strict_all(val, sel);
+			r = subset ? sel->regex ? _cmp_field_string_list_subset_regex_all(rh, val, sel)
+						: _cmp_field_string_list_subset_all(rh, val, sel)
+				   : sel->regex ? _cmp_field_string_list_strict_regex_all(rh, val, sel)
+				   		: _cmp_field_string_list_strict_all(rh, val, sel);
 			break;
 		case SEL_OR:
-			r = subset ? _cmp_field_string_list_subset_any(val, sel)
-				   : _cmp_field_string_list_strict_any(val, sel);
+			r = subset ? sel->regex ? _cmp_field_string_list_subset_regex_any(rh, val, sel)
+						: _cmp_field_string_list_subset_any(rh, val, sel)
+				   : sel->regex ? _cmp_field_string_list_strict_regex_any(rh, val, sel)
+				   		: _cmp_field_string_list_strict_any(rh, val, sel);
 			break;
 		default:
 			log_error(INTERNAL_ERROR "_cmp_field_string_list: unsupported string "
@@ -1955,6 +2091,7 @@ static int _compare_selection_field(struct dm_report *rh,
 					r = _cmp_field_regex((const char *) f->sort_value, fs);
 					break;
 			case DM_REPORT_FIELD_TYPE_STRING_LIST:
+					r = _cmp_field_string_list(rh, f->props->field_num, field_id, (const struct str_list_sort_value *) f->sort_value, fs);
 					break;
 			default:
 				log_error(INTERNAL_ERROR "_compare_selection_field: regex: incorrect type %" PRIu32 " for field %s",
