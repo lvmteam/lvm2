@@ -1937,7 +1937,8 @@ static int _compare_selection_field(struct dm_report *rh,
 				r = _cmp_field_time(rh, f->props->field_num, field_id, *(const time_t *) f->sort_value, fs);
 				break;
 			default:
-				log_error(INTERNAL_ERROR "_compare_selection_field: unknown field type for field %s", field_id);
+				log_error(INTERNAL_ERROR "_compare_selection_field: incorrect type %" PRIu32 " for field %s",
+					  f->props->flags & DM_REPORT_FIELD_TYPE_MASK, field_id);
 		}
 	}
 
@@ -3728,8 +3729,8 @@ static struct field_selection *_create_field_selection(struct dm_report *rh,
 				}
 				break;
 			default:
-				log_error(INTERNAL_ERROR "_create_field_selection: "
-					  "unknown type of selection field %s", field_id);
+				log_error(INTERNAL_ERROR "_create_field_selection: incorrect type %" PRIu32 " for field %s",
+					  flags & DM_REPORT_FIELD_TYPE_MASK, field_id);
 				goto error;
 		}
 	}
