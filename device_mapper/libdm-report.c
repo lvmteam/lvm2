@@ -1820,7 +1820,7 @@ static int _cmp_field_string_list_subset_all(const struct str_list_sort_value *v
 }
 
 /* Matches if any item from selection string list matches list value. */
-static int _cmp_field_string_list_any(const struct str_list_sort_value *val,
+static int _cmp_field_string_list_subset_any(const struct str_list_sort_value *val,
 				      const struct selection_str_list *sel)
 {
 	struct dm_str_list *sel_item;
@@ -1850,6 +1850,39 @@ static int _cmp_field_string_list_any(const struct str_list_sort_value *val,
 	return 0;
 }
 
+/* Matches if all items from list value can be matched by any item from selection list. */
+static int _cmp_field_string_list_strict_any(const struct str_list_sort_value *val,
+				      const struct selection_str_list *sel)
+{
+	struct dm_str_list *sel_item;
+	unsigned int i;
+	int match;
+
+	/* match blank string list with selection that contains blank string */
+	if (!val->items) {
+		dm_list_iterate_items(sel_item, &sel->str_list.list) {
+			if (!strcmp(sel_item->str, ""))
+				return 1;
+		}
+		return 0;
+	}
+
+	for (i = 1; i <= val->items[0].pos; i++) {
+		match = 0;
+		dm_list_iterate_items(sel_item, &sel->str_list.list) {
+			if ((strlen(sel_item->str) == val->items[i].len) &&
+			    !strncmp(sel_item->str, val->value + val->items[i].pos, val->items[i].len)) {
+				match = 1;
+				break;
+			}
+		}
+		if (!match)
+			return 0;
+	}
+
+	return 1;
+}
+
 static int _cmp_field_string_list(struct dm_report *rh __attribute__((unused)),
 				  uint32_t field_num, const char *field_id,
 				  const struct str_list_sort_value *val,
@@ -1876,7 +1909,8 @@ static int _cmp_field_string_list(struct dm_report *rh __attribute__((unused)),
 				   : _cmp_field_string_list_strict_all(val, sel);
 			break;
 		case SEL_OR:
-			r = _cmp_field_string_list_any(val, sel);
+			r = subset ? _cmp_field_string_list_subset_any(val, sel)
+				   : _cmp_field_string_list_strict_any(val, sel);
 			break;
 		default:
 			log_error(INTERNAL_ERROR "_cmp_field_string_list: unsupported string "
