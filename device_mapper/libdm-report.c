@@ -3444,7 +3444,7 @@ static const char *_tok_value(struct dm_report *rh,
 
 	return s;
 bad:
-	log_error(INTERNAL_ERROR "Forbidden NULL custom detected.");
+	log_error(INTERNAL_ERROR "_tok_value: Forbidden NULL custom parameter detected.");
 
 	return NULL;
 }
@@ -3740,7 +3740,7 @@ error_field_id:
 		  field_id);
 	goto error;
 bad:
-	log_error(INTERNAL_ERROR "Forbidden NULL custom detected.");
+	log_error(INTERNAL_ERROR "_create_field_selection: Forbidden NULL custom detected.");
 error:
 	dm_pool_free(rh->selection->mem, fs);
 
