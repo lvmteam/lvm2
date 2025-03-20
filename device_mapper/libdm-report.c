@@ -4153,7 +4153,7 @@ error:
 static int _alloc_rh_selection(struct dm_report *rh)
 {
 	if (!(rh->selection = dm_pool_zalloc(rh->mem, sizeof(struct selection))) ||
-	    !(rh->selection->mem = dm_pool_create("report selection", 10 * 1024))) {
+	    !(rh->selection->mem = dm_pool_create("report selection", 1024))) {
 		log_error("Failed to allocate report selection structure.");
 		if (rh->selection)
 			dm_pool_free(rh->mem, rh->selection);
