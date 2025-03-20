@@ -31,6 +31,7 @@
 
 struct selection {
 	struct dm_pool *mem;
+	struct dm_pool *regex_mem;
 	struct selection_node *selection_root;
 	int add_new_fields;
 };
@@ -1412,8 +1413,11 @@ struct dm_report *dm_report_init(uint32_t *report_types,
 
 void dm_report_free(struct dm_report *rh)
 {
-	if (rh->selection)
+	if (rh->selection) {
 		dm_pool_destroy(rh->selection->mem);
+		if (rh->selection->regex_mem)
+			dm_pool_destroy(rh->selection->regex_mem);
+	}
 	if (rh->value_cache)
 		dm_hash_destroy(rh->value_cache);
 	dm_pool_destroy(rh->mem);
@@ -3548,6 +3552,19 @@ static int _get_reserved_value(struct dm_report *rh, uint32_t field_num,
 	return 1;
 }
 
+static struct dm_regex *_selection_regex_create(struct selection *selection, const char * const *patterns,
+						unsigned num_patterns)
+{
+	if (!selection->regex_mem) {
+		if (!(selection->regex_mem = dm_pool_create("report selection regex", 32 * 1024))) {
+			log_error("Failed to create report selection regex memory pool.");
+			return NULL;
+		}
+	}
+
+	return dm_regex_create(selection->regex_mem, patterns, num_patterns);
+}
+
 static struct field_selection *_create_field_selection(struct dm_report *rh,
 						       uint32_t field_num,
 						       int implicit,
@@ -3642,7 +3659,7 @@ static struct field_selection *_create_field_selection(struct dm_report *rh,
 		s[len] = '\0';
 		s_array[0] = s;
 
-		fs->value->v.r = dm_regex_create(rh->selection->mem, s_array, 1);
+		fs->value->v.r = _selection_regex_create(rh->selection, s_array, 1);
 		free(s);
 		if (!fs->value->v.r) {
 			log_error("dm_report: failed to create regex "
