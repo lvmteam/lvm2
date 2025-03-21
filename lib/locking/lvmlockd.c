@@ -1857,6 +1857,8 @@ int lockd_global_create(struct cmd_context *cmd, const char *def_mode, const cha
 			log_error("Global lock failed: lockspace is starting.");
 		else if (result == -EIOTIMEOUT)
 			log_error("Global lock failed: io timeout");
+		else if (result == -ELOCKREPAIR)
+			log_error("Global lock failed: sanlock lease needs repair");
 		else if (result == -EAGAIN)
 			log_error("Global lock failed: held by other host%s", _owner_str(&owner));
 		else if (result == -EPROTONOSUPPORT)
@@ -2079,6 +2081,7 @@ int lockd_global(struct cmd_context *cmd, const char *def_mode)
 	    result == -EVGKILLED ||
 	    result == -ELOCKIO ||
 	    result == -EIOTIMEOUT ||
+	    result == -ELOCKREPAIR ||
 	    result == -ELMERR ||
 	    result == -EORPHAN ||
 	    result == -EADOPT_RETRY ||
@@ -2096,6 +2099,8 @@ int lockd_global(struct cmd_context *cmd, const char *def_mode)
 				log_error("Global lock failed: storage errors for sanlock leases");
 			else if (result == -EIOTIMEOUT)
 				log_error("Global lock failed: io timeout");
+			else if (result == -ELOCKREPAIR)
+				log_error("Global lock failed: sanlock lease needs repair");
 			else if (result == -ELMERR)
 				log_error("Global lock failed: lock manager error");
 			else if (result == -EVGKILLED)
@@ -2133,6 +2138,11 @@ int lockd_global(struct cmd_context *cmd, const char *def_mode)
 
 		if (result == -EIOTIMEOUT) {
 			log_warn("Skipping global lock: io timeout");
+			goto allow;
+		}
+
+		if (result == -ELOCKREPAIR) {
+			log_warn("Skipping global lock: sanlock lease needs repair");
 			goto allow;
 		}
 
@@ -2440,6 +2450,19 @@ int lockd_vg(struct cmd_context *cmd, const char *vg_name, const char *def_mode,
 			goto out;
 		} else {
 			log_error("VG %s lock failed: io timeout", vg_name);
+			ret = 0;
+			goto out;
+		}
+	}
+
+	if (result == -ELOCKREPAIR) {
+		if (!strcmp(mode, "un"))
+			goto out;
+		else if (!strcmp(mode, "sh")) {
+			log_warn("VG %s lock skipped: sanlock lease needs repair", vg_name);
+			goto out;
+		} else {
+			log_error("VG %s lock failed: sanlock lease needs repair", vg_name);
 			ret = 0;
 			goto out;
 		}
@@ -2815,6 +2838,11 @@ int lockd_lv_name(struct cmd_context *cmd, struct volume_group *vg,
 
 	if (result == -EIOTIMEOUT) {
 		log_error("LV %s/%s lock failed: io timeout.", vg->name, lv_name);
+		return 0;
+	}
+
+	if (result == -ELOCKREPAIR) {
+		log_error("LV %s/%s lock failed: sanlock lease needs repair.", vg->name, lv_name);
 		return 0;
 	}
 

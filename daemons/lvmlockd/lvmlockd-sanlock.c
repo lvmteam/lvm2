@@ -2076,8 +2076,20 @@ int lm_lock_sanlock(struct lockspace *ls, struct resource *r, int ld_mode,
 			lm_rem_resource_sanlock(ls, r);
 
 		/* sanlock gets i/o errors trying to read/write the leases. */
-		if (rv == -EIO)
+		if (rv == -EIO ||
+		    rv == SANLK_LEADER_READ ||
+		    rv == SANLK_LEADER_WRITE ||
+		    rv == SANLK_DBLOCK_READ ||
+		    rv == SANLK_DBLOCK_WRITE)
 			return -ELOCKIO;
+
+		if (rv == SANLK_LEADER_MAGIC ||
+		    rv == SANLK_LEADER_VERSION ||
+		    rv == SANLK_LEADER_LOCKSPACE ||
+		    rv == SANLK_LEADER_RESOURCE ||
+		    rv == SANLK_LEADER_CHECKSUM ||
+		    rv == SANLK_DBLOCK_CHECKSUM)
+			return -ELOCKREPAIR;
 
 		/*
 		 * The sanlock lockspace can disappear if the lease storage fails,
