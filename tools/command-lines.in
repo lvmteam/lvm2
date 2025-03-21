@@ -244,7 +244,7 @@ OO_LVCHANGE: --autobackup Bool, --force, --ignoremonitoring,
 OO_LVCHANGE_META: --addtag Tag, --deltag Tag,
 --alloc Alloc, --contiguous Bool,
 --compression Bool, --deduplication Bool,
---detachprofile, --metadataprofile String, --profile String,
+--detachprofile, --metadataprofile String,
 --permission Permission, --readahead Readahead, --setactivationskip Bool,
 --setautoactivation Bool, --errorwhenfull Bool, --discards Discards, --zero Bool,
 --cachemode CacheMode, --cachepolicy String, --cachesettings String,
@@ -1573,7 +1573,7 @@ ID: lvscan_general
 ---
 
 # None of these can function as a required option for pvchange.
-OO_PVCHANGE: --autobackup Bool, --force, --reportformat ReportFmt, --uuid
+OO_PVCHANGE: --autobackup Bool, --force, --reportformat ReportFmt
 
 # Any of these can function as a required option for pvchange.
 OO_PVCHANGE_META: --allocatable Bool, --addtag Tag, --deltag Tag,
@@ -1783,7 +1783,7 @@ OO_VGCHANGE_META: --addtag Tag, --deltag Tag,
 --logicalvolume Uint32, --maxphysicalvolumes Uint32, --alloc Alloc, --uuid,
 --pvmetadatacopies MetadataCopiesPV, --vgmetadatacopies MetadataCopiesVG,
 --physicalextentsize SizeMB, --resizeable Bool,
---profile String, --detachprofile, --metadataprofile String,
+--detachprofile, --metadataprofile String,
 --setautoactivation Bool
 
 vgchange OO_VGCHANGE_META
