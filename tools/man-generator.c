@@ -1640,7 +1640,7 @@ static int _check_overlap(void)
 {
 	int all_req_opts[ARG_COUNT] = { 0 };
 	struct command *cmd1, *cmd2;
-	int i, j;
+	int i, j, k;
 	int r = 1;
 
 	for (i = 0; i < COMMAND_COUNT; i++) {
@@ -1653,8 +1653,20 @@ static int _check_overlap(void)
 
 		cmd1 = &commands[i];
 
-		if (cmd1->any_ro_count)
+		if (cmd1->any_ro_count) {
+			for (j = 0; j < cmd1->oo_count; j++) {
+				for (k = 0; k < cmd1->any_ro_count; k++) {
+					if (cmd1->optional_opt_args[j].opt ==
+					    cmd1->required_opt_args[k + cmd1->ro_count].opt) {
+						log_error("Option %s in command %s is required and optional!",
+							  opt_names[cmd1->optional_opt_args[j].opt].long_opt,
+							  command_enum(cmd1->command_enum));
+						r = 0;
+					}
+				}
+			}
 			continue;
+		}
 
 		for (j = 0; j < COMMAND_COUNT; j++) {
 			if (i == j)
