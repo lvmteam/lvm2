@@ -1108,14 +1108,15 @@ static int lm_add_resource(struct lockspace *ls, struct resource *r)
 }
 
 static int lm_lock(struct lockspace *ls, struct resource *r, int mode, struct action *act,
-		   struct val_blk *vb_out, int *retry, int adopt_only, int adopt_ok)
+		   struct val_blk *vb_out, int *retry, struct owner *owner,
+		   int adopt_only, int adopt_ok)
 {
 	int rv = -1;
 
 	if (ls->lm_type == LD_LM_DLM)
 		rv = lm_lock_dlm(ls, r, mode, vb_out, adopt_only, adopt_ok);
 	else if (ls->lm_type == LD_LM_SANLOCK)
-		rv = lm_lock_sanlock(ls, r, mode, vb_out, retry, adopt_only, adopt_ok);
+		rv = lm_lock_sanlock(ls, r, mode, vb_out, retry, owner, adopt_only, adopt_ok);
 	else if (ls->lm_type == LD_LM_IDM)
 		rv = lm_lock_idm(ls, r, mode, vb_out, act->lv_uuid,
 				 &act->pvs, adopt_only, adopt_ok);
@@ -1264,7 +1265,7 @@ static void add_work_action(struct action *act)
 	pthread_mutex_unlock(&worker_mutex);
 }
 
-static int res_lock(struct lockspace *ls, struct resource *r, struct action *act, int *retry)
+static int res_lock(struct lockspace *ls, struct resource *r, struct action *act, int *retry, struct owner *owner)
 {
 	struct lock *lk;
 	struct val_blk vb;
@@ -1289,7 +1290,7 @@ static int res_lock(struct lockspace *ls, struct resource *r, struct action *act
 	if (r->type == LD_RT_LV && act->lv_args[0])
 		memcpy(r->lv_args, act->lv_args, MAX_ARGS);
 
-	rv = lm_lock(ls, r, act->mode, act, &vb, retry,
+	rv = lm_lock(ls, r, act->mode, act, &vb, retry, owner,
 		     act->flags & LD_AF_ADOPT_ONLY ? 1 : 0,
 		     act->flags & LD_AF_ADOPT ? 1 : 0);
 
@@ -1901,6 +1902,7 @@ out:
 static void res_process(struct lockspace *ls, struct resource *r,
 			struct list_head *act_close_list, int *retry_out)
 {
+	struct owner owner = { 0 };
 	struct action *act, *safe, *act_close;
 	struct lock *lk;
 	uint32_t unlock_by_client_id = 0;
@@ -2189,8 +2191,15 @@ static void res_process(struct lockspace *ls, struct resource *r,
 
 		if (act->op == LD_OP_LOCK && act->mode == LD_LK_SH) {
 			lm_retry = 0;
+			memset(&owner, 0, sizeof(owner));
 
-			rv = res_lock(ls, r, act, &lm_retry);
+			rv = res_lock(ls, r, act, &lm_retry, &owner);
+
+			/* TODO: if lock fails because it's owned by a failed host,
+			   and persistent reservations are enabled, then remove the
+			   pr of failed host_id, tell sanlock the host_id is now
+			   dead, and retry lock request. */
+
 			if ((rv == -EAGAIN) &&
 			    (act->retries <= act->max_retries) &&
 			    (lm_retry || (r->type != LD_RT_LV))) {
@@ -2199,6 +2208,8 @@ static void res_process(struct lockspace *ls, struct resource *r,
 				act->retries++;
 				*retry_out = 1;
 			} else {
+				if (rv == -EAGAIN)
+					memcpy(&act->owner, &owner, sizeof(owner));
 				act->result = rv;
 				list_del(&act->list);
 				add_client_result(act);
@@ -2222,8 +2233,10 @@ static void res_process(struct lockspace *ls, struct resource *r,
 	list_for_each_entry_safe(act, safe, &r->actions, list) {
 		if (act->op == LD_OP_LOCK && act->mode == LD_LK_EX) {
 			lm_retry = 0;
+			memset(&owner, 0, sizeof(owner));
 
-			rv = res_lock(ls, r, act, &lm_retry);
+			rv = res_lock(ls, r, act, &lm_retry, &owner);
+
 			if ((rv == -EAGAIN) &&
 			    (act->retries <= act->max_retries) &&
 			    (lm_retry || (r->type != LD_RT_LV))) {
@@ -2232,6 +2245,8 @@ static void res_process(struct lockspace *ls, struct resource *r,
 				act->retries++;
 				*retry_out = 1;
 			} else {
+				if (rv == -EAGAIN)
+					memcpy(&act->owner, &owner, sizeof(owner));
 				act->result = rv;
 				list_del(&act->list);
 				add_client_result(act);
@@ -4234,6 +4249,31 @@ static int client_send_result(struct client *cl, struct action *act)
 		res = daemon_reply_simple("OK",
 					  "result = " FMTd64, (int64_t) act->result,
 					  "dump_len = " FMTd64, (int64_t) dump_len,
+					  NULL);
+	} else if (act->op == LD_OP_LOCK && act->owner.host_id) {
+
+		/*
+		 * lock reply with owner info
+		 */
+
+		log_debug("send %s[%d][%u] %s%s%s result %d owner %u %u %u %s %s",
+			  cl->name[0] ? cl->name : "client", cl->pid, cl->id,
+			  op_mode_str(act->op, act->mode), act->rt ? "_" : "", rt_str(act->rt), act->result,
+			  act->owner.host_id, act->owner.generation, act->owner.timestamp,
+			  act->owner.state[0] ? act->owner.state : "",
+			  act->owner.name[0] ? act->owner.name : "");
+
+		res = daemon_reply_simple("OK",
+					  "op = " FMTd64, (int64_t) act->op,
+					  "lock_type = %s", lm_str(act->lm_type),
+					  "op_result = " FMTd64, (int64_t) act->result,
+					  "lm_result = " FMTd64, (int64_t) act->lm_rv,
+					  "owner_host_id = " FMTd64, (int64_t) act->owner.host_id,
+					  "owner_generation = " FMTd64, (int64_t) act->owner.generation,
+					  "owner_timestamp = " FMTd64, (int64_t) act->owner.timestamp,
+					  "owner_state = %s", act->owner.state[0] ? act->owner.state : "none",
+					  "owner_name = %s", act->owner.name[0] ? act->owner.name : "none",
+					  "result_flags = %s", result_flags[0] ? result_flags : "none",
 					  NULL);
 	} else {
 		/*

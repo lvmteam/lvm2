@@ -57,5 +57,6 @@ static inline void lvmlockd_close(daemon_handle h)
 #define EORPHAN   222
 #define EADOPT_NONE  223
 #define EADOPT_RETRY 224
+#define EIOTIMEOUT   225
 
 #endif	/* _LVM_LVMLOCKD_CLIENT_H */

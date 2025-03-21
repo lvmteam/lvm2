@@ -130,6 +130,17 @@ struct pvs {
 	int num;
 };
 
+#define OWNER_NAME_SIZE 64
+#define OWNER_STATE_SIZE 32
+
+struct owner {
+	uint32_t host_id;
+	uint32_t generation;
+	uint32_t timestamp;
+	char state[OWNER_STATE_SIZE];
+	char name[OWNER_NAME_SIZE];
+};
+
 struct action {
 	struct list_head list;
 	uint32_t client_id;
@@ -154,6 +165,7 @@ struct action {
 	char vg_args[MAX_ARGS+1];
 	char lv_args[MAX_ARGS+1];
 	char prev_lv_args[MAX_ARGS+1];
+	struct owner owner;
 	struct pvs pvs;			/* PV list for idm */
 };
 
@@ -553,7 +565,7 @@ int lm_add_lockspace_sanlock(struct lockspace *ls, int adopt_only, int adopt_ok,
 int lm_rem_lockspace_sanlock(struct lockspace *ls, int free_vg);
 int lm_add_resource_sanlock(struct lockspace *ls, struct resource *r);
 int lm_lock_sanlock(struct lockspace *ls, struct resource *r, int ld_mode,
-		    struct val_blk *vb_out, int *retry, 
+		    struct val_blk *vb_out, int *retry, struct owner *owner,
 		    int adopt_only, int adopt_ok);
 int lm_convert_sanlock(struct lockspace *ls, struct resource *r,
 		       int ld_mode, uint32_t r_version);
@@ -617,7 +629,7 @@ static inline int lm_add_resource_sanlock(struct lockspace *ls, struct resource 
 }
 
 static inline int lm_lock_sanlock(struct lockspace *ls, struct resource *r, int ld_mode,
-		    struct val_blk *vb_out, int *retry,
+		    struct val_blk *vb_out, int *retry, struct owner *owner,
 		    int adopt_only, int adopt_ok)
 {
 	return -1;

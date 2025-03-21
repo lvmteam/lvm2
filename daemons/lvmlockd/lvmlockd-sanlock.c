@@ -27,6 +27,8 @@
 /* FIXME: copied from sanlock header until the sanlock update is more widespread */
 #define SANLK_ADD_NODELAY      0x00000002
 
+#define SANLOCK_HAS_ACQUIRE2 1
+
 #include <stddef.h>
 #include <poll.h>
 #include <errno.h>
@@ -1797,13 +1799,33 @@ int lm_rem_resource_sanlock(struct lockspace *ls, struct resource *r)
 	return 0;
 }
 
+static const char *_host_flags_to_str(uint32_t flags)
+{
+	int val = flags & SANLK_HOST_MASK;
+
+	if (val == SANLK_HOST_FREE)
+		return "FREE";
+	if (val == SANLK_HOST_LIVE)
+		return "LIVE";
+	if (val == SANLK_HOST_FAIL)
+		return "FAIL";
+	if (val == SANLK_HOST_DEAD)
+		return "DEAD";
+	if (val == SANLK_HOST_UNKNOWN)
+		return "UNKNOWN";
+	return "ERROR";
+}
+
 int lm_lock_sanlock(struct lockspace *ls, struct resource *r, int ld_mode,
-		    struct val_blk *vb_out, int *retry, int adopt_only, int adopt_ok)
+		    struct val_blk *vb_out, int *retry, struct owner *owner,
+		    int adopt_only, int adopt_ok)
 {
 	struct lm_sanlock *lms = (struct lm_sanlock *)ls->lm_data;
 	struct rd_sanlock *rds = (struct rd_sanlock *)r->lm_data;
 	struct sanlk_resource *rs;
 	struct sanlk_options opt;
+	struct sanlk_host owner_host = { 0 };
+	char *owner_name = NULL;
 	uint64_t lock_lv_offset;
 	uint32_t flags = 0;
 	struct val_blk vb = { 0 };
@@ -1907,24 +1929,17 @@ int lm_lock_sanlock(struct lockspace *ls, struct resource *r, int ld_mode,
 	memset(&opt, 0, sizeof(opt));
 	sprintf(opt.owner_name, "%s", "lvmlockd");
 
+#ifdef SANLOCK_HAS_ACQUIRE2
+	rv = sanlock_acquire2(lms->sock, -1, flags, rs, &opt, &owner_host, &owner_name);
+#else
 	rv = sanlock_acquire(lms->sock, -1, flags, 1, &rs, &opt);
+#endif
 
 	/*
 	 * errors: translate the sanlock error number to an lvmlockd error.
 	 * We don't want to return an sanlock-specific error number from
 	 * this function to code that doesn't recognize sanlock error numbers.
 	 */
-
-	if (rv == -EAGAIN) {
-		/*
-		 * It appears that sanlock_acquire returns EAGAIN when we request
-		 * a shared lock but the lock is held ex by another host.
-		 * There's no point in retrying this case, just return an error.
-		 */
-		log_debug("%s:%s lock_san acquire mode %d rv EAGAIN", ls->name, r->name, ld_mode);
-		*retry = 0;
-		return -EAGAIN;
-	}
 
 	if ((rv == -EMSGSIZE) && (r->type == LD_RT_LV)) {
 		/*
@@ -1962,64 +1977,68 @@ int lm_lock_sanlock(struct lockspace *ls, struct resource *r, int ld_mode,
 		return -EADOPT_NONE;
 	}
 
-	if (rv == SANLK_ACQUIRE_IDLIVE || rv == SANLK_ACQUIRE_OWNED || rv == SANLK_ACQUIRE_OTHER) {
+	if (rv == SANLK_ACQUIRE_IDLIVE ||
+	    rv == SANLK_ACQUIRE_OWNED ||
+	    rv == SANLK_ACQUIRE_OTHER ||
+	    rv == SANLK_ACQUIRE_OWNED_RETRY ||
+	    rv == -EAGAIN) {
+
 		/*
-		 * The lock is held by another host.  These failures can
-		 * happen while multiple hosts are concurrently acquiring
-		 * shared locks.  We want to retry a couple times in this
-		 * case because we'll probably get the sh lock.
+		 * EAGAIN: when a shared lock is held, and we request an ex lock.
 		 *
-		 * I believe these are also the errors when requesting an
-		 * ex lock that another host holds ex.  We want to report
-		 * something like: "lock is held by another host" in this case.
-		 * Retry is pointless here.
+		 * OWNED_RETRY: the lock is held by a failed but not yet dead host.
+		 * Retrying will eventually find the host is dead (and the lock is
+		 * granted), or another host has acquired it.
 		 *
-		 * We can't distinguish between the two cases above,
-		 * so if requesting a sh lock, retry a couple times,
-		 * otherwise don't.
+		 * Multiple hosts all requesting shared locks can also result in
+		 * some transient errors here (shared locks involve acquiring the
+		 * paxos lease ex for a short period, which means two hosts both
+		 * requesting sh at once can cause one to fail here.)
+		 * Retry here to attempt to cover these transient failures.
+		 *
+		 * The command also has its own configurable retry logic.
+		 * The intention is to handle actual lock contention retries
+		 * from the command, and the transient failures from concurrent
+		 * shared requests here.  We don't actually know when a failure
+		 * was related to the transient concurrent sh, so we just guess
+		 * it was if we were requesting a sh lock.
 		 */
-		log_debug("%s:%s lock_san acquire mode %d rv %d", ls->name, r->name, ld_mode, rv);
+
 		*retry = (ld_mode == LD_LK_SH) ? 1 : 0;
+
+		if (rv == SANLK_ACQUIRE_OWNED_RETRY)
+			*retry = 0;
+
+		if (owner && owner_host.host_id) {
+			const char *host_state;
+
+			owner->host_id = (uint32_t)owner_host.host_id;
+			owner->generation = (uint32_t)owner_host.generation;
+			owner->timestamp = (uint32_t)owner_host.timestamp;
+
+			if ((host_state = _host_flags_to_str(owner_host.flags)))
+				dm_strncpy(owner->state, host_state, OWNER_STATE_SIZE-1);
+
+			if (owner_name) {
+				dm_strncpy(owner->name, owner_name, OWNER_NAME_SIZE-1);
+				free(owner_name);
+			}
+
+			log_debug("%s:%s lock_san acquire mode %d lock held %d owner %u %u %u %s %s",
+				  ls->name, r->name, ld_mode, rv,
+				  owner->host_id, owner->generation, owner->timestamp,
+				  owner->state, owner->name ?: "");
+		} else {
+			log_debug("%s:%s lock_san acquire mode %d lock held %d",
+				  ls->name, r->name, ld_mode, rv);
+		}
 		return -EAGAIN;
 	}
 
 	if (rv == SANLK_AIO_TIMEOUT) {
-		/*
-		 * sanlock got an i/o timeout when trying to acquire the
-		 * lease on disk.
-		 */
-		log_debug("%s:%s lock_san acquire mode %d rv %d", ls->name, r->name, ld_mode, rv);
+		log_debug("%s:%s lock_san acquire mode %d io timeout", ls->name, r->name, ld_mode);
 		*retry = 0;
-		return -EAGAIN;
-	}
-
-	if (rv == SANLK_DBLOCK_LVER || rv == SANLK_DBLOCK_MBAL) {
-		/*
-		 * There was contention with another host for the lease,
-		 * and we lost.
-		 */
-		log_debug("%s:%s lock_san acquire mode %d rv %d", ls->name, r->name, ld_mode, rv);
-		*retry = 0;
-		return -EAGAIN;
-	}
-
-	if (rv == SANLK_ACQUIRE_OWNED_RETRY) {
-		/*
-		 * The lock is held by a failed host, and will eventually
-		 * expire.  If we retry we'll eventually acquire the lock
-		 * (or find someone else has acquired it).  The EAGAIN retry
-		 * attempts for SH locks above would not be sufficient for
-		 * the length of expiration time.  We could add a longer
-		 * retry time here to cover the full expiration time and block
-		 * the activation command for that long.  For now just return
-		 * the standard error indicating that another host still owns
-		 * the lease.  FIXME: return a different error number so the
-		 * command can print an different error indicating that the
-		 * owner of the lease is in the process of expiring?
-		 */
-		log_debug("%s:%s lock_san acquire mode %d rv %d", ls->name, r->name, ld_mode, rv);
-		*retry = 0;
-		return -EAGAIN;
+		return -EIOTIMEOUT;
 	}
 
 	if (rv < 0) {
@@ -2162,8 +2181,6 @@ int lm_convert_sanlock(struct lockspace *ls, struct resource *r,
 	case SANLK_ACQUIRE_OWNED_RETRY:
 	case SANLK_ACQUIRE_OTHER:
 	case SANLK_AIO_TIMEOUT:
-	case SANLK_DBLOCK_LVER:
-	case SANLK_DBLOCK_MBAL:
 		/* expected errors from known/normal cases like lock contention or io timeouts */
 		log_debug("%s:%s convert_san error %d", ls->name, r->name, rv);
 		return -EAGAIN;
