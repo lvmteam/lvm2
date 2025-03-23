@@ -86,14 +86,14 @@ int lv_merge_segments(struct logical_volume *lv)
  * bogus segment structure setup.
  */
 #define raid_seg_error(msg) do { \
-	log_error("LV %s invalid: %s for %s segment", \
+	log_error("LV %s invalid: %s for %s segment.", \
 		  display_lvname(seg->lv), (msg), lvseg_name(seg)); \
 	if ((*error_count)++ > ERROR_MAX) \
 		return; \
 } while (0)
 
 #define raid_seg_error_val(msg, val) do { \
-	log_error("LV %s invalid: %s (is %u) for %s segment", \
+	log_error("LV %s invalid: %s (is %u) for %s segment.", \
 		  display_lvname(seg->lv), (msg), (val), lvseg_name(seg)); \
 	if ((*error_count)++ > ERROR_MAX) \
 		return; \
@@ -282,16 +282,20 @@ static void _check_raid_seg(struct lv_segment *seg, int *error_count)
 	/* Default < 10, change once raid1 split shift and rename SubLVs works! */
 	if (seg_is_raid1(seg)) {
 		if (seg->area_count > DEFAULT_RAID1_MAX_IMAGES) {
-			log_error("LV %s invalid: maximum supported areas %u (is %u) for %s segment",
-			  	seg->lv->name, DEFAULT_RAID1_MAX_IMAGES, seg->area_count, lvseg_name(seg));
-				if ((*error_count)++ > ERROR_MAX)
-					return;
-		}
-	} else if (seg->area_count > DEFAULT_RAID_MAX_IMAGES) {
-		log_error("LV %s invalid: maximum supported areas %u (is %u) for %s segment",
-		  	seg->lv->name, DEFAULT_RAID_MAX_IMAGES, seg->area_count, lvseg_name(seg));
+			log_error("LV %s invalid: maximum supported areas %u "
+				  "(is %u) for %s segment.",
+				  seg->lv->name, DEFAULT_RAID1_MAX_IMAGES,
+				  seg->area_count, lvseg_name(seg));
 			if ((*error_count)++ > ERROR_MAX)
 				return;
+		}
+	} else if (seg->area_count > DEFAULT_RAID_MAX_IMAGES) {
+		log_error("LV %s invalid: maximum supported areas %u "
+			  "(is %u) for %s segment.",
+			  seg->lv->name, DEFAULT_RAID_MAX_IMAGES,
+			  seg->area_count, lvseg_name(seg));
+		if ((*error_count)++ > ERROR_MAX)
+			return;
 	}
 
 	/* FIXME: should we check any non-RAID segment struct members at all? */
@@ -627,7 +631,7 @@ int check_lv_segments_complete_vg(struct logical_volume *lv)
 						     seg_le(seg, s))) ||
 			     find_mirror_seg(seg2) != seg)) {
 				log_error("LV %s: segment %u mirror "
-					  "image %u missing mirror ptr",
+					  "image %u missing mirror ptr.",
 					  lv->name, seg_count, s);
 				inc_error_count;
 			}
@@ -651,7 +655,9 @@ int check_lv_segments_complete_vg(struct logical_volume *lv)
 	     lv_is_raid(lv) ||
 	     lv_is_snapshot(lv) ||
 	     lv_is_thin_pool(lv) ||
-	     lv_is_thin_volume(lv))) {
+	     lv_is_thin_volume(lv) ||
+	     lv_is_vdo_pool(lv) ||
+	     lv_is_vdo(lv))) {
 		log_error("LV %s must have exactly one segment.",
 			  lv->name);
 		inc_error_count;
@@ -661,7 +667,7 @@ int check_lv_segments_complete_vg(struct logical_volume *lv)
 	    (!(seg2 = first_seg(lv)) || !(seg2 = find_pool_seg(seg2)) ||
 	     seg2->area_count != 1 || seg_type(seg2, 0) != AREA_LV ||
 	     seg_lv(seg2, 0) != lv)) {
-		log_error("LV %s: segment 1 pool data LV does not point back to same LV",
+		log_error("LV %s: segment 1 pool data LV does not point back to same LV.",
 			  lv->name);
 		inc_error_count;
 	}
@@ -732,7 +738,7 @@ int check_lv_segments_incomplete_vg(struct logical_volume *lv)
 		if (seg->len != seg->area_len &&
 		    seg->len != seg->area_len * data_rimage_count) {
 			log_error("LV %s: segment %u with len=%u "
-				  " has inconsistent area_len %u",
+				  "has inconsistent area_len %u.",
 				  lv->name, seg_count, seg->len, seg->area_len);
 			inc_error_count;
 		}
@@ -740,7 +746,7 @@ int check_lv_segments_incomplete_vg(struct logical_volume *lv)
 		if (seg_is_snapshot(seg)) {
 			if (seg->cow && seg->cow == seg->origin) {
 				log_error("LV %s: segment %u has same LV %s for "
-					  "both origin and snapshot",
+					  "both origin and snapshot.",
 					  lv->name, seg_count, seg->cow->name);
 				inc_error_count;
 			}
@@ -748,8 +754,8 @@ int check_lv_segments_incomplete_vg(struct logical_volume *lv)
 
 		for (s = 0; s < seg->area_count; s++) {
 			if (seg_type(seg, s) == AREA_UNASSIGNED) {
-				log_error("LV %s: segment %u has unassigned "
-					  "area %u.",
+				log_error("LV %s: segment %u has "
+					  "unassigned area %u.",
 					  lv->name, seg_count, s);
 				inc_error_count;
 			} else if (seg_type(seg, s) == AREA_PV) {
@@ -757,7 +763,7 @@ int check_lv_segments_incomplete_vg(struct logical_volume *lv)
 				    seg_pvseg(seg, s)->lvseg != seg ||
 				    seg_pvseg(seg, s)->lv_area != s) {
 					log_error("LV %s: segment %u has "
-						  "inconsistent PV area %u",
+						  "inconsistent PV area %u.",
 						  lv->name, seg_count, s);
 					inc_error_count;
 				}
@@ -766,7 +772,7 @@ int check_lv_segments_incomplete_vg(struct logical_volume *lv)
 				    seg_lv(seg, s)->vg != lv->vg ||
 				    seg_lv(seg, s) == lv) {
 					log_error("LV %s: segment %u has "
-						  "inconsistent LV area %u",
+						  "inconsistent LV area %u.",
 						  lv->name, seg_count, s);
 					inc_error_count;
 					/* Can't check more of such segment */
@@ -789,15 +795,15 @@ int check_lv_segments_incomplete_vg(struct logical_volume *lv)
 						seg_found++;
 
 				if (!seg_found) {
-					log_error("LV %s segment %u uses LV %s,"
-						  " but missing ptr from %s to %s",
+					log_error("LV %s segment %u uses LV %s, "
+						  "but missing ptr from %s to %s.",
 						  lv->name, seg_count,
 						  seg_lv(seg, s)->name,
 						  seg_lv(seg, s)->name, lv->name);
 					inc_error_count;
 				} else if (seg_found > 1) {
 					log_error("LV %s has duplicated links "
-						  "to LV %s segment %u",
+						  "to LV %s segment %u.",
 						  seg_lv(seg, s)->name,
 						  lv->name, seg_count);
 					inc_error_count;
@@ -810,7 +816,7 @@ int check_lv_segments_incomplete_vg(struct logical_volume *lv)
 	}
 
 	if (le != lv->le_count) {
-		log_error("LV %s: inconsistent LE count %u != %u",
+		log_error("LV %s: inconsistent LE count %u != %u.",
 			  lv->name, le, lv->le_count);
 		inc_error_count;
 	}
@@ -846,7 +852,7 @@ int check_lv_segments_incomplete_vg(struct logical_volume *lv)
 
 		if (!seg_found) {
 			log_error("LV %s is used by LV %s:%" PRIu32 "-%" PRIu32
-				  ", but missing ptr from %s to %s",
+				  ", but missing ptr from %s to %s.",
 				  lv->name, seg->lv->name, seg->le,
 				  seg->le + seg->len - 1,
 				  seg->lv->name, lv->name);
@@ -854,7 +860,7 @@ int check_lv_segments_incomplete_vg(struct logical_volume *lv)
 		} else if (seg_found != sl->count) {
 			log_error("Reference count mismatch: LV %s has %u "
 				  "links to LV %s:%" PRIu32 "-%" PRIu32
-				  ", which has %u links",
+				  ", which has %u links.",
 				  lv->name, sl->count, seg->lv->name, seg->le,
 				  seg->le + seg->len - 1, seg_found);
 			inc_error_count;
@@ -869,7 +875,7 @@ int check_lv_segments_incomplete_vg(struct logical_volume *lv)
 
 		if (!seg_found) {
 			log_error("LV segment %s:%" PRIu32 "-%" PRIu32
-				  " is incorrectly listed as being used by LV %s",
+				  " is incorrectly listed as being used by LV %s.",
 				  seg->lv->name, seg->le, seg->le + seg->len - 1,
 				  lv->name);
 			inc_error_count;
@@ -879,16 +885,16 @@ int check_lv_segments_incomplete_vg(struct logical_volume *lv)
 	dm_list_iterate_items(glvl, &lv->indirect_glvs) {
 		if (glvl->glv->is_historical) {
 			if (glvl->glv->historical->indirect_origin != lv->this_glv) {
-				log_error("LV %s is indirectly used by historical LV %s"
-					  "but that historical LV does not point back to LV %s",
+				log_error("LV %s is indirectly used by historical LV %s "
+					  "but that historical LV does not point back to LV %s.",
 					   lv->name, glvl->glv->historical->name, lv->name);
 				inc_error_count;
 			}
 		} else {
 			if (!(seg = first_seg(glvl->glv->live)) ||
 			    seg->indirect_origin != lv->this_glv) {
-				log_error("LV %s is indirectly used by LV %s"
-					  "but that LV does not point back to LV %s",
+				log_error("LV %s is indirectly used by LV %s "
+					  "but that LV does not point back to LV %s.",
 					  lv->name, glvl->glv->live->name, lv->name);
 				inc_error_count;
 			}
@@ -913,7 +919,7 @@ static int _lv_split_segment(struct logical_volume *lv, struct lv_segment *seg,
 
 	if (!seg_can_split(seg)) {
 		log_error("Unable to split the %s segment at LE %" PRIu32
-			  " in LV %s", lvseg_name(seg), le, lv->name);
+			  " in LV %s.", lvseg_name(seg), le, lv->name);
 		return 0;
 	}
 
@@ -930,7 +936,7 @@ static int _lv_split_segment(struct logical_volume *lv, struct lv_segment *seg,
 	}
 
 	if (!str_list_dup(lv->vg->vgmem, &split_seg->tags, &seg->tags)) {
-		log_error("LV segment tags duplication failed");
+		log_error("LV segment tags duplication failed.");
 		return 0;
 	}
 
@@ -957,7 +963,7 @@ static int _lv_split_segment(struct logical_volume *lv, struct lv_segment *seg,
 			if (!set_lv_segment_area_lv(split_seg, s, seg_lv(seg, s),
 						    seg_le(seg, s) + seg->area_len, 0))
 				return_0;
-			log_debug_alloc("Split %s:%u[%u] at %u: %s LE %u", lv->name,
+			log_debug_alloc("Split %s:%u[%u] at %u: %s LE %u.", lv->name,
 					seg->le, s, le, seg_lv(seg, s)->name,
 					seg_le(split_seg, s));
 			break;
@@ -971,14 +977,14 @@ static int _lv_split_segment(struct logical_volume *lv, struct lv_segment *seg,
 						     seg->area_len,
 						 split_seg, s)))
 				return_0;
-			log_debug_alloc("Split %s:%u[%u] at %u: %s PE %u", lv->name,
+			log_debug_alloc("Split %s:%u[%u] at %u: %s PE %u.", lv->name,
 					seg->le, s, le,
 					dev_name(seg_dev(seg, s)),
 					seg_pe(split_seg, s));
 			break;
 
 		case AREA_UNASSIGNED:
-			log_error("Unassigned area %u found in segment", s);
+			log_error("Unassigned area %u found in segment.", s);
 			return 0;
 		}
 	}
@@ -997,7 +1003,7 @@ int lv_split_segment(struct logical_volume *lv, uint32_t le)
 	struct lv_segment *seg;
 
 	if (!(seg = find_seg_by_le(lv, le))) {
-		log_error("Segment with extent %" PRIu32 " in LV %s not found",
+		log_error("Segment with extent %" PRIu32 " in LV %s not found.",
 			  le, lv->name);
 		return 0;
 	}
