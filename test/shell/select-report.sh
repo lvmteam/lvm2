@@ -97,14 +97,14 @@ sel lv "lv_name='vol1'" vol1
 # STRING LIST FIELD SELECTION #
 ###############################
 sel pv 'tags=["pv_tag1"]'
-# for one item, no need to use []
+# for one item, no need to use {}
 sel pv 'tags="pv_tag1"' "$dev1" "$dev6"
 # no match
 sel pv 'tags=["pv_tag1" && "pv_tag2"]'
 sel pv 'tags=["pv_tag1" && "pv_tag2" && "pv_tag3"]' "$dev1"
 # check the order has no effect on selection result
 sel pv 'tags=["pv_tag3" && "pv_tag2" && "pv_tag1"]' "$dev1"
-sel pv 'tags=["pv_tag4" || "pv_tag3"]' "$dev1" "$dev6"
+sel pv 'tags=["pv_tag4" || "pv_tag3" || "pv_tag1" || "pv_tag2"]' "$dev1" "$dev6"
 sel pv 'tags!=["pv_tag1"]' "$dev1" "$dev2" "$dev3" "$dev4" "$dev5" "$dev6"
 # check mixture of && and || - this is not allowed
 not sel pv 'tags=["pv_tag1" && "pv_tag2" || "pv_tag3"]'
