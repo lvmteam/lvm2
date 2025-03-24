@@ -2760,7 +2760,7 @@ static const char *_tok_value_string_list(const struct dm_report_field_type *ft,
 		}
 		if (!_add_item_to_string_list(mem, begin_item, end_item, &ssl->str_list.list))
 			goto_bad;
-		ssl->type = SEL_OR | SEL_LIST_LS;
+		ssl->type = SEL_OR | SEL_LIST_SUBSET_LS;
 		goto out;
 	}
 
