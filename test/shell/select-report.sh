@@ -115,6 +115,23 @@ sel lv 'tags=[]' xyz orig snap
 # check subset selection
 sel pv 'tags={"pv_tag1"}' "$dev1" "$dev6"
 sel pv 'tags={"pv_tag1" && "pv_tag2"}' "$dev1"
+# check regex selection
+sel pv 'tags=~["^pv_.*[123]$"]' "$dev1"
+sel pv 'tags=~["^pv_.*[14]$"]' "$dev6"
+sel pv 'tags=~["^pv_.*[1234]$"]' "$dev1" "$dev6"
+sel pv 'tags=~["^pv_.*[12]$" && "^pv_.*[34]$"]' "$dev1" "$dev6"
+sel pv 'tags=~["^pv_.*[12]$" && "^pv_.*[3]$"]' "$dev1"
+sel pv 'tags=~["^pv_.*[1]$" && "^pv_.*[4]$"]' "$dev6"
+sel pv 'tags=~["^pv_.*[12]$" || "^pv_.*[34]$"]' "$dev1" "$dev6"
+sel pv 'tags=~["^pv_.*[12]$" || "^pv_.*[3]$"]' "$dev1"
+sel pv 'tags=~["^pv_.*[12]$" || "^pv_.*[4]$"]' "$dev6"
+sel pv 'tags=~{"^pv_.*[12]$" && "^pv_.*[34]$"}' "$dev1" "$dev6"
+sel pv 'tags=~{"^pv_.*[12]$" && "^pv_.*[3]$"}' "$dev1"
+sel pv 'tags=~{"^pv_.*[1]$" && "^pv_.*[4]$"}' "$dev6"
+sel pv 'tags=~{"^pv_.*[12]$" || "^pv_.*[34]$"}' "$dev1" "$dev6"
+sel pv 'tags=~{"^pv_.*[12]$" || "^pv_.*[3]$"}' "$dev1" "$dev6"
+sel pv 'tags=~{"^pv_.*[12]$" || "^pv_.*[4]$"}' "$dev1" "$dev6"
+sel pv 'tags!~{"^pv_.*[12]$" && "^pv_.*[3]$"}' "$dev2" "$dev3" "$dev4" "$dev5" "$dev6"
 
 ##########################
 # NUMBER FIELD SELECTION #
