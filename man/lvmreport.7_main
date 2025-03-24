@@ -728,14 +728,25 @@ grouping operator is used and what item separator is used within that set
 of items. Also, note that order of items does not matter here.
 .P
 .IP \[bu] 3
-\fBmatching the set strictly\fP where all items must match - use [ ], e.g.
-["a","b","c"]
-.IP \[bu]
-\fBmatching a subset of the set\fP - use { } with "," or "&&" as item
-delimiter, e.g. {"a","b","c"}
-.IP \[bu]
-\fBmatching an intersection with the set\fP - use { } with "#" or
-"||" as item delimiter, e.g. {"a" || "b" || "c"}
+.B Matching all items in the string list field:
+.RS
+.IP - 3
+and all items from selection, use [ ] with "," (or "&&"), .e.g. ["a","b","c"],
+.RE
+.RS
+.IP - 3
+and any item from selection, use [ ] with "#" (or "||"), .e.g. ["a"#"b"#"c"].
+.RE
+.IP \[bu] 3
+.B Matching a subset of items in the string list field:
+.RS
+.IP - 3
+and all items from selection, use { } with "," (or "&&"), e.g. {"a","b","c"},
+.RE
+.RS
+.IP - 3
+and any item from selection, use { } with "#" (or "||"), e.g. {"a"#"b"#"c"}.
+.RE
 .P
 When using \fBtime\fP in your selection criteria, LVM can recognize various
 time formats using standard, absolute or freeform expressions. For examples
@@ -833,17 +844,19 @@ month names ("January" - "December" or abbreviated as "Jan" - "Dec")
 .IP -
 .B VALUE = [VALUE \fIlog_op\fP VALUE]
 .br
-For list-based types: string list. Matches strictly.
+For list-based types: string list. Matches all items in list.
 The log_op must always be of one type within the whole list value.
 .IP -
 .B VALUE = {VALUE \fIlog_op\fP VALUE}
 .br
-For list-based types: string list. Matches a subset.
+For list-based types: string list. Matches a subset of items in list.
 The log_op must always be of one type within the whole list value.
 .IP -
 .BR VALUE " = " value
 .br
 For scalar types: number, size, percent, string (or string regex).
+Also for list-based types: string list (in this case the value is
+a short form of {value}).
 .
 .SH EXAMPLES
 .
@@ -1503,40 +1516,90 @@ that matches. If the subset has only one item, we can leave out { }.
   lvol0 tagA,tagB
 .fi
 .P
-Depending on whether we use "&&" (or ",") or "||" ( or "#") as delimiter
-for items in the set we define in selection criterion for string list,
-we either match subset ("&&" or ",") or even intersection ("||" or "#").
+For string list values, we can either match all items in the string list
+value (by using [ ]) or only a subset of items in the string list value
+(by using { }). Further, we can either match if all items in the
+string list selection criterion match (by using "," or "&&" as item
+delimiter) or if only a subset of items in the string list selection
+criterion match (by using "#" or "||" as item delimiter).
 .P
 .nf
-# lvs -o name,tags -S 'tags={tagA,tagC,tagD}'
+# lvs -o name,tags -S 'tags={tagA}'
   LV    LV Tags
-  lvol2 tagA,tagC,tagD
-.P
-# lvs -o name,tags -S 'tags={tagA || tagC || tagD}'
-  LV    LV Tags
-  lvol2 tagA,tagC,tagD
   lvol0 tagA,tagB
-.fi
+  lvol2 tagA,tagC,tagD
 .P
-To match the complete set, use [ ] with "&&" (or ",") as delimiter for items.
-Also note that the order in which we define items in the set is not relevant.
+# lvs -o name,tags -S 'tags={tagA || tagB}'
+  LV    LV Tags
+  lvol0 tagA,tagB
+  lvol2 tagA,tagC,tagD
 .P
-.nf
+# lvs -o name,tags -S 'tags={tagA && tagB}'
+  LV    LV Tags
+  lvol0 tagA,tagB
+.P
+# lvs -o name,tags -S 'tags={tagA || tagB || tagC}'
+  LV    LV Tags
+  lvol0 tagA,tagB
+  lvol2 tagA,tagC,tagD
+.P
+# lvs -o name,tags -S 'tags={tagA && tagB && tagC}'
+.P
 # lvs -o name,tags -S 'tags=[tagA]'
 .P
-# lvs -o name,tags -S 'tags=[tagB,tagA]'
+# lvs -o name,tags -S 'tags=[tagA || tagB]'
   LV    LV Tags
   lvol0 tagA,tagB
+.P
+# lvs -o name,tags -S 'tags=[tagA && tagB]'
+  LV    LV Tags
+  lvol0 tagA,tagB
+.P
+# lvs -o name,tags -S 'tags=[tagA || tagB || tagC]'
+  LV    LV Tags
+  lvol0 tagA,tagB
+.P
+# lvs -o name,tags -S 'tags=[tagA && tagB && tagC]'
 .fi
 .P
-If you use [ ] with "||" (or "#"), this is exactly the same as using { }.
-.P
+You can also use regular expressions instead of simple strings inside
+the string list selection criteria. In that case, the "=~" operator is
+used instead of "=". The string list grouping operators { } and [ ] are
+also recognized.
 .nf
-# lvs -o name,tags -S 'tags=[tagA || tagC || tagD]'
+# lvs -o name,tags -S 'tags=~^t.*[ACD]$'
+  LV    LV Tags
+  lvol0 tagA,tagB
+  lvol2 tagA,tagC,tagD
+.P
+# lvs -o name,tags -S 'tags=~{"^t.*[ACD]$"}'
+  LV    LV Tags
+  lvol0 tagA,tagB
+  lvol2 tagA,tagC,tagD
+.P
+# lvs -o name,tags -S 'tags=~["^t.*[ACD]$"]'
   LV    LV Tags
   lvol2 tagA,tagC,tagD
+.P
+# lvs -o name,tags -S 'tags=~{"^t.*[AC]$" || "^tag[D]$" }'
+  LV    LV Tags
   lvol0 tagA,tagB
-.fi
+  lvol2 tagA,tagC,tagD
+.P
+# lvs -o name,tags -S 'tags=~["^t.*[AC]$" || "^tag[D]$" ]'
+  LV    LV Tags
+  lvol2 tagA,tagC,tagD
+.P
+# lvs -o name,tags -S 'tags=~["^t.*A$" && "^t.*B$" ]'
+  LV    LV Tags
+  lvol0 tagA,tagB
+.P
+# lvs -o name,tags -S 'tags!~["^t.*A$" && "^t.*B$" ]'
+  LV    LV Tags
+  lvol1
+  lvol2 tagA,tagC,tagD
+  lvol3
+  lvol4
 .P
 To match a set with no items, use "" to denote this (note that we have
 output compaction enabled so the "LV Tags" column is not displayed in
