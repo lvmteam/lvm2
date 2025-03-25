@@ -30,6 +30,7 @@
 
 struct selection {
 	struct dm_pool *mem;
+	struct dm_pool *regex_mem;
 	struct selection_node *selection_root;
 	int add_new_fields;
 };
@@ -203,7 +204,9 @@ static const struct op_def _op_log[] = {
 
 struct selection_str_list {
 	struct dm_str_list str_list;
-	unsigned type;			/* either SEL_AND or SEL_OR */
+	struct dm_regex *regex;
+	size_t regex_num_patterns;
+	unsigned type; /* either SEL_LIST_LS or SEL_LIST_SUBSET_LS with either SEL_AND or SEL_OR */
 };
 
 struct field_selection_value {
@@ -1410,8 +1413,11 @@ struct dm_report *dm_report_init(uint32_t *report_types,
 
 void dm_report_free(struct dm_report *rh)
 {
-	if (rh->selection)
+	if (rh->selection) {
 		dm_pool_destroy(rh->selection->mem);
+		if (rh->selection->regex_mem)
+			dm_pool_destroy(rh->selection->regex_mem);
+	}
 	if (rh->value_cache)
 		dm_hash_destroy(rh->value_cache);
 	dm_pool_destroy(rh->mem);
@@ -1749,8 +1755,74 @@ static int _cmp_field_time(struct dm_report *rh,
 	return 0;
 }
 
+static int _str_list_item_match_regex(const struct str_list_sort_value *val, unsigned int i, struct dm_regex *regex)
+{
+	struct pos_len *item = val->items + i;
+	char *s = (char *) (val->value + item->pos);
+	char c = s[item->len];
+	int r;
+
+	/*
+	 * The val->items contains the whole string list in the form of a single string,
+	 * where each item is delimited by a delimiter.
+	 *
+	 * The item->pos + item->len pair then points to the exact item within the val->items.
+	 *
+	 * The dm_regex_match accepts a string, not the pos + len pair, so we need to adapt here:
+	 * replace the delimiter with '\0' temporarily so the item is a proper string.
+	 */
+	s[item->len] = '\0';
+	r = dm_regex_match(regex, s);
+	s[item->len] = c;
+
+	return r;
+}
+
+static size_t _bitset_count_set(dm_bitset_t bs)
+{
+	size_t i, size = bs[0]/DM_BITS_PER_INT + 1;
+	size_t count = 0;
+
+	for (i = 1; i <= size; i++)
+		count += hweight32(bs[i]);
+
+	return count;
+}
+
 /* Matches if all items from selection string list match list value strictly 1:1. */
-static int _cmp_field_string_list_strict_all(const struct str_list_sort_value *val,
+static int _cmp_field_string_list_strict_regex_all(const struct dm_report *rh,
+						   const struct str_list_sort_value *val,
+						   const struct selection_str_list *sel)
+{
+	unsigned int i;
+	dm_bitset_t bs;
+	int r;
+
+	if (!val->items)
+		return (sel->regex_num_patterns == 1) && dm_regex_match(sel->regex, "") >= 0;
+
+	if (!(bs = dm_bitset_create(rh->selection->mem, sel->regex_num_patterns))) {
+		log_error("Failed to create bitset for regex match counter.");
+		return 0;
+	}
+
+	for (i = 1; i <= val->items[0].pos; i++) {
+		if ((r = _str_list_item_match_regex(val, i, sel->regex)) < 0) {
+			r = 0;
+			goto out;
+		}
+		dm_bit_set(bs, r);
+	}
+
+	r = _bitset_count_set(bs) == sel->regex_num_patterns;
+out:
+	dm_pool_free(rh->selection->mem, bs);
+	return r;
+}
+
+/* Matches if all items from selection string list match list value strictly 1:1. */
+static int _cmp_field_string_list_strict_all(const struct dm_report *rh,
+					     const struct str_list_sort_value *val,
 					     const struct selection_str_list *sel)
 {
 	unsigned int sel_list_size = dm_list_size(&sel->str_list.list);
@@ -1782,7 +1854,36 @@ static int _cmp_field_string_list_strict_all(const struct str_list_sort_value *v
 }
 
 /* Matches if all items from selection string list match a subset of list value. */
-static int _cmp_field_string_list_subset_all(const struct str_list_sort_value *val,
+static int _cmp_field_string_list_subset_regex_all(const struct dm_report *rh,
+						   const struct str_list_sort_value *val,
+						   const struct selection_str_list *sel)
+{
+	dm_bitset_t bs;
+	unsigned int i;
+	int r;
+
+	if (!val->items)
+		return (sel->regex_num_patterns == 1) && dm_regex_match(sel->regex, "") >= 0;
+
+	if (!(bs = dm_bitset_create(rh->selection->mem, sel->regex_num_patterns))) {
+		log_error("Failed to create bitset for regex match counter.");
+		return 0;
+	}
+
+	for (i = 1; i <= val->items[0].pos; i++) {
+		if ((r = _str_list_item_match_regex(val, i, sel->regex)) < 0)
+			continue;
+		dm_bit_set(bs, r);
+	}
+
+	r = _bitset_count_set(bs) == sel->regex_num_patterns;
+	dm_pool_free(rh->selection->mem, bs);
+	return r;
+}
+
+/* Matches if all items from selection string list match a subset of list value. */
+static int _cmp_field_string_list_subset_all(const struct dm_report *rh __attribute__((unused)),
+					     const struct str_list_sort_value *val,
 					     const struct selection_str_list *sel)
 {
 	unsigned int sel_list_size = dm_list_size(&sel->str_list.list);
@@ -1817,8 +1918,26 @@ static int _cmp_field_string_list_subset_all(const struct str_list_sort_value *v
 }
 
 /* Matches if any item from selection string list matches list value. */
-static int _cmp_field_string_list_any(const struct str_list_sort_value *val,
-				      const struct selection_str_list *sel)
+static int _cmp_field_string_list_subset_regex_any(const struct dm_report *rh __attribute__((unused)),
+						   const struct str_list_sort_value *val,
+						   const struct selection_str_list *sel)
+{
+	unsigned int i;
+
+	if (!val->items)
+		return dm_regex_match(sel->regex, "") >= 0;
+
+	for (i = 1; i <= val->items[0].pos; i++) {
+		if (_str_list_item_match_regex(val, i, sel->regex) >= 0)
+			return 1;
+	}
+	return 0;
+}
+
+/* Matches if any item from selection string list matches list value. */
+static int _cmp_field_string_list_subset_any(const struct dm_report *rh __attribute__((unused)),
+					     const struct str_list_sort_value *val,
+					     const struct selection_str_list *sel)
 {
 	struct dm_str_list *sel_item;
 	unsigned int i;
@@ -1847,7 +1966,59 @@ static int _cmp_field_string_list_any(const struct str_list_sort_value *val,
 	return 0;
 }
 
-static int _cmp_field_string_list(struct dm_report *rh __attribute__((unused)),
+/* Matches if all items from list value can be matched by any item from selection list. */
+static int _cmp_field_string_list_strict_regex_any(const struct dm_report *rh __attribute__((unused)),
+						   const struct str_list_sort_value *val,
+						   const struct selection_str_list *sel)
+{
+	unsigned int i;
+
+	if (!val->items)
+		return dm_regex_match(sel->regex, "") >= 0;
+
+	for (i = 1; i <= val->items[0].pos; i++) {
+		if (_str_list_item_match_regex(val, i, sel->regex) < 0)
+			return 0;
+	}
+
+	return 1;
+}
+
+/* Matches if all items from list value can be matched by any item from selection list. */
+static int _cmp_field_string_list_strict_any(const struct dm_report *rh __attribute__((unused)),
+					     const struct str_list_sort_value *val,
+					     const struct selection_str_list *sel)
+{
+	struct dm_str_list *sel_item;
+	unsigned int i;
+	int match;
+
+	/* match blank string list with selection that contains blank string */
+	if (!val->items) {
+		dm_list_iterate_items(sel_item, &sel->str_list.list) {
+			if (!strcmp(sel_item->str, ""))
+				return 1;
+		}
+		return 0;
+	}
+
+	for (i = 1; i <= val->items[0].pos; i++) {
+		match = 0;
+		dm_list_iterate_items(sel_item, &sel->str_list.list) {
+			if ((strlen(sel_item->str) == val->items[i].len) &&
+			    !strncmp(sel_item->str, val->value + val->items[i].pos, val->items[i].len)) {
+				match = 1;
+				break;
+			}
+		}
+		if (!match)
+			return 0;
+	}
+
+	return 1;
+}
+
+static int _cmp_field_string_list(struct dm_report *rh,
 				  uint32_t field_num, const char *field_id,
 				  const struct str_list_sort_value *val,
 				  struct field_selection *fs)
@@ -1869,11 +2040,16 @@ static int _cmp_field_string_list(struct dm_report *rh __attribute__((unused)),
 
 	switch (sel->type & SEL_MASK) {
 		case SEL_AND:
-			r = subset ? _cmp_field_string_list_subset_all(val, sel)
-				   : _cmp_field_string_list_strict_all(val, sel);
+			r = subset ? sel->regex ? _cmp_field_string_list_subset_regex_all(rh, val, sel)
+						: _cmp_field_string_list_subset_all(rh, val, sel)
+				   : sel->regex ? _cmp_field_string_list_strict_regex_all(rh, val, sel)
+				   		: _cmp_field_string_list_strict_all(rh, val, sel);
 			break;
 		case SEL_OR:
-			r = _cmp_field_string_list_any(val, sel);
+			r = subset ? sel->regex ? _cmp_field_string_list_subset_regex_any(rh, val, sel)
+						: _cmp_field_string_list_subset_any(rh, val, sel)
+				   : sel->regex ? _cmp_field_string_list_strict_regex_any(rh, val, sel)
+				   		: _cmp_field_string_list_strict_any(rh, val, sel);
 			break;
 		default:
 			log_error(INTERNAL_ERROR "_cmp_field_string_list: unsupported string "
@@ -1907,7 +2083,17 @@ static int _compare_selection_field(struct dm_report *rh,
 	}
 
 	if (fs->flags & FLD_CMP_REGEX)
-		r = _cmp_field_regex((const char *) f->sort_value, fs);
+		switch (f->props->flags & DM_REPORT_FIELD_TYPE_MASK) {
+			case DM_REPORT_FIELD_TYPE_STRING:
+					r = _cmp_field_regex((const char *) f->sort_value, fs);
+					break;
+			case DM_REPORT_FIELD_TYPE_STRING_LIST:
+					r = _cmp_field_string_list(rh, f->props->field_num, field_id, (const struct str_list_sort_value *) f->sort_value, fs);
+					break;
+			default:
+				log_error(INTERNAL_ERROR "_compare_selection_field: regex: incorrect type %" PRIu32 " for field %s",
+					  f->props->flags & DM_REPORT_FIELD_TYPE_MASK, field_id);
+		}
 	else {
 		switch(f->props->flags & DM_REPORT_FIELD_TYPE_MASK) {
 			case DM_REPORT_FIELD_TYPE_PERCENT:
@@ -1934,7 +2120,8 @@ static int _compare_selection_field(struct dm_report *rh,
 				r = _cmp_field_time(rh, f->props->field_num, field_id, *(const time_t *) f->sort_value, fs);
 				break;
 			default:
-				log_error(INTERNAL_ERROR "_compare_selection_field: unknown field type for field %s", field_id);
+				log_error(INTERNAL_ERROR "_compare_selection_field: incorrect type %" PRIu32 " for field %s",
+					  f->props->flags & DM_REPORT_FIELD_TYPE_MASK, field_id);
 		}
 	}
 
@@ -2626,11 +2813,9 @@ static int _check_reserved_values_supported(const struct dm_report_field_type fi
 static const char *_tok_value_regex(struct dm_report *rh,
 				    const struct dm_report_field_type *ft,
 				    const char *s, const char **begin,
-				    const char **end, uint32_t *flags,
-				    struct reserved_value_wrapper *rvw)
+				    const char **end, uint32_t *flags)
 {
 	char c;
-	rvw->reserved = NULL;
 
 	s = _skip_space(s);
 
@@ -2693,7 +2878,8 @@ static int _add_item_to_string_list(struct dm_pool *mem, const char *begin,
 static const char *_tok_value_string_list(const struct dm_report_field_type *ft,
 					  struct dm_pool *mem, const char *s,
 					  const char **begin, const char **end,
-					  struct selection_str_list **sel_str_list)
+					  struct selection_str_list **sel_str_list,
+					  uint32_t *flags)
 {
 	static const char _str_list_item_parsing_failed[] = "Failed to parse string list value "
 							    "for selection field %s.";
@@ -2724,7 +2910,7 @@ static const char *_tok_value_string_list(const struct dm_report_field_type *ft,
 		}
 		if (!_add_item_to_string_list(mem, begin_item, end_item, &ssl->str_list.list))
 			goto_bad;
-		ssl->type = SEL_OR | SEL_LIST_LS;
+		ssl->type = SEL_OR | SEL_LIST_SUBSET_LS;
 		goto out;
 	}
 
@@ -2799,12 +2985,17 @@ static const char *_tok_value_string_list(const struct dm_report_field_type *ft,
 	else
 		ssl->type |= SEL_LIST_SUBSET_LS;
 
-	/* Sort the list. */
 	if (!(list_size = dm_list_size(&ssl->str_list.list))) {
 		log_error(INTERNAL_ERROR "_tok_value_string_list: list has no items");
 		goto bad;
 	} else if (list_size == 1)
 		goto out;
+
+	if (*flags & FLD_CMP_REGEX)
+		/* No need to sort the list for regex. */
+		goto out;
+
+	/* Sort the list. */
 	if (!(arr = dm_malloc(sizeof(item) * list_size))) {
 		log_error("_tok_value_string_list: memory allocation failed for sort array");
 		goto bad;
@@ -3320,7 +3511,10 @@ static const char *_tok_value(struct dm_report *rh,
 
 	s = _skip_space(s);
 
-	s = _get_reserved(rh, expected_type, field_num, implicit, s, begin, end, rvw);
+	/* recognize possible reserved value (but not in a regex) */
+	if (!(*flags & FLD_CMP_REGEX))
+		s = _get_reserved(rh, expected_type, field_num, implicit, s, begin, end, rvw);
+
 	if (rvw->reserved) {
 		/*
 		 * FLD_CMP_NUMBER shares operators with FLD_CMP_TIME,
@@ -3331,17 +3525,24 @@ static const char *_tok_value(struct dm_report *rh,
 		else if (expected_type == DM_REPORT_FIELD_TYPE_NUMBER)
 			*flags &= ~FLD_CMP_TIME;
 		*flags |= expected_type;
+
+		/* if we matched a reserved value, skip further processing of this token */
 		return s;
 	}
 
 	switch (expected_type) {
 
 		case DM_REPORT_FIELD_TYPE_STRING:
-			c = _get_and_skip_quote_char(&s);
-			if (!(s = _tok_value_string(s, begin, end, c, SEL_AND | SEL_OR | SEL_PRECEDENCE_PE, NULL))) {
-				log_error("Failed to parse string value "
-					  "for selection field %s.", ft->id);
-				return NULL;
+			if (*flags & FLD_CMP_REGEX) {
+				if (!(s = _tok_value_regex(rh, ft, s, begin, end, flags)))
+					return NULL;
+			} else {
+				c = _get_and_skip_quote_char(&s);
+				if (!(s = _tok_value_string(s, begin, end, c, SEL_AND | SEL_OR | SEL_PRECEDENCE_PE, NULL))) {
+					log_error("Failed to parse string value "
+						  "for selection field %s.", ft->id);
+					return NULL;
+				}
 			}
 			*flags |= DM_REPORT_FIELD_TYPE_STRING;
 			break;
@@ -3350,7 +3551,7 @@ static const char *_tok_value(struct dm_report *rh,
 			if (!(str_list = (struct selection_str_list **) custom))
 				goto_bad;
 
-			s = _tok_value_string_list(ft, mem, s, begin, end, str_list);
+			s = _tok_value_string_list(ft, mem, s, begin, end, str_list, flags);
 			if (!(*str_list)) {
 				log_error("Failed to parse string list value "
 					  "for selection field %s.", ft->id);
@@ -3434,7 +3635,7 @@ static const char *_tok_value(struct dm_report *rh,
 
 	return s;
 bad:
-	log_error(INTERNAL_ERROR "Forbidden NULL custom detected.");
+	log_error(INTERNAL_ERROR "_tok_value: Forbidden NULL custom parameter detected.");
 
 	return NULL;
 }
@@ -3505,6 +3706,19 @@ static int _get_reserved_value(struct dm_report *rh, uint32_t field_num,
 	return 1;
 }
 
+static struct dm_regex *_selection_regex_create(struct selection *selection, const char * const *patterns,
+						unsigned num_patterns)
+{
+	if (!selection->regex_mem) {
+		if (!(selection->regex_mem = dm_pool_create("report selection regex", 32 * 1024))) {
+			log_error("Failed to create report selection regex memory pool.");
+			return NULL;
+		}
+	}
+
+	return dm_regex_create(selection->regex_mem, patterns, num_patterns);
+}
+
 static struct field_selection *_create_field_selection(struct dm_report *rh,
 						       uint32_t field_num,
 						       int implicit,
@@ -3522,7 +3736,11 @@ static struct field_selection *_create_field_selection(struct dm_report *rh,
 	struct time_value *tval;
 	uint64_t factor;
 	char *s;
-	const char *s_array[2] = { 0 };
+	const char *s_arr_single[2] = { 0 };
+	const char **s_arr;
+	size_t s_arr_size;
+	struct dm_str_list *sl;
+	size_t i;
 
 	dm_list_iterate_items(fp, &rh->field_props) {
 		if ((fp->implicit == implicit) && (fp->field_num == field_num)) {
@@ -3549,6 +3767,9 @@ static struct field_selection *_create_field_selection(struct dm_report *rh,
 	field_id = fields[found->field_num].id;
 
 	if (!(found->flags & flags & DM_REPORT_FIELD_TYPE_MASK)) {
+		/*
+		 * FIXME: See if this is ever reachable here and if not, remove this check.
+		 *        It looks like we already checked this in _parse_selection.*/
 		log_error("dm_report: incompatible comparison "
 			  "type for selection field %s", field_id);
 		return NULL;
@@ -3587,21 +3808,53 @@ static struct field_selection *_create_field_selection(struct dm_report *rh,
 	/* store comparison operand */
 	if (flags & FLD_CMP_REGEX) {
 		/* REGEX */
-		if (!(s = dm_malloc(len + 1))) {
-			log_error("dm_report: dm_malloc failed to store "
-				  "regex value for selection field %s", field_id);
-			goto error;
-		}
-		memcpy(s, v, len);
-		s[len] = '\0';
-		s_array[0] = s;
+		switch (flags & DM_REPORT_FIELD_TYPE_MASK) {
+			case DM_REPORT_FIELD_TYPE_STRING:
+				if (!(s = malloc(len + 1))) {
+					log_error("dm_report: malloc failed to store "
+						  "regex value for selection field %s", field_id);
+					goto error;
+				}
+				memcpy(s, v, len);
+				s[len] = '\0';
+				s_arr_single[0] = s;
 
-		fs->value->v.r = dm_regex_create(rh->selection->mem, s_array, 1);
-		dm_free(s);
-		if (!fs->value->v.r) {
-			log_error("dm_report: failed to create regex "
-				  "matcher for selection field %s", field_id);
-			goto error;
+				fs->value->v.r = _selection_regex_create(rh->selection, s_arr_single, 1);
+				free(s);
+				if (!fs->value->v.r) {
+					log_error("dm_report: failed to create regex "
+						  "matcher for selection field %s", field_id);
+					goto error;
+				}
+				break;
+			case DM_REPORT_FIELD_TYPE_STRING_LIST:
+				if (!custom)
+					goto bad;
+				fs->value->v.l = *((struct selection_str_list **) custom);
+
+				s_arr_size = dm_list_size(&fs->value->v.l->str_list.list);
+				if (!(s_arr = malloc(sizeof(char *) * s_arr_size))) {
+					log_error("dm_report: malloc failed for regex array "
+						  "for selection field %s", field_id);
+					goto error;
+				}
+				i = 0;
+				dm_list_iterate_items(sl, &fs->value->v.l->str_list.list)
+					s_arr[i++] = sl->str;
+
+				fs->value->v.l->regex = _selection_regex_create(rh->selection, s_arr, s_arr_size);
+				fs->value->v.l->regex_num_patterns = s_arr_size;
+				free(s_arr);
+				if (!fs->value->v.l->regex) {
+					log_error("dm_report: failed to create regex "
+						  "matcher for selection field %s", field_id);
+					goto error;
+				}
+				break;
+			default:
+				log_error(INTERNAL_ERROR "_create_field_selection: regex: incorrect type %" PRIu32 " for field %s",
+					  flags & DM_REPORT_FIELD_TYPE_MASK, field_id);
+				goto error;
 		}
 	} else {
 		/* STRING, NUMBER, SIZE, PERCENT, STRING_LIST, TIME */
@@ -3715,8 +3968,8 @@ static struct field_selection *_create_field_selection(struct dm_report *rh,
 				}
 				break;
 			default:
-				log_error(INTERNAL_ERROR "_create_field_selection: "
-					  "unknown type of selection field %s", field_id);
+				log_error(INTERNAL_ERROR "_create_field_selection: incorrect type %" PRIu32 " for field %s",
+					  flags & DM_REPORT_FIELD_TYPE_MASK, field_id);
 				goto error;
 		}
 	}
@@ -3727,7 +3980,7 @@ error_field_id:
 		  field_id);
 	goto error;
 bad:
-	log_error(INTERNAL_ERROR "Forbidden NULL custom detected.");
+	log_error(INTERNAL_ERROR "_create_field_selection: Forbidden NULL custom detected.");
 error:
 	dm_pool_free(rh->selection->mem, fs);
 
@@ -3863,7 +4116,7 @@ static struct selection_node *_parse_selection(struct dm_report *rh,
 	char *tmp;
 	char c;
 
-	/* field name */
+	/* get field name */
 	if (!(last = _tok_field_name(s, &ws, &we))) {
 		log_error("Expecting field name");
 		goto bad;
@@ -3896,7 +4149,7 @@ static struct selection_node *_parse_selection(struct dm_report *rh,
 	} else
 		ft = &rh->fields[field_num];
 
-	/* comparison operator */
+	/* get comparison operator */
 	if (!(flags = _tok_op_cmp(we, &last))) {
 		_display_selection_help(rh);
 		log_error("Unrecognised comparison operator: %s", we);
@@ -3908,49 +4161,48 @@ static struct selection_node *_parse_selection(struct dm_report *rh,
 		goto bad;
 	}
 
-	/* comparison value */
+	/* check we can use the operator with the field */
 	if (flags & FLD_CMP_REGEX) {
-		/*
-		 * REGEX value
-		 */
-		if (!(last = _tok_value_regex(rh, ft, last, &vs, &ve, &flags, &rvw)))
-			goto_bad;
-	} else {
-		/*
-		 * STRING, NUMBER, SIZE, PERCENT, STRING_LIST, TIME value
-		 */
-		if (flags & FLD_CMP_NUMBER) {
-			if (!(ft->flags & (DM_REPORT_FIELD_TYPE_NUMBER |
-					   DM_REPORT_FIELD_TYPE_SIZE |
-					   DM_REPORT_FIELD_TYPE_PERCENT |
-					   DM_REPORT_FIELD_TYPE_TIME))) {
-				_display_selection_help(rh);
-				log_error("Operator can be used only with number, size, time or percent fields: %s", ws);
-				goto bad;
-			}
-		} else if (flags & FLD_CMP_TIME) {
-			if (!(ft->flags & DM_REPORT_FIELD_TYPE_TIME)) {
-				_display_selection_help(rh);
-				log_error("Operator can be used only with time fields: %s", ws);
-				goto bad;
-			}
+		if (!(ft->flags & (DM_REPORT_FIELD_TYPE_STRING |
+				   DM_REPORT_FIELD_TYPE_STRING_LIST))) {
+			_display_selection_help(rh);
+			log_error("Operator can be used only with string or string list fields: %s", ws);
+			goto bad;
 		}
-
-		if (ft->flags == DM_REPORT_FIELD_TYPE_SIZE ||
-		    ft->flags == DM_REPORT_FIELD_TYPE_NUMBER ||
-		    ft->flags == DM_REPORT_FIELD_TYPE_PERCENT)
-			custom = &factor;
-		else if (ft->flags & DM_REPORT_FIELD_TYPE_TIME)
-			custom = &tval;
-		else if (ft->flags == DM_REPORT_FIELD_TYPE_STRING_LIST)
-			custom = &str_list;
-		else
-			custom = NULL;
-		if (!(last = _tok_value(rh, ft, field_num, implicit,
-					last, &vs, &ve, &flags,
-					&rvw, rh->selection->mem, custom)))
-			goto_bad;
+	} else if (flags & FLD_CMP_NUMBER) {
+		if (!(ft->flags & (DM_REPORT_FIELD_TYPE_NUMBER |
+				   DM_REPORT_FIELD_TYPE_SIZE |
+				   DM_REPORT_FIELD_TYPE_PERCENT |
+				   DM_REPORT_FIELD_TYPE_TIME))) {
+			_display_selection_help(rh);
+			log_error("Operator can be used only with number, size, time or percent fields: %s", ws);
+			goto bad;
+		}
+	} else if (flags & FLD_CMP_TIME) {
+		if (!(ft->flags & DM_REPORT_FIELD_TYPE_TIME)) {
+			_display_selection_help(rh);
+			log_error("Operator can be used only with time fields: %s", ws);
+			goto bad;
+		}
 	}
+
+	/* assign custom structures to hold extra information for specific value types */
+	if (ft->flags == DM_REPORT_FIELD_TYPE_SIZE ||
+	    ft->flags == DM_REPORT_FIELD_TYPE_NUMBER ||
+	    ft->flags == DM_REPORT_FIELD_TYPE_PERCENT)
+		custom = &factor;
+	else if (ft->flags & DM_REPORT_FIELD_TYPE_TIME)
+		custom = &tval;
+	else if (ft->flags == DM_REPORT_FIELD_TYPE_STRING_LIST)
+		custom = &str_list;
+	else
+		custom = NULL;
+
+	/* get value to compare with */
+	if (!(last = _tok_value(rh, ft, field_num, implicit,
+				last, &vs, &ve, &flags,
+				&rvw, rh->selection->mem, custom)))
+		goto_bad;
 
 	*next = _skip_space(last);
 
@@ -4092,7 +4344,7 @@ error:
 static int _alloc_rh_selection(struct dm_report *rh)
 {
 	if (!(rh->selection = dm_pool_zalloc(rh->mem, sizeof(struct selection))) ||
-	    !(rh->selection->mem = dm_pool_create("report selection", 10 * 1024))) {
+	    !(rh->selection->mem = dm_pool_create("report selection", 1024))) {
 		log_error("Failed to allocate report selection structure.");
 		if (rh->selection)
 			dm_pool_free(rh->mem, rh->selection);
