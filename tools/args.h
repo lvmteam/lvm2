@@ -298,7 +298,7 @@ arg(errorwhenfull_ARG, '\0', "errorwhenfull", bool_VAL, 0, 0,
     "When no, device-mapper will queue these I/O requests for a\n"
     "period of time to allow the thin pool to be extended.\n"
     "Errors are returned if no space is available after the timeout.\n"
-    "(Also see dm-thin-pool kernel module option no_space_timeout.)\n"
+    "(Also see \"\\fIdm_thin_pool\\fP\" kernel module option no_space_timeout.)\n"
     "See \\fBlvmthin\\fP(7) for more information.\n")
 
 arg(force_long_ARG, '\0', "force", 0, ARG_COUNTABLE | ARG_LONG_OPT, 0,
@@ -1504,7 +1504,7 @@ arg(mirrors_ARG, 'm', "mirrors", number_VAL, 0, 0,
     "Use the --type option to specify which to use (raid1 is default,\n"
     "and mirror is legacy)\n"
     "Use \\fBlvm.conf\\fP(5) \\fBglobal/mirror_segtype_default\\fP and\n"
-    "global/raid10_segtype_default to configure the default types.\n"
+    "\\fBglobal/raid10_segtype_default\\fP to configure the default types.\n"
     "See the --nosync option for avoiding initial image synchronization.\n"
     "See \\fBlvmraid\\fP(7) for more information.\n"
     "#lvconvert\n"
@@ -1518,7 +1518,7 @@ arg(mirrors_ARG, 'm', "mirrors", number_VAL, 0, 0,
     "Use the --type option to specify which to use (raid1 is default,\n"
     "and mirror is legacy)\n"
     "Use \\fBlvm.conf\\fP(5) \\fBglobal/mirror_segtype_default\\fP and\n"
-    "global/raid10_segtype_default to configure the default types.\n"
+    "\\fBglobal/raid10_segtype_default\\fP to configure the default types.\n"
     "The plus prefix \\fB+\\fP can be used, in which case\n"
     "the number is added to the current number of images,\n"
     "or the minus prefix \\fB-\\fP can be used, in which case\n"
