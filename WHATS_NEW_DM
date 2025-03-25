@@ -1,5 +1,7 @@
 Version 1.02.206 - 
 ===================
+  Add support for using regex in selection criteria for string lists.
+  Fix string list selection when using [<item> || <item> ...].
 
 Version 1.02.205 - 27th February 2025
 =====================================
