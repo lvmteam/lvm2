@@ -522,7 +522,8 @@ static void _print_man_usage(char *lvmname, struct command *cmd)
 
 			if (cmd->required_opt_args[ro].def.val_bits) {
 				printf(" ");
-				_print_def_man(cname, opt_enum, &cmd->required_opt_args[ro].def, 1, NULL);
+				_print_def_man(cname, opt_enum, &cmd->required_opt_args[ro].def, 1,
+					       lv_type_bits ? NULL : &lv_type_bits);
 			}
 
 			sep++;
