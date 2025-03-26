@@ -5004,7 +5004,7 @@ bad:
 int lvconvert_to_pool_or_swap_metadata_cmd(struct cmd_context *cmd, int argc, char **argv)
 {
 	char *pool_data_name;
-	int i, p;
+	int i;
 
 	switch (cmd->command->command_enum) {
 	case lvconvert_to_thinpool_or_swap_metadata_CMD:
@@ -5019,10 +5019,8 @@ int lvconvert_to_pool_or_swap_metadata_cmd(struct cmd_context *cmd, int argc, ch
 	};
 
 	/* Make the LV the first position arg. */
-
-	p = cmd->position_argc;
-	for (i = 0; i < cmd->position_argc; i++)
-		cmd->position_argv[p] = cmd->position_argv[p-1];
+	for (i = cmd->position_argc; i > 0; --i)
+		cmd->position_argv[i] = cmd->position_argv[i - 1];
 
 	cmd->position_argv[0] = pool_data_name;
 	cmd->position_argc++;
