@@ -5605,15 +5605,9 @@ int lvconvert_to_vdopool_cmd(struct cmd_context *cmd, int argc, char **argv)
 int lvconvert_to_vdopool_param_cmd(struct cmd_context *cmd, int argc, char **argv)
 {
 	/* Make the LV the first position arg. */
-	int i, p = cmd->position_argc;
+	char *position_argv[] = { (char *)arg_str_value(cmd, vdopool_ARG, NULL) };
 
-	for (i = 0; i < cmd->position_argc; i++)
-		cmd->position_argv[p] = cmd->position_argv[p-1];
-
-	cmd->position_argv[0] = (char *)arg_str_value(cmd, vdopool_ARG, NULL);
-	cmd->position_argc++;
-
-	return process_each_lv(cmd, 1, cmd->position_argv, NULL, NULL, READ_FOR_UPDATE,
+	return process_each_lv(cmd, 1, position_argv, NULL, NULL, READ_FOR_UPDATE,
 			       NULL, NULL, &_lvconvert_to_vdopool_single);
 }
 
