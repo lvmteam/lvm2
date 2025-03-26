@@ -675,11 +675,11 @@ RULE: all and lv_is_visible lv_is_writable
 RULE: all not lv_is_locked lv_is_origin lv_is_merging_origin lv_is_external_origin lv_is_virtual lv_is_raid_with_integrity
 
 lvconvert --vdopool LV_linear_striped_raid_cache
-OO: OO_LVCONVERT_VDO_POOL, OO_LVCONVERT, --name LV_new, --virtualsize SizeMB,
+OO: --name LV_new, --virtualsize SizeMB, OO_LVCONVERT_VDO_POOL, OO_LVCONVERT
 ID: lvconvert_to_vdopool_param
 DESC: Convert LV to type vdopool (variant: use --type vdo-pool,
 DESC: existing data on LV will be erased).
-RULE: all and lv_is_visible
+RULE: all and lv_is_visible lv_is_writable
 RULE: all not lv_is_locked lv_is_origin lv_is_merging_origin lv_is_external_origin lv_is_virtual lv_is_raid_with_integrity
 FLAGS: SECONDARY_SYNTAX
 AUTOTYPE: vdo-pool
