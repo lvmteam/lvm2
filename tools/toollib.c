@@ -2933,6 +2933,8 @@ static int _lv_is_type(struct cmd_context *cmd, struct logical_volume *lv, int l
 		return lv_is_thin_volume(lv);
 	case thinpool_LVT:
 		return lv_is_thin_pool(lv);
+	case thinpooldata_LVT:
+		return lv_is_thin_pool_data(lv);
 	case cache_LVT:
 		return lv_is_cache(lv);
 	case cachepool_LVT:
