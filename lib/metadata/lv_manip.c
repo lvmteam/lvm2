@@ -5587,13 +5587,8 @@ static int _lvresize_adjust_extents(struct logical_volume *lv,
 				log_print_unless_silent("Reached maximum COW size %s (%" PRIu32 " extents).",
 							display_size(vg->cmd, (uint64_t) vg->extent_size * logical_extents_used),
 							logical_extents_used);
-				lp->extents = logical_extents_used;	// CHANGES lp->extents
-				seg_size = lp->extents - existing_logical_extents;	// Recalculate
-				if (lp->extents == existing_logical_extents) {
-					/* Signal that normal resizing is not required */
-					lp->size_changed = 1;
-					return 1;
-				}
+				/* Truncate lp->extents to logical_extents_used */
+				lp->extents = logical_extents_used;
 			}
 		} else if (lv_is_thin_pool_metadata(lv)) {
 			if (!(seg = get_only_segment_using_this_lv(lv)))
