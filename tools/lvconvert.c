@@ -5532,6 +5532,41 @@ int lvconvert_merge_cmd(struct cmd_context *cmd, int argc, char **argv)
 	return ret;
 }
 
+static int _lvconvert_check_vdopool_lv(struct cmd_context *cmd,
+				       struct logical_volume *lv,
+				       struct processing_handle *handle,
+				       int lv_is_named_arg)
+{
+	int lvt_enum = get_lvt_enum(lv);
+	const struct lv_type *lvtype = get_lv_type(lvt_enum);
+
+	if (!lv_is_visible(lv) ||
+	    !lv_is_writable(lv) ||
+	    lv_is_origin(lv) ||
+	    lv_is_merging_origin(lv) ||
+	    lv_is_virtual(lv) ||
+	    lv_is_external_origin(lv) ||
+	    lv_raid_has_integrity(lv)) {
+		log_error("Conversion of LV %s to vdo pool is not supported.",
+			  display_lvname(lv));
+		return 0;
+	}
+
+	switch (lvt_enum) {
+	case linear_LVT:
+	case striped_LVT:
+	case raid_LVT:
+	case cache_LVT:
+		break; // supported LV types
+	default:
+		log_error("Operation not permitted on LV %s type %s.",
+			  display_lvname(lv), lvtype ? lvtype->name : "unknown");
+		return 0;
+	}
+
+	return 1;
+}
+
 static int _lvconvert_to_vdopool_single(struct cmd_context *cmd,
 					struct logical_volume *lv,
 					struct processing_handle *handle)
@@ -5597,7 +5632,8 @@ static int _lvconvert_to_vdopool_single(struct cmd_context *cmd,
 int lvconvert_to_vdopool_cmd(struct cmd_context *cmd, int argc, char **argv)
 {
 	return process_each_lv(cmd, 1, cmd->position_argv, NULL, NULL, READ_FOR_UPDATE,
-			       NULL, NULL, &_lvconvert_to_vdopool_single);
+			       NULL, &_lvconvert_check_vdopool_lv,
+			       &_lvconvert_to_vdopool_single);
 }
 
 int lvconvert_to_vdopool_param_cmd(struct cmd_context *cmd, int argc, char **argv)
@@ -5606,7 +5642,8 @@ int lvconvert_to_vdopool_param_cmd(struct cmd_context *cmd, int argc, char **arg
 	char *position_argv[] = { (char *)arg_str_value(cmd, vdopool_ARG, NULL) };
 
 	return process_each_lv(cmd, 1, position_argv, NULL, NULL, READ_FOR_UPDATE,
-			       NULL, NULL, &_lvconvert_to_vdopool_single);
+			       NULL, &_lvconvert_check_vdopool_lv,
+			       &_lvconvert_to_vdopool_single);
 }
 
 /*
