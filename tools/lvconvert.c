@@ -5321,10 +5321,10 @@ static int _lvconvert_visible_check(struct cmd_context *cmd, struct logical_volu
 {
 	if (!lv_is_visible(lv)) {
 		log_error("Operation not permitted on hidden LV %s.", display_lvname(lv));
-		return ECMD_FAILED;
+		return 0;
 	}
 
-	return ECMD_PROCESSED;
+	return 1;
 }
 
 static int _lvconvert_change_mirrorlog_single(struct cmd_context *cmd, struct logical_volume *lv,
