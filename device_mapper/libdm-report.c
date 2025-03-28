@@ -3770,9 +3770,6 @@ static struct field_selection *_create_field_selection(struct dm_report *rh,
 	field_id = fields[found->field_num].id;
 
 	if (!(found->flags & flags & DM_REPORT_FIELD_TYPE_MASK)) {
-		/*
-		 * FIXME: See if this is ever reachable here and if not, remove this check.
-		 *        It looks like we already checked this in _parse_selection.*/
 		log_error("dm_report: incompatible comparison "
 			  "type for selection field %s", field_id);
 		return NULL;
