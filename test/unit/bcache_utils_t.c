@@ -26,7 +26,7 @@
 
 //----------------------------------------------------------------
 
-#define T_BLOCK_SIZE (PAGE_SIZE)
+#define T_BLOCK_SIZE ((uint64_t)PAGE_SIZE)
 #define NR_BLOCKS 64
 #define INIT_PATTERN 123
 
