@@ -21,7 +21,6 @@
 #include "lib/device/device_id.h"
 #include "lib/locking/locking.h"
 #include "lib/metadata/metadata.h"
-#include "lib/mm/memlock.h"
 #include "lib/format_text/format-text.h"
 #include "lib/config/config.h"
 #include "lib/filters/filter.h"
