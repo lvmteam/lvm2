@@ -30,6 +30,42 @@ if not aux have_vdo 6 2 0 ; then
 	exit
 fi
 
+if aux have_thin 1 0 0 && aux have_cache 1 3 0 ; then
+
+# Prepare some lvs for testing conversion
+lvcreate --vdo -V5G -L5G -n vdo $vg/vpool
+
+lvcreate -T -V20 -L10 -n thin $vg/tpool
+
+lvcreate --type cache-pool -L10 $vg/cpool
+
+lvcreate -L10 -n $lv2 $vg
+lvcreate -s -L10 -n snap $vg/$lv2
+
+#
+# Unsupported conversion:
+#  thin-pool, thin metadata
+#  cache-pool, cache-pool data, cache-pool metadata
+#  vdo, vdo-pool, vdo-pool vdata
+#
+for i in $vg/tpool $vg/tpool_tmeta $vg/thin \
+	$vg/cpool $vg/cpool_cmeta $vg/cpool_cdata \
+	$vg/lvol0_pmspare \
+	$vg/vpool $vg/vpool_vdata $vg/vdo \
+	$vg/snap
+do
+	not lvconvert -t --type vdo-pool $i 2>out
+	grep "not permitted" out
+	not lvconvert -t --vdopool $i 2>out
+	grep "not permitted" out
+done
+
+fi
+lvremove -f $vg
+
+
+lvcreate -L5G -n $lv1 $vg
+
 # Check there is big prompting warning
 not lvconvert --type vdo-pool $vg/$lv1 |& tee out
 grep "WARNING" out
