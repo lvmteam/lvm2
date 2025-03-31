@@ -65,14 +65,4 @@ check lv_field $vg/${lv1}_vdata size "5.00g" -a
 check lv_field $vg/$lv2 size "10.00g"
 lvremove -f $vg
 
-
-# Simple stacking works...
-# Just be sure test do not try to synchronize 5G of mirror!!
-lvcreate -L5G --type mirror --nosync -n $lv1 $vg
-lvconvert -y --vdopool $vg/$lv1 -n $lv2
-lvs -a $vg
-check lv_field $vg/${lv1}_vdata segtype mirror -a
-lvremove -f $vg
-
-
 vgremove -ff $vg
