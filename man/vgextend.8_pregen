@@ -1,14 +1,162 @@
 .TH VGEXTEND 8 "LVM TOOLS #VERSION#" "Red Hat, Inc."
 .
+.ie t \{\
+.\" PostScript/PDF with tabs
+. ds TT \t
+. ds DTT \t\t
+.\}
+.el \{\
+. ds TT \&
+. ds DTT \0\0\0
+.\}
+.
+.de OPT
+.ie \\n(.$>1 \\*[TT]\fB-\\$1\fP|\\*[TT]\fB--\\$2\fP\c
+.el \\*[DTT]\fB--\\$1\fP\c
+..
+.
+.de OPA
+.OPT \\$*
+\ \c
+..
+.de OPS
+.OPT \\$*
+\&
+..
+.
+.
+.\"List of all options as O_string.
+.
+.de O_autobackup
+.OPA A autobackup
+\fBy\fP|\fBn\fP
+..
+.de O_commandprofile
+.OPA commandprofile
+\fIString\fP
+..
+.de O_config
+.OPA config
+\fIString\fP
+..
+.de O_dataalignment
+.OPA dataalignment
+\fISize\fP[k|\:UNIT]
+..
+.de O_dataalignmentoffset
+.OPA dataalignmentoffset
+\fISize\fP[k|\:UNIT]
+..
+.de O_debug
+.OPA d debug
+\&\.\|.\|.\&
+..
+.de O_devices
+.OPA devices
+\fIPV\fP
+..
+.de O_devicesfile
+.OPA devicesfile
+\fIString\fP
+..
+.de O_driverloaded
+.OPA driverloaded
+\fBy\fP|\fBn\fP
+..
+.de O_force
+.OPA f force
+\&\.\|.\|.\&
+..
+.de O_help
+.OPS h help
+..
+.de O_journal
+.OPA journal
+\fIString\fP
+..
+.de O_labelsector
+.OPA labelsector
+\fINumber\fP
+..
+.de O_lockopt
+.OPA lockopt
+\fIString\fP
+..
+.de O_longhelp
+.OPS longhelp
+..
+.de O_metadataignore
+.OPA metadataignore
+\fBy\fP|\fBn\fP
+..
+.de O_metadatasize
+.OPA metadatasize
+\fISize\fP[m|\:UNIT]
+..
+.de O_metadatatype
+.OPA M metadatatype
+\fBlvm2\fP
+..
+.de O_nohints
+.OPS nohints
+..
+.de O_nolocking
+.OPS nolocking
+..
+.de O_profile
+.OPA profile
+\fIString\fP
+..
+.de O_pvmetadatacopies
+.OPA pvmetadatacopies
+\fB0\fP|\fB1\fP|\fB2\fP
+..
+.de O_quiet
+.OPA q quiet
+\&\.\|.\|.\&
+..
+.de O_reportformat
+.OPA reportformat
+\%\fBbasic\fP|\:\
+\fBjson\fP|\:\
+\fBjson_std\fP
+..
+.de O_restoremissing
+.OPS restoremissing
+..
+.de O_test
+.OPS t test
+..
+.de O_verbose
+.OPA v verbose
+\&\.\|.\|.\&
+..
+.de O_version
+.OPS version
+..
+.de O_yes
+.OPS y yes
+..
+.de O_zero
+.OPA Z zero
+\fBy\fP|\fBn\fP
+..
+.
 .SH NAME
 .
 vgextend \(em Add physical volumes to a volume group
 .
 .SH SYNOPSIS
 .
+.nh
+.TP
 \fBvgextend\fP \fIposition_args\fP
-.br
-    [ \fIoption_args\fP ]
+[ \fIoption_args\fP ]
+.hy
+.
+.ds TT \&
+.ds DTT \&
+.
 .
 .SH DESCRIPTION
 .
@@ -26,161 +174,209 @@ will initialize them. In this case pvcreate options can be used, e.g.
 .
 .SH USAGE
 .
-\fBvgextend\fP \fIVG\fP \fIPV\fP ...
-.br
-.RS 4
+.nh
 .na
-[ \fB-A\fP|\fB--autobackup\fP \fBy\fP|\fBn\fP ]
+.B vgextend
+\fIVG\fP \fIPV\fP\ .\|.\|.\&
+.RS
+[
+.O_autobackup
+]
 .br
-[ \fB-f\fP|\fB--force\fP ]
+[
+.O_force
+]
 .br
-[ \fB-Z\fP|\fB--zero\fP \fBy\fP|\fBn\fP ]
+[
+.O_zero
+]
 .br
-[ \fB-M\fP|\fB--metadatatype\fP \fBlvm2\fP ]
+[
+.O_metadatatype
+]
 .br
-[    \fB--labelsector\fP \fINumber\fP ]
+[
+.O_labelsector
+]
 .br
-[    \fB--metadatasize\fP \fISize\fP[m|UNIT] ]
+[
+.O_metadatasize
+]
 .br
-[    \fB--pvmetadatacopies\fP \fB0\fP|\fB1\fP|\fB2\fP ]
+[
+.O_pvmetadatacopies
+]
 .br
-[    \fB--metadataignore\fP \fBy\fP|\fBn\fP ]
+[
+.O_metadataignore
+]
 .br
-[    \fB--dataalignment\fP \fISize\fP[k|UNIT] ]
+[
+.O_dataalignment
+]
 .br
-[    \fB--dataalignmentoffset\fP \fISize\fP[k|UNIT] ]
+[
+.O_dataalignmentoffset
+]
 .br
-[    \fB--reportformat\fP \fBbasic\fP|\fBjson\fP|\fBjson_std\fP ]
+[
+.O_reportformat
+]
 .br
-[    \fB--restoremissing\fP ]
+[
+.O_restoremissing
+]
 .br
 [ COMMON_OPTIONS ]
-.ad
 .RE
 .P
+\(em
+.P
 Common options for lvm:
-.
-.RS 4
-.na
-[ \fB-d\fP|\fB--debug\fP ]
+.RS
+[
+.O_debug
+]
 .br
-[ \fB-h\fP|\fB--help\fP ]
+[
+.O_help
+]
 .br
-[ \fB-q\fP|\fB--quiet\fP ]
+[
+.O_quiet
+]
 .br
-[ \fB-t\fP|\fB--test\fP ]
+[
+.O_test
+]
 .br
-[ \fB-v\fP|\fB--verbose\fP ]
+[
+.O_verbose
+]
 .br
-[ \fB-y\fP|\fB--yes\fP ]
+[
+.O_yes
+]
 .br
-[    \fB--commandprofile\fP \fIString\fP ]
+[
+.O_commandprofile
+]
 .br
-[    \fB--config\fP \fIString\fP ]
+[
+.O_config
+]
 .br
-[    \fB--devices\fP \fIPV\fP ]
+[
+.O_devices
+]
 .br
-[    \fB--devicesfile\fP \fIString\fP ]
+[
+.O_devicesfile
+]
 .br
-[    \fB--driverloaded\fP \fBy\fP|\fBn\fP ]
+[
+.O_driverloaded
+]
 .br
-[    \fB--journal\fP \fIString\fP ]
+[
+.O_journal
+]
 .br
-[    \fB--lockopt\fP \fIString\fP ]
+[
+.O_lockopt
+]
 .br
-[    \fB--longhelp\fP ]
+[
+.O_longhelp
+]
 .br
-[    \fB--nohints\fP ]
+[
+.O_nohints
+]
 .br
-[    \fB--nolocking\fP ]
+[
+.O_nolocking
+]
 .br
-[    \fB--profile\fP \fIString\fP ]
+[
+.O_profile
+]
 .br
-[    \fB--version\fP ]
-.ad
+[
+.O_version
+]
 .RE
+.hy
+.ad
 .
 .SH OPTIONS
 .
-.
-.HP
-\fB-A\fP|\fB--autobackup\fP \fBy\fP|\fBn\fP
-.br
+.TP
+.O_autobackup
 Specifies if metadata should be backed up automatically after a change.
 Enabling this is strongly advised!
 See \fBvgcfgbackup\fP(8) for more information.
 .
-.HP
-\fB--commandprofile\fP \fIString\fP
-.br
+.TP
+.O_commandprofile
 The command profile to use for command configuration.
 See \fBlvm.conf\fP(5) for more information about profiles.
 .
-.HP
-\fB--config\fP \fIString\fP
-.br
+.TP
+.O_config
 Config settings for the command. These override \fBlvm.conf\fP(5) settings.
 The String arg uses the same format as \fBlvm.conf\fP(5),
 or may use section/field syntax.
 See \fBlvm.conf\fP(5) for more information about config.
 .
-.HP
-\fB--dataalignment\fP \fISize\fP[k|UNIT]
-.br
+.TP
+.O_dataalignment
 Align the start of a PV data area with a multiple of this number.
 To see the location of the first Physical Extent (PE) of an existing PV,
 use pvs -o +pe_start. In addition, it may be shifted by an alignment offset,
 see --dataalignmentoffset.
 Also specify an appropriate PE size when creating a VG.
 .
-.HP
-\fB--dataalignmentoffset\fP \fISize\fP[k|UNIT]
-.br
+.TP
+.O_dataalignmentoffset
 Shift the start of the PV data area by this additional offset.
 .
-.HP
-\fB-d\fP|\fB--debug\fP ...
-.br
+.TP
+.O_debug
 Set debug level. Repeat from 1 to 6 times to increase the detail of
 messages sent to the log file and/or syslog (if configured).
 .
-.HP
-\fB--devices\fP \fIPV\fP
-.br
+.TP
+.O_devices
 Restricts the devices that are visible and accessible to the command.
 Devices not listed will appear to be missing. This option can be
 repeated, or accepts a comma separated list of devices. This overrides
 the devices file.
 .
-.HP
-\fB--devicesfile\fP \fIString\fP
-.br
+.TP
+.O_devicesfile
 A file listing devices that LVM should use.
 The file must exist in \fI#DEFAULT_SYS_DIR#/devices/\fP and is managed
 with the \fBlvmdevices\fP(8) command.
 This overrides the \fBlvm.conf\fP(5) \fBdevices/devicesfile\fP and
 \fBdevices/use_devicesfile\fP settings.
 .
-.HP
-\fB--driverloaded\fP \fBy\fP|\fBn\fP
-.br
+.TP
+.O_driverloaded
 If set to no, the command will not attempt to use device-mapper.
 For testing and debugging.
 .
-.HP
-\fB-f\fP|\fB--force\fP ...
-.br
+.TP
+.O_force
 Override various checks, confirmations and protections.
 Use with extreme caution.
 .
-.HP
-\fB-h\fP|\fB--help\fP
-.br
+.TP
+.O_help
 Display help text.
 .
-.HP
-\fB--journal\fP \fIString\fP
-.br
+.TP
+.O_journal
 Record information in the systemd journal.
 This information is in addition to information
 enabled by the lvm.conf log/journal setting.
@@ -188,68 +384,58 @@ command: record information about the command.
 output: record the default command output.
 debug: record full command debugging.
 .
-.HP
-\fB--labelsector\fP \fINumber\fP
-.br
+.TP
+.O_labelsector
 By default the PV is labelled with an LVM2 identifier in its second
 sector (sector 1). This lets you use a different sector near the
 start of the disk (between 0 and 3 inclusive - see LABEL_SCAN_SECTORS
 in the source). Use with care.
 .
-.HP
-\fB--lockopt\fP \fIString\fP
-.br
+.TP
+.O_lockopt
 Used to pass options for special cases to lvmlockd.
 See \fBlvmlockd\fP(8) for more information.
 .
-.HP
-\fB--longhelp\fP
-.br
+.TP
+.O_longhelp
 Display long help text.
 .
-.HP
-\fB--metadataignore\fP \fBy\fP|\fBn\fP
-.br
+.TP
+.O_metadataignore
 Specifies the metadataignore property of a PV.
 If yes, metadata areas on the PV are ignored, and lvm will
 not store metadata in the metadata areas of the PV.
 If no, lvm will store metadata on the PV.
 .
-.HP
-\fB--metadatasize\fP \fISize\fP[m|UNIT]
-.br
+.TP
+.O_metadatasize
 The approximate amount of space used for each VG metadata area.
 The size may be rounded.
 .
-.HP
-\fB-M\fP|\fB--metadatatype\fP \fBlvm2\fP
-.br
+.TP
+.O_metadatatype
 Specifies the type of on-disk metadata to use.
 \fBlvm2\fP (or just \fB2\fP) is the current, standard format.
 \fBlvm1\fP (or just \fB1\fP) is no longer used.
 .
-.HP
-\fB--nohints\fP
-.br
+.TP
+.O_nohints
 Do not use the hints file to locate devices for PVs. A command may read
 more devices to find PVs when hints are not used. The command will still
 perform standard hint file invalidation where appropriate.
 .
-.HP
-\fB--nolocking\fP
-.br
+.TP
+.O_nolocking
 Disable locking. Use with caution, concurrent commands may produce
 incorrect results.
 .
-.HP
-\fB--profile\fP \fIString\fP
-.br
+.TP
+.O_profile
 An alias for --commandprofile or --metadataprofile, depending
 on the command.
 .
-.HP
-\fB--pvmetadatacopies\fP \fB0\fP|\fB1\fP|\fB2\fP
-.br
+.TP
+.O_pvmetadatacopies
 The number of metadata areas to set aside on a PV for storing VG metadata.
 When 2, one copy of the VG metadata is stored at the front of the PV
 and a second copy is stored at the end.
@@ -258,15 +444,13 @@ When 0, no copies of the VG metadata are stored on the given PV.
 This may be useful in VGs containing many PVs (this places limitations
 on the ability to use vgsplit later.)
 .
-.HP
-\fB-q\fP|\fB--quiet\fP ...
-.br
+.TP
+.O_quiet
 Suppress output and log messages. Overrides --debug and --verbose.
 Repeat once to also suppress any prompts with answer 'no'.
 .
-.HP
-\fB--reportformat\fP \fBbasic\fP|\fBjson\fP|\fBjson_std\fP
-.br
+.TP
+.O_reportformat
 Overrides current output format for reports which is defined globally by
 the report/output_format setting in \fBlvm.conf\fP(5).
 \fBbasic\fP is the original format with columns and rows.
@@ -276,42 +460,36 @@ output in JSON format. \fBjson_std\fP produces report output in
 JSON format which is more compliant with JSON standard.
 See \fBlvmreport\fP(7) for more information.
 .
-.HP
-\fB--restoremissing\fP
-.br
+.TP
+.O_restoremissing
 Add a PV back into a VG after the PV was missing and then returned,
 e.g. due to a transient failure. The PV is not reinitialized.
 .
-.HP
-\fB-t\fP|\fB--test\fP
-.br
+.TP
+.O_test
 Run in test mode. Commands will not update metadata.
 This is implemented by disabling all metadata writing but nevertheless
 returning success to the calling function. This may lead to unusual
 error messages in multi-stage operations if a tool relies on reading
 back metadata it believes has changed but hasn't.
 .
-.HP
-\fB-v\fP|\fB--verbose\fP ...
-.br
+.TP
+.O_verbose
 Set verbose level. Repeat from 1 to 4 times to increase the detail
 of messages sent to stdout and stderr.
 .
-.HP
-\fB--version\fP
-.br
+.TP
+.O_version
 Display version information.
 .
-.HP
-\fB-y\fP|\fB--yes\fP
-.br
+.TP
+.O_yes
 Do not prompt for confirmation interactively but always assume the
 answer yes. Use with extreme caution.
 (For automatic no, see -qq.)
 .
-.HP
-\fB-Z\fP|\fB--zero\fP \fBy\fP|\fBn\fP
-.br
+.TP
+.O_zero
 Controls if the first 4 sectors (2048 bytes) of the device are wiped.
 The default is to wipe these sectors unless either or both of
 --restorefile or --uuid are specified.
@@ -321,6 +499,7 @@ The default is to wipe these sectors unless either or both of
 .TP
 .I VG
 Volume Group name.  See \fBlvm\fP(8) for valid names.
+.
 .TP
 .I PV
 Physical Volume name, a device path under /dev.
@@ -328,13 +507,17 @@ For commands managing physical extents, a PV positional arg
 generally accepts a suffix indicating a range (or multiple ranges)
 of physical extents (PEs). When the first PE is omitted, it defaults
 to the start of the device, and when the last PE is omitted it defaults to end.
+.br
 Start and end range (inclusive):
-\fIPV\fP[\fB:\fP\fIPE\fP\fB-\fP\fIPE\fP]...
+\fIPV\fP[\fB:\fP\fIPE\fP\fB-\fP\fIPE\fP]\ .\|.\|.\&
+.br
 Start and length range (counting from 0):
-\fIPV\fP[\fB:\fP\fIPE\fP\fB+\fP\fIPE\fP]...
+\fIPV\fP[\fB:\fP\fIPE\fP\fB+\fP\fIPE\fP]\ .\|.\|.\&
+.
 .TP
 .I String
 See the option description for information about the string content.
+.
 .TP
 .IR Size [UNIT]
 Size is an input number that accepts an optional unit.
@@ -364,5 +547,5 @@ where capital letters mean multiple of 1000.)
 .SH ENVIRONMENT VARIABLES
 .
 See \fBlvm\fP(8) for information about environment variables used by lvm.
-For example, LVM_VG_NAME can generally be substituted
+For example, \fBLVM_VG_NAME\fP can generally be substituted
 for a required VG parameter.

@@ -1,96 +1,280 @@
 .TH LVEXTEND 8 "LVM TOOLS #VERSION#" "Red Hat, Inc."
 .
+.ie t \{\
+.\" PostScript/PDF with tabs
+. ds TT \t
+. ds DTT \t\t
+.\}
+.el \{\
+. ds TT \&
+. ds DTT \0\0\0
+.\}
+.
+.de OPT
+.ie \\n(.$>1 \\*[TT]\fB-\\$1\fP|\\*[TT]\fB--\\$2\fP\c
+.el \\*[DTT]\fB--\\$1\fP\c
+..
+.
+.de OPA
+.OPT \\$*
+\ \c
+..
+.de OPS
+.OPT \\$*
+\&
+..
+.
+.
+.\"List of all options as O_string.
+.
+.de O_alloc
+.OPA alloc
+\%\fBcontiguous\fP|\:\
+\fBcling\fP|\:\
+\fBcling_by_tags\fP|\:\
+\fBnormal\fP|\:\
+\fBanywhere\fP|\:\
+\fBinherit\fP
+..
+.de O_autobackup
+.OPA A autobackup
+\fBy\fP|\fBn\fP
+..
+.de O_commandprofile
+.OPA commandprofile
+\fIString\fP
+..
+.de O_config
+.OPA config
+\fIString\fP
+..
+.de O_debug
+.OPA d debug
+\&\.\|.\|.\&
+..
+.de O_devices
+.OPA devices
+\fIPV\fP
+..
+.de O_devicesfile
+.OPA devicesfile
+\fIString\fP
+..
+.de O_driverloaded
+.OPA driverloaded
+\fBy\fP|\fBn\fP
+..
+.de O_extents
+.OPA l extents
+[\fB+\fP]\fINumber\fP[PERCENT]
+..
+.de O_force
+.OPA f force
+\&\.\|.\|.\&
+..
+.de O_fs
+.OPA fs
+\fIString\fP
+..
+.de O_fsmode
+.OPA fsmode
+\fIString\fP
+..
+.de O_help
+.OPS h help
+..
+.de O_journal
+.OPA journal
+\fIString\fP
+..
+.de O_lockopt
+.OPA lockopt
+\fIString\fP
+..
+.de O_longhelp
+.OPS longhelp
+..
+.de O_mirrors
+.OPA m mirrors
+\fINumber\fP
+..
+.de O_nofsck
+.OPS n nofsck
+..
+.de O_nohints
+.OPS nohints
+..
+.de O_nolocking
+.OPS nolocking
+..
+.de O_nosync
+.OPS nosync
+..
+.de O_noudevsync
+.OPS noudevsync
+..
+.de O_poolmetadatasize
+.OPA poolmetadatasize
+[\fB+\fP]\fISize\fP[m|\:UNIT]
+..
+.de O_profile
+.OPA profile
+\fIString\fP
+..
+.de O_quiet
+.OPA q quiet
+\&\.\|.\|.\&
+..
+.de O_reportformat
+.OPA reportformat
+\%\fBbasic\fP|\:\
+\fBjson\fP|\:\
+\fBjson_std\fP
+..
+.de O_resizefs
+.OPS r resizefs
+..
+.de O_size
+.OPA L size
+[\fB+\fP]\fISize\fP[m|\:UNIT]
+..
+.de O_stripes
+.OPA i stripes
+\fINumber\fP
+..
+.de O_stripesize
+.OPA I stripesize
+\fISize\fP[k|\:UNIT]
+..
+.de O_test
+.OPS t test
+..
+.de O_type
+.OPA type
+\%\fBlinear\fP|\:\
+\fBstriped\fP|\:\
+\fBsnapshot\fP|\:\
+\fBraid\fP|\:\
+\fBmirror\fP|\:\
+\fBthin\fP|\:\
+\fBthin-pool\fP|\:\
+\fBvdo\fP|\:\
+\fBvdo-pool\fP|\:\
+\fBcache\fP|\:\
+\fBcache-pool\fP|\:\
+\fBwritecache\fP
+..
+.de O_usepolicies
+.OPS usepolicies
+..
+.de O_verbose
+.OPA v verbose
+\&\.\|.\|.\&
+..
+.de O_version
+.OPS version
+..
+.de O_yes
+.OPS y yes
+..
+.
 .SH NAME
 .
 lvextend \(em Add space to a logical volume
 .
 .SH SYNOPSIS
 .
+.nh
+.TP
 \fBlvextend\fP \fIoption_args\fP \fIposition_args\fP
+[ \fIoption_args\fP ]
 .br
-    [ \fIoption_args\fP ]
-.br
-    [ \fIposition_args\fP ]
+[ \fIposition_args\fP ]
 .P
 .na
-    \fB--alloc\fP \c
-.nh
-\%\fBcontiguous\fP|\:\fBcling\fP|\:\fBcling_by_tags\fP|\:\fBnormal\fP|\:\fBanywhere\fP|\:\fBinherit\fP
-.hy
+.RS 5
+.if t .ta 3nR +1uL \" PostScript/PDF
+.PD 0
+.O_alloc
 .br
- \fB-A\fP|\fB--autobackup\fP \fBy\fP|\fBn\fP
+.O_autobackup
 .br
-    \fB--commandprofile\fP \fIString\fP
+.O_commandprofile
 .br
-    \fB--config\fP \fIString\fP
+.O_config
 .br
- \fB-d\fP|\fB--debug\fP
+.O_debug
 .br
-    \fB--devices\fP \fIPV\fP
+.O_devices
 .br
-    \fB--devicesfile\fP \fIString\fP
+.O_devicesfile
 .br
-    \fB--driverloaded\fP \fBy\fP|\fBn\fP
+.O_driverloaded
 .br
- \fB-l\fP|\fB--extents\fP [\fB+\fP]\fINumber\fP[PERCENT]
+.O_extents
 .br
- \fB-f\fP|\fB--force\fP
+.O_force
 .br
-    \fB--fs\fP \fIString\fP
+.O_fs
 .br
-    \fB--fsmode\fP \fIString\fP
+.O_fsmode
 .br
- \fB-h\fP|\fB--help\fP
+.O_help
 .br
-    \fB--journal\fP \fIString\fP
+.O_journal
 .br
-    \fB--lockopt\fP \fIString\fP
+.O_lockopt
 .br
-    \fB--longhelp\fP
+.O_longhelp
 .br
- \fB-m\fP|\fB--mirrors\fP \fINumber\fP
+.O_mirrors
 .br
- \fB-n\fP|\fB--nofsck\fP
+.O_nofsck
 .br
-    \fB--nohints\fP
+.O_nohints
 .br
-    \fB--nolocking\fP
+.O_nolocking
 .br
-    \fB--nosync\fP
+.O_nosync
 .br
-    \fB--noudevsync\fP
+.O_noudevsync
 .br
-    \fB--poolmetadatasize\fP [\fB+\fP]\fISize\fP[m|UNIT]
+.O_poolmetadatasize
 .br
-    \fB--profile\fP \fIString\fP
+.O_profile
 .br
- \fB-q\fP|\fB--quiet\fP
+.O_quiet
 .br
-    \fB--reportformat\fP \fBbasic\fP|\fBjson\fP|\fBjson_std\fP
+.O_reportformat
 .br
- \fB-r\fP|\fB--resizefs\fP
+.O_resizefs
 .br
- \fB-L\fP|\fB--size\fP [\fB+\fP]\fISize\fP[m|UNIT]
+.O_size
 .br
- \fB-i\fP|\fB--stripes\fP \fINumber\fP
+.O_stripes
 .br
- \fB-I\fP|\fB--stripesize\fP \fISize\fP[k|UNIT]
+.O_stripesize
 .br
- \fB-t\fP|\fB--test\fP
+.O_test
 .br
-    \fB--type\fP \c
-.nh
-\%\fBlinear\fP|\:\fBstriped\fP|\:\fBsnapshot\fP|\:\fBraid\fP|\:\fBmirror\fP|\:\fBthin\fP|\:\fBthin-pool\fP|\:\fBvdo\fP|\:\fBvdo-pool\fP|\:\fBcache\fP|\:\fBcache-pool\fP|\:\fBwritecache\fP
-.hy
+.O_type
 .br
-    \fB--usepolicies\fP
+.O_usepolicies
 .br
- \fB-v\fP|\fB--verbose\fP
+.O_verbose
 .br
-    \fB--version\fP
+.O_version
 .br
- \fB-y\fP|\fB--yes\fP
+.O_yes
+.PD
+.if t .ta
+.RE
 .ad
+.hy
+.
+.ds TT \&
+.ds DTT \&
+.
 .
 .SH DESCRIPTION
 .
@@ -109,194 +293,260 @@ the options section.
 .
 .SH USAGE
 .
+.nh
+.na
 Extend an LV by a specified size.
-.br
 .P
-\fBlvextend\fP \fB-L\fP|\fB--size\fP [\fB+\fP]\fISize\fP[m|UNIT] \fILV\fP
+.B lvextend
+.O_size
+\fILV\fP
+.RS
+[
+.O_extents
+]
 .br
-.RS 4
-.na
-[ \fB-l\fP|\fB--extents\fP [\fB+\fP]\fINumber\fP[PERCENT] ]
+[
+.O_resizefs
+]
 .br
-[ \fB-r\fP|\fB--resizefs\fP ]
+[
+.O_stripes
+]
 .br
-[ \fB-i\fP|\fB--stripes\fP \fINumber\fP ]
+[
+.O_stripesize
+]
 .br
-[ \fB-I\fP|\fB--stripesize\fP \fISize\fP[k|UNIT] ]
+[
+.O_poolmetadatasize
+]
 .br
-[    \fB--poolmetadatasize\fP [\fB+\fP]\fISize\fP[m|UNIT] ]
+[
+.O_fs
+]
 .br
-[    \fB--fs\fP \fIString\fP ]
-.br
-[    \fB--fsmode\fP \fIString\fP ]
+[
+.O_fsmode
+]
 .br
 [ COMMON_OPTIONS ]
-.ad
+.br
+[ \fIPV\fP\ .\|.\|.\& ]
 .RE
-.RS 4
-[ \fIPV\fP ... ]
-.RE
+.
 .P
 \(em
 .P
+.
 Extend an LV by specified PV extents.
-.br
 .P
-\fBlvextend\fP \fILV\fP \fIPV\fP ...
+.B lvextend
+\fILV\fP \fIPV\fP\ .\|.\|.\&
+.RS
+[
+.O_resizefs
+]
 .br
-.RS 4
-.na
-[ \fB-r\fP|\fB--resizefs\fP ]
+[
+.O_stripes
+]
 .br
-[ \fB-i\fP|\fB--stripes\fP \fINumber\fP ]
+[
+.O_stripesize
+]
 .br
-[ \fB-I\fP|\fB--stripesize\fP \fISize\fP[k|UNIT] ]
+[
+.O_fs
+]
 .br
-[    \fB--fs\fP \fIString\fP ]
-.br
-[    \fB--fsmode\fP \fIString\fP ]
+[
+.O_fsmode
+]
 .br
 [ COMMON_OPTIONS ]
-.ad
 .RE
+.
 .P
 \(em
 .P
+.
 Extend a pool metadata SubLV by a specified size.
-.br
 .P
-\fBlvextend\fP \fB--poolmetadatasize\fP [\fB+\fP]\fISize\fP[m|UNIT] \fILV1\fP
+.B lvextend
+.O_poolmetadatasize
+\fILV1\fP
+.RS
+[
+.O_stripes
+]
 .br
-.RS 4
-.na
-[ \fB-i\fP|\fB--stripes\fP \fINumber\fP ]
-.br
-[ \fB-I\fP|\fB--stripesize\fP \fISize\fP[k|UNIT] ]
+[
+.O_stripesize
+]
 .br
 [ COMMON_OPTIONS ]
-.ad
+.br
+[ \fIPV\fP\ .\|.\|.\& ]
+.sp
+LV1 types:
+linear
+thinpool
 .RE
-.RS 4
-[ \fIPV\fP ... ]
-.RE
-.P
-.RS 4
-LV1 types: linear thinpool
-.RE
+.
 .P
 \(em
 .P
+.
 Extend an LV according to a predefined policy.
-.br
 .P
-\fBlvextend\fP \fB--usepolicies\fP \fILV1\fP
+.B lvextend
+.O_usepolicies
+\fILV1\fP
+.RS
+[
+.O_resizefs
+]
 .br
-.RS 4
-.na
-[ \fB-r\fP|\fB--resizefs\fP ]
+[
+.O_fs
+]
 .br
-[    \fB--fs\fP \fIString\fP ]
-.br
-[    \fB--fsmode\fP \fIString\fP ]
+[
+.O_fsmode
+]
 .br
 [ COMMON_OPTIONS ]
-.ad
-.RE
-.RS 4
-[ \fIPV\fP ... ]
-.RE
-.P
-.RS 4
-LV1 types: snapshot thinpool vdopool
+.br
+[ \fIPV\fP\ .\|.\|.\& ]
+.sp
+LV1 types:
+snapshot
+thinpool
+vdopool
 .RE
 .P
 \(em
 .P
 Common options for command:
-.
-.RS 4
-.na
-[ \fB-A\fP|\fB--autobackup\fP \fBy\fP|\fBn\fP ]
-.br
-[ \fB-f\fP|\fB--force\fP ]
-.br
-[ \fB-m\fP|\fB--mirrors\fP \fINumber\fP ]
-.br
-[ \fB-n\fP|\fB--nofsck\fP ]
-.br
-[    \fB--alloc\fP \c
-.nh
-\%\fBcontiguous\fP|\:\fBcling\fP|\:\fBcling_by_tags\fP|\:\fBnormal\fP|\:\fBanywhere\fP|\:\fBinherit\fP
-.hy
+.RS
+[
+.O_autobackup
 ]
 .br
-[    \fB--nosync\fP ]
-.br
-[    \fB--noudevsync\fP ]
-.br
-[    \fB--reportformat\fP \fBbasic\fP|\fBjson\fP|\fBjson_std\fP ]
-.br
-[    \fB--type\fP \c
-.nh
-\%\fBlinear\fP|\:\fBstriped\fP|\:\fBsnapshot\fP|\:\fBraid\fP|\:\fBmirror\fP|\:\fBthin\fP|\:\fBthin-pool\fP|\:\fBvdo\fP|\:\fBvdo-pool\fP|\:\fBcache\fP|\:\fBcache-pool\fP|\:\fBwritecache\fP
-.hy
+[
+.O_force
 ]
-.ad
+.br
+[
+.O_mirrors
+]
+.br
+[
+.O_nofsck
+]
+.br
+[
+.O_alloc
+]
+.br
+[
+.O_nosync
+]
+.br
+[
+.O_noudevsync
+]
+.br
+[
+.O_reportformat
+]
+.br
+[
+.O_type
+]
 .RE
 .P
 Common options for lvm:
-.
-.RS 4
-.na
-[ \fB-d\fP|\fB--debug\fP ]
+.RS
+[
+.O_debug
+]
 .br
-[ \fB-h\fP|\fB--help\fP ]
+[
+.O_help
+]
 .br
-[ \fB-q\fP|\fB--quiet\fP ]
+[
+.O_quiet
+]
 .br
-[ \fB-t\fP|\fB--test\fP ]
+[
+.O_test
+]
 .br
-[ \fB-v\fP|\fB--verbose\fP ]
+[
+.O_verbose
+]
 .br
-[ \fB-y\fP|\fB--yes\fP ]
+[
+.O_yes
+]
 .br
-[    \fB--commandprofile\fP \fIString\fP ]
+[
+.O_commandprofile
+]
 .br
-[    \fB--config\fP \fIString\fP ]
+[
+.O_config
+]
 .br
-[    \fB--devices\fP \fIPV\fP ]
+[
+.O_devices
+]
 .br
-[    \fB--devicesfile\fP \fIString\fP ]
+[
+.O_devicesfile
+]
 .br
-[    \fB--driverloaded\fP \fBy\fP|\fBn\fP ]
+[
+.O_driverloaded
+]
 .br
-[    \fB--journal\fP \fIString\fP ]
+[
+.O_journal
+]
 .br
-[    \fB--lockopt\fP \fIString\fP ]
+[
+.O_lockopt
+]
 .br
-[    \fB--longhelp\fP ]
+[
+.O_longhelp
+]
 .br
-[    \fB--nohints\fP ]
+[
+.O_nohints
+]
 .br
-[    \fB--nolocking\fP ]
+[
+.O_nolocking
+]
 .br
-[    \fB--profile\fP \fIString\fP ]
+[
+.O_profile
+]
 .br
-[    \fB--version\fP ]
-.ad
+[
+.O_version
+]
 .RE
+.hy
+.ad
 .
 .SH OPTIONS
 .
-.
-.HP
-.ad
-\fB--alloc\fP \c
-.nh
-\%\fBcontiguous\fP|\:\fBcling\fP|\:\fBcling_by_tags\fP|\:\fBnormal\fP|\:\fBanywhere\fP|\:\fBinherit\fP
-.hy
-.ad
-.br
+.TP
+.O_alloc
 Determines the allocation policy when a command needs to allocate
 Physical Extents (PEs) from the VG. Each VG and LV has an allocation policy
 which can be changed with vgchange/lvchange, or overridden on the
@@ -314,59 +564,51 @@ Optional positional PV args on the command line can also be used to limit
 which PVs the command will use for allocation.
 See \fBlvm\fP(8) for more information about allocation.
 .
-.HP
-\fB-A\fP|\fB--autobackup\fP \fBy\fP|\fBn\fP
-.br
+.TP
+.O_autobackup
 Specifies if metadata should be backed up automatically after a change.
 Enabling this is strongly advised!
 See \fBvgcfgbackup\fP(8) for more information.
 .
-.HP
-\fB--commandprofile\fP \fIString\fP
-.br
+.TP
+.O_commandprofile
 The command profile to use for command configuration.
 See \fBlvm.conf\fP(5) for more information about profiles.
 .
-.HP
-\fB--config\fP \fIString\fP
-.br
+.TP
+.O_config
 Config settings for the command. These override \fBlvm.conf\fP(5) settings.
 The String arg uses the same format as \fBlvm.conf\fP(5),
 or may use section/field syntax.
 See \fBlvm.conf\fP(5) for more information about config.
 .
-.HP
-\fB-d\fP|\fB--debug\fP ...
-.br
+.TP
+.O_debug
 Set debug level. Repeat from 1 to 6 times to increase the detail of
 messages sent to the log file and/or syslog (if configured).
 .
-.HP
-\fB--devices\fP \fIPV\fP
-.br
+.TP
+.O_devices
 Restricts the devices that are visible and accessible to the command.
 Devices not listed will appear to be missing. This option can be
 repeated, or accepts a comma separated list of devices. This overrides
 the devices file.
 .
-.HP
-\fB--devicesfile\fP \fIString\fP
-.br
+.TP
+.O_devicesfile
 A file listing devices that LVM should use.
 The file must exist in \fI#DEFAULT_SYS_DIR#/devices/\fP and is managed
 with the \fBlvmdevices\fP(8) command.
 This overrides the \fBlvm.conf\fP(5) \fBdevices/devicesfile\fP and
 \fBdevices/use_devicesfile\fP settings.
 .
-.HP
-\fB--driverloaded\fP \fBy\fP|\fBn\fP
-.br
+.TP
+.O_driverloaded
 If set to no, the command will not attempt to use device-mapper.
 For testing and debugging.
 .
-.HP
-\fB-l\fP|\fB--extents\fP [\fB+\fP]\fINumber\fP[PERCENT]
-.br
+.TP
+.O_extents
 Specifies the new size of the LV in logical extents.
 The --size and --extents options are alternate methods of specifying size.
 The total number of physical extents used will be
@@ -386,15 +628,13 @@ When the plus \fB+\fP or minus \fB-\fP prefix is used,
 the value is not an absolute size, but is relative and added or subtracted
 from the current size.
 .
-.HP
-\fB-f\fP|\fB--force\fP ...
-.br
+.TP
+.O_force
 Override various checks, confirmations and protections.
 Use with extreme caution.
 .
-.HP
-\fB--fs\fP \fIString\fP
-.br
+.TP
+.O_fs
 Control file system resizing when resizing an LV.
 \fBchecksize\fP: Check the fs size and reduce the LV if the fs is not
 using the reduced space (fs reduce is not needed.) If the reduced space
@@ -409,9 +649,8 @@ file systems that are unmounted (or mounted if prompts are skipped.)
 \fBignore\fP: Resize the LV without checking for or handling a file system.
 Warning: using ignore when reducing the LV size may destroy the file system.
 .
-.HP
-\fB--fsmode\fP \fIString\fP
-.br
+.TP
+.O_fsmode
 Control file system mounting behavior for fs resize.
 \fBmanage\fP: Mount or unmount the fs as needed to resize the fs,
 and attempt to restore the original mount state at the end.
@@ -422,14 +661,12 @@ the command.
 is unmounted. If mounting is required to resize the fs, then do not resize
 the fs or the LV and fail the command.
 .
-.HP
-\fB-h\fP|\fB--help\fP
-.br
+.TP
+.O_help
 Display help text.
 .
-.HP
-\fB--journal\fP \fIString\fP
-.br
+.TP
+.O_journal
 Record information in the systemd journal.
 This information is in addition to information
 enabled by the lvm.conf log/journal setting.
@@ -437,43 +674,36 @@ command: record information about the command.
 output: record the default command output.
 debug: record full command debugging.
 .
-.HP
-\fB--lockopt\fP \fIString\fP
-.br
+.TP
+.O_lockopt
 Used to pass options for special cases to lvmlockd.
 See \fBlvmlockd\fP(8) for more information.
 .
-.HP
-\fB--longhelp\fP
-.br
+.TP
+.O_longhelp
 Display long help text.
 .
-.HP
-\fB-m\fP|\fB--mirrors\fP \fINumber\fP
-.br
+.TP
+.O_mirrors
 Not used.
 .
-.HP
-\fB-n\fP|\fB--nofsck\fP
-.br
+.TP
+.O_nofsck
 Do not perform fsck when resizing the file system with --resizefs.
 .
-.HP
-\fB--nohints\fP
-.br
+.TP
+.O_nohints
 Do not use the hints file to locate devices for PVs. A command may read
 more devices to find PVs when hints are not used. The command will still
 perform standard hint file invalidation where appropriate.
 .
-.HP
-\fB--nolocking\fP
-.br
+.TP
+.O_nolocking
 Disable locking. Use with caution, concurrent commands may produce
 incorrect results.
 .
-.HP
-\fB--nosync\fP
-.br
+.TP
+.O_nosync
 Causes the creation of mirror, raid1, raid4, raid5 and raid10 to skip the
 initial synchronization. In case of mirror, raid1 and raid10, any data
 written afterwards will be mirrored, but the original contents will not be
@@ -487,36 +717,31 @@ to reconstruct proper user date in case of device failures.
 raid0 and raid0_meta do not provide any data copies or parity support
 and thus do not support initial synchronization.
 .
-.HP
-\fB--noudevsync\fP
-.br
+.TP
+.O_noudevsync
 Disables udev synchronization. The process will not wait for notification
 from udev. It will continue irrespective of any possible udev processing
 in the background. Only use this if udev is not running or has rules that
 ignore the devices LVM creates.
 .
-.HP
-\fB--poolmetadatasize\fP [\fB+\fP]\fISize\fP[m|UNIT]
-.br
+.TP
+.O_poolmetadatasize
 Specifies the new size of the pool metadata LV.
 The plus prefix \fB+\fP can be used, in which case
 the value is added to the current size.
 .
-.HP
-\fB--profile\fP \fIString\fP
-.br
+.TP
+.O_profile
 An alias for --commandprofile or --metadataprofile, depending
 on the command.
 .
-.HP
-\fB-q\fP|\fB--quiet\fP ...
-.br
+.TP
+.O_quiet
 Suppress output and log messages. Overrides --debug and --verbose.
 Repeat once to also suppress any prompts with answer 'no'.
 .
-.HP
-\fB--reportformat\fP \fBbasic\fP|\fBjson\fP|\fBjson_std\fP
-.br
+.TP
+.O_reportformat
 Overrides current output format for reports which is defined globally by
 the report/output_format setting in \fBlvm.conf\fP(5).
 \fBbasic\fP is the original format with columns and rows.
@@ -526,17 +751,15 @@ output in JSON format. \fBjson_std\fP produces report output in
 JSON format which is more compliant with JSON standard.
 See \fBlvmreport\fP(7) for more information.
 .
-.HP
-\fB-r\fP|\fB--resizefs\fP
-.br
+.TP
+.O_resizefs
 Resize the fs using the fs-specific resize command.
 May include mounting, unmounting, or running fsck. See --fsmode to control
 mounting behavior, and --nofsck to disable fsck. See --fs for more options
 (--resizefs is equivalent to --fs resize.)
 .
-.HP
-\fB-L\fP|\fB--size\fP [\fB+\fP]\fISize\fP[m|UNIT]
-.br
+.TP
+.O_size
 Specifies the new size of the LV.
 The --size and --extents options are alternate methods of specifying size.
 The total number of physical extents used will be
@@ -545,9 +768,8 @@ When the plus \fB+\fP or minus \fB-\fP prefix is used,
 the value is not an absolute size, but is relative and added or subtracted
 from the current size.
 .
-.HP
-\fB-i\fP|\fB--stripes\fP \fINumber\fP
-.br
+.TP
+.O_stripes
 Specifies the number of stripes in a striped LV. This is the number of
 PVs (devices) that a striped LV is spread across. Data that
 appears sequential in the LV is spread across multiple devices in units of
@@ -561,29 +783,21 @@ when unspecified, the default depends on the RAID type
 To stripe a new raid LV across all PVs by default,
 see \fBlvm.conf\fP(5) \fBallocation/raid_stripe_all_devices\fP.
 .
-.HP
-\fB-I\fP|\fB--stripesize\fP \fISize\fP[k|UNIT]
-.br
+.TP
+.O_stripesize
 The amount of data that is written to one device before
 moving to the next in a striped LV.
 .
-.HP
-\fB-t\fP|\fB--test\fP
-.br
+.TP
+.O_test
 Run in test mode. Commands will not update metadata.
 This is implemented by disabling all metadata writing but nevertheless
 returning success to the calling function. This may lead to unusual
 error messages in multi-stage operations if a tool relies on reading
 back metadata it believes has changed but hasn't.
 .
-.HP
-.ad
-\fB--type\fP \c
-.nh
-\%\fBlinear\fP|\:\fBstriped\fP|\:\fBsnapshot\fP|\:\fBraid\fP|\:\fBmirror\fP|\:\fBthin\fP|\:\fBthin-pool\fP|\:\fBvdo\fP|\:\fBvdo-pool\fP|\:\fBcache\fP|\:\fBcache-pool\fP|\:\fBwritecache\fP
-.hy
-.ad
-.br
+.TP
+.O_type
 The LV type, also known as "segment type" or "segtype".
 See usage descriptions for the specific ways to use these types.
 For more information about redundancy and performance
@@ -599,26 +813,22 @@ is inferred from other options or shortcuts
 --thin, --cache, --vdo).
 Use inferred types with care because it can lead to unexpected results.
 .
-.HP
-\fB--usepolicies\fP
-.br
+.TP
+.O_usepolicies
 Perform an operation according to the policy configured in \fBlvm.conf\fP(5)
 or a profile.
 .
-.HP
-\fB-v\fP|\fB--verbose\fP ...
-.br
+.TP
+.O_verbose
 Set verbose level. Repeat from 1 to 4 times to increase the detail
 of messages sent to stdout and stderr.
 .
-.HP
-\fB--version\fP
-.br
+.TP
+.O_version
 Display version information.
 .
-.HP
-\fB-y\fP|\fB--yes\fP
-.br
+.TP
+.O_yes
 Do not prompt for confirmation interactively but always assume the
 answer yes. Use with extreme caution.
 (For automatic no, see -qq.)
@@ -631,6 +841,7 @@ Logical Volume name.  See \fBlvm\fP(8) for valid names.
 An LV positional arg generally includes the VG name and LV name, e.g. VG/LV.
 LV1 indicates the LV must have a specific type, where the
 accepted LV types are listed. (raid represents raid<N> type).
+.
 .TP
 .I PV
 Physical Volume name, a device path under /dev.
@@ -638,13 +849,17 @@ For commands managing physical extents, a PV positional arg
 generally accepts a suffix indicating a range (or multiple ranges)
 of physical extents (PEs). When the first PE is omitted, it defaults
 to the start of the device, and when the last PE is omitted it defaults to end.
+.br
 Start and end range (inclusive):
-\fIPV\fP[\fB:\fP\fIPE\fP\fB-\fP\fIPE\fP]...
+\fIPV\fP[\fB:\fP\fIPE\fP\fB-\fP\fIPE\fP]\ .\|.\|.\&
+.br
 Start and length range (counting from 0):
-\fIPV\fP[\fB:\fP\fIPE\fP\fB+\fP\fIPE\fP]...
+\fIPV\fP[\fB:\fP\fIPE\fP\fB+\fP\fIPE\fP]\ .\|.\|.\&
+.
 .TP
 .I String
 See the option description for information about the string content.
+.
 .TP
 .IR Size [UNIT]
 Size is an input number that accepts an optional unit.
@@ -674,5 +889,5 @@ where capital letters mean multiple of 1000.)
 .SH ENVIRONMENT VARIABLES
 .
 See \fBlvm\fP(8) for information about environment variables used by lvm.
-For example, LVM_VG_NAME can generally be substituted
+For example, \fBLVM_VG_NAME\fP can generally be substituted
 for a required VG parameter.

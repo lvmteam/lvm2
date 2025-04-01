@@ -1,16 +1,127 @@
 .TH VGMKNODES 8 "LVM TOOLS #VERSION#" "Red Hat, Inc."
 .
+.ie t \{\
+.\" PostScript/PDF with tabs
+. ds TT \t
+. ds DTT \t\t
+.\}
+.el \{\
+. ds TT \&
+. ds DTT \0\0\0
+.\}
+.
+.de OPT
+.ie \\n(.$>1 \\*[TT]\fB-\\$1\fP|\\*[TT]\fB--\\$2\fP\c
+.el \\*[DTT]\fB--\\$1\fP\c
+..
+.
+.de OPA
+.OPT \\$*
+\ \c
+..
+.de OPS
+.OPT \\$*
+\&
+..
+.
+.
+.\"List of all options as O_string.
+.
+.de O_commandprofile
+.OPA commandprofile
+\fIString\fP
+..
+.de O_config
+.OPA config
+\fIString\fP
+..
+.de O_debug
+.OPA d debug
+\&\.\|.\|.\&
+..
+.de O_devices
+.OPA devices
+\fIPV\fP
+..
+.de O_devicesfile
+.OPA devicesfile
+\fIString\fP
+..
+.de O_driverloaded
+.OPA driverloaded
+\fBy\fP|\fBn\fP
+..
+.de O_help
+.OPS h help
+..
+.de O_ignorelockingfailure
+.OPS ignorelockingfailure
+..
+.de O_journal
+.OPA journal
+\fIString\fP
+..
+.de O_lockopt
+.OPA lockopt
+\fIString\fP
+..
+.de O_longhelp
+.OPS longhelp
+..
+.de O_nohints
+.OPS nohints
+..
+.de O_nolocking
+.OPS nolocking
+..
+.de O_profile
+.OPA profile
+\fIString\fP
+..
+.de O_quiet
+.OPA q quiet
+\&\.\|.\|.\&
+..
+.de O_refresh
+.OPS refresh
+..
+.de O_reportformat
+.OPA reportformat
+\%\fBbasic\fP|\:\
+\fBjson\fP|\:\
+\fBjson_std\fP
+..
+.de O_test
+.OPS t test
+..
+.de O_verbose
+.OPA v verbose
+\&\.\|.\|.\&
+..
+.de O_version
+.OPS version
+..
+.de O_yes
+.OPS y yes
+..
+.
 .SH NAME
 .
 vgmknodes \(em Create the special files for volume group devices in /dev
 .
 .SH SYNOPSIS
 .
+.nh
+.TP
 \fBvgmknodes\fP
+[ \fIoption_args\fP ]
 .br
-    [ \fIoption_args\fP ]
-.br
-    [ \fIposition_args\fP ]
+[ \fIposition_args\fP ]
+.hy
+.
+.ds TT \&
+.ds DTT \&
+.
 .
 .SH DESCRIPTION
 .
@@ -25,125 +136,156 @@ together with udev.
 .
 .SH USAGE
 .
-\fBvgmknodes\fP
-.br
-.RS 4
+.nh
 .na
-[    \fB--ignorelockingfailure\fP ]
+.B vgmknodes
+.RS
+[
+.O_ignorelockingfailure
+]
 .br
-[    \fB--refresh\fP ]
+[
+.O_refresh
+]
 .br
-[    \fB--reportformat\fP \fBbasic\fP|\fBjson\fP|\fBjson_std\fP ]
+[
+.O_reportformat
+]
 .br
 [ COMMON_OPTIONS ]
-.ad
-.RE
-.RS 4
-[ \fIVG\fP|\fILV\fP|\fITag\fP ... ]
+.br
+[ \fIVG\fP|\fILV\fP|\fITag\fP\ .\|.\|.\& ]
 .RE
 .P
+\(em
+.P
 Common options for lvm:
-.
-.RS 4
-.na
-[ \fB-d\fP|\fB--debug\fP ]
+.RS
+[
+.O_debug
+]
 .br
-[ \fB-h\fP|\fB--help\fP ]
+[
+.O_help
+]
 .br
-[ \fB-q\fP|\fB--quiet\fP ]
+[
+.O_quiet
+]
 .br
-[ \fB-t\fP|\fB--test\fP ]
+[
+.O_test
+]
 .br
-[ \fB-v\fP|\fB--verbose\fP ]
+[
+.O_verbose
+]
 .br
-[ \fB-y\fP|\fB--yes\fP ]
+[
+.O_yes
+]
 .br
-[    \fB--commandprofile\fP \fIString\fP ]
+[
+.O_commandprofile
+]
 .br
-[    \fB--config\fP \fIString\fP ]
+[
+.O_config
+]
 .br
-[    \fB--devices\fP \fIPV\fP ]
+[
+.O_devices
+]
 .br
-[    \fB--devicesfile\fP \fIString\fP ]
+[
+.O_devicesfile
+]
 .br
-[    \fB--driverloaded\fP \fBy\fP|\fBn\fP ]
+[
+.O_driverloaded
+]
 .br
-[    \fB--journal\fP \fIString\fP ]
+[
+.O_journal
+]
 .br
-[    \fB--lockopt\fP \fIString\fP ]
+[
+.O_lockopt
+]
 .br
-[    \fB--longhelp\fP ]
+[
+.O_longhelp
+]
 .br
-[    \fB--nohints\fP ]
+[
+.O_nohints
+]
 .br
-[    \fB--nolocking\fP ]
+[
+.O_nolocking
+]
 .br
-[    \fB--profile\fP \fIString\fP ]
+[
+.O_profile
+]
 .br
-[    \fB--version\fP ]
-.ad
+[
+.O_version
+]
 .RE
+.hy
+.ad
 .
 .SH OPTIONS
 .
-.
-.HP
-\fB--commandprofile\fP \fIString\fP
-.br
+.TP
+.O_commandprofile
 The command profile to use for command configuration.
 See \fBlvm.conf\fP(5) for more information about profiles.
 .
-.HP
-\fB--config\fP \fIString\fP
-.br
+.TP
+.O_config
 Config settings for the command. These override \fBlvm.conf\fP(5) settings.
 The String arg uses the same format as \fBlvm.conf\fP(5),
 or may use section/field syntax.
 See \fBlvm.conf\fP(5) for more information about config.
 .
-.HP
-\fB-d\fP|\fB--debug\fP ...
-.br
+.TP
+.O_debug
 Set debug level. Repeat from 1 to 6 times to increase the detail of
 messages sent to the log file and/or syslog (if configured).
 .
-.HP
-\fB--devices\fP \fIPV\fP
-.br
+.TP
+.O_devices
 Restricts the devices that are visible and accessible to the command.
 Devices not listed will appear to be missing. This option can be
 repeated, or accepts a comma separated list of devices. This overrides
 the devices file.
 .
-.HP
-\fB--devicesfile\fP \fIString\fP
-.br
+.TP
+.O_devicesfile
 A file listing devices that LVM should use.
 The file must exist in \fI#DEFAULT_SYS_DIR#/devices/\fP and is managed
 with the \fBlvmdevices\fP(8) command.
 This overrides the \fBlvm.conf\fP(5) \fBdevices/devicesfile\fP and
 \fBdevices/use_devicesfile\fP settings.
 .
-.HP
-\fB--driverloaded\fP \fBy\fP|\fBn\fP
-.br
+.TP
+.O_driverloaded
 If set to no, the command will not attempt to use device-mapper.
 For testing and debugging.
 .
-.HP
-\fB-h\fP|\fB--help\fP
-.br
+.TP
+.O_help
 Display help text.
 .
-.HP
-\fB--ignorelockingfailure\fP
-.br
+.TP
+.O_ignorelockingfailure
 Allows a command to continue with read-only metadata
 operations after locking failures.
 .
-.HP
-\fB--journal\fP \fIString\fP
-.br
+.TP
+.O_journal
 Record information in the systemd journal.
 This information is in addition to information
 enabled by the lvm.conf log/journal setting.
@@ -151,45 +293,38 @@ command: record information about the command.
 output: record the default command output.
 debug: record full command debugging.
 .
-.HP
-\fB--lockopt\fP \fIString\fP
-.br
+.TP
+.O_lockopt
 Used to pass options for special cases to lvmlockd.
 See \fBlvmlockd\fP(8) for more information.
 .
-.HP
-\fB--longhelp\fP
-.br
+.TP
+.O_longhelp
 Display long help text.
 .
-.HP
-\fB--nohints\fP
-.br
+.TP
+.O_nohints
 Do not use the hints file to locate devices for PVs. A command may read
 more devices to find PVs when hints are not used. The command will still
 perform standard hint file invalidation where appropriate.
 .
-.HP
-\fB--nolocking\fP
-.br
+.TP
+.O_nolocking
 Disable locking. Use with caution, concurrent commands may produce
 incorrect results.
 .
-.HP
-\fB--profile\fP \fIString\fP
-.br
+.TP
+.O_profile
 An alias for --commandprofile or --metadataprofile, depending
 on the command.
 .
-.HP
-\fB-q\fP|\fB--quiet\fP ...
-.br
+.TP
+.O_quiet
 Suppress output and log messages. Overrides --debug and --verbose.
 Repeat once to also suppress any prompts with answer 'no'.
 .
-.HP
-\fB--refresh\fP
-.br
+.TP
+.O_refresh
 If the LV is active, reload its metadata.
 In an environment where udev is used to manage the /dev content,
 usage of this option is highly recommended. This is because refresh
@@ -198,9 +333,8 @@ rules are applied to set the /dev content and permissions.
 Also, this operation may be useful if something has gone wrong,
 or if some form of manual LV sharing is being used.
 .
-.HP
-\fB--reportformat\fP \fBbasic\fP|\fBjson\fP|\fBjson_std\fP
-.br
+.TP
+.O_reportformat
 Overrides current output format for reports which is defined globally by
 the report/output_format setting in \fBlvm.conf\fP(5).
 \fBbasic\fP is the original format with columns and rows.
@@ -210,29 +344,25 @@ output in JSON format. \fBjson_std\fP produces report output in
 JSON format which is more compliant with JSON standard.
 See \fBlvmreport\fP(7) for more information.
 .
-.HP
-\fB-t\fP|\fB--test\fP
-.br
+.TP
+.O_test
 Run in test mode. Commands will not update metadata.
 This is implemented by disabling all metadata writing but nevertheless
 returning success to the calling function. This may lead to unusual
 error messages in multi-stage operations if a tool relies on reading
 back metadata it believes has changed but hasn't.
 .
-.HP
-\fB-v\fP|\fB--verbose\fP ...
-.br
+.TP
+.O_verbose
 Set verbose level. Repeat from 1 to 4 times to increase the detail
 of messages sent to stdout and stderr.
 .
-.HP
-\fB--version\fP
-.br
+.TP
+.O_version
 Display version information.
 .
-.HP
-\fB-y\fP|\fB--yes\fP
-.br
+.TP
+.O_yes
 Do not prompt for confirmation interactively but always assume the
 answer yes. Use with extreme caution.
 (For automatic no, see -qq.)
@@ -242,17 +372,21 @@ answer yes. Use with extreme caution.
 .TP
 .I VG
 Volume Group name.  See \fBlvm\fP(8) for valid names.
+.
 .TP
 .I LV
 Logical Volume name.  See \fBlvm\fP(8) for valid names.
 An LV positional arg generally includes the VG name and LV name, e.g. VG/LV.
+.
 .TP
 .I Tag
 Tag name.  See \fBlvm\fP(8) for information about tag names and using tags
 in place of a VG, LV or PV.
+.
 .TP
 .I String
 See the option description for information about the string content.
+.
 .TP
 .IR Size [UNIT]
 Size is an input number that accepts an optional unit.
@@ -282,5 +416,5 @@ where capital letters mean multiple of 1000.)
 .SH ENVIRONMENT VARIABLES
 .
 See \fBlvm\fP(8) for information about environment variables used by lvm.
-For example, LVM_VG_NAME can generally be substituted
+For example, \fBLVM_VG_NAME\fP can generally be substituted
 for a required VG parameter.

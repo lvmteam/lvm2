@@ -1,16 +1,192 @@
 .TH LVMCONFIG 8 "LVM TOOLS #VERSION#" "Red Hat, Inc."
 .
+.ie t \{\
+.\" PostScript/PDF with tabs
+. ds TT \t
+. ds DTT \t\t
+.\}
+.el \{\
+. ds TT \&
+. ds DTT \0\0\0
+.\}
+.
+.de OPT
+.ie \\n(.$>1 \\*[TT]\fB-\\$1\fP|\\*[TT]\fB--\\$2\fP\c
+.el \\*[DTT]\fB--\\$1\fP\c
+..
+.
+.de OPA
+.OPT \\$*
+\ \c
+..
+.de OPS
+.OPT \\$*
+\&
+..
+.
+.
+.\"List of all options as O_string.
+.
+.de O_atversion
+.OPA atversion
+\fIString\fP
+..
+.de O_commandprofile
+.OPA commandprofile
+\fIString\fP
+..
+.de O_config
+.OPA config
+\fIString\fP
+..
+.de O_debug
+.OPA d debug
+\&\.\|.\|.\&
+..
+.de O_devices
+.OPA devices
+\fIPV\fP
+..
+.de O_devicesfile
+.OPA devicesfile
+\fIString\fP
+..
+.de O_driverloaded
+.OPA driverloaded
+\fBy\fP|\fBn\fP
+..
+.de O_file
+.OPA f file
+\fIString\fP
+..
+.de O_help
+.OPS h help
+..
+.de O_ignoreadvanced
+.OPS ignoreadvanced
+..
+.de O_ignorelocal
+.OPS ignorelocal
+..
+.de O_ignoreunsupported
+.OPS ignoreunsupported
+..
+.de O_journal
+.OPA journal
+\fIString\fP
+..
+.de O_list
+.OPS l list
+..
+.de O_lockopt
+.OPA lockopt
+\fIString\fP
+..
+.de O_longhelp
+.OPS longhelp
+..
+.de O_mergedconfig
+.OPS mergedconfig
+..
+.de O_metadataprofile
+.OPA metadataprofile
+\fIString\fP
+..
+.de O_nohints
+.OPS nohints
+..
+.de O_nolocking
+.OPS nolocking
+..
+.de O_profile
+.OPA profile
+\fIString\fP
+..
+.de O_quiet
+.OPA q quiet
+\&\.\|.\|.\&
+..
+.de O_showdeprecated
+.OPS showdeprecated
+..
+.de O_showunsupported
+.OPS showunsupported
+..
+.de O_sinceversion
+.OPA sinceversion
+\fIString\fP
+..
+.de O_test
+.OPS t test
+..
+.de O_typeconfig
+.OPA typeconfig
+\%\fBcurrent\fP|\:\
+\fBdefault\fP|\:\
+\fBdiff\fP|\:\
+\fBfull\fP|\:\
+\fBlist\fP|\:\
+\fBmissing\fP|\:\
+\fBnew\fP|\:\
+\fBprofilable\fP|\:\
+\fBprofilable-command\fP|\:\
+\fBprofilable-metadata\fP
+..
+.de O_unconfigured
+.OPS unconfigured
+..
+.de O_validate
+.OPS validate
+..
+.de O_valuesonly
+.OPS valuesonly
+..
+.de O_verbose
+.OPA v verbose
+\&\.\|.\|.\&
+..
+.de O_version
+.OPS version
+..
+.de O_withcomments
+.OPS withcomments
+..
+.de O_withgeneralpreamble
+.OPS withgeneralpreamble
+..
+.de O_withlocalpreamble
+.OPS withlocalpreamble
+..
+.de O_withspaces
+.OPS withspaces
+..
+.de O_withsummary
+.OPS withsummary
+..
+.de O_withversions
+.OPS withversions
+..
+.de O_yes
+.OPS y yes
+..
+.
 .SH NAME
 .
 lvmconfig \(em Display and manipulate configuration information
 .
 .SH SYNOPSIS
 .
+.nh
+.TP
 \fBlvmconfig\fP
+[ \fIoption_args\fP ]
 .br
-    [ \fIoption_args\fP ]
-.br
-    [ \fIposition_args\fP ]
+[ \fIposition_args\fP ]
+.hy
+.
+.ds TT \&
+.ds DTT \&
+.
 .
 .SH DESCRIPTION
 .
@@ -21,111 +197,182 @@ line settings from --config.
 .
 .SH USAGE
 .
-\fBlvmconfig\fP
-.br
-.RS 4
-.na
-[ \fB-f\fP|\fB--file\fP \fIString\fP ]
-.br
-[ \fB-l\fP|\fB--list\fP ]
-.br
-[    \fB--atversion\fP \fIString\fP ]
-.br
-[    \fB--typeconfig\fP \c
 .nh
-\%\fBcurrent\fP|\:\fBdefault\fP|\:\fBdiff\fP|\:\fBfull\fP|\:\fBlist\fP|\:\fBmissing\fP|\:\fBnew\fP|\:\fBprofilable\fP|\:\fBprofilable-command\fP|\:\fBprofilable-metadata\fP
-.hy
+.na
+.B lvmconfig
+.RS
+[
+.O_file
 ]
 .br
-[    \fB--ignoreadvanced\fP ]
+[
+.O_list
+]
 .br
-[    \fB--ignoreunsupported\fP ]
+[
+.O_atversion
+]
 .br
-[    \fB--ignorelocal\fP ]
+[
+.O_typeconfig
+]
 .br
-[    \fB--mergedconfig\fP ]
+[
+.O_ignoreadvanced
+]
 .br
-[    \fB--metadataprofile\fP \fIString\fP ]
+[
+.O_ignoreunsupported
+]
 .br
-[    \fB--sinceversion\fP \fIString\fP ]
+[
+.O_ignorelocal
+]
 .br
-[    \fB--showdeprecated\fP ]
+[
+.O_mergedconfig
+]
 .br
-[    \fB--showunsupported\fP ]
+[
+.O_metadataprofile
+]
 .br
-[    \fB--validate\fP ]
+[
+.O_sinceversion
+]
 .br
-[    \fB--valuesonly\fP ]
+[
+.O_showdeprecated
+]
 .br
-[    \fB--withsummary\fP ]
+[
+.O_showunsupported
+]
 .br
-[    \fB--withcomments\fP ]
+[
+.O_validate
+]
 .br
-[    \fB--withgeneralpreamble\fP ]
+[
+.O_valuesonly
+]
 .br
-[    \fB--withlocalpreamble\fP ]
+[
+.O_withsummary
+]
 .br
-[    \fB--withspaces\fP ]
+[
+.O_withcomments
+]
 .br
-[    \fB--unconfigured\fP ]
+[
+.O_withgeneralpreamble
+]
 .br
-[    \fB--withversions\fP ]
+[
+.O_withlocalpreamble
+]
+.br
+[
+.O_withspaces
+]
+.br
+[
+.O_unconfigured
+]
+.br
+[
+.O_withversions
+]
 .br
 [ COMMON_OPTIONS ]
-.ad
-.RE
-.RS 4
-[ \fIString\fP ... ]
+.br
+[ \fIString\fP\ .\|.\|.\& ]
 .RE
 .P
+\(em
+.P
 Common options for lvm:
-.
-.RS 4
-.na
-[ \fB-d\fP|\fB--debug\fP ]
+.RS
+[
+.O_debug
+]
 .br
-[ \fB-h\fP|\fB--help\fP ]
+[
+.O_help
+]
 .br
-[ \fB-q\fP|\fB--quiet\fP ]
+[
+.O_quiet
+]
 .br
-[ \fB-t\fP|\fB--test\fP ]
+[
+.O_test
+]
 .br
-[ \fB-v\fP|\fB--verbose\fP ]
+[
+.O_verbose
+]
 .br
-[ \fB-y\fP|\fB--yes\fP ]
+[
+.O_yes
+]
 .br
-[    \fB--commandprofile\fP \fIString\fP ]
+[
+.O_commandprofile
+]
 .br
-[    \fB--config\fP \fIString\fP ]
+[
+.O_config
+]
 .br
-[    \fB--devices\fP \fIPV\fP ]
+[
+.O_devices
+]
 .br
-[    \fB--devicesfile\fP \fIString\fP ]
+[
+.O_devicesfile
+]
 .br
-[    \fB--driverloaded\fP \fBy\fP|\fBn\fP ]
+[
+.O_driverloaded
+]
 .br
-[    \fB--journal\fP \fIString\fP ]
+[
+.O_journal
+]
 .br
-[    \fB--lockopt\fP \fIString\fP ]
+[
+.O_lockopt
+]
 .br
-[    \fB--longhelp\fP ]
+[
+.O_longhelp
+]
 .br
-[    \fB--nohints\fP ]
+[
+.O_nohints
+]
 .br
-[    \fB--nolocking\fP ]
+[
+.O_nolocking
+]
 .br
-[    \fB--profile\fP \fIString\fP ]
+[
+.O_profile
+]
 .br
-[    \fB--version\fP ]
-.ad
+[
+.O_version
+]
 .RE
+.hy
+.ad
 .
 .SH OPTIONS
 .
-.
-.HP
-\fB--atversion\fP \fIString\fP
-.br
+.TP
+.O_atversion
 Specify an LVM version in x.y.z format where x is the major version,
 the y is the minor version and z is the patchlevel (e.g. 2.2.106).
 When configuration is displayed, the configuration settings recognized
@@ -134,84 +381,72 @@ to display a configuration that a certain LVM version understands and
 which does not contain any newer settings for which LVM would
 issue a warning message when checking the configuration.
 .
-.HP
-\fB--commandprofile\fP \fIString\fP
-.br
+.TP
+.O_commandprofile
 The command profile to use for command configuration.
 See \fBlvm.conf\fP(5) for more information about profiles.
 .
-.HP
-\fB--config\fP \fIString\fP
-.br
+.TP
+.O_config
 Config settings for the command. These override \fBlvm.conf\fP(5) settings.
 The String arg uses the same format as \fBlvm.conf\fP(5),
 or may use section/field syntax.
 See \fBlvm.conf\fP(5) for more information about config.
 .
-.HP
-\fB-d\fP|\fB--debug\fP ...
-.br
+.TP
+.O_debug
 Set debug level. Repeat from 1 to 6 times to increase the detail of
 messages sent to the log file and/or syslog (if configured).
 .
-.HP
-\fB--devices\fP \fIPV\fP
-.br
+.TP
+.O_devices
 Restricts the devices that are visible and accessible to the command.
 Devices not listed will appear to be missing. This option can be
 repeated, or accepts a comma separated list of devices. This overrides
 the devices file.
 .
-.HP
-\fB--devicesfile\fP \fIString\fP
-.br
+.TP
+.O_devicesfile
 A file listing devices that LVM should use.
 The file must exist in \fI#DEFAULT_SYS_DIR#/devices/\fP and is managed
 with the \fBlvmdevices\fP(8) command.
 This overrides the \fBlvm.conf\fP(5) \fBdevices/devicesfile\fP and
 \fBdevices/use_devicesfile\fP settings.
 .
-.HP
-\fB--driverloaded\fP \fBy\fP|\fBn\fP
-.br
+.TP
+.O_driverloaded
 If set to no, the command will not attempt to use device-mapper.
 For testing and debugging.
 .
-.HP
-\fB-f\fP|\fB--file\fP \fIString\fP
-.br
+.TP
+.O_file
 Write output to the named file.
 .
-.HP
-\fB-h\fP|\fB--help\fP
-.br
+.TP
+.O_help
 Display help text.
 .
-.HP
-\fB--ignoreadvanced\fP
-.br
+.TP
+.O_ignoreadvanced
 Exclude advanced configuration settings from the output.
 .
-.HP
-\fB--ignorelocal\fP
-.br
+.TP
+.O_ignorelocal
 Ignore the local section. The local section should be defined in
 the lvmlocal.conf file, and should contain config settings
 specific to the local host which should not be copied to
 other hosts.
 .
-.HP
-\fB--ignoreunsupported\fP
-.br
+.TP
+.O_ignoreunsupported
 Exclude unsupported configuration settings from the output. These settings are
 either used for debugging and development purposes only or their support is not
 yet complete and they are not meant to be used in production. The \fBcurrent\fP
 and \fBdiff\fP types include unsupported settings in their output by default,
 all the other types ignore unsupported settings.
 .
-.HP
-\fB--journal\fP \fIString\fP
-.br
+.TP
+.O_journal
 Record information in the systemd journal.
 This information is in addition to information
 enabled by the lvm.conf log/journal setting.
@@ -219,26 +454,22 @@ command: record information about the command.
 output: record the default command output.
 debug: record full command debugging.
 .
-.HP
-\fB-l\fP|\fB--list\fP
-.br
+.TP
+.O_list
 List config settings with summarizing comment. This is the same as using
 options --typeconfig list --withsummary.
 .
-.HP
-\fB--lockopt\fP \fIString\fP
-.br
+.TP
+.O_lockopt
 Used to pass options for special cases to lvmlockd.
 See \fBlvmlockd\fP(8) for more information.
 .
-.HP
-\fB--longhelp\fP
-.br
+.TP
+.O_longhelp
 Display long help text.
 .
-.HP
-\fB--mergedconfig\fP
-.br
+.TP
+.O_mergedconfig
 When the command is run with --config
 and/or --commandprofile (or using LVM_COMMAND_PROFILE
 environment variable), --profile, or --metadataprofile,
@@ -247,40 +478,34 @@ Without merging, only the configuration at the front of the
 cascade is displayed.
 See \fBlvm.conf\fP(5) for more information about config.
 .
-.HP
-\fB--metadataprofile\fP \fIString\fP
-.br
+.TP
+.O_metadataprofile
 The metadata profile to use for command configuration.
 See \fBlvm.conf\fP(5) for more information about profiles.
 .
-.HP
-\fB--nohints\fP
-.br
+.TP
+.O_nohints
 Do not use the hints file to locate devices for PVs. A command may read
 more devices to find PVs when hints are not used. The command will still
 perform standard hint file invalidation where appropriate.
 .
-.HP
-\fB--nolocking\fP
-.br
+.TP
+.O_nolocking
 Disable locking. Use with caution, concurrent commands may produce
 incorrect results.
 .
-.HP
-\fB--profile\fP \fIString\fP
-.br
+.TP
+.O_profile
 An alias for --commandprofile or --metadataprofile, depending
 on the command.
 .
-.HP
-\fB-q\fP|\fB--quiet\fP ...
-.br
+.TP
+.O_quiet
 Suppress output and log messages. Overrides --debug and --verbose.
 Repeat once to also suppress any prompts with answer 'no'.
 .
-.HP
-\fB--showdeprecated\fP
-.br
+.TP
+.O_showdeprecated
 Include deprecated configuration settings in the output. These settings
 are deprecated after a certain version. If a concrete version is specified
 with --atversion, deprecated settings are automatically included
@@ -288,40 +513,31 @@ if the specified version is lower than the version in which the settings were
 deprecated. The current and diff types include deprecated settings
 in their output by default, all the other types ignore deprecated settings.
 .
-.HP
-\fB--showunsupported\fP
-.br
+.TP
+.O_showunsupported
 Include unsupported configuration settings in the output. These settings
 are either used for debugging or development purposes only, or their support
 is not yet complete and they are not meant to be used in production. The
 current and diff types include unsupported settings in their
 output by default, all the other types ignore unsupported settings.
 .
-.HP
-\fB--sinceversion\fP \fIString\fP
-.br
+.TP
+.O_sinceversion
 Specify an LVM version in x.y.z format where x is the major version,
 the y is the minor version and z is the patchlevel (e.g. 2.2.106).
 This option is currently applicable only with --typeconfig new
 to display all configuration settings introduced since given version.
 .
-.HP
-\fB-t\fP|\fB--test\fP
-.br
+.TP
+.O_test
 Run in test mode. Commands will not update metadata.
 This is implemented by disabling all metadata writing but nevertheless
 returning success to the calling function. This may lead to unusual
 error messages in multi-stage operations if a tool relies on reading
 back metadata it believes has changed but hasn't.
 .
-.HP
-.ad
-\fB--typeconfig\fP \c
-.nh
-\%\fBcurrent\fP|\:\fBdefault\fP|\:\fBdiff\fP|\:\fBfull\fP|\:\fBlist\fP|\:\fBmissing\fP|\:\fBnew\fP|\:\fBprofilable\fP|\:\fBprofilable-command\fP|\:\fBprofilable-metadata\fP
-.hy
-.ad
-.br
+.TP
+.O_typeconfig
 \fBcurrent\fP prints the config settings that would be applied
 to an lvm command (assuming the command does not override them
 on the command line.) This includes:
@@ -355,14 +571,12 @@ with their default values.
 \fBprofilable-metadata\fP prints settings with their default values that can be set from a metadata profile.
 Also see \fBlvm.conf\fP(5).
 .
-.HP
-\fB--unconfigured\fP
-.br
+.TP
+.O_unconfigured
 Internal option used for generating config file during build.
 .
-.HP
-\fB--validate\fP
-.br
+.TP
+.O_validate
 Validate current configuration used and exit with appropriate
 return code. The validation is done only for the configuration
 at the front of the "config cascade". To validate the whole
@@ -370,58 +584,48 @@ merged configuration tree, also use --mergedconfig.
 The validation is done even if \fBlvm.conf\fP(5) \fBconfig/checks\fP
 is disabled.
 .
-.HP
-\fB--valuesonly\fP
-.br
+.TP
+.O_valuesonly
 When printing config settings, print only values without keys.
 .
-.HP
-\fB-v\fP|\fB--verbose\fP ...
-.br
+.TP
+.O_verbose
 Set verbose level. Repeat from 1 to 4 times to increase the detail
 of messages sent to stdout and stderr.
 .
-.HP
-\fB--version\fP
-.br
+.TP
+.O_version
 Display version information.
 .
-.HP
-\fB--withcomments\fP
-.br
+.TP
+.O_withcomments
 Display a full comment for each configuration node. For deprecated
 settings, also display comments about deprecation.
 .
-.HP
-\fB--withgeneralpreamble\fP
-.br
+.TP
+.O_withgeneralpreamble
 Include general config file preamble.
 .
-.HP
-\fB--withlocalpreamble\fP
-.br
+.TP
+.O_withlocalpreamble
 Include local config file preamble.
 .
-.HP
-\fB--withspaces\fP
-.br
+.TP
+.O_withspaces
 Where appropriate, add more spaces in output for better readability.
 .
-.HP
-\fB--withsummary\fP
-.br
+.TP
+.O_withsummary
 Display a one line comment for each configuration node.
 .
-.HP
-\fB--withversions\fP
-.br
+.TP
+.O_withversions
 Also display a comment containing the version of introduction for
 each configuration node. If the setting is deprecated, also display
 the version since which it is deprecated.
 .
-.HP
-\fB-y\fP|\fB--yes\fP
-.br
+.TP
+.O_yes
 Do not prompt for confirmation interactively but always assume the
 answer yes. Use with extreme caution.
 (For automatic no, see -qq.)
@@ -431,6 +635,7 @@ answer yes. Use with extreme caution.
 .TP
 .I String
 See the option description for information about the string content.
+.
 .TP
 .IR Size [UNIT]
 Size is an input number that accepts an optional unit.
@@ -460,5 +665,5 @@ where capital letters mean multiple of 1000.)
 .SH ENVIRONMENT VARIABLES
 .
 See \fBlvm\fP(8) for information about environment variables used by lvm.
-For example, LVM_VG_NAME can generally be substituted
+For example, \fBLVM_VG_NAME\fP can generally be substituted
 for a required VG parameter.
