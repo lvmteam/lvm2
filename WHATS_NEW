@@ -1,5 +1,9 @@
 Version 2.03.32 - 
 ==================
+  Lvconvert vdopool conversion propperly validates acceptable LVs.
+  Accept thin pool data LV as cachable LV.
+  Allow using zram block devices (likely for testing).
+  Fix lvresize when resizing COW snapshots already covering origin.
   Fix lvmdbusd read of executed lvm commands output.
   Fix construction of DM UUID for cachevol _cdata and _cmeta devices.
 
