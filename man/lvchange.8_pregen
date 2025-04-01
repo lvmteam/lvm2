@@ -188,8 +188,6 @@ required, after which the others are optional.
 .br
      \fB--metadataprofile\fP \fIString\fP
 .br
-     \fB--profile\fP \fIString\fP
-.br
      \fB--setautoactivation\fP \fBy\fP|\fBn\fP
 .br
      \fB--errorwhenfull\fP \fBy\fP|\fBn\fP
@@ -661,7 +659,7 @@ when a thin pool is full and an I/O request requires space.
 When no, device-mapper will queue these I/O requests for a
 period of time to allow the thin pool to be extended.
 Errors are returned if no space is available after the timeout.
-(Also see dm-thin-pool kernel module option no_space_timeout.)
+(Also see "\fIdm_thin_pool\fP" kernel module option no_space_timeout.)
 See \fBlvmthin\fP(7) for more information.
 .
 .HP

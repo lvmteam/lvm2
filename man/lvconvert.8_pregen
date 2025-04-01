@@ -593,7 +593,7 @@ Attach a cache pool to an LV, converts the LV to type cache.
 .RE
 .P
 .RS 4
-LV1 types: linear striped raid thin thinpool vdo vdopool vdopooldata zero error
+LV1 types: linear striped raid thin thinpool thinpooldata vdo vdopool vdopooldata zero error
 .RE
 .P
 \(em
@@ -694,7 +694,7 @@ LV1 types: linear striped raid thinpool
 .P
 \(em
 .P
-Convert LV to type thin-pool.
+Convert LV to type thin-pool (existing data on LV will be erased).
 .br
 .P
 \fBlvconvert\fP \fB--type\fP \fBthin-pool\fP \fILV1\fP
@@ -746,7 +746,7 @@ LV1 types: linear striped cache raid vdo writecache zero error
 .P
 \(em
 .P
-Convert LV to type cache-pool.
+Convert LV to type cache-pool (existing data on LV will be erased).
 .br
 .P
 \fBlvconvert\fP \fB--type\fP \fBcache-pool\fP \fILV1\fP
@@ -790,7 +790,7 @@ LV1 types: linear striped raid zero error
 .P
 \(em
 .P
-Convert LV to type vdopool.
+Convert LV to type vdopool (existing data on LV will be erased).
 .br
 .P
 \fBlvconvert\fP \fB--type\fP \fBvdo-pool\fP \fILV1\fP
@@ -1250,7 +1250,7 @@ when a thin pool is full and an I/O request requires space.
 When no, device-mapper will queue these I/O requests for a
 period of time to allow the thin pool to be extended.
 Errors are returned if no space is available after the timeout.
-(Also see dm-thin-pool kernel module option no_space_timeout.)
+(Also see "\fIdm_thin_pool\fP" kernel module option no_space_timeout.)
 See \fBlvmthin\fP(7) for more information.
 .
 .HP
@@ -1364,7 +1364,7 @@ These are the names of the corresponding LV types, or "segment types".
 Use the --type option to specify which to use (raid1 is default,
 and mirror is legacy)
 Use \fBlvm.conf\fP(5) \fBglobal/mirror_segtype_default\fP and
-global/raid10_segtype_default to configure the default types.
+\fBglobal/raid10_segtype_default\fP to configure the default types.
 The plus prefix \fB+\fP can be used, in which case
 the number is added to the current number of images,
 or the minus prefix \fB-\fP can be used, in which case
@@ -1967,24 +1967,26 @@ LV1 types: linear striped raid thinpool
 .P
 \(em
 .P
-Convert LV to type vdopool.
+Convert LV to type vdopool (variant: use --type vdo-pool,
+.br
+existing data on LV will be erased).
 .br
 .P
-\fBlvconvert\fP \fB--vdopool\fP \fILV\fP
+\fBlvconvert\fP \fB--vdopool\fP \fILV1\fP
 .br
 .RS 4
 .na
 [ \fB--type vdo-pool\fP ] (implied)
+.br
+[ \fB-n\fP|\fB--name\fP \fILV\fP\fI_new\fP ]
+.br
+[ \fB-V\fP|\fB--virtualsize\fP \fISize\fP[m|UNIT] ]
 .br
 [ \fB-r\fP|\fB--readahead\fP \fBauto\fP|\fBnone\fP|\fINumber\fP ]
 .br
 [ \fB-W\fP|\fB--wipesignatures\fP \fBy\fP|\fBn\fP ]
 .br
 [ \fB-Z\fP|\fB--zero\fP \fBy\fP|\fBn\fP ]
-.br
-[ \fB-n\fP|\fB--name\fP \fILV\fP\fI_new\fP ]
-.br
-[ \fB-V\fP|\fB--virtualsize\fP \fISize\fP[m|UNIT] ]
 .br
 [    \fB--compression\fP \fBy\fP|\fBn\fP ]
 .br
@@ -1996,6 +1998,10 @@ Convert LV to type vdopool.
 .br
 [ COMMON_OPTIONS ]
 .ad
+.RE
+.P
+.RS 4
+LV1 types: linear striped cache raid
 .RE
 .P
 \(em

@@ -270,6 +270,8 @@ Create a striped LV.
 .P
 Create a raid1 or mirror LV.
 .br
+Implicit type is defined by lvm.conf global/mirror_segfault_default.
+.br
 .P
 \fBlvcreate\fP \fB-m\fP|\fB--mirrors\fP \fINumber\fP \fB-L\fP|\fB--size\fP \fISize\fP[m|UNIT] \fIVG\fP
 .br
@@ -491,7 +493,7 @@ Create a cache pool.
 Create a thin LV in a thin pool.
 .br
 .P
-\fBlvcreate\fP \fB-V\fP|\fB--virtualsize\fP \fISize\fP[m|UNIT] \fB--thinpool\fP \fILV\fP \fIVG\fP
+\fBlvcreate\fP \fB-V\fP|\fB--virtualsize\fP \fISize\fP[m|UNIT] \fB--thinpool\fP \fILV1\fP \fIVG\fP
 .br
 .RS 4
 .na
@@ -501,6 +503,10 @@ Create a thin LV in a thin pool.
 .br
 [ COMMON_OPTIONS ]
 .ad
+.RE
+.P
+.RS 4
+LV1 types: thinpool
 .RE
 .P
 \(em
@@ -527,7 +533,7 @@ LV1 types: thin
 Create a thin LV that is a snapshot of an external origin LV.
 .br
 .P
-\fBlvcreate\fP \fB--type\fP \fBthin\fP \fB--thinpool\fP \fILV\fP \fILV\fP
+\fBlvcreate\fP \fB--type\fP \fBthin\fP \fB--thinpool\fP \fILV1\fP \fILV\fP
 .br
 .RS 4
 .na
@@ -535,6 +541,10 @@ Create a thin LV that is a snapshot of an external origin LV.
 .br
 [ COMMON_OPTIONS ]
 .ad
+.RE
+.P
+.RS 4
+LV1 types: thinpool
 .RE
 .P
 \(em
@@ -580,7 +590,7 @@ which converts the new LV to type cache.
 .P
 \fBlvcreate\fP \fB--type\fP \fBcache\fP \fB-L\fP|\fB--size\fP \fISize\fP[m|UNIT]
 .RS 5
- \fB--cachepool\fP \fILV\fP \fIVG\fP
+ \fB--cachepool\fP \fILV1\fP \fIVG\fP
 .RE
 .br
 .RS 4
@@ -612,6 +622,10 @@ which converts the new LV to type cache.
 .RE
 .RS 4
 [ \fIPV\fP ... ]
+.RE
+.P
+.RS 4
+LV1 types: cachepool
 .RE
 .P
 \(em
@@ -1075,7 +1089,7 @@ when a thin pool is full and an I/O request requires space.
 When no, device-mapper will queue these I/O requests for a
 period of time to allow the thin pool to be extended.
 Errors are returned if no space is available after the timeout.
-(Also see dm-thin-pool kernel module option no_space_timeout.)
+(Also see "\fIdm_thin_pool\fP" kernel module option no_space_timeout.)
 See \fBlvmthin\fP(7) for more information.
 .
 .HP
@@ -1199,7 +1213,7 @@ These are the names of the corresponding LV types, or "segment types".
 Use the --type option to specify which to use (raid1 is default,
 and mirror is legacy)
 Use \fBlvm.conf\fP(5) \fBglobal/mirror_segtype_default\fP and
-global/raid10_segtype_default to configure the default types.
+\fBglobal/raid10_segtype_default\fP to configure the default types.
 See the --nosync option for avoiding initial image synchronization.
 See \fBlvmraid\fP(7) for more information.
 .
@@ -1909,7 +1923,7 @@ Create a thin LV in a thin pool.
 .P
 \fBlvcreate\fP \fB--type\fP \fBthin\fP \fB-V\fP|\fB--virtualsize\fP \fISize\fP[m|UNIT]
 .RS 5
- \fB--thinpool\fP \fILV\fP \fIVG\fP
+ \fB--thinpool\fP \fILV1\fP \fIVG\fP
 .RE
 .br
 .RS 4
@@ -1918,6 +1932,10 @@ Create a thin LV in a thin pool.
 .br
 [ COMMON_OPTIONS ]
 .ad
+.RE
+.P
+.RS 4
+LV1 types: thinpool
 .RE
 .P
 \(em
@@ -2011,7 +2029,7 @@ LV1 types: thin
 Create a thin LV that is a snapshot of an external origin LV.
 .br
 .P
-\fBlvcreate\fP \fB-s\fP|\fB--snapshot\fP \fB--thinpool\fP \fILV\fP \fILV\fP
+\fBlvcreate\fP \fB-s\fP|\fB--snapshot\fP \fB--thinpool\fP \fILV1\fP \fILV\fP
 .br
 .RS 4
 .na
@@ -2019,6 +2037,10 @@ Create a thin LV that is a snapshot of an external origin LV.
 .br
 [ COMMON_OPTIONS ]
 .ad
+.RE
+.P
+.RS 4
+LV1 types: thinpool
 .RE
 .P
 \(em
@@ -2339,7 +2361,7 @@ Create a new LV, then attach the specified cachepool
 which converts the new LV to type cache.
 .br
 .P
-\fBlvcreate\fP \fB-L\fP|\fB--size\fP \fISize\fP[m|UNIT] \fB--cachepool\fP \fILV\fP \fIVG\fP
+\fBlvcreate\fP \fB-L\fP|\fB--size\fP \fISize\fP[m|UNIT] \fB--cachepool\fP \fILV1\fP \fIVG\fP
 .br
 .RS 4
 .na
@@ -2367,6 +2389,10 @@ which converts the new LV to type cache.
 .RE
 .RS 4
 [ \fIPV\fP ... ]
+.RE
+.P
+.RS 4
+LV1 types: cachepool
 .RE
 .P
 \(em

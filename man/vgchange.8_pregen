@@ -162,8 +162,6 @@ required, after which the others are optional.
 .br
      \fB--\fP[\fBvg\fP]\fBmetadatacopies\fP \fBall\fP|\fBunmanaged\fP|\fINumber\fP
 .br
-     \fB--profile\fP \fIString\fP
-.br
      \fB--detachprofile\fP
 .br
      \fB--metadataprofile\fP \fIString\fP

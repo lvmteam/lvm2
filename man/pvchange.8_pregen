@@ -76,8 +76,6 @@ Common options for command:
 .br
 [ \fB-f\fP|\fB--force\fP ]
 .br
-[ \fB-u\fP|\fB--uuid\fP ]
-.br
 [    \fB--reportformat\fP \fBbasic\fP|\fBjson\fP|\fBjson_std\fP ]
 .ad
 .RE
