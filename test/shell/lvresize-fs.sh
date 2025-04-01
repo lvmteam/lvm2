@@ -146,6 +146,7 @@ lvextend -L+5M $vg/$lv
 check lv_field $vg/$lv lv_size "25.00m"
 #  here the filesystem should be resize to match 25M and must not fail
 lvextend -r -L25M $vg/$lv
+workaround_
 NEW_FSLASTBLOCK="$(blkid -p -o udev --match-tag FSLASTBLOCK "$DM_DEV_DIR/$vg/$lv")"
 NEW_FSLASTBLOCK=${NEW_FSLASTBLOCK/*=}
 test "$NEW_FSLASTBLOCK" -gt "$FSLASTBLOCK" ||
