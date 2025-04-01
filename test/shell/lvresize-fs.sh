@@ -191,6 +191,13 @@ lvextend --resizefs -L+10M $vg/$lv
 check lv_field $vg/$lv lv_size "60.00m"
 df --output=size "$mount_dir" |tee df2
 not diff df1 df2
+
+# check if there is a snapshot over mounted origin,
+# resize works and reports correct size info.
+lvcreate -s -n $lv1 -L80M $vg/$lv
+not lvresize -L80M $vg/$lv1
+lvremove -f $vg/$lv1
+
 # keep mounted fs
 
 if [ -n "$HAVE_FSINFO" ]; then
