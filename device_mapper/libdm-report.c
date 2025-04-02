@@ -2896,12 +2896,11 @@ static const char *_tok_value_string_list(const struct dm_report_field_type *ft,
 	int list_end = 0;
 	char c;
 
-	if (!(ssl = dm_pool_alloc(mem, sizeof(*ssl)))) {
-		log_error("_tok_value_string_list: memory allocation failed for selection list");
+	if (!(ssl = dm_pool_zalloc(mem, sizeof(*ssl)))) {
+		log_error("_tok_value_string_list: memory allocation failed for selection list.");
 		goto bad;
 	}
 	dm_list_init(&ssl->str_list.list);
-	ssl->type = 0;
 	*begin = s;
 
 	if (!(op_flags = _tok_op_log(s, &tmp, SEL_LIST_LS | SEL_LIST_SUBSET_LS))) {
