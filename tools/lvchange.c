@@ -1360,8 +1360,11 @@ static int _lvchange_properties_single(struct cmd_context *cmd,
 	for (i = 0; i < cmd->command->ro_count + cmd->command->any_ro_count; i++) {
 		opt_enum = cmd->command->required_opt_args[i].opt;
 
-		if (!arg_is_set(cmd, opt_enum))
-			continue;
+		if (!arg_is_set(cmd, opt_enum)) {
+			if ((opt_enum != metadataprofile_ARG) ||
+			    !arg_is_set(cmd, profile_ARG))
+				continue;
+		}
 
 		/*
 		 * Skip options requiring direct commit/reload

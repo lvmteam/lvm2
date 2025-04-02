@@ -1137,6 +1137,15 @@ int headings_arg(struct cmd_context *cmd, struct arg_values *av)
 	return report_headings_str_to_type(av->value) != REPORT_HEADINGS_UNKNOWN;
 }
 
+static int _is_profile_metadataprofile(const char *name)
+{
+	return (!strcmp(name, "lvcreate") ||
+		!strcmp(name, "lvconvert") ||
+		!strcmp(name, "vgcreate") ||
+		!strcmp(name, "lvchange") ||
+		!strcmp(name, "vgchange"));
+}
+
 /*
  * FIXME: there's been a confusing mixup among:
  * resizeable, resizable, allocatable, allocation.
@@ -1187,6 +1196,10 @@ static int _opt_standard_to_synonym(const char *cmd_name, int opt)
 		if (!strncmp(cmd_name, "vg", 2))
 			return metadatacopies_ARG;
 		return 0;
+	case metadataprofile_ARG:
+		if (_is_profile_metadataprofile(cmd_name))
+			return profile_ARG;
+		return 0;
 	}
 	return 0;
 }
@@ -1223,6 +1236,10 @@ static int _opt_synonym_to_standard(const char *cmd_name, int opt)
 			return pvmetadatacopies_ARG;
 		if (!strncmp(cmd_name, "vg", 2))
 			return vgmetadatacopies_ARG;
+		return 0;
+	case profile_ARG:
+		if (_is_profile_metadataprofile(cmd_name))
+			return metadataprofile_ARG;
 		return 0;
 	}
 	return 0;
@@ -2820,11 +2837,7 @@ static int _prepare_profiles(struct cmd_context *cmd)
 		 * it's recognized as shortcut to --metadataprofile.
 		 * The --commandprofile is assumed otherwise.
 		 */
-		if (!strcmp(cmd->command->name, "lvcreate") ||
-		    !strcmp(cmd->command->name, "lvconvert") ||
-		    !strcmp(cmd->command->name, "vgcreate") ||
-		    !strcmp(cmd->command->name, "lvchange") ||
-		    !strcmp(cmd->command->name, "vgchange")) {
+		if (_is_profile_metadataprofile(cmd->command->name)) {
 			if (arg_is_set(cmd, metadataprofile_ARG)) {
 				log_error("Only one of --profile or "
 					  " --metadataprofile allowed.");
