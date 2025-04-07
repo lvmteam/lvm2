@@ -119,6 +119,7 @@ vdo stop $VDOCONF --name "$VDONAME"
 
 lvm_import_vdo -y -v --name $vg/$lv1 "$dev1"
 
+check lv_field $vg/$lv1 vdo_slab_size "128.00m"
 check lv_field $vg/$lv1 size "3.00t"
 
 vgremove -f $vg
@@ -130,16 +131,18 @@ vgremove -f $vg
 aux teardown_devs
 aux prepare_devs 1 23456
 
-vdo create $VDOCONF --name "$VDONAME" --device "$dev1" --vdoSlabSize 128M --vdoLogicalSize 23G
+vdo create $VDOCONF --name "$VDONAME" --device "$dev1" --vdoSlabSize 256M --vdoLogicalSize 23G
 
 mkfs -E nodiscard "$DM_DEV_DIR/mapper/$VDONAME"
 
 lvm_import_vdo --vdo-config "$VDO_CONFIG" -y -v --name $vg1/$lv2 "$dev1"
 
+check lv_field $vg1/$lv2 vdo_slab_size "256.00m"
+check lv_field $vg1/$lv2 size "23.00g"
+
 fsck -n "$DM_DEV_DIR/$vg1/$lv2"
 
 vgremove -f $vg1
-
 
 
 ########################################################################
