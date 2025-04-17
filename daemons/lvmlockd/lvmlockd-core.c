@@ -1047,14 +1047,19 @@ fail:
 
 static int lm_prepare_lockspace(struct lockspace *ls, struct action *act)
 {
+	uint64_t prev_generation = 0;
 	int rv = -1;
 
-	if (ls->lm_type == LD_LM_DLM)
+	if (ls->lm_type == LD_LM_DLM) {
 		rv = lm_prepare_lockspace_dlm(ls);
-	else if (ls->lm_type == LD_LM_SANLOCK)
-		rv = lm_prepare_lockspace_sanlock(ls);
-	else if (ls->lm_type == LD_LM_IDM)
+	} else if (ls->lm_type == LD_LM_SANLOCK) {
+		rv = lm_prepare_lockspace_sanlock(ls, &prev_generation);
+		/* borrowing action.owner to avoid adding another action field */
+		if (!rv)
+			act->owner.generation = (uint32_t)prev_generation;
+	} else if (ls->lm_type == LD_LM_IDM) {
 		rv = lm_prepare_lockspace_idm(ls);
+	}
 
 	if (act)
 		act->lm_rv = rv;
@@ -4250,6 +4255,7 @@ static int client_send_result(struct client *cl, struct action *act)
 					  "result = " FMTd64, (int64_t) act->result,
 					  "dump_len = " FMTd64, (int64_t) dump_len,
 					  NULL);
+
 	} else if (act->op == LD_OP_LOCK && act->owner.host_id) {
 
 		/*
@@ -4275,6 +4281,27 @@ static int client_send_result(struct client *cl, struct action *act)
 					  "owner_name = %s", act->owner.name[0] ? act->owner.name : "none",
 					  "result_flags = %s", result_flags[0] ? result_flags : "none",
 					  NULL);
+
+	} else if (act->op == LD_OP_START && act->owner.generation) {
+
+		/*
+		 * start_vg for sanlock returns the prev generation
+		 */
+
+		log_debug("send %s[%d][%u] %s%s%s result %d %s %s",
+			  cl->name[0] ? cl->name : "client", cl->pid, cl->id,
+			  op_mode_str(act->op, act->mode), act->rt ? "_" : "", rt_str(act->rt),
+			  act->result, (act->result == -ENOLS) ? "ENOLS" : "", result_flags);
+
+		res = daemon_reply_simple("OK",
+					  "op = " FMTd64, (int64_t) act->op,
+					  "lock_type = %s", lm_str(act->lm_type),
+					  "op_result = " FMTd64, (int64_t) act->result,
+					  "lm_result = " FMTd64, (int64_t) act->lm_rv,
+					  "owner_generation = " FMTd64, (int64_t) act->owner.generation,
+					  "result_flags = %s", result_flags[0] ? result_flags : "none",
+					  NULL);
+
 	} else {
 		/*
 		 * A normal reply.

@@ -479,8 +479,8 @@ static int get_sizes_device(char *path, uint64_t *dev_size, int *sector_size, in
 /* Get the sector/align sizes that were used to create an existing VG.
    sanlock encoded this in the lockspace/resource structs on disk. */
 
-static int get_sizes_lockspace(char *path, int *sector_size, int *align_size, int *align_mb,
-			       uint32_t *ss_flags, uint32_t *rs_flags)
+static int read_lockspace_info(char *path, int *sector_size, int *align_size, int *align_mb,
+			       uint32_t *ss_flags, uint32_t *rs_flags, struct sanlk_host *hs)
 {
 	struct sanlk_lockspace ss;
 	uint32_t io_timeout = 0;
@@ -490,9 +490,13 @@ static int get_sizes_lockspace(char *path, int *sector_size, int *align_size, in
 	memcpy(ss.host_id_disk.path, path, SANLK_PATH_LEN);
 	ss.host_id_disk.offset = 0;
 
-	rv = sanlock_read_lockspace(&ss, 0, &io_timeout);
+	if (hs)
+		rv = sanlock_read_lockspace_host(&ss, 0, &io_timeout, hs);
+	else
+		rv = sanlock_read_lockspace(&ss, 0, &io_timeout);
+
 	if (rv < 0) {
-		log_error("get_sizes_lockspace %s error %d", path, rv);
+		log_error("read_lockspace_info %s error %d", path, rv);
 		return rv;
 	}
 
@@ -532,7 +536,7 @@ static int get_sizes_lockspace(char *path, int *sector_size, int *align_size, in
 		*rs_flags = SANLK_RES_SECTOR512 | SANLK_RES_ALIGN1M;
 	}
 
-	log_debug("get_sizes_lockspace found %d %d", *sector_size, *align_size);
+	log_debug("read_lockspace_info found sector_size %d align_size %d", *sector_size, *align_size);
 	return 0;
 }
 
@@ -831,7 +835,7 @@ int lm_init_lv_sanlock(struct lockspace *ls, char *ls_name, char *vg_name, char 
 		/* FIXME: optimize repeated init_lv for vgchange --locktype sanlock,
 		   to avoid finding align_size/rs_flags each time. */
 
-		rv = get_sizes_lockspace(disk_path, &sector_size, &align_size, &align_mb, &ss_flags, &rs_flags);
+		rv = read_lockspace_info(disk_path, &sector_size, &align_size, &align_mb, &ss_flags, &rs_flags, NULL);
 		if (rv < 0) {
 			log_error("S %s init_lv_san get_sizes error %d %s",
 				  ls_name, rv, disk_path);
@@ -1447,7 +1451,7 @@ int lm_find_free_lock_sanlock(struct lockspace *ls, uint64_t lv_size_bytes)
  * This should also not create any major problems.
  */
 
-int lm_prepare_lockspace_sanlock(struct lockspace *ls)
+int lm_prepare_lockspace_sanlock(struct lockspace *ls, uint64_t *prev_generation)
 {
 	struct stat st;
 	struct lm_sanlock *lms = NULL;
@@ -1456,6 +1460,7 @@ int lm_prepare_lockspace_sanlock(struct lockspace *ls)
 	char disk_path[SANLK_PATH_LEN];
 	char killpath[SANLK_PATH_LEN];
 	char killargs[SANLK_PATH_LEN];
+	struct sanlk_host hs = { 0 };
 	uint32_t ss_flags = 0;
 	uint32_t rs_flags = 0;
 	int sector_size = 0;
@@ -1561,7 +1566,7 @@ int lm_prepare_lockspace_sanlock(struct lockspace *ls)
 		goto fail;
 	}
 
-	log_debug("set killpath to %s %s", killpath, killargs);
+	log_debug("S %s prepare_lockspace_san set killpath to %s %s", lsname, killpath, killargs);
 
 	rv = sanlock_killpath(lms->sock, 0, killpath, killargs);
 	if (rv < 0) {
@@ -1577,12 +1582,14 @@ int lm_prepare_lockspace_sanlock(struct lockspace *ls)
 		goto fail;
 	}
 
-	rv = get_sizes_lockspace(disk_path, &sector_size, &align_size, &align_mb, &ss_flags, &rs_flags);
+	rv = read_lockspace_info(disk_path, &sector_size, &align_size, &align_mb, &ss_flags, &rs_flags, &hs);
 	if (rv < 0) {
-		log_error("S %s prepare_lockspace_san cannot get sector/align sizes %d", lsname, rv);
+		log_error("S %s prepare_lockspace_san cannot read lockspace info %d", lsname, rv);
 		ret = -EMANAGER;
 		goto fail;
 	}
+
+	*prev_generation = hs.generation;
 
 	if (!sector_size) {
 		log_debug("S %s prepare_lockspace_san using old size method", lsname);
@@ -1597,8 +1604,8 @@ int lm_prepare_lockspace_sanlock(struct lockspace *ls)
 		log_debug("S %s prepare_lockspace_san found old sector_size %d align_size %d", lsname, sector_size, align_size);
 	}
 
-	log_debug("S %s prepare_lockspace_san sector_size %d align_mb %d align_size %d",
-		  lsname, sector_size, align_mb, align_size);
+	log_debug("S %s prepare_lockspace_san sector_size %d align_mb %d align_size %d prev_generation %llu",
+		  lsname, sector_size, align_mb, align_size, (unsigned long long)hs.generation);
 
 	if (sector_size == 4096) {
 		if (((align_mb == 1) && (ls->host_id > 250)) ||
