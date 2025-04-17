@@ -478,6 +478,17 @@ static int get_sizes_device(char *path, uint64_t *dev_size, int *sector_size, in
 	return -1;
 }
 
+static int _lease_corrupt_error(int rv)
+{
+	if (rv == SANLK_LEADER_MAGIC ||
+	    rv == SANLK_LEADER_VERSION ||
+	    rv == SANLK_LEADER_LOCKSPACE ||
+	    rv == SANLK_LEADER_RESOURCE ||
+	    rv == SANLK_LEADER_CHECKSUM ||
+	    rv == SANLK_DBLOCK_CHECKSUM)
+		return 1;
+	return 0;
+}
 
 /* Get the sector/align sizes that were used to create an existing VG.
    sanlock encoded this in the lockspace/resource structs on disk. */
@@ -500,6 +511,9 @@ static int read_lockspace_info(char *path, uint32_t host_id, int *sector_size, i
 	else
 #endif
 		rv = sanlock_read_lockspace(&ss, 0, &io_timeout);
+
+	if (_lease_corrupt_error(rv))
+		return -ELOCKREPAIR;
 
 	if (rv < 0) {
 		log_error("read_lockspace_info %s %u error %d", path, host_id, rv);
@@ -2083,12 +2097,7 @@ int lm_lock_sanlock(struct lockspace *ls, struct resource *r, int ld_mode,
 		    rv == SANLK_DBLOCK_WRITE)
 			return -ELOCKIO;
 
-		if (rv == SANLK_LEADER_MAGIC ||
-		    rv == SANLK_LEADER_VERSION ||
-		    rv == SANLK_LEADER_LOCKSPACE ||
-		    rv == SANLK_LEADER_RESOURCE ||
-		    rv == SANLK_LEADER_CHECKSUM ||
-		    rv == SANLK_DBLOCK_CHECKSUM)
+		if (_lease_corrupt_error(rv))
 			return -ELOCKREPAIR;
 
 		/*

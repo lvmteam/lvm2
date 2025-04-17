@@ -1566,6 +1566,9 @@ int lockd_start_vg(struct cmd_context *cmd, struct volume_group *vg, int *exists
 	case -EPROTONOSUPPORT:
 		log_error("VG %s start failed: lock manager %s is not supported by lvmlockd", vg->name, vg->lock_type);
 		break;
+	case -ELOCKREPAIR: 
+		log_error("VG %s start failed: sanlock lease needs repair", vg->name);
+		break;
 	default:
 		log_error("VG %s start failed: %d", vg->name, result);
 	}
