@@ -2957,6 +2957,11 @@ static int _init_lvmlockd(struct cmd_context *cmd)
 			log_debug("Ignore lvmlockd for pvscan cache.");
 		return 1;
 	}
+	if (!strcmp(cmd->name, "lvmdevices")) {
+		if (use_lvmlockd)
+			log_debug("Ignore lvmlockd for lvmdevices.");
+		return 1;
+	}
 
 	/*
 	 * Think about when/how to enable hints with lvmlockd.
