@@ -43,7 +43,7 @@ daemon_handle daemon_open(daemon_info i)
 
 	if (connect(h.socket_fd,(struct sockaddr *) &sockaddr, sizeof(sockaddr))) {
 		h.error = errno;
-		log_sys_error("connect", i.socket);
+		log_debug("socket connect error %d for %s", h.error, i.socket);
 		goto error;
 	}
 
