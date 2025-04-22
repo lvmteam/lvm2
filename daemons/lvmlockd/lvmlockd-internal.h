@@ -62,6 +62,7 @@ enum {
 	LD_OP_BUSY,
 	LD_OP_QUERY_LOCK,
 	LD_OP_REFRESH_LV,
+	LD_OP_VG_STATUS,
 };
 
 /* resource types */
@@ -146,7 +147,7 @@ struct action {
 	uint32_t client_id;
 	uint32_t flags;			/* LD_AF_ */
 	uint32_t version;
-	uint64_t host_id;
+	uint32_t host_id;
 	uint64_t lv_size_bytes;
 	int8_t op;			/* operation type LD_OP_ */
 	int8_t rt;			/* resource type LD_RT_ */
@@ -207,7 +208,7 @@ struct lockspace {
 	char vg_args[MAX_ARGS+1];	/* lock manager specific args */
 	int8_t lm_type;			/* lock manager: LM_DLM, LM_SANLOCK */
 	void *lm_data;
-	uint64_t host_id;
+	uint32_t host_id;
 	uint64_t free_lock_offset;	/* for sanlock, start search for free lock here */
 	struct pvs pvs;			/* for idm: PV list */
 
@@ -580,6 +581,7 @@ int lm_get_lockspaces_sanlock(struct list_head *ls_rejoin);
 int lm_data_size_sanlock(void);
 int lm_is_running_sanlock(void);
 int lm_find_free_lock_sanlock(struct lockspace *ls, uint64_t lv_size_bytes);
+int lm_vg_status_sanlock(struct lockspace *ls, struct action *act);
 
 static inline int lm_support_sanlock(void)
 {
@@ -688,6 +690,11 @@ static inline int lm_is_running_sanlock(void)
 }
 
 static inline int lm_find_free_lock_sanlock(struct lockspace *ls, uint64_t lv_size_bytes)
+{
+	return -1;
+}
+
+static inline int lm_vg_status_sanlock(struct lockspace *ls, struct action *act)
 {
 	return -1;
 }

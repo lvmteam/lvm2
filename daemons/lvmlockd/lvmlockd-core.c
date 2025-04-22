@@ -782,6 +782,8 @@ static const char *op_str(int x)
 		return "disable";
 	case LD_OP_START_WAIT:
 		return "start_wait";
+	case LD_OP_VG_STATUS:
+		return "vg_status";
 	case LD_OP_STOP_ALL:
 		return "stop_all";
 	case LD_OP_RENAME_BEFORE:
@@ -1044,6 +1046,16 @@ fail:
  * These are few enough that arrays of function pointers can
  * be avoided.
  */
+static void lm_vg_status(struct lockspace *ls, struct action *act)
+{
+	int rv = 0;
+
+	if (ls->lm_type == LD_LM_SANLOCK)
+		rv = lm_vg_status_sanlock(ls, act);
+
+	if (act)
+		act->lm_rv = rv;
+}
 
 static int lm_prepare_lockspace(struct lockspace *ls, struct action *act)
 {
@@ -3791,6 +3803,29 @@ static int work_init_lv(struct action *act)
 	}
 }
 
+static int work_vg_status(struct action *act)
+{
+	struct lockspace *ls;
+	char ls_name[MAX_NAME+1];
+	int rv = 0;
+
+	memset(ls_name, 0, sizeof(ls_name));
+	vg_ls_name(act->vg_name, ls_name);
+
+	pthread_mutex_lock(&lockspaces_mutex);
+	ls = find_lockspace_name(ls_name);
+	if (ls) {
+		memcpy(act->vg_args, ls->vg_args, MAX_ARGS);
+		act->lm_type = ls->lm_type;
+		lm_vg_status(ls, act);
+	} else {
+		rv = -ENOENT;
+	}
+	pthread_mutex_unlock(&lockspaces_mutex);
+
+	return rv;
+}
+
 /*
  * When an action is queued for the worker_thread, it is processed right away.
  * After processing, some actions need to be retried again in a short while.
@@ -3909,6 +3944,10 @@ static void *worker_thread_main(void *arg_in)
 				add_client_result(act);
 			else
 				list_add(&act->list, &delayed_list);
+
+		} else if (act->op == LD_OP_VG_STATUS) {
+			act->result = work_vg_status(act);
+			add_client_result(act);
 
 		} else if (act->op == LD_OP_STOP_ALL) {
 			act->result = for_each_lockspace(DO_STOP, DO_FREE, (act->flags & LD_AF_FORCE) ? DO_FORCE : NO_FORCE);
@@ -4298,7 +4337,27 @@ static int client_send_result(struct client *cl, struct action *act)
 					  "lock_type = %s", lm_str(act->lm_type),
 					  "op_result = " FMTd64, (int64_t) act->result,
 					  "lm_result = " FMTd64, (int64_t) act->lm_rv,
+					  "prev_generation = " FMTd64, (int64_t) act->owner.generation,
+					  "result_flags = %s", result_flags[0] ? result_flags : "none",
+					  NULL);
+
+	} else if (act->op == LD_OP_VG_STATUS) {
+
+		log_debug("send %s[%d][%u] vg_status result %d owner %u %u %u %s",
+			  cl->name[0] ? cl->name : "client", cl->pid, cl->id, act->result,
+			  act->owner.host_id, act->owner.generation, act->owner.timestamp,
+			  act->owner.state[0] ? act->owner.state : "");
+
+		res = daemon_reply_simple("OK",
+					  "op = " FMTd64, (int64_t) act->op,
+					  "lock_type = %s", lm_str(act->lm_type),
+					  "op_result = " FMTd64, (int64_t) act->result,
+					  "lm_result = " FMTd64, (int64_t) act->lm_rv,
+					  "owner_host_id = " FMTd64, (int64_t) act->owner.host_id,
 					  "owner_generation = " FMTd64, (int64_t) act->owner.generation,
+					  "owner_timestamp = " FMTd64, (int64_t) act->owner.timestamp,
+					  "owner_state = %s", act->owner.state[0] ? act->owner.state : "none",
+					  "owner_name = %s", "none",
 					  "result_flags = %s", result_flags[0] ? result_flags : "none",
 					  NULL);
 
@@ -4583,6 +4642,11 @@ static int str_to_op_rt(const char *req_name, int *op, int *rt)
 		*rt = 0;
 		return 0;
 	}
+	if (!strcmp(req_name, "vg_status")) {
+		*op = LD_OP_VG_STATUS;
+		*rt = LD_RT_VG;
+		return 0;
+	}
 	if (!strcmp(req_name, "stop_all")) {
 		*op = LD_OP_STOP_ALL;
 		*rt = 0;
@@ -4836,7 +4900,7 @@ static int print_lockspace(struct lockspace *ls, const char *prefix, int pos, in
 			"vg_uuid=%s "
 			"vg_args=%s "
 			"lm_type=%s "
-			"host_id=%llu "
+			"host_id=%u "
 			"create_fail=%d "
 			"create_done=%d "
 			"thread_work=%d "
@@ -4851,7 +4915,7 @@ static int print_lockspace(struct lockspace *ls, const char *prefix, int pos, in
 			ls->vg_uuid,
 			ls->vg_args,
 			lm_str(ls->lm_type),
-			(unsigned long long)ls->host_id,
+			ls->host_id,
 			ls->create_fail ? 1 : 0,
 			ls->create_done ? 1 : 0,
 			ls->thread_work ? 1 : 0,
@@ -5288,6 +5352,7 @@ skip_pvs_path:
 		break;
 	case LD_OP_INIT:
 	case LD_OP_START_WAIT:
+	case LD_OP_VG_STATUS:
 	case LD_OP_STOP_ALL:
 	case LD_OP_RENAME_FINAL:
 	case LD_OP_RUNNING_LM:

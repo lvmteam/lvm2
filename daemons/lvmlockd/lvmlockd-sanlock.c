@@ -26,8 +26,11 @@
 
 /* FIXME: copied from sanlock header until the sanlock update is more widespread */
 #define SANLK_ADD_NODELAY      0x00000002
+/* FIXME: copied from sanlock header until the sanlock update is more widespread */
+#define SANLK_GET_HOST_LOCAL   0x00000001
 
 #define SANLOCK_HAS_ACQUIRE2 1
+#define SANLOCK_HAS_READ_LOCKSPACE_HOST 1
 
 #include <stddef.h>
 #include <poll.h>
@@ -479,7 +482,7 @@ static int get_sizes_device(char *path, uint64_t *dev_size, int *sector_size, in
 /* Get the sector/align sizes that were used to create an existing VG.
    sanlock encoded this in the lockspace/resource structs on disk. */
 
-static int read_lockspace_info(char *path, int *sector_size, int *align_size, int *align_mb,
+static int read_lockspace_info(char *path, uint32_t host_id, int *sector_size, int *align_size, int *align_mb,
 			       uint32_t *ss_flags, uint32_t *rs_flags, struct sanlk_host *hs)
 {
 	struct sanlk_lockspace ss;
@@ -489,14 +492,17 @@ static int read_lockspace_info(char *path, int *sector_size, int *align_size, in
 	memset(&ss, 0, sizeof(ss));
 	memcpy(ss.host_id_disk.path, path, SANLK_PATH_LEN);
 	ss.host_id_disk.offset = 0;
+	ss.host_id = host_id;
 
+#ifdef SANLOCK_HAS_READ_LOCKSPACE_HOST
 	if (hs)
 		rv = sanlock_read_lockspace_host(&ss, 0, &io_timeout, hs);
 	else
+#endif
 		rv = sanlock_read_lockspace(&ss, 0, &io_timeout);
 
 	if (rv < 0) {
-		log_error("read_lockspace_info %s error %d", path, rv);
+		log_error("read_lockspace_info %s %u error %d", path, host_id, rv);
 		return rv;
 	}
 
@@ -536,7 +542,8 @@ static int read_lockspace_info(char *path, int *sector_size, int *align_size, in
 		*rs_flags = SANLK_RES_SECTOR512 | SANLK_RES_ALIGN1M;
 	}
 
-	log_debug("read_lockspace_info found sector_size %d align_size %d", *sector_size, *align_size);
+	log_debug("read_lockspace_info %s %u found sector_size %d align_size %d",
+		  path, host_id, *sector_size, *align_size);
 	return 0;
 }
 
@@ -835,9 +842,11 @@ int lm_init_lv_sanlock(struct lockspace *ls, char *ls_name, char *vg_name, char 
 		/* FIXME: optimize repeated init_lv for vgchange --locktype sanlock,
 		   to avoid finding align_size/rs_flags each time. */
 
-		rv = read_lockspace_info(disk_path, &sector_size, &align_size, &align_mb, &ss_flags, &rs_flags, NULL);
+		/* using host_id 1 to get sizes since we don't need host-specific info */
+
+		rv = read_lockspace_info(disk_path, 1, &sector_size, &align_size, &align_mb, &ss_flags, &rs_flags, NULL);
 		if (rv < 0) {
-			log_error("S %s init_lv_san get_sizes error %d %s",
+			log_error("S %s init_lv_san read_lockspace_info error %d %s",
 				  ls_name, rv, disk_path);
 			return rv;
 		}
@@ -1582,7 +1591,7 @@ int lm_prepare_lockspace_sanlock(struct lockspace *ls, uint64_t *prev_generation
 		goto fail;
 	}
 
-	rv = read_lockspace_info(disk_path, &sector_size, &align_size, &align_mb, &ss_flags, &rs_flags, &hs);
+	rv = read_lockspace_info(disk_path, lms->ss.host_id, &sector_size, &align_size, &align_mb, &ss_flags, &rs_flags, &hs);
 	if (rv < 0) {
 		log_error("S %s prepare_lockspace_san cannot read lockspace info %d", lsname, rv);
 		ret = -EMANAGER;
@@ -1612,8 +1621,8 @@ int lm_prepare_lockspace_sanlock(struct lockspace *ls, uint64_t *prev_generation
 		    ((align_mb == 2) && (ls->host_id > 500)) ||
 		    ((align_mb == 4) && (ls->host_id > 1000)) ||
 		    ((align_mb == 8) && (ls->host_id > 2000))) {
-			log_error("S %s prepare_lockspace_san invalid host_id %llu for align %d MiB",
-				  lsname, (unsigned long long)ls->host_id, align_mb);
+			log_error("S %s prepare_lockspace_san invalid host_id %u for align %d MiB",
+				  lsname, ls->host_id, align_mb);
 			ret = -EHOSTID;
 			goto fail;
 		}
@@ -2320,6 +2329,32 @@ int lm_unlock_sanlock(struct lockspace *ls, struct resource *r,
 	return 0;
 }
 
+int lm_vg_status_sanlock(struct lockspace *ls, struct action *act)
+{
+	struct sanlk_host *hs;
+	const char *host_state;
+	int count = 0;
+	int rv;
+
+	if (daemon_test)
+		return 0;
+
+	rv = sanlock_get_hosts(ls->name, 0, &hs, &count, SANLK_GET_HOST_LOCAL);
+	if (rv < 0) {
+		log_error("S %s vg_status_san get_hosts error %d", ls->name, rv);
+		return rv;
+	}
+
+	act->owner.host_id = (uint32_t)hs->host_id;
+	act->owner.generation = (uint32_t)hs->generation;
+	act->owner.timestamp = (uint32_t)hs->timestamp;
+
+	if ((host_state = _host_flags_to_str(hs->flags)))
+		dm_strncpy(act->owner.state, host_state, OWNER_STATE_SIZE-1);
+
+	return 0;
+}
+
 int lm_hosts_sanlock(struct lockspace *ls, int notify)
 {
 	struct sanlk_host *hss = NULL;
@@ -2353,7 +2388,7 @@ int lm_hosts_sanlock(struct lockspace *ls, int notify)
 			  (unsigned long long)hs->generation,
 			  hs->flags);
 
-		if (hs->host_id == ls->host_id) {
+		if ((uint32_t)hs->host_id == ls->host_id) {
 			found_self = 1;
 			hs++;
 			continue;
@@ -2440,3 +2475,4 @@ int lm_is_running_sanlock(void)
 		return 0;
 	return 1;
 }
+
