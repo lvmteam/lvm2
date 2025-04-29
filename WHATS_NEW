@@ -6,6 +6,9 @@ Version 2.03.32 -
   Fix lvresize when resizing COW snapshots already covering origin.
   Fix lvmdbusd read of executed lvm commands output.
   Fix construction of DM UUID for cachevol _cdata and _cmeta devices.
+  Ignore PV claims from old metadata when then PV belongs to a new VG.
+  Fix integrity metadata rounding.
+  Accept --autobackup option in pvresize.
 
 Version 2.03.31 - 27th February 2025
 ====================================
