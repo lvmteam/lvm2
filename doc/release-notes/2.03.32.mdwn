@@ -1,0 +1,26 @@
+<!-- Page title -->
+[[!meta title="Version 2.03.32 - Bug Fix Release"]]
+
+Version 2.03.32
+===============
+
+Mostly bugfix release:
+
+* Add support for using regex in selection criteria for string lists.
+* Accept thin pool data LV as cachable LV.
+* Accept `--autobackup` option in pvresize.
+* Allow using zram block devices (likely for testing).
+* Lvconvert vdopool conversion propperly validates acceptable LVs.
+* Fix lvresize when resizing COW snapshots already covering origin.
+* Fix lvmdbusd read of executed lvm commands output.
+* Fix construction of DM UUID for cachevol `_cdata` and `_cmeta` devices.
+* Ignore PV claims from old metadata when then PV belongs to a new VG.
+* Fix integrity metadata rounding.
+* Fix string list selection when using `[<item> || <item> ...]`.
+
+<!-- remove the pending tag on release, remove draft tag once editing is complete -->
+[[!tag]]
+<!--
+For old releases add Release Timestamp like this, date from git show $COMMIT is fine.
+[[!meta date="Mon May 05 17:02:00 2025 +0200"]]
+-->
