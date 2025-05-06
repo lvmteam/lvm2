@@ -29,8 +29,11 @@
 /* FIXME: copied from sanlock header until the sanlock update is more widespread */
 #define SANLK_GET_HOST_LOCAL   0x00000001
 
+/* FIXME: enable these when the APIs are available */
+/*
 #define SANLOCK_HAS_ACQUIRE2 1
 #define SANLOCK_HAS_READ_LOCKSPACE_HOST 1
+*/
 
 #include <stddef.h>
 #include <poll.h>
