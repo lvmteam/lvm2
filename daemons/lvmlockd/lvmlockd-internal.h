@@ -555,7 +555,7 @@ static inline int lm_refresh_lv_check_dlm(struct action *act)
 
 #endif /* dlm support */
 
-#ifdef LOCKDSANLOCK_SUPPORT
+#if LOCKDSANLOCK_SUPPORT > 0
 
 int lm_init_vg_sanlock(char *ls_name, char *vg_name, uint32_t flags, char *vg_args, int opt_align_mb);
 int lm_init_lv_sanlock(struct lockspace *ls, char *ls_name, char *vg_name, char *lv_name, char *vg_args, char *lv_args, char *prev_args);

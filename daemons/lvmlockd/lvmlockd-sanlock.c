@@ -29,12 +29,6 @@
 /* FIXME: copied from sanlock header until the sanlock update is more widespread */
 #define SANLK_GET_HOST_LOCAL   0x00000001
 
-/* FIXME: enable these when the APIs are available */
-/*
-#define SANLOCK_HAS_ACQUIRE2 1
-#define SANLOCK_HAS_READ_LOCKSPACE_HOST 1
-*/
-
 #include <stddef.h>
 #include <poll.h>
 #include <errno.h>
@@ -508,7 +502,7 @@ static int read_lockspace_info(char *path, uint32_t host_id, int *sector_size, i
 	ss.host_id_disk.offset = 0;
 	ss.host_id = host_id;
 
-#ifdef SANLOCK_HAS_READ_LOCKSPACE_HOST
+#if LOCKDSANLOCK_SUPPORT >= 400
 	if (hs)
 		rv = sanlock_read_lockspace_host(&ss, 0, &io_timeout, hs);
 	else
@@ -1962,7 +1956,7 @@ int lm_lock_sanlock(struct lockspace *ls, struct resource *r, int ld_mode,
 	memset(&opt, 0, sizeof(opt));
 	sprintf(opt.owner_name, "%s", "lvmlockd");
 
-#ifdef SANLOCK_HAS_ACQUIRE2
+#if LOCKDSANLOCK_SUPPORT >= 400
 	rv = sanlock_acquire2(lms->sock, -1, flags, rs, &opt, &owner_host, &owner_name);
 #else
 	rv = sanlock_acquire(lms->sock, -1, flags, 1, &rs, &opt);

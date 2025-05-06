@@ -1,4 +1,3 @@
-###############################################################################
 ## Copyright (C) 2000-2004 Sistina Software, Inc. All rights reserved.
 ## Copyright (C) 2004-2023 Red Hat, Inc. All rights reserved.
 ##
@@ -935,8 +934,10 @@ AC_MSG_RESULT([$BUILD_LOCKDSANLOCK])
 
 dnl -- Look for sanlock libraries
 AS_IF([test "$BUILD_LOCKDSANLOCK" = "yes"], [
+	PKG_CHECK_EXISTS(libsanlock_client >= 4.0.0, [LOCKDSANLOCK_SUPPORT=400])
+	PKG_CHECK_EXISTS(libsanlock_client >= 3.7.0, [LOCKDSANLOCK_SUPPORT=370])
 	PKG_CHECK_MODULES(LIBSANLOCKCLIENT, libsanlock_client >= 3.7.0, [BUILD_LVMLOCKD="yes"])
-	AC_DEFINE([LOCKDSANLOCK_SUPPORT], 1, [Define to 1 to include code that uses lvmlockd sanlock option.])
+	AC_DEFINE_UNQUOTED([LOCKDSANLOCK_SUPPORT], [$LOCKDSANLOCK_SUPPORT], [Define version of sanlock.])
 ])
 
 ################################################################################
@@ -1292,7 +1293,7 @@ AS_IF([test "$NOTIFYDBUS_SUPPORT" = "maybe"],
       [NOTIFYDBUS_SUPPORT="yes"], [NOTIFYDBUS_SUPPORT="no"])])
 
 AS_IF([test "$NOTIFYDBUS_SUPPORT" = "yes"],
-       AC_DEFINE([NOTIFYDBUS_SUPPORT], 1, [Define to 1 to include code that uses dbus notification.])])
+       [AC_DEFINE([NOTIFYDBUS_SUPPORT], 1, [Define to 1 to include code that uses dbus notification.])])
 
 AC_MSG_CHECKING([whether to build notifydbus])
 AC_MSG_RESULT([$NOTIFYDBUS_SUPPORT])
