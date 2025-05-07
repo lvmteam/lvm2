@@ -2740,13 +2740,16 @@ static void *lockspace_thread_main(void *arg_in)
 				rv = lm_hosts(ls, 1);
 				if (rv) {
 					/*
+					 * rv < 0: error (don't remove)
+					 * rv > 0: other hosts in lockspace (cannot remove)
+					 * rv = 0: only local host in lockspace (can remove)
 					 * Checking for hosts here in addition to after the
 					 * main loop allows vgremove to fail and be rerun
 					 * after the ls is stopped on other hosts.
 					 */
 					log_error("S %s lockspace hosts %d", ls->name, rv);
 					list_del(&act->list);
-					act->result = -EBUSY;
+					act->result = (rv < 0) ? rv : -EBUSY;
 					add_client_result(act);
 					continue;
 				}
@@ -2759,7 +2762,9 @@ static void *lockspace_thread_main(void *arg_in)
 			if (act->op == LD_OP_BUSY && act->rt == LD_RT_VG) {
 				log_debug("S %s checking if lockspace is busy", ls->name);
 				rv = lm_hosts(ls, 0);
-				if (rv)
+				if (rv < 0)
+					act->result = rv;
+				else if (rv)
 					act->result = -EBUSY;
 				else
 					act->result = 0;
@@ -2775,7 +2780,7 @@ static void *lockspace_thread_main(void *arg_in)
 				if (rv) {
 					log_error("S %s lockspace hosts %d", ls->name, rv);
 					list_del(&act->list);
-					act->result = -EBUSY;
+					act->result = (rv < 0) ? rv : -EBUSY;
 					add_client_result(act);
 					continue;
 				}

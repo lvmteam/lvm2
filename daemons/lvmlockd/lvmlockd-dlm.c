@@ -799,6 +799,14 @@ int lm_unlock_dlm(struct lockspace *ls, struct resource *r,
  * the stale lockspaces on the others eventually.)
  */
 
+/*
+ * On error, returns < 0
+ *
+ * On success:
+ * If other hosts are found, returns the number.
+ * If no other hosts are found (only ourself), returns 0.
+ */
+
 int lm_hosts_dlm(struct lockspace *ls, int notify)
 {
 	char ls_nodes_path[PATH_MAX];
