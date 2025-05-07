@@ -12174,6 +12174,15 @@ printf "%s\n" "$BUILD_LOCKDSANLOCK" >&6; }
 if test "$BUILD_LOCKDSANLOCK" = "yes"
 then :
 
+	LOCKDSANLOCK_SUPPORT=370
+	if test -n "$PKG_CONFIG" && \
+    { { printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$PKG_CONFIG --exists --print-errors \"libsanlock_client >= 4.0.0\""; } >&5
+  ($PKG_CONFIG --exists --print-errors "libsanlock_client >= 4.0.0") 2>&5
+  ac_status=$?
+  printf "%s\n" "$as_me:${as_lineno-$LINENO}: \$? = $ac_status" >&5
+  test $ac_status = 0; }; then
+  LOCKDSANLOCK_SUPPORT=400
+fi
 
 pkg_failed=no
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for libsanlock_client >= 3.7.0" >&5
@@ -12266,7 +12275,7 @@ printf "%s\n" "yes" >&6; }
         BUILD_LVMLOCKD="yes"
 fi
 
-printf "%s\n" "#define LOCKDSANLOCK_SUPPORT 1" >>confdefs.h
+printf "%s\n" "#define LOCKDSANLOCK_SUPPORT $LOCKDSANLOCK_SUPPORT" >>confdefs.h
 
 
 fi
@@ -13694,7 +13703,7 @@ if test "$NOTIFYDBUS_SUPPORT" = "yes"
 then :
 
 printf "%s\n" "#define NOTIFYDBUS_SUPPORT 1" >>confdefs.h
-]
+
 fi
 
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether to build notifydbus" >&5

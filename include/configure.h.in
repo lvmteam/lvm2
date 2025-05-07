@@ -579,7 +579,7 @@
 /* Define to 1 to include code that uses lvmlockd IDM option. */
 #undef LOCKDIDM_SUPPORT
 
-/* Define to 1 to include code that uses lvmlockd sanlock option. */
+/* Define version of sanlock. */
 #undef LOCKDSANLOCK_SUPPORT
 
 /* Define to 1 if 'lstat' dereferences a symlink specified with a trailing
