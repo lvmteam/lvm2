@@ -1,5 +1,6 @@
 Version 2.03.33 - 
 ==================
+  Repair raid arrays with transiently lost devices.
 
 Version 2.03.32 - 05th May 2025
 ===============================
