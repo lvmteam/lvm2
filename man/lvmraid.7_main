@@ -434,7 +434,7 @@ found, run:
 # lvs -o name,raid_mismatch_count
 .EE
 .P
-Also, if mismatches were found, the 
+Also, if mismatches were found, the
 .BR lvs (8)
 attr field will display the letter
 "m" (mismatch) in the 9th position, e.g.
@@ -861,6 +861,21 @@ those PVs can be reconstructed with:
 .P
 The rebuild option can be repeated with different PVs to replace the data
 on multiple PVs.
+.
+.SS Reactivating arrays after temporary device loss
+
+When a RAID array loses a critical number of devices,
+causing it to lose its ability to function reliably,
+the array will stop and require repair.
+
+Initiate repair process with this command:
+.P
+.B lvconvert --repair
+.I LV
+.P
+If the previously unavailable devices become accessible again,
+this repair process will update their metadata and
+the RAID array can be reactivated.
 .
 .SH DATA INTEGRITY
 .
