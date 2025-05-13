@@ -19,10 +19,12 @@
 #include "lib/device/device.h"
 
 #define FSTYPE_MAX 16
+#define UUID_LEN 37
 
 struct fs_info {
 	char fstype[FSTYPE_MAX];
 	char mount_dir[PATH_MAX];
+	char uuid[UUID_LEN];
 	char fs_dev_path[PATH_MAX]; /* usually lv dev, can be crypt dev */
 	unsigned int fs_block_size_bytes; /* 512 or 4k */
 	uint64_t fs_last_byte; /* last byte on the device used by the fs */

@@ -999,6 +999,9 @@ int fs_get_blkid(const char *pathname, struct fs_info *fsi)
 	if (!blkid_probe_lookup_value(probe, "FSSIZE", &str, &len) && len)
 		fssize = strtoull(str, NULL, 0);
 
+	if (!blkid_probe_lookup_value(probe, "UUID", &str, &len) && len)
+		memcpy(fsi->uuid, str, UUID_LEN);
+
 	blkid_free_probe(probe);
 
 	if (fslastblock && fsblocksize)
