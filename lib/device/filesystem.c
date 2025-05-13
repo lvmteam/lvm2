@@ -108,6 +108,42 @@ int lv_crypt_is_active(struct cmd_context *cmd, char *lv_path)
 	return _get_crypt_path(st_lv.st_rdev, lv_path, crypt_path);
 }
 
+static int _fs_get_mnt(struct fs_info *fsi, dev_t devt)
+{
+	struct stat stme;
+	FILE *fme = NULL;
+	struct mntent *me;
+
+	/*
+	 * Note: used swap devices are not considered as mount points,
+	 * hence they're not listed in /etc/mtab, we'd need to read the
+	 * /proc/swaps instead. We don't need it at this moment though,
+	 * but if we do once, read the /proc/swaps here if fsi->fstype == "swap".
+	 */
+	if (!(fme = setmntent("/etc/mtab", "r")))
+		return_0;
+
+	while ((me = getmntent(fme))) {
+		if (strcmp(me->mnt_type, fsi->fstype))
+			continue;
+		if (me->mnt_dir[0] != '/')
+			continue;
+		if (me->mnt_fsname[0] != '/')
+			continue;
+		if (stat(me->mnt_dir, &stme) < 0)
+			continue;
+		if (stme.st_dev != devt)
+			continue;
+
+		log_debug("fs_get_info %s is mounted \"%s\"", fsi->fs_dev_path, me->mnt_dir);
+		fsi->mounted = 1;
+		strncpy(fsi->mount_dir, me->mnt_dir, PATH_MAX-1);
+	}
+	endmntent(fme);
+
+	return 1;
+}
+
 int fs_get_info(struct cmd_context *cmd, struct logical_volume *lv,
 		struct fs_info *fsi, int include_mount)
 {
@@ -116,10 +152,7 @@ int fs_get_info(struct cmd_context *cmd, struct logical_volume *lv,
 	struct stat st_lv;
 	struct stat st_crypt;
 	struct stat st_top;
-	struct stat stme;
 	struct fs_info info;
-	FILE *fme = NULL;
-	struct mntent *me;
 	int fd;
 	int ret;
 
@@ -201,35 +234,7 @@ int fs_get_info(struct cmd_context *cmd, struct logical_volume *lv,
 	if (!include_mount)
 		return 1;
 
-	/*
-	 * Note: used swap devices are not considered as mount points,
-	 * hence they're not listed in /etc/mtab, we'd need to read the
-	 * /proc/swaps instead. We don't need it at this moment though,
-	 * but if we do once, read the /proc/swaps here if fsi->fstype == "swap".
-	 */
-
-	if (!(fme = setmntent("/etc/mtab", "r")))
-		return_0;
-
-	ret = 1;
-
-	while ((me = getmntent(fme))) {
-		if (strcmp(me->mnt_type, fsi->fstype))
-			continue;
-		if (me->mnt_dir[0] != '/')
-			continue;
-		if (me->mnt_fsname[0] != '/')
-			continue;
-		if (stat(me->mnt_dir, &stme) < 0)
-			continue;
-		if (stme.st_dev != st_top.st_rdev)
-			continue;
-
-		log_debug("fs_get_info %s is mounted \"%s\"", fsi->fs_dev_path, me->mnt_dir);
-		fsi->mounted = 1;
-		strncpy(fsi->mount_dir, me->mnt_dir, PATH_MAX-1);
-	}
-	endmntent(fme);
+	ret = _fs_get_mnt(fsi, st_top.st_rdev);
 
 	fsi->unmounted = !fsi->mounted;
 	return ret;
