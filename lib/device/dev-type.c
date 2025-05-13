@@ -1018,6 +1018,13 @@ int fs_get_blkid(const char *pathname, struct fs_info *fsi)
 			fsi->fs_last_byte += fsblocksize;
 
 	}
+	/*
+	 * For a multi-devices btrfs, fslastblock * fsblocksize means the whole fs size.
+	 * Thus here fs_last_byte can't be used as a device size boundary.
+	 * Let btrfs handle it.
+	 */
+	if (!strcmp(fsi->fstype, "btrfs"))
+		fsi->fs_last_byte = 0;
 
 	log_debug("libblkid TYPE %s BLOCK_SIZE %d FSLASTBLOCK %llu FSBLOCKSIZE %u fs_last_byte %llu",
 		  fsi->fstype, fsi->fs_block_size_bytes, (unsigned long long)fslastblock, fsblocksize,

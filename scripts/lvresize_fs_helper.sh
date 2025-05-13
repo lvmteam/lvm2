@@ -12,6 +12,8 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
+DM_DEV_DIR="${DM_DEV_DIR:-/dev}"
+
 errorexit() {
 	echo "$1" >&2
 	exit 1
@@ -20,6 +22,34 @@ errorexit() {
 logmsg() {
 	echo "$1"
 	logger "${SCRIPTNAME}: $1"
+}
+
+btrfs_devid() {
+	local devpath="$1"
+	local devid
+
+	devpath="$(readlink "$devpath")"
+
+	# It could be a multi-devices btrfs so call grep.
+	devid="$(LC_ALL=C btrfs filesystem show "$devpath" | grep "$devpath"$ )"
+
+	# if DM_DEV_DIR is not /dev/ e.g /tmp, output of btrfs filesystem show would be like:
+	# Label: none  uuid: d17f6974-267f-4140-8d71-83d4afd36a72
+	# 		 Total devices 1 FS bytes used 144.00KiB
+	# 		 devid    1 size 256.00MiB used 16.75MiB path /dev/mapper/LVMTEST120665vg-LV1
+	#
+	# But the VOLUME here is /tmp/mapper/LVMTEST120665vg-LV1
+	if [ -z "$devid" ];then
+		tmp_path="${devpath/#${DM_DEV_DIR}//dev}"
+		devid="$(LC_ALL=C btrfs filesystem show "$devpath" | grep "$tmp_path"$)"
+		devid=${devid##*devid}
+	fi
+
+	devid=${devid##*devid}
+	devid=${devid%%size*}
+	devid="$(echo "$devid" |sed 's/^[ \t]*//g'|sed 's/[ \t]*$'//g)"
+
+	echo "$devid"
 }
 
 # Set to 1 while the fs is temporarily mounted on $TMPDIR
@@ -39,12 +69,22 @@ fsextend() {
 	fi
 
 	if [ "$DO_FSCK" -eq 1 ]; then
-		logmsg "e2fsck ${DEVPATH}"
-		if e2fsck -f -p "$DEVPATH"; then
-			logmsg "e2fsck done"
-		else
-			logmsg "e2fsck failed"
-			exit 1
+		if [[ "$FSTYPE" == "ext"* ]]; then
+			logmsg "e2fsck ${DEVPATH}"
+			if e2fsck -f -p "$DEVPATH"; then
+				logmsg "e2fsck done"
+			else
+				logmsg "e2fsck failed"
+				exit 1
+			fi
+		elif [[ "$FSTYPE" == "btrfs" ]]; then
+			logmsg "btrfsck ${DEVPATH}"
+			if btrfsck "$DEVPATH"; then
+				logmsg "btrfsck done"
+			else
+				logmsg "btrfsck failed"
+				exit 1
+			fi
 		fi
 	fi
 	
@@ -83,6 +123,22 @@ fsextend() {
 			logmsg "xfs_growfs done"
 		else
 			logmsg "xfs_growfs failed"
+			RESIZEFS_FAILED=1
+		fi
+	elif [[ "$FSTYPE" == "btrfs" ]]; then
+		NEWSIZEBYTES=${NEWSIZEBYTES:-max}
+		BTRFS_DEVID="$(btrfs_devid "$DEVPATH")"
+		REAL_MOUNTPOINT="$MOUNTDIR"
+
+		if [ $TMP_MOUNT_DONE -eq 1 ]; then
+			REAL_MOUNTPOINT="$TMPDIR"
+		fi
+
+		logmsg "btrfs filesystem resize ${BTRFS_DEVID}:${NEWSIZEBYTES} ${REAL_MOUNTPOINT}"
+		if btrfs filesystem resize "$BTRFS_DEVID":"$NEWSIZEBYTES" "$REAL_MOUNTPOINT"; then
+			logmsg "btrfs filesystem resize done"
+		else
+			logmsg "btrfs filesystem resize failed"
 			RESIZEFS_FAILED=1
 		fi
 	fi
@@ -131,12 +187,22 @@ fsreduce() {
 	fi
 
 	if [ "$DO_FSCK" -eq 1 ]; then
-		logmsg "e2fsck ${DEVPATH}"
-		if e2fsck -f -p "$DEVPATH"; then
-			logmsg "e2fsck done"
-		else
-			logmsg "e2fsck failed"
-			exit 1
+		if [[ "$FSTYPE" == "ext"* ]]; then
+			logmsg "e2fsck ${DEVPATH}"
+			if e2fsck -f -p "$DEVPATH"; then
+				logmsg "e2fsck done"
+			else
+				logmsg "e2fsck failed"
+				exit 1
+			fi
+		elif [[ "$FSTYPE" == "btrfs" ]]; then
+			logmsg "btrfsck ${DEVPATH}"
+			if btrfsck "$DEVPATH"; then
+				logmsg "btrfsck done"
+			else
+				logmsg "btrfsck failed"
+				exit 1
+			fi
 		fi
 	fi
 	
@@ -159,6 +225,21 @@ fsreduce() {
 		else
 			logmsg "resize2fs failed"
 			# will exit after cleanup unmount
+			RESIZEFS_FAILED=1
+		fi
+	elif [[ "$FSTYPE" == "btrfs" ]]; then
+		BTRFS_DEVID="$(btrfs_devid "$DEVPATH")"
+		REAL_MOUNTPOINT="$MOUNTDIR"
+
+		if [ $TMP_MOUNT_DONE -eq 1 ]; then
+			REAL_MOUNTPOINT="$TMPDIR"
+		fi
+
+		logmsg "btrfs filesystem resize ${BTRFS_DEVID}:${NEWSIZEBYTES} ${REAL_MOUNTPOINT}"
+		if btrfs filesystem resize "$BTRFS_DEVID":"$NEWSIZEBYTES" "$REAL_MOUNTPOINT"; then
+			logmsg "btrfs filesystem resize done"
+		else
+			logmsg "btrfs filesystem resize failed"
 			RESIZEFS_FAILED=1
 		fi
 	fi
@@ -230,6 +311,7 @@ usage() {
 	echo "    [ --fsck ]"
 	echo "    [ --cryptresize ]"
 	echo "    [ --cryptpath path ]"
+	echo "    [ --newsizebytes num ]"
 	echo ""
 	echo "${SCRIPTNAME} --fsreduce --fstype name --lvpath path"
 	echo "    [ --newsizebytes num ]"
@@ -249,7 +331,7 @@ usage() {
 	echo "    --fsreduce"
 	echo "        Reduce the file system."
 	echo "    --fstype name"
-	echo "        The type of file system (ext*, xfs)."
+	echo "        The type of file system (ext*, xfs, btrfs.)"
 	echo "    --lvpath path"
 	echo "        The path to the LV being resized."
 	echo "    --mountdir path"
@@ -380,6 +462,7 @@ if [[ "$DO_FSEXTEND" -eq 1 || "$DO_FSREDUCE" -eq 1 ]]; then
 	case "$FSTYPE" in
 	  ext[234]) ;;
 	  "xfs")    ;;
+	  "btrfs")  ;;
 	  *) errorexit "Cannot resize --fstype \"$FSTYPE\"."
 	esac
 
@@ -447,4 +530,3 @@ elif [ "$DO_FSREDUCE" -eq 1 ]; then
 elif [ "$DO_CRYPTRESIZE" -eq 1 ]; then
 	cryptresize
 fi
-

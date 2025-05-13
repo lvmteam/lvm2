@@ -6071,6 +6071,7 @@ static int _fs_reduce_allow(struct cmd_context *cmd, struct logical_volume *lv,
 	int equal = 0, smaller = 0, larger = 0;
 	int is_ext_fstype = 0;
 	int confirm_mount_change = 0;
+	int check_boundary = 1;
 
 	/*
 	 * Allow reducing the LV for other fs types if the fs is not using
@@ -6079,7 +6080,8 @@ static int _fs_reduce_allow(struct cmd_context *cmd, struct logical_volume *lv,
 	if (!strcmp(fsi->fstype, "ext2") ||
 	    !strcmp(fsi->fstype, "ext3") ||
 	    !strcmp(fsi->fstype, "ext4") ||
-	    !strcmp(fsi->fstype, "xfs")) {
+	    !strcmp(fsi->fstype, "xfs") ||
+	    !strcmp(fsi->fstype, "btrfs")) {
 		log_debug("Found fs %s last_byte %llu new_size_bytes %llu",
 			  fsi->fstype,
 			  (unsigned long long)fsi->fs_last_byte,
@@ -6087,6 +6089,9 @@ static int _fs_reduce_allow(struct cmd_context *cmd, struct logical_volume *lv,
 		if (!strncmp(fsi->fstype, "ext", 3)) {
 			is_ext_fstype = 1;
 			fs_reduce_cmd = " resize2fs";
+		} else if (!strncmp(fsi->fstype, "btrfs", 5)) {
+			/* let btrfs handle it */
+			check_boundary = 0;
 		}
 	}
 
@@ -6103,29 +6108,34 @@ static int _fs_reduce_allow(struct cmd_context *cmd, struct logical_volume *lv,
 		if (!strcmp(fsi->fstype, "reiserfs")) {
 			log_error("File system reduce for reiserfs requires --fs resize_fsadm.");
 			return 0;
+		} else if (!strcmp(fsi->fstype, "btrfs")) {
+			log_print_unless_silent("Skipping check used device size for btrfs.");
+		} else {
+			log_error("File system device usage is not available from libblkid.");
+			return 0;
 		}
-		log_error("File system device usage is not available from libblkid.");
-		return 0;
 	}
 
-	if ((equal = (fsi->fs_last_byte == fsi->new_size_bytes)))
-		cmp_desc = "equal to";
-	else if ((smaller = (fsi->fs_last_byte < fsi->new_size_bytes)))
-		cmp_desc = "smaller than";
-	else if ((larger = (fsi->fs_last_byte > fsi->new_size_bytes)))
-		cmp_desc = "larger than";
+	if (check_boundary) {
+		if ((equal = (fsi->fs_last_byte == fsi->new_size_bytes)))
+			cmp_desc = "equal to";
+		else if ((smaller = (fsi->fs_last_byte < fsi->new_size_bytes)))
+			cmp_desc = "smaller than";
+		else if ((larger = (fsi->fs_last_byte > fsi->new_size_bytes)))
+			cmp_desc = "larger than";
 
-	log_print_unless_silent("File system size (%s) is %s the requested size (%s).",
-				display_size(cmd, fsi->fs_last_byte/512), cmp_desc,
-				display_size(cmd, fsi->new_size_bytes/512));
+		log_print_unless_silent("File system size (%s) is %s the requested size (%s).",
+					display_size(cmd, fsi->fs_last_byte/512), cmp_desc,
+					display_size(cmd, fsi->new_size_bytes/512));
 
-	/*
-	 * FS reduce is not needed, it's not using the affected space.
-	 */
-	if (smaller || equal) {
-		log_print_unless_silent("File system reduce is not needed, skipping.");
-		fsi->needs_reduce = 0;
-		return 1;
+		/*
+		 * FS reduce is not needed, it's not using the affected space.
+		 */
+		if (smaller || equal) {
+			log_print_unless_silent("File system reduce is not needed, skipping.");
+			fsi->needs_reduce = 0;
+			return 1;
+		}
 	}
 
 	/*
@@ -6134,19 +6144,23 @@ static int _fs_reduce_allow(struct cmd_context *cmd, struct logical_volume *lv,
 	if (!strcmp(lp->fsopt, "checksize")) {
 		if (is_ext_fstype)
 			log_error("File system reduce is required (see resize2fs or --resizefs.)");
+		else if (!strcmp(fsi->fstype, "btrfs"))
+			log_error("File system reduce is required (see btrfs-progs or --resizefs.)");
 		else
 			log_error("File system reduce is required and not supported (%s).", fsi->fstype);
 		return 0;
 	}
 
 	/*
-	 * FS reduce required, ext* supports it, xfs does not.
+	 * FS reduce required, ext* and btrfs support it, xfs does not.
 	 */
 	if (is_ext_fstype) {
 		log_print_unless_silent("File system reduce is required using resize2fs.");
 	} else if (!strcmp(fsi->fstype, "reiserfs")) {
 		log_error("File system reduce for reiserfs requires --fs resize_fsadm.");
 		return 0;
+	} else if (!strcmp(fsi->fstype, "btrfs")) {
+		log_print_unless_silent("File system reduce is required using btrfs-progs.");
 	} else {
 		log_error("File system reduce is required and not supported (%s).", fsi->fstype);
 		return 0;
@@ -6168,6 +6182,11 @@ static int _fs_reduce_allow(struct cmd_context *cmd, struct logical_volume *lv,
 
 		fsi->needs_reduce = 1;
 	} else if (!strcmp(fsi->fstype, "swap")) {
+		fsi->needs_reduce = 1;
+	} else if (!strcmp(fsi->fstype, "btrfs")) {
+		/* btrfs requires fs to be mounted to shrink */
+		if (fsi->unmounted)
+			fsi->needs_mount = 1;
 		fsi->needs_reduce = 1;
 	} else {
 		/*
@@ -6261,7 +6280,8 @@ static int _fs_extend_allow(struct cmd_context *cmd, struct logical_volume *lv,
 	if (!strcmp(fsi->fstype, "ext2") ||
 	    !strcmp(fsi->fstype, "ext3") ||
 	    !strcmp(fsi->fstype, "ext4") ||
-	    !strcmp(fsi->fstype, "xfs")) {
+	    !strcmp(fsi->fstype, "xfs") ||
+	    !strcmp(fsi->fstype, "btrfs")) {
 		log_debug("Found fs %s last_byte %llu",
 			  fsi->fstype, (unsigned long long)fsi->fs_last_byte);
 		if (!strncmp(fsi->fstype, "ext", 3))
@@ -6340,11 +6360,13 @@ static int _fs_extend_allow(struct cmd_context *cmd, struct logical_volume *lv,
 
 	} else if (!strcmp(fsi->fstype, "swap")) {
 		fsi->needs_extend = 1;
-	} else if (!strcmp(fsi->fstype, "xfs")) {
-		fs_extend_cmd = " xfs_growfs";
-
+	} else if (!strcmp(fsi->fstype, "xfs") || !strcmp(fsi->fstype, "btrfs")) {
+		if (!strcmp(fsi->fstype, "xfs"))
+			fs_extend_cmd = " xfs_growfs";
+		else
+			fs_extend_cmd = " btrfs filesystem resize";
 		/*
-		 * xfs must be mounted to extend.
+		 * xfs and btrfs must be mounted to extend.
 		 *
 		 * --fs resize --fsmode nochange: don't change mount condition.
 		 * if mounted: fs_extend
@@ -6377,7 +6399,6 @@ static int _fs_extend_allow(struct cmd_context *cmd, struct logical_volume *lv,
 				fsi->needs_extend = 1;
 			}
 		}
-
 	} else {
 		/* shouldn't reach here */
 		log_error("File system type %s not handled.", fsi->fstype);

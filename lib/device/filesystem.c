@@ -130,18 +130,127 @@ static int _fs_get_mnt(struct fs_info *fsi, dev_t devt)
 			continue;
 		if (me->mnt_fsname[0] != '/')
 			continue;
-		if (stat(me->mnt_dir, &stme) < 0)
-			continue;
-		if (stme.st_dev != devt)
-			continue;
+
+		/*
+		 * st_dev of mnt_dir in btrfs is an anonymous device number,
+		 * use mnt_fsname instead.
+		 */
+		if (!strcmp(fsi->fstype, "btrfs")) {
+			if (stat(me->mnt_fsname, &stme) < 0)
+				log_sys_error("stat", me->mnt_fsname);
+			if (stme.st_rdev != devt)
+				continue;
+		} else {
+			if (stat(me->mnt_dir, &stme) < 0)
+				continue;
+			if (stme.st_dev != devt)
+				continue;
+			fsi->mounted = 1;
+		}
 
 		log_debug("fs_get_info %s is mounted \"%s\"", fsi->fs_dev_path, me->mnt_dir);
-		fsi->mounted = 1;
 		strncpy(fsi->mount_dir, me->mnt_dir, PATH_MAX-1);
 	}
 	endmntent(fme);
 
 	return 1;
+}
+
+static int _btrfs_get_mnt(struct fs_info *fsi, dev_t lv_devt)
+{
+	char devices_path[PATH_MAX];
+	char rdev_path[PATH_MAX];
+	unsigned major, minor;
+	dev_t devt;
+	char buffer[16];
+	char *device_name;
+	DIR *dr;
+	struct dirent *de;
+	int ret = 1;
+	int fd = -1;
+	int r;
+	bool found = false;
+
+	/* For a mounted btrfs, there will be a sys dir like /sys/fs/btrfs/$uuid/devices */
+	if (!dm_snprintf(devices_path, sizeof(devices_path), "%sfs/btrfs/%s/devices",
+			dm_sysfs_dir(), fsi->uuid)) {
+		log_error("Couldn't create btrfs devices path for %s.", fsi->fs_dev_path);
+		return 0;
+	}
+
+	/* btrfs module is not avaiable or the device is not mounted */
+	if (!(dr = opendir(devices_path))) {
+		if (errno == ENOENT) {
+			fsi->mounted = 0;
+			return 1;
+		}
+	}
+
+	/*
+	 * Here iterates entries under /sys/fs/btrfs/$uuid/devices and read devt.
+	 * There is only one mnt entry per mounted fs even it's a multi-devices fs.
+	 * So also call _fs_get_mnt for every devices to find a matched mount point.
+	 */
+	while ((de = readdir(dr))) {
+		if (!strcmp(de->d_name, ".") || !strcmp(de->d_name, ".."))
+			continue;
+
+		device_name = de->d_name;
+
+		if (!dm_snprintf(rdev_path, sizeof(devices_path), "%s/%s/dev",
+				 devices_path, device_name)) {
+			    log_error("Couldn't create rdev path for %s.", fsi->fs_dev_path);
+			    ret = 0;
+			    break;
+		}
+
+		if ((fd = open(rdev_path, O_RDONLY)) < 0) {
+			log_sys_debug("open", rdev_path);
+			ret = 0;
+			break;
+		}
+
+		r = read(fd, buffer, sizeof(buffer));
+		if (r < 0) {
+			ret = 0;
+			close(fd);
+			log_sys_debug("read", rdev_path);
+			break;
+		}
+
+		buffer[r - 1] = 0;
+
+		if (sscanf(buffer, "%u:%u", &major, &minor) != 2) {
+			ret = 0;
+			log_sys_debug("sscanf", rdev_path);
+			break;
+		}
+
+		devt = MKDEV(major, minor);
+		if (devt == lv_devt)
+			found = true;
+
+		if (fsi->mount_dir[0] == 0)
+			_fs_get_mnt(fsi, devt);
+
+		if (fsi->mounted && fsi->mount_dir[0])
+			break;
+	}
+
+	if (fd >= 0)
+		close(fd);
+
+	if (closedir(dr))
+		log_sys_debug("closedir", devices_path);
+
+	fsi->mounted = !!found;
+
+	if (fsi->mounted && fsi->mount_dir[0] == 0) {
+		log_error("Couldn't get mount point for %s.", fsi->fs_dev_path);
+		ret = 0;
+	}
+
+	return ret;
 }
 
 int fs_get_info(struct cmd_context *cmd, struct logical_volume *lv,
@@ -234,7 +343,10 @@ int fs_get_info(struct cmd_context *cmd, struct logical_volume *lv,
 	if (!include_mount)
 		return 1;
 
-	ret = _fs_get_mnt(fsi, st_top.st_rdev);
+	if (!strcmp(fsi->fstype, "btrfs"))
+		ret = _btrfs_get_mnt(fsi, st_lv.st_rdev);
+	else
+		ret = _fs_get_mnt(fsi, st_top.st_rdev);
 
 	fsi->unmounted = !fsi->mounted;
 	return ret;
@@ -525,10 +637,14 @@ int fs_extend_script(struct cmd_context *cmd, struct logical_volume *lv, struct 
 {
 	char lv_path[PATH_MAX];
 	char crypt_path[PATH_MAX];
+	char newsize_str[16] = { 0 };
 	const char *argv[FS_CMD_MAX_ARGS + 4];
 	char *devpath;
 	int args = 0;
 	int status;
+
+	if (dm_snprintf(newsize_str, sizeof(newsize_str), "%llu", (unsigned long long)fsi->new_size_bytes) < 0)
+		return_0;
 
 	if (dm_snprintf(lv_path, PATH_MAX, "%s%s/%s", lv->vg->cmd->dev_dir, lv->vg->name, lv->name) < 0)
 		return_0;
@@ -540,6 +656,10 @@ int fs_extend_script(struct cmd_context *cmd, struct logical_volume *lv, struct 
 	argv[++args] = "--lvpath";
 	argv[++args] = lv_path;
 
+	if (fsi->new_size_bytes) {
+		argv[++args] = "--newsizebytes";
+		argv[++args] = newsize_str;
+	}
 	if (fsi->mounted) {
 		argv[++args] = "--mountdir";
 		argv[++args] = fsi->mount_dir;
