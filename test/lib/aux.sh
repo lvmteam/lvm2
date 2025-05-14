@@ -1388,7 +1388,8 @@ writeerror_dev() {
 			target_at_least dm-delay 1 1 0 || return 0
 			touch HAVE_DM_DELAY
 		fi
-		dmsetup create -u "TEST-$name" "$name" --table "0 4611686018427387904 error"
+		# error device with the size of 8EiB
+		dmsetup create -u "TEST-$name" "$name" --table "0 18014398509481983 error"
 		# Take major:minor of our error device
 		echo "$name" > ERR_DEV_NAME
 		dmsetup info -c  --noheadings -o major,minor "$name" > ERR_DEV
@@ -1411,7 +1412,8 @@ delayzero_dev() {
 			target_at_least dm-delay 1 1 0 || return 0
 			touch HAVE_DM_DELAY
 		fi
-		dmsetup create -u "TEST-$name" "$name" --table "0 4611686018427387904 zero"
+		# error device with the size of 8EiB
+		dmsetup create -u "TEST-$name" "$name" --table "0 18014398509481983 zero"
 		# Take major:minor of our error device
 		echo "$name" > ZERO_DEV_NAME
 		dmsetup info -c  --noheadings -o major,minor "$name" > ZERO_DEV
