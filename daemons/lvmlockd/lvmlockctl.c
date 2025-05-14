@@ -122,10 +122,10 @@ static int szscanf(const char *input, const char *format, ...)
 				if (sscanf(in, "%d%n", dest, &n) == 1) {
 					in += n;
 					matched++;
-                		} else {
+				} else {
 					/* matching failure: no input int */
 					break;
-                		}
+				}
 
 			} else if (*fm == 'u') {
 				/*
@@ -136,10 +136,10 @@ static int szscanf(const char *input, const char *format, ...)
 				if (sscanf(in, "%u%n", dest, &n) == 1) {
 					in += n;
 					matched++;
-                		} else {
+				} else {
 					/* matching failure: no input unsigned int */
 					break;
-                		}
+				}
 
 			} else if (*fm == 's') {
 				/*
