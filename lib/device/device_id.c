@@ -482,28 +482,6 @@ int read_sys_block_binary(struct cmd_context *cmd, struct device *dev,
 	return _read_sys_block(cmd, dev, suffix, sysbuf, sysbufsize, 1, retlen);
 }
 
-static int _dm_uuid_has_prefix(char *sysbuf, const char *prefix)
-{
-	if (!strncmp(sysbuf, prefix, strlen(prefix)))
-		return 1;
-
-	/*
-	 * If it's a kpartx partitioned dm device the dm uuid will
-	 * be part%d-<prefix>...  e.g. part1-mpath-abc...
-	 * Check for the prefix after the part%-
-	 */
-	if (!strncmp(sysbuf, "part", 4)) {
-		const char *dash = strchr(sysbuf, '-');
-
-		if (!dash)
-			return 0;
-
-		if (!strncmp(dash + 1, prefix, strlen(prefix)))
-			return 1;
-	}
-	return 0;
-}
-
 /* the dm uuid uses the wwid of the underlying dev */
 int dev_has_mpath_uuid(struct cmd_context *cmd, struct device *dev, char **idname_out)
 {
@@ -514,7 +492,7 @@ int dev_has_mpath_uuid(struct cmd_context *cmd, struct device *dev, char **idnam
 	if (!dev_dm_uuid(cmd, dev, uuid, sizeof(uuid)))
 		return_0;
 
-	if (!_dm_uuid_has_prefix(uuid, "mpath-"))
+	if (!dm_uuid_has_prefix(uuid, "mpath-"))
 		return 0;
 
 	if (!idname_out)
@@ -533,7 +511,7 @@ static int _dev_has_crypt_uuid(struct cmd_context *cmd, struct device *dev, char
 	if (!dev_dm_uuid(cmd, dev, uuid, sizeof(uuid)))
 		return_0;
 
-	if (!_dm_uuid_has_prefix(uuid, "CRYPT-"))
+	if (!dm_uuid_has_prefix(uuid, "CRYPT-"))
 		return 0;
 
 	if (!idname_out)
@@ -552,7 +530,7 @@ static int _dev_has_lvmlv_uuid(struct cmd_context *cmd, struct device *dev, char
 	if (!dev_dm_uuid(cmd, dev, uuid, sizeof(uuid)))
 		return_0;
 
-	if (!_dm_uuid_has_prefix(uuid, UUID_PREFIX))
+	if (!dm_uuid_has_prefix(uuid, UUID_PREFIX))
 		return 0;
 
 	if (!idname_out)
@@ -1082,11 +1060,11 @@ static int _dev_has_stable_id(struct cmd_context *cmd, struct device *dev)
 		if (!dev_dm_uuid(cmd, dev, sysbuf, sizeof(sysbuf)))
 			goto_out;
 
-		if (_dm_uuid_has_prefix(sysbuf, "mpath-"))
+		if (dm_uuid_has_prefix(sysbuf, "mpath-"))
 			return 1;
-		if (_dm_uuid_has_prefix(sysbuf, "CRYPT-"))
+		if (dm_uuid_has_prefix(sysbuf, "CRYPT-"))
 			return 1;
-		if (_dm_uuid_has_prefix(sysbuf, "LVM-"))
+		if (dm_uuid_has_prefix(sysbuf, "LVM-"))
 			return 1;
 	}
 

@@ -95,12 +95,15 @@ unsigned long dev_optimal_io_size(struct dev_types *dt, struct device *dev);
 unsigned long dev_discard_max_bytes(struct dev_types *dt, struct device *dev);
 unsigned long dev_discard_granularity(struct dev_types *dt, struct device *dev);
 
+int dm_uuid_has_prefix(char *sysbuf, const char *prefix);
+
 int dev_is_rotational(struct dev_types *dt, struct device *dev);
 
 int dev_is_pmem(struct dev_types *dt, struct device *dev);
 
 int dev_is_nvme(struct device *dev);
-
+int dev_is_scsi(struct cmd_context *cmd, struct device *dev);
+int dev_is_mpath(struct cmd_context *cmd, struct device *dev);
 int dev_is_lv(struct cmd_context *cmd, struct device *dev);
 
 #define FSTYPE_MAX 16

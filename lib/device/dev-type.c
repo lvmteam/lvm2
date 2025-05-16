@@ -53,13 +53,51 @@ int dev_is_nvme(struct device *dev)
 	return (dev->flags & DEV_IS_NVME) ? 1 : 0;
 }
 
+int dev_is_scsi(struct cmd_context *cmd, struct device *dev)
+{
+	return major_is_scsi_device(cmd->dev_types, MAJOR(dev->dev));
+}
+
+int dm_uuid_has_prefix(char *sysbuf, const char *prefix)
+{
+	if (!strncmp(sysbuf, prefix, strlen(prefix)))
+		return 1;
+
+	/*
+	 * If it's a kpartx partitioned dm device the dm uuid will
+	 * be part%d-<prefix>...  e.g. part1-mpath-abc...
+	 * Check for the prefix after the part%-
+	 */ 
+	if (!strncmp(sysbuf, "part", 4)) {
+		const char *dash = strchr(sysbuf, '-');
+
+ 		if (!dash)
+			return 0;
+
+		if (!strncmp(dash + 1, prefix, strlen(prefix)))
+			return 1;
+	}
+	return 0;
+}
+
+int dev_is_mpath(struct cmd_context *cmd, struct device *dev)
+{
+	char buffer[128];
+
+	if (dev_dm_uuid(cmd, dev, buffer, sizeof(buffer)) &&
+	    dm_uuid_has_prefix(buffer, "mpath-"))
+		return 1;
+
+	return 0;
+}
+
 int dev_is_lv(struct cmd_context *cmd, struct device *dev)
 {
 	char buffer[128];
 
 	if (dev_dm_uuid(cmd, dev, buffer, sizeof(buffer)) &&
 	    !strncmp(buffer, UUID_PREFIX, sizeof(UUID_PREFIX) - 1))
-                return 1;
+		return 1;
 
 	return 0;
 }
@@ -120,7 +158,7 @@ int dev_is_used_by_active_lv(struct cmd_context *cmd, struct device *dev, int *u
 
 		dm_dev_major = MAJOR(info.st_rdev);
 		dm_dev_minor = MINOR(info.st_rdev);
-        
+
 		if (dm_dev_major != cmd->dev_types->device_mapper_major)
 			continue;
 
