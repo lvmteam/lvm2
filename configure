@@ -14564,7 +14564,7 @@ printf %s "checking whether to compile liblvm2cmd.so... " >&6; }
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $CMDLIB" >&5
 printf "%s\n" "$CMDLIB" >&6; }
 
-if test "$CMDLIB" == "yes" && test "$SHARED_LINK" = "no"
+if test "$CMDLIB" = "yes" && test "$SHARED_LINK" = "no"
 then :
   as_fn_error $? "--enable-cmdlib requires dynamic linking." "$LINENO" 5
 fi

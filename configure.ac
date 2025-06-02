@@ -1395,7 +1395,7 @@ AS_IF([test "$CMDLIB" != "yes"], [CMDLIB="no" LVM2CMD_LIB=], [LVM2CMD_LIB="-llvm
 AC_MSG_CHECKING([whether to compile liblvm2cmd.so])
 AC_MSG_RESULT([$CMDLIB])
 
-AS_IF([test "$CMDLIB" == "yes" && test "$SHARED_LINK" = "no"],
+AS_IF([test "$CMDLIB" = "yes" && test "$SHARED_LINK" = "no"],
       [AC_MSG_ERROR([--enable-cmdlib requires dynamic linking.])])
 
 
