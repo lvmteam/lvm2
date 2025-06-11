@@ -17,6 +17,9 @@
 
 #include "lib/report/report.h"
 
+#include <langinfo.h>
+#include <locale.h>
+
 typedef enum {
 	REPORT_IDX_NULL = -1,
 	REPORT_IDX_SINGLE,
@@ -1508,6 +1511,16 @@ int report_format_init(struct cmd_context *cmd)
 			report_command_log = 1;
 	} else if (!strcmp(format_str, REPORT_FORMAT_NAME_JSON_STD)) {
 		args.report_group_type = DM_REPORT_GROUP_JSON_STD;
+
+		/* For json_std, the radix character must be '.'. */
+		const char * radixchar = nl_langinfo(RADIXCHAR);
+		if (radixchar && strcmp(radixchar, ".")) {
+			log_debug("Radix character for current locale is '%s', json_std requires '.', "
+				  "overriding LC_NUMERIC locale to 'C'", radixchar);
+			setlocale(LC_NUMERIC, "C");
+			cmd->cmd_report.lc_numeric_override = 1;
+		}
+
 		if (!report_command_log_config_set)
 			report_command_log = 1;
 	} else {
@@ -1586,6 +1599,12 @@ void report_format_destroy(struct cmd_context *cmd)
 	if (cmd->cmd_report.log_rh) {
 		dm_report_free(cmd->cmd_report.log_rh);
 		cmd->cmd_report.log_rh = NULL;
+	}
+
+	if (cmd->cmd_report.lc_numeric_override) {
+		setlocale(LC_NUMERIC, "");
+		cmd->cmd_report.lc_numeric_override = 0;
+		log_debug("Setting LC_NUMERIC locale back after finished json_std report.");
 	}
 }
 

@@ -73,7 +73,8 @@ struct cmd_context_initialized_parts {
 };
 
 struct cmd_report {
-	int log_only;
+	unsigned log_only:1;
+	unsigned lc_numeric_override:1;
 	dm_report_group_type_t report_group_type;
 	struct dm_report_group *report_group;
 	struct dm_report *log_rh;
