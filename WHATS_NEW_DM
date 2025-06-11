@@ -1,5 +1,6 @@
 Version 1.02.207 - 
 ===================
+  Fail dm_report_group_create if radix char from locale unsuitable for JSON_STD.
 
 Version 1.02.206 - 05th May 2025
 ================================
