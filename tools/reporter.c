@@ -1505,12 +1505,21 @@ int report_format_init(struct cmd_context *cmd)
 	if (!format_str || !strcmp(format_str, REPORT_FORMAT_NAME_BASIC)) {
 		args.report_group_type = (report_command_log && !args.log_only) ? DM_REPORT_GROUP_BASIC
 										: DM_REPORT_GROUP_SINGLE;
+		cmd->report_strict_type_mode = 0;
 	} else if (!strcmp(format_str, REPORT_FORMAT_NAME_JSON)) {
 		args.report_group_type = DM_REPORT_GROUP_JSON;
 		if (!report_command_log_config_set)
 			report_command_log = 1;
+		cmd->report_strict_type_mode = 0;
 	} else if (!strcmp(format_str, REPORT_FORMAT_NAME_JSON_STD)) {
 		args.report_group_type = DM_REPORT_GROUP_JSON_STD;
+
+		/*
+		 * json_std requires strict type mode. That means all NUM and BIN
+		 * fields are always reported as numeric values and not strings which
+		 * are synonyms to these numeric values.
+		 */
+		cmd->report_strict_type_mode = 1;
 
 		/* For json_std, the radix character must be '.'. */
 		const char * radixchar = nl_langinfo(RADIXCHAR);
@@ -1539,16 +1548,6 @@ int report_format_init(struct cmd_context *cmd)
 		log_error("Failed to create report group.");
 		return 0;
 	}
-
-	/*
-	 * JSON_STD requires strict type mode. That means all NUM and BIN
-	 * fields are always reported as numeric values and not strings which
-	 * are synonyms to these numeric values.
-	 */
-	if (args.report_group_type == DM_REPORT_GROUP_JSON_STD)
-		cmd->report_strict_type_mode = 1;
-	else
-		cmd->report_strict_type_mode = 0;
 
 	if (report_command_log) {
 		single_args = &args.single_args[REPORT_IDX_LOG];
