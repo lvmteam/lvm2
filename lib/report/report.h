@@ -91,6 +91,7 @@ typedef int (*field_report_fn) (struct report_handle * dh, struct field * field,
 report_headings_t report_headings_str_to_type(const char *str);
 
 int report_format_init(struct cmd_context *cmd);
+void report_format_destroy(struct cmd_context *cmd);
 
 void *report_init(struct cmd_context *cmd, const char *format, const char *keys,
 		  unsigned *report_type, const char *separator,

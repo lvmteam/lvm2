@@ -1577,6 +1577,18 @@ bad:
 	return 0;
 }
 
+void report_format_destroy(struct cmd_context *cmd)
+{
+	if (!dm_report_group_destroy(cmd->cmd_report.report_group))
+		stack;
+	cmd->cmd_report.report_group = NULL;
+
+	if (cmd->cmd_report.log_rh) {
+		dm_report_free(cmd->cmd_report.log_rh);
+		cmd->cmd_report.log_rh = NULL;
+	}
+}
+
 int lastlog(struct cmd_context *cmd, int argc __attribute((unused)), char **argv __attribute__((unused)))
 {
 	const char *selection;

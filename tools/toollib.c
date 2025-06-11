@@ -2200,16 +2200,9 @@ void destroy_processing_handle(struct cmd_context *cmd, struct processing_handle
 		 * the log report to cover the rest of the processing.
 		 *
 		 */
-		if (!cmd->is_interactive && !handle->parent) {
-			if (!dm_report_group_destroy(cmd->cmd_report.report_group))
-				stack;
-			cmd->cmd_report.report_group = NULL;
+		if (!cmd->is_interactive && !handle->parent)
+			report_format_destroy(cmd);
 
-			if (cmd->cmd_report.log_rh) {
-				dm_report_free(cmd->cmd_report.log_rh);
-				cmd->cmd_report.log_rh = NULL;
-			}
-		}
 		/*
 		 * TODO: think about better alternatives:
 		 * handle mempool, dm_alloc for handle memory...
