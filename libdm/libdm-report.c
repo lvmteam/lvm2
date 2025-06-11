@@ -16,6 +16,7 @@
 #include "libdm/misc/dmlib.h"
 
 #include <ctype.h>
+#include <langinfo.h>
 #include <math.h>  /* fabs() */
 #include <float.h> /* DBL_EPSILON */
 #include <time.h>
@@ -5346,6 +5347,15 @@ struct dm_report_group *dm_report_group_create(dm_report_group_type_t type, void
 	struct dm_report_group *group;
 	struct dm_pool *mem;
 	struct report_group_item *item;
+
+	if (type == DM_REPORT_GROUP_JSON_STD) {
+		const char * radixchar = nl_langinfo(RADIXCHAR);
+		if (radixchar && strcmp(radixchar, ".")) {
+			log_error("dm_report: incompatible locale used for DM_REPORT_GROUP_JSON_STD, "
+				  "radix character is '%s', expected '.'", radixchar);
+			return NULL;
+		}
+	}
 
 	if (!(mem = dm_pool_create("report_group", 1024))) {
 		log_error("dm_report: dm_report_init_group: failed to allocate mem pool");
