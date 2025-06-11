@@ -393,7 +393,7 @@ teardown_devs_prefixed() {
 	for dm in $(dm_info name -S "name=~$PREFIX&&suspended=Suspended"); do
 		test "$dm" != "No devices found" || break
 		echo "## resuming: dmsetup resume \"$dm\""
-		dmsetup clear "$dm"
+		dmsetup clear "$dm" &
 		dmsetup resume "$dm" &
 	done
 
