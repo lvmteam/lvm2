@@ -1387,7 +1387,7 @@ error_dev() {
 #
 # As we don't really care about couple missing sectors here, just lower
 # the size to the max usable size that is not cause troubles:
-MAX_DEV_SIZE=180143985094819876
+MAX_DEV_SIZE=18014398509481976
 
 #
 # Convert device to device with write errors but normal reads.
