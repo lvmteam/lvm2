@@ -1374,6 +1374,21 @@ error_dev() {
 	common_dev_ error "$@"
 }
 
+# New kernels do not allow to create devices bigger the <8EiB
+# This gives 18014398509481983 as maximum usable sectors
+#
+# MAX_DEV_SIZE=18014398509481983
+#
+# Interestingly older kernels (3.X series) do have some strange problems
+# if there is a device of such size  (systemd-udev runs in endless loop:
+#   truncate_inode_pages_range+0x1ed/0x5e0
+#   truncate_inode_pages+0x1f/0x30
+#   kill_bdev+0x26/0x30
+#
+# As we don't really care about couple missing sectors here, just lower
+# the size to the max usable size that is not cause troubles:
+MAX_DEV_SIZE=180143985094819876
+
 #
 # Convert device to device with write errors but normal reads.
 # For this 'delay' dev is used and reroutes 'reads' back to original device
@@ -1389,7 +1404,7 @@ writeerror_dev() {
 			touch HAVE_DM_DELAY
 		fi
 		# error device with the size of 8EiB
-		dmsetup create -u "TEST-$name" "$name" --table "0 18014398509481983 error"
+		dmsetup create -u "TEST-$name" "$name" --table "0 $MAX_DEV_SIZE error"
 		# Take major:minor of our error device
 		echo "$name" > ERR_DEV_NAME
 		dmsetup info -c  --noheadings -o major,minor "$name" > ERR_DEV
@@ -1413,7 +1428,7 @@ delayzero_dev() {
 			touch HAVE_DM_DELAY
 		fi
 		# error device with the size of 8EiB
-		dmsetup create -u "TEST-$name" "$name" --table "0 18014398509481983 zero"
+		dmsetup create -u "TEST-$name" "$name" --table "0 $MAX_DEV_SIZE zero"
 		# Take major:minor of our error device
 		echo "$name" > ZERO_DEV_NAME
 		dmsetup info -c  --noheadings -o major,minor "$name" > ZERO_DEV
