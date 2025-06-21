@@ -243,7 +243,7 @@ specified with --cachesettings block_size=4096|512 when caching is started.
 When a file system like xfs already exists on the main LV prior to
 caching, and the file system is using a block size of 512, then the
 writecache block size should be set to 512.  (The file system will likely
-fail to mount if writecache block size of 4096 is used in this case.)
+fail to mount if a writecache block size of 4096 is used in this case.)
 .P
 Check the xfs sector size while the fs is mounted:
 .P

@@ -99,7 +99,7 @@ and the \fImode\fP option for more information.
 .
 .TP
 .OPT_MODE
-The filemap monitoring mode the daemon.
+The filemap monitoring mode of the daemon.
 Use either
 .na
 .nh

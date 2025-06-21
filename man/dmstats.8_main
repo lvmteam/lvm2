@@ -106,7 +106,7 @@
 .  RB ( p )eta\%bytes,
 .  RB ( e )xa\%bytes.
 .  ad
-.  nop Capitalise to use multiples of 1000 (S.I.\&) instead of 1024.
+.  nop Capitalize to use multiples of 1000 (S.I.\&) instead of 1024.
 ..
 .
 .as AD "\" define the string if not defined on the command line

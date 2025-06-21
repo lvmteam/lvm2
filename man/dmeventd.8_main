@@ -142,7 +142,7 @@ retries up to 42 minutes.
 User may also configure external command to support more advanced
 maintenance operations of a thin pool.
 Such external command can e.g. remove some unneeded snapshots,
-use \fBfstrim\fP(8) to free recover space in a thin pool,
+use \fBfstrim\fP(8) to recover free space in a thin pool,
 but also can use \fBlvextend --use-policies\fP if other actions
 have not released enough space.
 Command is executed with environmental variable
@@ -189,19 +189,19 @@ Command can also read status with tools like \fBlvs\fP(8).
 .TP
 .B DMEVENTD_THIN_POOL_DATA
 Variable is set by thin plugin and is available to executed program.
-Value present actual usage of thin pool data volume.
+Value presents actual usage of thin pool data volume.
 Variable is not set when error event is processed.
 .
 .TP
 .B DMEVENTD_THIN_POOL_METADATA
 Variable is set by thin plugin and is available to executed program.
-Value present actual usage of thin pool metadata volume.
+Value presents actual usage of thin pool metadata volume.
 Variable is not set when error event is processed.
 .
 .TP
 .B DMEVENTD_VDO_POOL
 Variable is set by vdo plugin and is available to executed program.
-Value present actual usage of VDO pool data volume.
+Value presents actual usage of VDO pool data volume.
 Variable is not set when error event is processed.
 .
 .TP
