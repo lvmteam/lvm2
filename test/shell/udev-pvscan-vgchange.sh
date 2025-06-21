@@ -12,10 +12,8 @@
 
 test_description='udev rule and systemd unit run vgchange'
 
-SKIP_WITH_LVMPOLLD=1
-SKIP_WITH_LVMLOCKD=1
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld --skip-with-lvmlockd
 
 # FIXME: currently test relies on several system properties to be
 # explicitly configure and directly modifies their state

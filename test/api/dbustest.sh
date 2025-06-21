@@ -12,10 +12,9 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 SKIP_WITH_LVMPOLLD=1
-SKIP_WITH_LVMLOCKD=1
 SKIP_WITH_CLVMD=1
 
-. lib/inittest
+. lib/inittest --skip-with-lvmlockd
 
 # Unsupported with valgrind testing
 test "${LVM_VALGRIND:-0}" -eq 0 || skip "Unsupported with valgrind"

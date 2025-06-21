@@ -12,12 +12,10 @@
 
 # test activation of monitoring with more thin-pool
 
-SKIP_WITH_LVMLOCKD=1
-SKIP_WITH_LVMPOLLD=1
 
 export LVM_TEST_THIN_REPAIR_CMD=${LVM_TEST_THIN_REPAIR_CMD-/bin/false}
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld --skip-with-lvmlockd
 
 #
 # Main

@@ -13,10 +13,8 @@
 test_description='Test VG takeover with raid LVs'
 
 # test does not apply to lvmlockd
-SKIP_WITH_LVMLOCKD=1
-SKIP_WITH_LVMPOLLD=1
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld --skip-with-lvmlockd
 
 aux have_raid 1 9 0 || skip
 aux prepare_devs ${PREPARE_DEVS-3}

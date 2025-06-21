@@ -12,9 +12,8 @@
 # Basic usage of zero target
 
 
-SKIP_WITH_LVMPOLLD=1
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld
 
 which md5sum || skip
 

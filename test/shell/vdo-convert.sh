@@ -13,9 +13,8 @@
 # Test conversion of VDO volumes made by vdo manager into VDO LV.
 
 
-SKIP_WITH_LVMPOLLD=1
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld
 
 # Use local for this test vdo configuration
 VDO_CONFIG="vdotestconf.yml"

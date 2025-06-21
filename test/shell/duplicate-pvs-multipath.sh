@@ -12,10 +12,8 @@
 
 test_description='duplicate pv detection of mpath components using wwid'
 
-SKIP_WITH_LVMPOLLD=1
-SKIP_WITH_LVMLOCKD=1
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld --skip-with-lvmlockd
 
 # FIXME: skip until mpath/scsi_debug cleanup works after a failure
 skip

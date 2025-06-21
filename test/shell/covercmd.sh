@@ -16,9 +16,8 @@
 #
 
 
-SKIP_WITH_LVMPOLLD=1
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld
 
 aux prepare_pvs 5
 get_devs

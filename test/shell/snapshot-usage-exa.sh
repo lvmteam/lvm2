@@ -13,10 +13,8 @@
 # Check very large device size (up to 15Exa bytes)
 # this needs 64bit arch
 
-SKIP_WITH_LVMLOCKD=1
-SKIP_WITH_LVMPOLLD=1
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld --skip-with-lvmlockd
 
 aux can_use_16T || skip
 

@@ -12,9 +12,8 @@
 
 # Check performance of activation and deactivation
 
-SKIP_WITH_LVMPOLLD=1
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld
 
 # Number of LVs to create
 TEST_DEVS=1000

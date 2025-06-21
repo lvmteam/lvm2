@@ -16,9 +16,8 @@
 # transitions, like: recover, resync, check, repair, idle, reshape, etc
 #######################################################################
 
-SKIP_WITH_LVMPOLLD=1
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld
 
 # check for version 1.9.0
 # - it is the point at which linear->raid1 uses "recover"

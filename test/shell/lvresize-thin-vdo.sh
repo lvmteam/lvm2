@@ -11,11 +11,10 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 
-SKIP_WITH_LVMPOLLD=1
 
 export LVM_TEST_THIN_REPAIR_CMD=${LVM_TEST_THIN_REPAIR_CMD-/bin/false}
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld
 
 aux have_thin 1 10 0 || skip
 aux have_vdo 6 2 0 || skip

@@ -12,9 +12,8 @@
 
 # Test single lv cache options
 
-SKIP_WITH_LVMPOLLD=1
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld
 
 mkfs_mount_umount()
 {

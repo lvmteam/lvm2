@@ -12,13 +12,12 @@
 
 test_description='Exercise fsadm filesystem resize on crypt devices'
 
-SKIP_WITH_LVMPOLLD=1
 
 # FIXME: cannot use brd (ramdisk)  - lsblk is NOT listing it
 # so lsblk usage should be replaced
 export LVM_TEST_PREFER_BRD=0
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld
 
 aux prepare_vg 1 1300
 

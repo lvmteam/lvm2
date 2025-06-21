@@ -13,9 +13,8 @@
 # Exercise caching vdo and vdo-pool's data LV
 
 
-SKIP_WITH_LVMPOLLD=1
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld
 
 #
 # Main

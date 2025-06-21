@@ -16,9 +16,8 @@
 
 test_description='Test read-ahead functionality'
 
-SKIP_WITH_LVMPOLLD=1
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld
 
 aux prepare_vg 5
 

@@ -12,10 +12,8 @@
 
 # Test vgsplit operation, including different LV types
 
-SKIP_WITH_LVMLOCKD=1
-SKIP_WITH_LVMPOLLD=1
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld --skip-with-lvmlockd
 
 aux lvmconf "global/support_mirrored_mirror_log=1"
 

@@ -10,12 +10,10 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
-SKIP_WITH_LVMPOLLD=1
 
 # hints are currently disabled with lvmlockd
-SKIP_WITH_LVMLOCKD=1
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld --skip-with-lvmlockd
 
 # Since this test is currently using 'system's' hints,
 # it cannot be running, while lvmdbusd operates in the system.

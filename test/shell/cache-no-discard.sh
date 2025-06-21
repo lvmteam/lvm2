@@ -12,12 +12,11 @@
 
 # Check reporting of no_discard_passdown
 
-SKIP_WITH_LVMPOLLD=1
 
 # Until new version of cache_check tools - no integrity validation
 LVM_TEST_CACHE_CHECK_CMD=""
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld
 
 aux kernel_at_least 5 1 || skip
 

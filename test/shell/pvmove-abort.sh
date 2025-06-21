@@ -12,9 +12,8 @@
 
 # Check pvmove --abort behaviour when specific device is requested
 
-SKIP_WITH_LVMLOCKD=1
 
-. lib/inittest
+. lib/inittest --skip-with-lvmlockd
 
 aux lvmconf 'activation/raid_region_size = 16'
 

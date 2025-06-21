@@ -12,9 +12,8 @@
 
 # disable lvmetad logging as it bogs down test systems
 
-SKIP_WITH_LVMPOLLD=1
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld
 
 test "${LVM_VALGRIND:-0}" -eq 0 || skip # too slow test for valgrind
 get_image_pvs() {

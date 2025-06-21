@@ -13,11 +13,10 @@
 # test restore operation of thin pool metadata
 
 
-SKIP_WITH_LVMPOLLD=1
 
 export LVM_TEST_THIN_REPAIR_CMD=${LVM_TEST_THIN_REPAIR_CMD-/bin/false}
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld
 
 #
 # Main

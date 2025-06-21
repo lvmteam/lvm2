@@ -12,10 +12,8 @@
 
 # Exercise usage of stacked cache volume used in thin pool volumes
 
-SKIP_WITH_LVMLOCKD=1
-SKIP_WITH_LVMPOLLD=1
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld --skip-with-lvmlockd
 
 percent_() {
 	get lv_field $vg/vpool data_percent | cut -d. -f1

@@ -12,9 +12,8 @@
 
 # Check what happens when reading of lvm.conf fails
 
-SKIP_WITH_LVMPOLLD=1
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld
 
 MKFS=mkfs.ext3
 which $MKFS || skip

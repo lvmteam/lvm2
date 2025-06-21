@@ -12,9 +12,8 @@
 
 test_description='Check lvmlockd lock_args for different LV types'
 
-SKIP_WITH_LVMPOLLD=1
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld
 
 [ -z "$LVM_TEST_LVMLOCKD" ] && skip;
 

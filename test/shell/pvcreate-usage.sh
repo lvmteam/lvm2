@@ -12,12 +12,11 @@
 
 test_description='Test pvcreate option values'
 
-SKIP_WITH_LVMPOLLD=1
 PAGESIZE=$(getconf PAGESIZE)
 # MDA_SIZE_MIN defined in lib/format_text/layout.h
 MDA_SIZE_MIN=$(( 8 * PAGESIZE ))
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld
 
 aux prepare_devs 4
 

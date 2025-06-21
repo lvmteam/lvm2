@@ -15,9 +15,8 @@
 # Due to a bug in 32-bit version lvm2 <2.02.169  produced metadata
 # contained invalid number for creation_time
 
-SKIP_WITH_LVMPOLLD=1
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld
 
 aux prepare_vg 1
 

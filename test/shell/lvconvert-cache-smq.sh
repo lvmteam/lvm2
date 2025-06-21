@@ -13,9 +13,8 @@
 # Exercise conversion of cache and cache pool
 
 
-SKIP_WITH_LVMPOLLD=1
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld
 
 aux have_cache 1 8 0 || skip
 

@@ -13,9 +13,8 @@
 # Check how lvm2 handles partitions over losetup -P devices
 
 
-SKIP_WITH_LVMPOLLD=1
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld
 
 which sfdisk || skip
 

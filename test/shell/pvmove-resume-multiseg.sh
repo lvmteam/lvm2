@@ -15,9 +15,8 @@
 
 # Multisegment variant w/ 2 pvmoves LVs per VG
 
-SKIP_WITH_LVMLOCKD=1
 
-. lib/inittest
+. lib/inittest --skip-with-lvmlockd
 
 aux prepare_pvs 5 40
 

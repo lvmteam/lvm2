@@ -12,9 +12,8 @@
 
 # Check pvmove behaviour when its device are kept open
 
-SKIP_WITH_LVMLOCKD=1
 
-. lib/inittest
+. lib/inittest --skip-with-lvmlockd
 
 _create_lv()
 {

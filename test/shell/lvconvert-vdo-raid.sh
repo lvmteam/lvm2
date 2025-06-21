@@ -13,9 +13,8 @@
 # Exercise vdo-pool's on raidLV
 
 
-SKIP_WITH_LVMPOLLD=1
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld
 
 #
 # Main

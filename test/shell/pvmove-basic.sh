@@ -13,9 +13,8 @@
 
 test_description="ensure that pvmove works with basic options"
 
-SKIP_WITH_LVMLOCKD=1
 
-. lib/inittest
+. lib/inittest --skip-with-lvmlockd
 
 which md5sum || skip
 

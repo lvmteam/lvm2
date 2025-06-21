@@ -12,9 +12,8 @@
 
 test_description='device id tests'
 
-SKIP_WITH_LVMPOLLD=1
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld
 
 test -d /sys/block/ram0 && skip "Ramdisk already loaded"
 

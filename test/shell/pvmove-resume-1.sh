@@ -15,10 +15,9 @@
 
 # 2 pvmove LVs in 2 VGs (1 per VG)
 
-SKIP_WITH_LVMLOCKD=1
 SKIP_WITH_CLVMD=1
 
-. lib/inittest
+. lib/inittest --skip-with-lvmlockd
 
 aux prepare_pvs 4 30
 

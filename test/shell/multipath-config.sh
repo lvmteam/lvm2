@@ -12,10 +12,8 @@
 
 test_description='using multipath blacklist'
 
-SKIP_WITH_LVMPOLLD=1
-SKIP_WITH_LVMLOCKD=1
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld --skip-with-lvmlockd
 
 # FIXME: don't run this test by default because it destroys the
 # local multipath config, the timing of multipath/dm/lvm interactions

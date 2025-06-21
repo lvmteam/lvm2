@@ -13,9 +13,8 @@
 # 'Check extents percentage arguments'
 
 
-SKIP_WITH_LVMPOLLD=1
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld
 
 aux prepare_pvs 2 128
 get_devs

@@ -6,10 +6,8 @@
 # modify, copy, or redistribute it subject to the terms and conditions
 # of the GNU General Public License v.2.
 
-SKIP_WITH_LVMLOCKD=1
-SKIP_WITH_LVMPOLLD=1
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld --skip-with-lvmlockd
 
 aux prepare_devs 4
 

@@ -18,9 +18,8 @@
 #
 
 
-SKIP_WITH_LVMPOLLD=1
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld
 
 # Snapshot should remain unmodified
 check_s_() {

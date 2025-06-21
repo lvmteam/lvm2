@@ -12,10 +12,8 @@
 
 # tests, write failure on PV1 is not reporting errors on PV2 or PV3...
 
-SKIP_WITH_LVMLOCKD=1
-SKIP_WITH_LVMPOLLD=1
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld --skip-with-lvmlockd
 
 # skip test early if there is no 'delay' target available
 aux target_at_least dm-delay 1 1 0 || skip "missing dm-delay target"

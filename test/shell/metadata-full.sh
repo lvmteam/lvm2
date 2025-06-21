@@ -12,9 +12,8 @@
 
 test_description='Test full metadata'
 
-SKIP_WITH_LVMPOLLD=1
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld
 
 # this test needs lot of memory
 test "$(aux total_mem)" -gt 524288 || skip

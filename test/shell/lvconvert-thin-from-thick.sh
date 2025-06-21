@@ -12,11 +12,10 @@
 
 # Test conversion to thin volume from thick LVs
 
-SKIP_WITH_LVMPOLLD=1
 
 export LVM_TEST_THIN_REPAIR_CMD=${LVM_TEST_THIN_REPAIR_CMD-/bin/false}
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld
 
 which mkfs.ext4 || skip
 which fsck || skip

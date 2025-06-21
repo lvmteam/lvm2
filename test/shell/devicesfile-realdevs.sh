@@ -12,9 +12,8 @@
 
 test_description='devices file with real devs'
 
-SKIP_WITH_LVMPOLLD=1
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld
 
 #
 # To use this test, add two or more devices with real device ids,

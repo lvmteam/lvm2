@@ -12,10 +12,8 @@
 
 # check if 'dmsetup --noflush' will work properly for mounted snapshot
 
-SKIP_WITH_LVMLOCKD=1
-SKIP_WITH_LVMPOLLD=1
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld --skip-with-lvmlockd
 
 which mkfs.ext2 || skip
 

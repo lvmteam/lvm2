@@ -8,9 +8,8 @@
 
 test_description='Test the vg name for an lv from env var'
 
-SKIP_WITH_LVMPOLLD=1
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld
 
 aux prepare_devs 2
 

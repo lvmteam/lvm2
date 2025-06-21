@@ -13,9 +13,8 @@
 # Exercise creation of cache without cache_check
 
 
-SKIP_WITH_LVMPOLLD=1
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld
 
 if test -e LOCAL_CLVMD ; then
 # In cluster, the error from activation is logged in clvmd

@@ -13,7 +13,6 @@
 # test activation race for raid's --syncaction check
 
 
-SKIP_WITH_LVMPOLLD=1
 
 
 # Current support for syncaction in cluster is broken
@@ -21,7 +20,7 @@ SKIP_WITH_LVMPOLLD=1
 # meanwhile skipped
 SKIP_WITH_CLVMD=1
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld
 
 # Proper mismatch count 1.5.2+ upstream, 1.3.5 < x < 1.4.0 in RHEL6
 aux have_raid 1 3 5 &&

@@ -12,9 +12,8 @@
 
 # Test repairing of broken cached LV
 
-SKIP_WITH_LVMLOCKD=1
 
-. lib/inittest
+. lib/inittest --skip-with-lvmlockd
 
 MKFS=mkfs.ext4
 FSCK=fsck

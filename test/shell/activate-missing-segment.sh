@@ -18,9 +18,8 @@
 # - linear LVs with bits missing are not activated
 
 
-SKIP_WITH_LVMPOLLD=1
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld
 
 aux prepare_vg 2
 

@@ -8,7 +8,6 @@
 
 test_description='Test duplicate PVs'
 
-SKIP_WITH_LVMPOLLD=1
 SKIP_WITH_CLVMD=1
 
 # This test should work with real device ids (not devnames).
@@ -19,9 +18,8 @@ SKIP_WITH_CLVMD=1
 # so the 'pvs' commands below don't report them. 
 # In general this is better behavior, but needs to be tested
 # with proper device ids.
-SKIP_WITH_DEVICES_FILE=1
 
-. lib/inittest
+. lib/inittest --skip-with-devices-file --skip-with-lvmpolld
 
 aux prepare_devs 6 16
 

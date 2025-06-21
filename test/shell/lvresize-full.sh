@@ -14,9 +14,8 @@
 # https://bugzilla.redhat.com/1354396
 
 
-SKIP_WITH_LVMPOLLD=1
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld
 
 FSCK=${FSCK-fsck}
 MKFS=${MKFS-mkfs.ext3}

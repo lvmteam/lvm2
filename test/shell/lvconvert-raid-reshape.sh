@@ -11,11 +11,10 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA2110-1301 USA
 
 
-SKIP_WITH_LVMPOLLD=1
 
 LVM_SKIP_LARGE_TESTS=0
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld
 
 case "$(uname -r)" in
 5.19*) skip "Skippen test that kills this kernel" ;;

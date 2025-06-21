@@ -12,10 +12,8 @@
 
 # Test various supported conversion of snapshot of cached volume
 
-SKIP_WITH_LVMLOCKD=1
-SKIP_WITH_LVMPOLLD=1
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld --skip-with-lvmlockd
 
 aux have_cache 1 3 0 || skip
 

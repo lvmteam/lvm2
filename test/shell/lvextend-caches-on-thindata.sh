@@ -10,11 +10,10 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
-SKIP_WITH_LVMPOLLD=1
 
 # lvextend thin pool data that has cache|writecache attached
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld
 
 do_test()
 {

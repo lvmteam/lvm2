@@ -12,10 +12,8 @@
 
 # Test vgsplit command options for validity
 
-SKIP_WITH_LVMLOCKD=1
-SKIP_WITH_LVMPOLLD=1
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld --skip-with-lvmlockd
 
 aux prepare_devs 5
 get_devs

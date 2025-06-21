@@ -13,9 +13,8 @@
 # Exercise changing of caching mode on both cache pool and cached LV.
 
 
-SKIP_WITH_LVMPOLLD=1
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld
 
 aux have_cache 1 5 0 || skip
 

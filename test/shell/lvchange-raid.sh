@@ -11,9 +11,8 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 
-SKIP_WITH_LVMPOLLD=1
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld
 
 # Writemostly has been in every version since the beginning
 # Device refresh in 1.5.1 upstream and 1.3.4 < x < 1.4.0 in RHEL6

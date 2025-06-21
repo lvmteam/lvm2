@@ -13,9 +13,8 @@
 # test foreign user of thin-pool
 
 
-SKIP_WITH_LVMPOLLD=1
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld
 
 MOUNT_DIR=mnt
 

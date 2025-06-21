@@ -12,9 +12,8 @@
 
 # Test single lv cache options
 
-SKIP_WITH_LVMPOLLD=1
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld
 
 case "$(uname -r)" in
 6.[0123]*|5.19*) skip "Skipped test that kills this kernel" ;;

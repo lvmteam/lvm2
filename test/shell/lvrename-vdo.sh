@@ -13,9 +13,8 @@
 # Check online renaming of VDO devices works
 
 
-SKIP_WITH_LVMPOLLD=1
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld
 
 #
 # Main

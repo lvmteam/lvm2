@@ -14,9 +14,8 @@
 # https://bugzilla.redhat.com/show_bug.cgi?id=1035871
 
 
-SKIP_WITH_LVMPOLLD=1
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld
 
 aux prepare_pvs 1
 get_devs

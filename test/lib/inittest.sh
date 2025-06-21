@@ -14,6 +14,33 @@ initskip() {
 	exit 200
 }
 
+# Parse command line options
+SKIP_ROOT_DM_CHECK=${SKIP_ROOT_DM_CHECK-}
+SKIP_WITH_DEVICES_FILE=${SKIP_WITH_DEVICES_FILE-}
+SKIP_WITH_LVMLOCKD=${SKIP_WITH_LVMLOCKD-}
+SKIP_WITH_LVMPOLLD=${SKIP_WITH_LVMPOLLD-}
+while [ "$#" -gt 0 ]; do
+	case "$1" in
+		--skip-root-dm-check)
+			SKIP_ROOT_DM_CHECK=1
+			;;
+		--skip-with-devices-file)
+			SKIP_WITH_DEVICES_FILE=1
+			;;
+		--skip-with-lvmpolld)
+			SKIP_WITH_LVMPOLLD=1
+			;;
+		--skip-with-lvmlockd)
+			SKIP_WITH_LVMLOCKD=1
+			;;
+		*)
+			echo "Unknown option: $1"
+			exit 1
+			;;
+	esac
+	shift
+done
+
 # sanitize the environment
 LANG=C
 LC_ALL=C
@@ -47,9 +74,6 @@ LVM_TEST_LOCK_TYPE_IDM=${LVM_TEST_LOCK_TYPE_IDM-}
 SKIP_WITHOUT_CLVMD=${SKIP_WITHOUT_CLVMD-}
 SKIP_WITH_CLVMD=${SKIP_WITH_CLVMD-}
 
-SKIP_WITH_LVMPOLLD=${SKIP_WITH_LVMPOLLD-}
-SKIP_WITH_LVMLOCKD=${SKIP_WITH_LVMLOCKD-}
-SKIP_ROOT_DM_CHECK=${SKIP_ROOT_DM_CHECK-}
 SKIP_WITH_LOW_SPACE=${SKIP_WITH_LOW_SPACE-50}
 
 test -n "$LVM_TEST_FLAVOUR" || { echo "NOTE: Empty flavour">&2; initskip; }

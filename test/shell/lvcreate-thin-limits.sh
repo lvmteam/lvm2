@@ -12,11 +12,10 @@
 
 # test allocation of thin-pool on limiting extents number
 
-SKIP_WITH_LVMPOLLD=1
 
 export LVM_TEST_THIN_REPAIR_CMD=${LVM_TEST_THIN_REPAIR_CMD-/bin/false}
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld
 
 # FIXME  update test to make something useful on <16T
 aux can_use_16T || skip

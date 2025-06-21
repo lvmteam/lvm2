@@ -12,9 +12,8 @@
 
 # 'Test for proper escaping of strings in metadata (bz431474)'
 
-SKIP_WITH_LVMPOLLD=1
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld
 
 # For udev impossible to create
 test "$LVM_TEST_DEVDIR" = "/dev" && skip

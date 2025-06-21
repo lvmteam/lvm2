@@ -11,10 +11,8 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 # unrelated to lvm2 daemons
-SKIP_WITH_LVMLOCKD=1
-SKIP_WITH_LVMPOLLD=1
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld --skip-with-lvmlockd
 
 CIPHER=aes-xts-plain64
 HEXKEY_32=0102030405060708090a0102030405060102030405060708090a010203040506

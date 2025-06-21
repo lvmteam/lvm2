@@ -13,9 +13,8 @@
 # Exercise creation of cache and raids
 
 
-SKIP_WITH_LVMPOLLD=1
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld
 
 aux have_cache 1 3 0 || skip
 aux have_raid 1 0 0 || skip

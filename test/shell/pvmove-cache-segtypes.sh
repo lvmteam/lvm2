@@ -11,9 +11,8 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 test_description="ensure pvmove works with the cache segment types"
-SKIP_WITH_LVMLOCKD=1
 
-. lib/inittest
+. lib/inittest --skip-with-lvmlockd
 
 # pvmove fails when a RAID LV is the origin of a cache LV
 # pvmoving cache types is currently disabled in tools/pvmove.c

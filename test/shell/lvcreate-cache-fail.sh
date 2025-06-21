@@ -14,9 +14,8 @@
 # https://bugzilla.redhat.com/1355923
 
 
-SKIP_WITH_LVMPOLLD=1
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld
 
 aux have_cache 1 3 0 || skip
 

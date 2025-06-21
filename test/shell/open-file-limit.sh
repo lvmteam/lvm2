@@ -11,10 +11,8 @@
 
 # Test scan_lvs config setting
 
-SKIP_WITH_LVMPOLLD=1
-SKIP_WITH_LVMLOCKD=1
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld --skip-with-lvmlockd
 
 prlimit -h || skip
 

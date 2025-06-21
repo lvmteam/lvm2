@@ -14,9 +14,8 @@
 # RHBZ: https://bugzilla.redhat.com/show_bug.cgi?id=1049296
 
 
-SKIP_WITH_LVMPOLLD=1
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld
 
 which mkfs.ext3 || skip
 which fsck || skip

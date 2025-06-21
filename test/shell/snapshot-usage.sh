@@ -12,10 +12,8 @@
 
 # no automatic extensions please
 
-SKIP_WITH_LVMLOCKD=1
-SKIP_WITH_LVMPOLLD=1
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld --skip-with-lvmlockd
 
 MKFS=mkfs.ext2
 which $MKFS || skip

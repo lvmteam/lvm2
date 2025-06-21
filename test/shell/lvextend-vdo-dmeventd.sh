@@ -13,9 +13,8 @@
 # Test autoextension of VDO pool volume
 
 
-SKIP_WITH_LVMPOLLD=1
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld
 
 percent_() {
 	get lv_field $vg/vpool data_percent | cut -d. -f1

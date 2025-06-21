@@ -12,10 +12,8 @@
 
 # Test various supported conversion of snapshot
 
-SKIP_WITH_LVMLOCKD=1
-SKIP_WITH_LVMPOLLD=1
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld --skip-with-lvmlockd
 
 aux prepare_pvs 2
 get_devs

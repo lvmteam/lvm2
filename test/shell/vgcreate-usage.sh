@@ -12,9 +12,8 @@
 
 test_description='Exercise some vgcreate diagnostics'
 
-SKIP_WITH_LVMPOLLD=1
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld
 
 aux prepare_devs 3
 pvcreate "$dev1" "$dev2"

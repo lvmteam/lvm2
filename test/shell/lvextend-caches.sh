@@ -10,11 +10,10 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
-SKIP_WITH_LVMPOLLD=1
 
 # lvextend LV with cache|writecache
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld
 
 case "$(uname -r)" in
 6.[0123]*|5.19*) skip "Skippen test that kills this kernel" ;;

@@ -13,9 +13,8 @@
 # no automatic extensions please
 
 
-SKIP_WITH_LVMPOLLD=1
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld
 
 which mkfs.ext2 || skip
 

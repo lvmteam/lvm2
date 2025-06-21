@@ -11,11 +11,10 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 
-SKIP_WITH_LVMPOLLD=1
 
 # bz1161347 - When raid creation is aborted, left-over devices appear
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld
 
 ########################################################
 # MAIN

@@ -14,9 +14,8 @@
 # seriously broken!
 
 SKIP_WITH_CLVMD=1
-SKIP_WITH_LVMPOLLD=1
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld
 
 aux prepare_dmeventd
 aux prepare_vg 3

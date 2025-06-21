@@ -12,9 +12,8 @@
 
 # Test snapshot on cache|writecache
 
-SKIP_WITH_LVMPOLLD=1
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld
 
 lvm segtypes 2>/dev/null | grep writecache$ >/dev/null || {
 	skip 'Writecache is not built-in.'

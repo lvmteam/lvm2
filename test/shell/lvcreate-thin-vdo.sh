@@ -12,11 +12,10 @@
 
 # testing the create of thin-pool with data volume using vdo volume
 
-SKIP_WITH_LVMPOLLD=1
 
 export LVM_TEST_THIN_REPAIR_CMD=${LVM_TEST_THIN_REPAIR_CMD-/bin/false}
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld
 
 aux have_thin 1 0 0 || skip
 aux have_vdo 6 2 0 || skip

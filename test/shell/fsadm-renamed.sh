@@ -12,9 +12,8 @@
 
 test_description='Exercise fsadm operation on renamed device'
 
-SKIP_WITH_LVMPOLLD=1
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld
 
 aux prepare_vg 1 700
 

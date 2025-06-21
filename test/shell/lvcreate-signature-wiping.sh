@@ -13,9 +13,8 @@
 # 'Exercise signature wiping during lvcreate'
 
 
-SKIP_WITH_LVMPOLLD=1
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld
 
 init_lv_() {
 	mkswap "$DM_DEV_DIR/$vg/$lv1"

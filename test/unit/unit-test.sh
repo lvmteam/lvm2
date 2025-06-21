@@ -11,11 +11,6 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
-SKIP_WITH_LVMLOCKD=1
-SKIP_WITH_LVMPOLLD=1
-
-SKIP_ROOT_DM_CHECK=1
-
-. lib/inittest
+. lib/inittest --skip-root-dm-check --skip-with-lvmpolld --skip-with-lvmlockd
 
 aux unittest run

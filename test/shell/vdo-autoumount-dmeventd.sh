@@ -13,9 +13,8 @@
 # no automatic extensions, just umount
 
 
-SKIP_WITH_LVMPOLLD=1
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld
 
 mntdir="${PREFIX}mnt with space"
 PERCENT=70

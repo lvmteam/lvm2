@@ -11,9 +11,8 @@
 
 # Test scan_lvs config setting
 
-SKIP_WITH_LVMPOLLD=1
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld
 
 aux extend_filter_LVMTEST
 aux lvmconf "devices/scan_lvs = 1"

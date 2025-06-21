@@ -13,9 +13,8 @@
 # 'Exercise some lvcreate diagnostics'
 
 
-SKIP_WITH_LVMPOLLD=1
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld
 
 aux lvmconf "global/support_mirrored_mirror_log=1"
 

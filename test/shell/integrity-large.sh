@@ -12,10 +12,9 @@
 
 # Test writecache usage
 
-SKIP_WITH_LVMPOLLD=1
 SKIP_WITH_LOW_SPACE=1100
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld
 
 aux have_integrity 1 5 0 || skip
 which mkfs.xfs || skip

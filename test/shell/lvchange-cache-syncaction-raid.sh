@@ -13,7 +13,6 @@
 # test activation race for raid's --syncaction check
 
 
-SKIP_WITH_LVMPOLLD=1
 
 
 # Current support for syncaction in cluster is broken
@@ -21,7 +20,7 @@ SKIP_WITH_LVMPOLLD=1
 # meanwhile skipped
 SKIP_WITH_CLVMD=1
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld
 
 aux have_cache 1 5 0 || skip
 

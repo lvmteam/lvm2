@@ -12,10 +12,8 @@
 
 # Test vgsplit command options with vdo volumes
 
-SKIP_WITH_LVMLOCKD=1
-SKIP_WITH_LVMPOLLD=1
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld --skip-with-lvmlockd
 
 aux have_vdo 6 2 0 || skip
 

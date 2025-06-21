@@ -22,9 +22,8 @@
 #     LVM_TEST_BACKING_DEVICE=/dev/sdj3,/dev/sdk3,/dev/sdl3 \
 #     LVM_TEST_MULTI_HOST=1 T=multi_hosts_vg_hostb.sh
 
-SKIP_WITH_LVMPOLLD=1
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld
 
 [ -z "$LVM_TEST_MULTI_HOST" ] && skip;
 

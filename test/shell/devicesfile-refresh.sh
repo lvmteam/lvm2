@@ -12,9 +12,8 @@
 
 test_description='refresh device ids if system changes'
 
-SKIP_WITH_LVMPOLLD=1
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld
 
 test -d /sys/block/ram0 && skip "Ramdisk already loaded"
 

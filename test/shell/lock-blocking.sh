@@ -13,9 +13,8 @@
 test_description='test some blocking / non-blocking multi-vg operations'
 
 SKIP_WITH_CLVMD=1
-SKIP_WITH_LVMPOLLD=1
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld
 
 # Make sure the placement of locking dir is known
 aux lvmconf "global/locking_dir = \"$TESTDIR/var/lock/lvm\""

@@ -13,11 +13,10 @@
 # Test unaligned size of external origin and thin pool chunk size
 
 
-SKIP_WITH_LVMPOLLD=1
 
 export LVM_TEST_THIN_REPAIR_CMD=${LVM_TEST_THIN_REPAIR_CMD-/bin/false}
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld
 
 which cmp || skip
 

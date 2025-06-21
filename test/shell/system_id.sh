@@ -13,14 +13,12 @@
 test_description='Test system_id'
 
 # test does not apply to lvmlockd
-SKIP_WITH_LVMLOCKD=1
-SKIP_WITH_LVMPOLLD=1
 
 print_lvmlocal() {
 	{ echo "local {"; printf "%s\n" "$@"; echo "}"; } >"$LVMLOCAL"
 }
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld --skip-with-lvmlockd
 
 aux prepare_devs 5
 

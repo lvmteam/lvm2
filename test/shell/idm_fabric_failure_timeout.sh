@@ -11,9 +11,8 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 
-SKIP_WITH_LVMPOLLD=1
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld
 
 [ -z "$LVM_TEST_LOCK_TYPE_IDM" ] && skip
 [ -z "$LVM_TEST_FAILURE" ] && skip

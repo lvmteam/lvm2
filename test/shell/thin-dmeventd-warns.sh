@@ -13,9 +13,8 @@
 # test if dmeventd produces multiple warnings when pools runs above 80%
 
 
-SKIP_WITH_LVMPOLLD=1
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld
 
 which blkdiscard || skip
 

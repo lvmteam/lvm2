@@ -13,9 +13,8 @@
 # Test usability of 16g thin pool metadata  LV
 
 
-SKIP_WITH_LVMPOLLD=1
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld
 
 aux have_thin 1 0 0 || skip
 

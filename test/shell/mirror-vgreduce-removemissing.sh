@@ -13,9 +13,8 @@
 
 test_description="ensure that 'vgreduce --removemissing' works on mirrored LV"
 
-SKIP_WITH_LVMPOLLD=1
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld
 
 list_pvs=()
 

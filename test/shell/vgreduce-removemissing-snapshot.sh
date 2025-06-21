@@ -12,9 +12,8 @@
 
 
 SKIP_WITH_CLVMD=1
-SKIP_WITH_LVMPOLLD=1
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld
 
 #
 # Snapshots of 'mirrors' are not supported.  They can no longer be created.

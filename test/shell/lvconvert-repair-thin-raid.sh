@@ -13,9 +13,8 @@
 # Test repairing of broken thin pool on raid
 
 
-SKIP_WITH_LVMPOLLD=1
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld
 
 aux have_thin 1 0 0 || skip
 aux have_raid 1 4 0 || skip

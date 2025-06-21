@@ -12,9 +12,8 @@
 
 test_description='device id wwid from vpd_pg83'
 
-SKIP_WITH_LVMPOLLD=1
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld
 
 aux lvmconf 'devices/global_filter = [ "a|.*|" ]' \
             'devices/filter = [ "a|.*|" ]'

@@ -14,9 +14,8 @@
 # Either command line or metadata profile or implicit default...
 
 
-SKIP_WITH_LVMPOLLD=1
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld
 
 aux have_vdo 6 2 0 || skip
 

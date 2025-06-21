@@ -12,9 +12,8 @@
 
 # Test resize of VDO volumes
 
-SKIP_WITH_LVMPOLLD=1
 
-. lib/inittest
+. lib/inittest --skip-with-lvmpolld
 
 aux have_vdo 6 2 0 || skip
 
