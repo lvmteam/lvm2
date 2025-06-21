@@ -181,7 +181,7 @@ Display attributes of Volume Groups.
 .
 .TP
 .B vgexport
-Make volume Groups unknown to the system.
+Make Volume Groups unknown to the system.
 .
 .TP
 .B vgextend

@@ -29,7 +29,7 @@ other hosts.
 .P
 The system ID is a string that uniquely identifies a host.  It can be
 configured as a custom value, or it can be assigned automatically by LVM
-using some unique identifier already available on the host, e.g.
+using some unique identifier already available on the host, e.g.,
 machine-id or uname.
 .P
 When a new VG is created, the system ID of the local host is recorded in
@@ -45,7 +45,7 @@ host.
 .P
 A
 .B foreign VG
-is a VG seen by a host with an unmatching system ID, i.e. the system ID
+is a VG seen by a host with an unmatching system ID, i.e., the system ID
 in the VG metadata does not match the system ID configured on the host.
 If the host has no system ID, and the VG does, the VG is foreign and LVM
 will ignore it.  If the VG has no system ID, access is unrestricted, and

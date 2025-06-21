@@ -37,8 +37,8 @@ fsadm \(em utility to resize or check filesystem on a device
 .
 .SH DESCRIPTION
 .
-fsadm utility checks or resizes the filesystem on a device (can be
-also dm-crypt encrypted device).
+fsadm utility checks or resizes the filesystem on a device
+(which can also be a dm-crypt encrypted device).
 It tries to use the same API for
 .BR ext2 ,
 .BR ext3 ,

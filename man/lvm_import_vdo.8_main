@@ -1,8 +1,8 @@
-.TH "FSADM" "8" "LVM TOOLS #VERSION#" "Red Hat, Inc" \" -*- nroff -*-
+.TH "LVM_IMPORT_VDO" "8" "LVM TOOLS #VERSION#" "Red Hat, Inc" \" -*- nroff -*-
 .
 .SH "NAME"
 .
-lvm_import_vdo \(em utility to import VDO volumes into a new volume group.
+lvm_import_vdo \(em utility to import VDO volumes into a new volume group
 .
 .SH SYNOPSIS
 .
@@ -38,9 +38,9 @@ Display the help text.
 .TP
 .BR -n | --name
 Specifies the name of converted VDO LV. When the name is not specified,
-some automatic name is selected. In case the converted VDO volume is
-already using LV a backend device, the name of this LV is used for VDO LV.
-In this case also the of volume group must stay same.
+some automatic name is selected. In case the converted VDO volume is already
+using an LV as a backend device, the name of this LV is used for VDO LV.
+In this case also the name of the volume group must stay the same.
 Automatic name may change between releases and currently selects
 "vdolv" as LV name and VG name is selected from sequence
 "vdovg", "vdovg1", ...
@@ -82,7 +82,7 @@ A status code of 1 is used for failure.
 .SH EXAMPLES
 .
 Convert VDO volume created by vdo manager into logical volume LV1
-with within volume group VG1.
+within volume group VG1.
 .P
 #
 .B lvm_import_vdo --name VG1/LV1 /dev/mapper/vdo-volume

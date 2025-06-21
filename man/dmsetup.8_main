@@ -497,7 +497,7 @@ Display output in columns rather than as Field: Value lines.
 .TP
 \fB--count\fP \fIcount\fP
 Specify the number of times to repeat a report.
-Set this to zero continue until interrupted.
+Set this to zero to continue until interrupted.
 The default interval is one second.
 .
 .TP
@@ -588,7 +588,7 @@ commit thin-pool metadata when obtaining thin-pool status.
 .
 .TP
 .B --nolockfs
-Do not attempt to synchronize filesystem eg, when suspending a device.
+Do not attempt to synchronize filesystem, e.g., when suspending a device.
 .
 .TP
 .B --noopencount
@@ -686,7 +686,7 @@ the table is loaded and made live.
 Otherwise a table is read from standard input unless \fB--notable\fP is used.
 The optional \fIuuid\fP can be used in place of
 device_name in subsequent dmsetup commands.
-If successful the device will appear in table and for live
+If successful the device will appear in table and for the live
 device the node
 .na
 .I /dev/mapper/device_name
@@ -712,7 +712,7 @@ below.
 .NTP
 .CMD_DEPS
 Outputs a list of devices referenced by the live table for the specified
-device. Device names on output can be customised by following options:
+device. Device names on output can be customised by the following options:
 \fBdevno\fP (major and minor pair, used by default),
 \fBblkdevname\fP (block device name),
 \fBdevname\fP (map name for device-mapper devices, equal to blkdevname otherwise).
@@ -774,12 +774,12 @@ Precede any sort field with '\fB-\fP' for a reverse sort on that column.
 List device names.  Optionally only list devices that have at least
 one target of the specified type.  Optionally execute a command for
 each device.  The device name is appended to the supplied command.
-Device names on output can be customised by following options:
+Device names on output can be customised by the following options:
 \fBdevno\fP (major and minor pair, used by default),
 \fBblkdevname\fP (block device name),
 \fBdevname\fP (map name for device-mapper devices, equal to blkdevname otherwise).
 \fB--tree\fP displays dependencies between devices as a tree.
-It accepts a comma-separate list of options.
+It accepts a comma-separated list of options.
 Some specify the information displayed against each node:
 .BR device\  /\: \ nodevice ;
 .BR blkdevname ;
@@ -1078,8 +1078,8 @@ More complex targets include:
 .
 .TP
 .B cache
-Improves performance of a block device (eg, a spindle) by dynamically
-migrating some of its data to a faster smaller device (eg, an SSD).
+Improves performance of a block device (e.g., a spindle) by dynamically
+migrating some of its data to a faster smaller device (e.g., an SSD).
 .
 .TP
 .B crypt

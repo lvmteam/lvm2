@@ -35,7 +35,7 @@ It is specific to device-mapper based mirrors (and by extension, LVM
 cluster mirrors).  Cluster mirrors are not possible without this daemon
 running.
 .P
-This daemon relies on the cluster infrastructure provided by the corosync,
+This daemon relies on the cluster infrastructure provided by corosync,
 which must be set up and running in order for cmirrord to function.
 .P
 Output is logged via \fBsyslog\fP(3). The \fBSIGUSR1 signal\fP(7) can be
