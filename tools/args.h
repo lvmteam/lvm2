@@ -152,7 +152,7 @@ arg(cachemode_ARG, '\0', "cachemode", cachemode_VAL, 0, 0,
     "Specifies when writes to a cache LV should be considered complete.\n"
     "\\fBwriteback\\fP considers a write complete as soon as it is\n"
     "stored in the cache pool.\n"
-    "\\fBwritethough\\fP considers a write complete only when it has\n"
+    "\\fBwritethrough\\fP considers a write complete only when it has\n"
     "been stored in both the cache pool and on the origin LV.\n"
     "While writethrough may be slower for writes, it is more\n"
     "resilient if something should happen to a device associated with the\n"
@@ -182,7 +182,7 @@ arg(commandprofile_ARG, '\0', "commandprofile", string_VAL, 0, 0,
     "See \\fBlvm.conf\\fP(5) for more information about profiles.\n")
 
 arg(compression_ARG, '\0', "compression", bool_VAL, 0, 0,
-    "Controls whether compression is enabled or disable for VDO volume.\n"
+    "Controls whether compression is enabled or disabled for VDO volume.\n"
     "See \\fBlvmvdo\\fP(7) for more information about VDO usage.\n")
 
 arg(config_ARG, '\0', "config", string_VAL, 0, 0,
@@ -239,7 +239,7 @@ arg(dataalignmentoffset_ARG, '\0', "dataalignmentoffset", sizekb_VAL, 0, 0,
     "Shift the start of the PV data area by this additional offset.\n")
 
 arg(deduplication_ARG, '\0', "deduplication", bool_VAL, 0, 0,
-    "Controls whether deduplication is enabled or disable for VDO volume.\n"
+    "Controls whether deduplication is enabled or disabled for VDO volume.\n"
     "See \\fBlvmvdo\\fP(7) for more information about VDO usage.\n")
 
 arg(deltag_ARG, '\0', "deltag", tag_VAL, ARG_GROUPABLE, 0,
@@ -573,7 +573,7 @@ arg(nosync_ARG, '\0', "nosync", 0, 0, 0,
     "sync of an empty mirror/raid1/raid4/raid5 and raid10 LV.\n"
     "This option is not valid for raid6, because raid6 relies on proper parity\n"
     "(P and Q Syndromes) being created during initial synchronization in order\n"
-    "to reconstruct proper user date in case of device failures.\n"
+    "to reconstruct proper user data in case of device failures.\n"
     "raid0 and raid0_meta do not provide any data copies or parity support\n"
     "and thus do not support initial synchronization.\n")
 
@@ -621,7 +621,7 @@ arg(pooldatavdo_ARG, '\0', "pooldatavdo", bool_VAL, 0, 0,
     "Use VDO type volume for pool data volume.\n")
 
 arg(poolmetadata_ARG, '\0', "poolmetadata", lv_VAL, 0, 0,
-    "The name of a an LV to use for storing pool metadata.\n")
+    "The name of an LV to use for storing pool metadata.\n")
 
 arg(poolmetadatasize_ARG, '\0', "poolmetadatasize", sizemb_VAL, 0, 0,
     "#lvcreate\n"
