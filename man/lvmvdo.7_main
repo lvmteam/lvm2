@@ -92,7 +92,7 @@ always fits into data volume even if no
 deduplication or compression can happen
 (i.e. it can hold the incompressible content of /dev/urandom).
 If you do not specify the name of VDOPoolLV, it is taken from
-the sequence of vpool0, vpool1 ...
+the sequence of vpool0, vpool1, \&...
 .P
 Note: The performance of TRIM/Discard operations is slow for large
 volumes of VDO type. Please try to avoid sending discard requests unless
@@ -251,7 +251,7 @@ Note: \fBvdostats\fP(8) currently understands only
 \  version                             : 30
 \  release version                     : 133524
 \  data blocks used                    : 79
-\  ...
+\  \&...
 .EE
 .
 .SS \n+[step]. Extending the VDOPoolLV size

@@ -902,10 +902,10 @@ points back in time with relative offset from today (N is a number)
 "N" "seconds" / "minutes" / "hours" / "days" / "weeks" / "years" "ago"
 .
 .IP
-"N" "secs" / "mins" / "hrs" ... "ago"
+"N" "secs" / "mins" / "hrs" \&... "ago"
 .
 .IP
-"N" "s" / "m" / "h" ... "ago"
+"N" "s" / "m" / "h" \&... "ago"
 .RE
 .
 .IP \(en 3

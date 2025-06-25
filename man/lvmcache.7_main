@@ -283,7 +283,7 @@ To specify dm-writecache tunable settings on the command line, use:
 .br
 --cachesettings 'option=N' or
 .br
---cachesettings 'option1=N option2=N ...'
+--cachesettings 'option1=N option2=N \&.\|.\|.'
 .P
 For example, --cachesettings 'high_watermark=90 writeback_jobs=4'.
 .P
@@ -541,12 +541,12 @@ Checking migration threshold (in sectors) of running cached LV:
 .
 To set dm-cache cache setting use:
 .P
---cachesettings 'option1=N option2=N .\|.\|.'
+--cachesettings 'option1=N option2=N \&.\|.\|.'
 .P
 To unset/drop cache setting and restore its default kernel value
 use special keyword 'default' as option parameter:
 .P
---cachesettings 'option1=default option2=default .\|.\|.'
+--cachesettings 'option1=default option2=default \&.\|.\|.'
 .
 .SS dm-cache migration threshold cache setting
 .

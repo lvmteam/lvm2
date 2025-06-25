@@ -388,13 +388,13 @@ All shared VGs can be started/stopped using:
 .P
 Individual VGs can be started/stopped using:
 .br
-vgchange --lockstart <vgname> ...
+vgchange --lockstart <vgname> \&.\|.\|.
 .br
-vgchange --lockstop <vgname> ...
+vgchange --lockstop <vgname> \&.\|.\|.
 .P
 To make vgchange not wait for start to complete:
 .br
-vgchange --lockstart --lockopt nowait ...
+vgchange --lockstart --lockopt nowait \&.\|.\|.
 .P
 lvmlockd can be asked directly to stop all lockspaces:
 .br

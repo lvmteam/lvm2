@@ -43,7 +43,7 @@ using an LV as a backend device, the name of this LV is used for VDO LV.
 In this case also the name of the volume group must stay the same.
 Automatic name may change between releases and currently selects
 "vdolv" as LV name and VG name is selected from sequence
-"vdovg", "vdovg1", ...
+"vdovg", "vdovg1", \&...
 .
 .TP
 .BR -v | --verbose
