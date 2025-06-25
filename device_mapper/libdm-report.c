@@ -4843,31 +4843,39 @@ bad:
 
 static int _safe_repstr_output(struct dm_report *rh, const char *repstr, size_t len)
 {
-	const char *p_repstr;
+	const char *repstr_next_write = repstr;
+	const char *repstr_current = repstr;
 	const char *repstr_end = len ? repstr + len : repstr + strlen(repstr);
 
-	/* Escape any JSON_QUOTE that may appear in reported string. */
-	while (1) {
-		if (!(p_repstr = memchr(repstr, JSON_QUOTE[0], repstr_end - repstr)))
-			break;
+	/* Escape any JSON_ESCAPE_CHAR and JSON_QUOTE that may appear in reported string. */
+	while (repstr_current < repstr_end) {
+		if (repstr_current[0] == JSON_ESCAPE_CHAR[0] || repstr_current[0] == JSON_QUOTE[0]) {
+			// Write out all "sanitized" chars so far
+			if (repstr_next_write < repstr_current) {
+				if (!dm_pool_grow_object(rh->mem, repstr_next_write, repstr_current - repstr_next_write)) {
+					log_error(UNABLE_TO_EXTEND_OUTPUT_LINE_MSG);
+					return 0;
+				}
 
-		if (p_repstr > repstr) {
-			if (!dm_pool_grow_object(rh->mem, repstr, p_repstr - repstr)) {
+				repstr_next_write = repstr_current;
+			}
+
+			// Add an escape
+			if (!dm_pool_grow_object(rh->mem, JSON_ESCAPE_CHAR, 1)) {
 				log_error(UNABLE_TO_EXTEND_OUTPUT_LINE_MSG);
 				return 0;
 			}
 		}
-		if (!dm_pool_grow_object(rh->mem, JSON_ESCAPE_CHAR, 1) ||
-		    !dm_pool_grow_object(rh->mem, JSON_QUOTE, 1)) {
+
+		++repstr_current;
+	}
+
+	// Write out all remaining "sanitized" chars
+	if (repstr_next_write < repstr_end) {
+		if (!dm_pool_grow_object(rh->mem, repstr_next_write, repstr_end - repstr_next_write)) {
 			log_error(UNABLE_TO_EXTEND_OUTPUT_LINE_MSG);
 			return 0;
 		}
-		repstr = p_repstr + 1;
-	}
-
-	if (!dm_pool_grow_object(rh->mem, repstr, repstr_end - repstr)) {
-		log_error(UNABLE_TO_EXTEND_OUTPUT_LINE_MSG);
-		return 0;
 	}
 
 	return 1;
