@@ -14,7 +14,7 @@
 .  \}
 ..
 .
-.SH "NAME"
+.SH NAME
 .
 fsadm \(em utility to resize or check filesystem on a device
 .

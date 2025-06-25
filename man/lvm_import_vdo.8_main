@@ -1,6 +1,6 @@
 .TH "LVM_IMPORT_VDO" "8" "LVM TOOLS #VERSION#" "Red Hat, Inc." \" -*- nroff -*-
 .
-.SH "NAME"
+.SH NAME
 .
 lvm_import_vdo \(em utility to import VDO volumes into a new volume group
 .
