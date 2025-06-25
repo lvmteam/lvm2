@@ -12,7 +12,7 @@
 
 enum {
 #define cmd(a, b) a ,
-#include "include/cmds.h"
+#include "cmds.h"
 #undef cmd
 };
 
