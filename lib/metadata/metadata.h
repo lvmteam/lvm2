@@ -419,7 +419,7 @@ struct logical_volume *alloc_lv(struct dm_pool *mem);
 
 /* Checks that an lv has no gaps or overlapping segments. */
 int check_lv_segments_incomplete_vg(struct logical_volume *lv);
-/* Aditional VG level checks on lv segment. */
+/* Additional VG level checks on lv segment. */
 int check_lv_segments_complete_vg(struct logical_volume *lv);
 
 /*

@@ -18,7 +18,7 @@ lvm version
 
 lvm pvmove --version|sed -n "1s/.*: *\([0-9][^ ]*\) .*/\1/p" | tee version
 
-# check LVM_SUPPRESS_FD_WARNINGS supression works
+# check LVM_SUPPRESS_FD_WARNINGS suppression works
 exec 3< version
 lvs 2>err
 # without suppression command prints message about leaked descriptor

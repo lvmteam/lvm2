@@ -5162,7 +5162,7 @@ struct volume_group *vg_read(struct cmd_context *cmd, const char *vg_name, const
 		/*
 		 * If the VG metadata is referencing PVs that don't belong to it,
 		 * then don't allow the VG to be modified or activated, to avoid
-		 * damanging those PVs.
+		 * damaging those PVs.
 		 */
 		if (incorrect_pv_claim) {
 			log_error("Cannot use VG %s referencing incorrect PVs.", vg->name);

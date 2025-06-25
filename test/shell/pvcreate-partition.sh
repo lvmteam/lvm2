@@ -23,7 +23,7 @@ pvcreate_on_dev_with_part_table() {
 	local type=$2
 
 	# pvcreate passes on empty partition table
-	echo "label:$type" | sfdisk "$dev" || skip "sfdisk does not support lable:$type"
+	echo "label:$type" | sfdisk "$dev" || skip "sfdisk does not support label:$type"
 	pvcreate -y "$dev"
 	pvremove "$dev"
 

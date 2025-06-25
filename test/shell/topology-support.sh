@@ -131,7 +131,7 @@ aux prepare_devs 1 $PER_DEV_SIZE
 
 pvcreate "${DEVICES[@]}"
 vgcreate $vg "${DEVICES[@]}"
-# Value ~16MiB should be ignored and standart 1MiB alignment should be here
+# Value ~16MiB should be ignored and standard 1MiB alignment should be here
 $SHOULD check pv_field "${DEVICES[@]}" pe_start 1.00m
 
 aux cleanup_scsi_debug_dev

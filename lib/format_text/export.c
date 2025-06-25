@@ -71,7 +71,7 @@ struct formatter {
 	int indent;		/* current level of indentation */
 	int error;
 	int header;		/* 1 => comments at start; 0 => end */
-	int with_comment;       /* 1 => prepare comment sting */
+	int with_comment;       /* 1 => prepare comment string */
 };
 
 static struct utsname _utsname;

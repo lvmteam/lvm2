@@ -178,7 +178,7 @@ static int _btrfs_get_mnt(struct fs_info *fsi, dev_t lv_devt)
 		return 0;
 	}
 
-	/* btrfs module is not avaiable or the device is not mounted */
+	/* btrfs module is not available or the device is not mounted */
 	if (!(dr = opendir(devices_path))) {
 		if (errno == ENOENT) {
 			fsi->mounted = 0;
