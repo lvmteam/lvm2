@@ -1,4 +1,4 @@
-.TH "LVMAUTOACTIVATION" "7" "LVM TOOLS #VERSION#" "Red Hat, Inc"
+.TH "LVMAUTOACTIVATION" "7" "LVM TOOLS #VERSION#" "Red Hat, Inc."
 .
 .if !dEX \{\
 .de EX

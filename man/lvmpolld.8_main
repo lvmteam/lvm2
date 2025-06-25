@@ -1,4 +1,4 @@
-.TH LVMPOLLD 8 "LVM TOOLS #VERSION#" "Red Hat Inc" \" -*- nroff -*-
+.TH LVMPOLLD 8 "LVM TOOLS #VERSION#" "Red Hat, Inc." \" -*- nroff -*-
 .
 .de NSY
 .  ie t .SY \\$1

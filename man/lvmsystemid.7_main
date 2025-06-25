@@ -1,4 +1,4 @@
-.TH "LVMSYSTEMID" "7" "LVM TOOLS #VERSION#" "Red Hat, Inc"
+.TH "LVMSYSTEMID" "7" "LVM TOOLS #VERSION#" "Red Hat, Inc."
 .
 .if !dEX \{\
 .de EX

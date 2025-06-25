@@ -1,4 +1,4 @@
-.TH "LVMLOCKCTL" "8" "LVM TOOLS #VERSION#" "Red Hat, Inc" \" -*- nroff -*-
+.TH "LVMLOCKCTL" "8" "LVM TOOLS #VERSION#" "Red Hat, Inc." \" -*- nroff -*-
 .
 .SH NAME
 .

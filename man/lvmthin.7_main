@@ -1,4 +1,4 @@
-.TH "LVMTHIN" "7" "LVM TOOLS #VERSION#" "Red Hat, Inc" \" -*- nroff -*-
+.TH "LVMTHIN" "7" "LVM TOOLS #VERSION#" "Red Hat, Inc." \" -*- nroff -*-
 .
 .if !dEX \{\
 .de EX

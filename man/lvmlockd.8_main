@@ -1,4 +1,4 @@
-.TH "LVMLOCKD" "8" "LVM TOOLS #VERSION#" "Red Hat, Inc" \" -*- nroff -*-
+.TH "LVMLOCKD" "8" "LVM TOOLS #VERSION#" "Red Hat, Inc." \" -*- nroff -*-
 .
 .if !dEX \{\
 .de EX

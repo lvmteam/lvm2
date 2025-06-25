@@ -1,4 +1,4 @@
-.TH DMEVENTD 8 "DM TOOLS #VERSION#" "Red Hat Inc" \" -*- nroff -*-
+.TH DMEVENTD 8 "DM TOOLS #VERSION#" "Red Hat, Inc." \" -*- nroff -*-
 .
 .de NSY
 .  ie t .SY \\$1
