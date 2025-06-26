@@ -2352,7 +2352,7 @@ int lm_unlock_sanlock(struct lockspace *ls, struct resource *r,
 
 int lm_vg_status_sanlock(struct lockspace *ls, struct action *act)
 {
-	struct sanlk_host *hs;
+	struct sanlk_host *hs = NULL;
 	const char *host_state;
 	int count = 0;
 	int rv;
@@ -2366,6 +2366,11 @@ int lm_vg_status_sanlock(struct lockspace *ls, struct action *act)
 		return rv;
 	}
 
+	if (!count || !hs) {
+		log_error("S %s vg_status_san get_hosts empty", ls->name);
+		return -EINVAL;
+	}
+
 	act->owner.host_id = (uint32_t)hs->host_id;
 	act->owner.generation = (uint32_t)hs->generation;
 	act->owner.timestamp = (uint32_t)hs->timestamp;
@@ -2373,6 +2378,7 @@ int lm_vg_status_sanlock(struct lockspace *ls, struct action *act)
 	if ((host_state = _host_flags_to_str(hs->flags)))
 		dm_strncpy(act->owner.state, host_state, OWNER_STATE_SIZE-1);
 
+	free(hs);
 	return 0;
 }
 
