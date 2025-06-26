@@ -24,17 +24,14 @@
 #include <mntent.h>
 #include <sys/ioctl.h>
 
-static const char *_lvresize_fs_helper_path;
-
-static const char *_get_lvresize_fs_helper_path(void)
+static const char *_get_lvresize_fs_helper_path(struct cmd_context *cmd)
 {
-	if (!_lvresize_fs_helper_path)
-		_lvresize_fs_helper_path = getenv("LVRESIZE_FS_HELPER_PATH");
+	const char *path = getenv("LVRESIZE_FS_HELPER_PATH");
 
-	if (!_lvresize_fs_helper_path)
-		_lvresize_fs_helper_path = LVRESIZE_FS_HELPER_PATH; /* from configure, usually in /usr/libexec */
+	if (!path)
+		path = find_config_tree_str(cmd, global_lvresize_fs_helper_executable_CFG, NULL);
 
-	return _lvresize_fs_helper_path;
+	return path;
 }
 
 /*
@@ -506,7 +503,7 @@ int crypt_resize_script(struct cmd_context *cmd, struct logical_volume *lv, stru
 	if (dm_snprintf(crypt_path, sizeof(crypt_path), "/dev/dm-%u", MINOR(fsi->crypt_devt)) < 0)
 		return_0;
 
-	argv[0] = _get_lvresize_fs_helper_path();
+	argv[0] = _get_lvresize_fs_helper_path(cmd);
 	argv[++args] = "--cryptresize";
 	argv[++args] = "--cryptpath";
 	argv[++args] = crypt_path;
@@ -556,7 +553,7 @@ int fs_reduce_script(struct cmd_context *cmd, struct logical_volume *lv, struct 
 	if (dm_snprintf(lv_path, PATH_MAX, "%s%s/%s", lv->vg->cmd->dev_dir, lv->vg->name, lv->name) < 0)
 		return_0;
 
-	argv[0] = _get_lvresize_fs_helper_path();
+	argv[0] = _get_lvresize_fs_helper_path(cmd);
 	argv[++args] = "--fsreduce";
 	argv[++args] = "--fstype";
 	argv[++args] = fsi->fstype;
@@ -649,7 +646,7 @@ int fs_extend_script(struct cmd_context *cmd, struct logical_volume *lv, struct 
 	if (dm_snprintf(lv_path, PATH_MAX, "%s%s/%s", lv->vg->cmd->dev_dir, lv->vg->name, lv->name) < 0)
 		return_0;
 
-	argv[0] = _get_lvresize_fs_helper_path();
+	argv[0] = _get_lvresize_fs_helper_path(cmd);
 	argv[++args] = "--fsextend";
 	argv[++args] = "--fstype";
 	argv[++args] = fsi->fstype;

@@ -1332,6 +1332,10 @@ cfg(global_fsadm_executable_CFG, "fsadm_executable", global_CFG_SECTION, CFG_DEF
 	"The full path to the fsadm command.\n"
 	"LVM uses this command to help with lvresize -r operations.\n")
 
+cfg(global_lvresize_fs_helper_executable_CFG, "lvresize_fs_helper_executable", global_CFG_SECTION, CFG_DEFAULT_COMMENTED, CFG_TYPE_STRING, DEFAULT_LVRESIZE_FS_HELPER_PATH, vsn(2, 3, 33), "@LVRESIZE_FS_HELPER_PATH@", 0, NULL,
+	"The full path to the lvresize_fs_helper command.\n"
+	"LVM uses this command to help with filesystem operations during lvresize.\n")
+
 cfg(global_system_id_source_CFG, "system_id_source", global_CFG_SECTION, CFG_DEFAULT_COMMENTED, CFG_TYPE_STRING, DEFAULT_SYSTEM_ID_SOURCE, vsn(2, 2, 117), NULL, 0, NULL,
 	"The method LVM uses to set the local system ID.\n"
 	"Volume Groups can also be given a system ID (by vgcreate, vgchange,\n"
