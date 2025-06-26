@@ -1635,7 +1635,7 @@ dmeventd/executable = "$abs_top_builddir/test/lib/dmeventd"
 activation/udev_rules = 1
 activation/udev_sync = 1
 global/fsadm_executable = "$abs_top_builddir/test/lib/fsadm"
-global/lvresize_fs_helper = "$abs_top_builddir/test/lib/lvresize_fs_helper"
+global/lvresize_fs_helper_executable = "$abs_top_builddir/test/lib/lvresize_fs_helper"
 global/library_dir = "$TESTDIR/lib"
 global/locking_dir = "$TESTDIR/var/lock/lvm"
 EOF
