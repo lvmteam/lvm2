@@ -1,5 +1,6 @@
 Version 1.02.207 - 
 ===================
+  Escape the escape character itself on JSON report format output.
   Fail dm_report_group_create if radix char from locale unsuitable for JSON_STD.
 
 Version 1.02.206 - 05th May 2025
