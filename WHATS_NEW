@@ -1,5 +1,7 @@
 Version 2.03.34 - 
 ==================
+  Add lvm.conf global/lvresize_fs_helper_executable.
+  Enable lvm to use persistent reservations on a VG.
 
 Version 2.03.33 - 27th June 2025
 ================================
