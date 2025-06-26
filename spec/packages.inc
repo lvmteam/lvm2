@@ -91,9 +91,9 @@ fi
 %endif
 %{_mandir}/man5/lvm.conf.5.gz
 %{_mandir}/man7/lvmautoactivation.7.gz
-%{_mandir}/man7/lvmsystemid.7.gz
-%{_mandir}/man7/lvmreport.7.gz
 %{_mandir}/man7/lvmraid.7.gz
+%{_mandir}/man7/lvmreport.7.gz
+%{_mandir}/man7/lvmsystemid.7.gz
 %{_mandir}/man8/fsadm.8.gz
 %{_mandir}/man8/lvchange.8.gz
 %{_mandir}/man8/lvconvert.8.gz
@@ -102,12 +102,13 @@ fi
 %{_mandir}/man8/lvextend.8.gz
 %{_mandir}/man8/lvm-config.8.gz
 %{_mandir}/man8/lvm-dumpconfig.8.gz
+%{_mandir}/man8/lvm-fullreport.8.gz
 %{_mandir}/man8/lvm.8.gz
 %{_mandir}/man8/lvmconfig.8.gz
 %{_mandir}/man8/lvmdevices.8.gz
 %{_mandir}/man8/lvmdiskscan.8.gz
 %{_mandir}/man8/lvmdump.8.gz
-%{_mandir}/man8/lvm-fullreport.8.gz
+%{_mandir}/man8/lvmpersist.8.gz
 %{_mandir}/man8/lvmsadc.8.gz
 %{_mandir}/man8/lvmsar.8.gz
 %{_mandir}/man8/lvreduce.8.gz
