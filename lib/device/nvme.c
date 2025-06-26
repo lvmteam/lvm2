@@ -506,7 +506,7 @@ int dev_read_reservation_nvme(struct cmd_context *cmd, struct device *dev, uint6
 }
 
 
-int dev_find_key_nvme(struct cmd_context *cmd, struct device *dev,
+int dev_find_key_nvme(struct cmd_context *cmd, struct device *dev, int may_fail,
 		      uint64_t find_key, int *found_key,
 		      int find_host_id, uint64_t *found_host_id_key,
 		      int find_all, int *found_count, uint64_t **found_all)
