@@ -78,6 +78,10 @@
 .de O_nolocking
 .OPS nolocking
 ..
+.de O_persist
+.OPA persist
+\fIString\fP
+..
 .de O_profile
 .OPA profile
 \fIString\fP
@@ -145,6 +149,10 @@ Import specified VGs.
 .RS
 [
 .O_select
+]
+.br
+[
+.O_persist
 ]
 .br
 [ COMMON_OPTIONS ]
@@ -332,6 +340,20 @@ perform standard hint file invalidation where appropriate.
 .O_nolocking
 Disable locking. Use with caution, concurrent commands may produce
 incorrect results.
+.
+.TP
+.O_persist
+Persistent Reservation operation.
+start: register local key and acquire reservation.
+stop: unregister local key, releasing reservation.
+remove: preempt and abort another key.
+clear: remove reservation and keys.
+check: check if started.
+autostart: start if the VG autostart flag is set.
+lvmlocal.conf pr_key or host_id must be configured to use PR.
+For local VGs, Write Exclusive (WE) is used, and for shared VGs
+Write Exclusive, all registrants (WEAR) is used.
+Use --setpersist to automate and/or require PR.
 .
 .TP
 .O_profile

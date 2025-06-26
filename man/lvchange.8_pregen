@@ -891,7 +891,7 @@ See \fBvgcfgbackup\fP(8) for more information.
 Specifies when writes to a cache LV should be considered complete.
 \fBwriteback\fP considers a write complete as soon as it is
 stored in the cache pool.
-\fBwritethough\fP considers a write complete only when it has
+\fBwritethrough\fP considers a write complete only when it has
 been stored in both the cache pool and on the origin LV.
 While writethrough may be slower for writes, it is more
 resilient if something should happen to a device associated with the
@@ -923,7 +923,7 @@ See \fBlvm.conf\fP(5) for more information about profiles.
 .
 .TP
 .O_compression
-Controls whether compression is enabled or disable for VDO volume.
+Controls whether compression is enabled or disabled for VDO volume.
 See \fBlvmvdo\fP(7) for more information about VDO usage.
 .
 .TP
@@ -948,7 +948,7 @@ messages sent to the log file and/or syslog (if configured).
 .
 .TP
 .O_deduplication
-Controls whether deduplication is enabled or disable for VDO volume.
+Controls whether deduplication is enabled or disabled for VDO volume.
 See \fBlvmvdo\fP(7) for more information about VDO usage.
 .
 .TP

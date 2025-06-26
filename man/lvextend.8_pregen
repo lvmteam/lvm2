@@ -713,7 +713,7 @@ This is useful for skipping a potentially long and resource intensive initial
 sync of an empty mirror/raid1/raid4/raid5 and raid10 LV.
 This option is not valid for raid6, because raid6 relies on proper parity
 (P and Q Syndromes) being created during initial synchronization in order
-to reconstruct proper user date in case of device failures.
+to reconstruct proper user data in case of device failures.
 raid0 and raid0_meta do not provide any data copies or parity support
 and thus do not support initial synchronization.
 .

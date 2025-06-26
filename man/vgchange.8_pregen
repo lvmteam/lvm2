@@ -159,6 +159,10 @@
 .de O_partial
 .OPS P partial
 ..
+.de O_persist
+.OPA persist
+\fIString\fP
+..
 .de O_physicalextentsize
 .OPA s physicalextentsize
 \fISize\fP[m|\:UNIT]
@@ -185,6 +189,10 @@
 .de O_refresh
 .OPS refresh
 ..
+.de O_removekey
+.OPA removekey
+\fIString\fP
+..
 .de O_reportformat
 .OPA reportformat
 \%\fBbasic\fP|\:\
@@ -202,6 +210,10 @@
 .de O_setautoactivation
 .OPA setautoactivation
 \fBy\fP|\fBn\fP
+..
+.de O_setpersist
+.OPA setpersist
+\fIString\fP
 ..
 .de O_sysinit
 .OPS sysinit
@@ -318,6 +330,8 @@ vgchange \(em Change volume group attributes
 .br
 .O_partial
 .br
+.O_persist
+.br
 .O_physicalextentsize
 .br
 .O_poll
@@ -332,6 +346,8 @@ vgchange \(em Change volume group attributes
 .br
 .O_refresh
 .br
+.O_removekey
+.br
 .O_reportformat
 .br
 .O_resizeable
@@ -339,6 +355,8 @@ vgchange \(em Change volume group attributes
 .O_select
 .br
 .O_setautoactivation
+.br
+.O_setpersist
 .br
 .O_sysinit
 .br
@@ -591,6 +609,10 @@ Activate or deactivate LVs.
 ]
 .br
 [
+.O_persist
+]
+.br
+[
 .O_ignoremonitoring
 ]
 .br
@@ -675,6 +697,64 @@ Change the system ID of a VG.
 .O_majoritypvs
 ]
 .br
+[
+.O_persist
+]
+.br
+[
+.O_removekey
+]
+.br
+[ COMMON_OPTIONS ]
+.RE
+.
+.P
+\(em
+.P
+.
+Set or clear flags to control persistent reservation behavior.
+.P
+.B vgchange
+.O_setpersist
+\fIVG\fP|\fITag\fP|\fISelect\fP
+.RS
+[
+.O_select
+]
+.br
+[
+.O_persist
+]
+.br
+[ COMMON_OPTIONS ]
+.RE
+.
+.P
+\(em
+.P
+.
+Perform persistent reservation commands on devices.
+.P
+.B vgchange
+.O_persist
+\fIVG\fP|\fITag\fP|\fISelect\fP
+.RS
+[
+.O_select
+]
+.br
+[
+.O_force
+]
+.br
+[
+.O_removekey
+]
+.br
+[
+.O_majoritypvs
+]
+.br
 [ COMMON_OPTIONS ]
 .RE
 .
@@ -689,6 +769,10 @@ Start the lockspace of a shared VG in lvmlockd.
 .RS
 [
 .O_select
+]
+.br
+[
+.O_persist
 ]
 .br
 [ COMMON_OPTIONS ]
@@ -707,6 +791,10 @@ Stop the lockspace of a shared VG in lvmlockd.
 .RS
 [
 .O_select
+]
+.br
+[
+.O_persist
 ]
 .br
 [ COMMON_OPTIONS ]
@@ -1047,6 +1135,20 @@ according to the  missing_stripe_filler setting.
 Metadata may not be changed with this option.
 .
 .TP
+.O_persist
+Persistent Reservation operation.
+start: register local key and acquire reservation.
+stop: unregister local key, releasing reservation.
+remove: preempt and abort another key.
+clear: remove reservation and keys.
+check: check if started.
+autostart: start if the VG autostart flag is set.
+lvmlocal.conf pr_key or host_id must be configured to use PR.
+For local VGs, Write Exclusive (WE) is used, and for shared VGs
+Write Exclusive, all registrants (WEAR) is used.
+Use --setpersist to automate and/or require PR.
+.
+.TP
 .O_physicalextentsize
 Sets the physical extent size of PVs in the VG.
 The value must be either a power of 2 of at least 1 sector
@@ -1105,6 +1207,10 @@ Also, this operation may be useful if something has gone wrong,
 or if some form of manual LV sharing is being used.
 .
 .TP
+.O_removekey
+A persistent reservation key to remove.
+.
+.TP
 .O_reportformat
 Overrides current output format for reports which is defined globally by
 the report/output_format setting in \fBlvm.conf\fP(5).
@@ -1144,6 +1250,20 @@ If autoactivation is disabled on a VG, no LVs will be autoactivated
 in that VG, and the LV autoactivation property has no effect.
 If autoactivation is enabled on a VG, autoactivation can be disabled
 for individual LVs.
+.
+.TP
+.O_setpersist
+Set or clear flags to control persistent reservation behavior.
+autostart: set flag, PR will be automatically started.
+noautostart: clear autostart flag.
+require: set flag, PR will be required to write or activate VG.
+norequire: clear require flag.
+y: set autostart and require flags.
+n: clear autostart and require flags.
+When autostart is enabled, autoactivation and auto-lockstart
+commands will first start PR.
+lvmlocal.conf pr_key or host_id must be configured to use PR.
+For local VGs, enabling system_id is also recommended.
 .
 .TP
 .O_sysinit

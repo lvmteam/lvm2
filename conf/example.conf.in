@@ -1379,6 +1379,12 @@ global {
 	# This configuration option has an automatic default value.
 	# fsadm_executable = "@FSADM_PATH@"
 
+	# Configuration option global/lvresize_fs_helper_executable.
+	# The full path to the lvresize_fs_helper command.
+	# LVM uses this command to help with filesystem operations during lvresize.
+	# This configuration option has an automatic default value.
+	# lvresize_fs_helper_executable = "@LVRESIZE_FS_HELPER_PATH@"
+
 	# Configuration option global/system_id_source.
 	# The method LVM uses to set the local system ID.
 	# Volume Groups can also be given a system ID (by vgcreate, vgchange,

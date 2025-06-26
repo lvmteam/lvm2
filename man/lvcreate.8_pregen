@@ -1575,7 +1575,7 @@ Specifies the cache metadata format used by cache target.
 Specifies when writes to a cache LV should be considered complete.
 \fBwriteback\fP considers a write complete as soon as it is
 stored in the cache pool.
-\fBwritethough\fP considers a write complete only when it has
+\fBwritethrough\fP considers a write complete only when it has
 been stored in both the cache pool and on the origin LV.
 While writethrough may be slower for writes, it is more
 resilient if something should happen to a device associated with the
@@ -1632,7 +1632,7 @@ See \fBlvm.conf\fP(5) for more information about profiles.
 .
 .TP
 .O_compression
-Controls whether compression is enabled or disable for VDO volume.
+Controls whether compression is enabled or disabled for VDO volume.
 See \fBlvmvdo\fP(7) for more information about VDO usage.
 .
 .TP
@@ -1657,7 +1657,7 @@ messages sent to the log file and/or syslog (if configured).
 .
 .TP
 .O_deduplication
-Controls whether deduplication is enabled or disable for VDO volume.
+Controls whether deduplication is enabled or disabled for VDO volume.
 See \fBlvmvdo\fP(7) for more information about VDO usage.
 .
 .TP
@@ -1847,7 +1847,7 @@ This is useful for skipping a potentially long and resource intensive initial
 sync of an empty mirror/raid1/raid4/raid5 and raid10 LV.
 This option is not valid for raid6, because raid6 relies on proper parity
 (P and Q Syndromes) being created during initial synchronization in order
-to reconstruct proper user date in case of device failures.
+to reconstruct proper user data in case of device failures.
 raid0 and raid0_meta do not provide any data copies or parity support
 and thus do not support initial synchronization.
 .

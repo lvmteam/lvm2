@@ -38,6 +38,14 @@ local {
 	# This configuration option has an automatic default value.
 	# system_id = ""
 
+	# Configuration option local/pr_key.
+	# The local persistent reservation key in hexidecimal.
+	# The value must be unique among all hosts using the same VG.
+	# The max length is 16 hex characters (8 bytes), plus an optional
+	# 0x prefix. If pr_key is not set, host_id will be used to create a key.
+	# This configuration option has an automatic default value.
+	# pr_key = ""
+
 	# Configuration option local/extra_system_ids.
 	# A list of extra VG system IDs the local host can access.
 	# VGs with the system IDs listed here (in addition to the host's own
@@ -52,7 +60,9 @@ local {
 	# The sanlock host_id used by lvmlockd. This must be unique among all the hosts
 	# using shared VGs with sanlock. Accepted values are 1-2000, except when sanlock_align_size
 	# is configured to 1, 2 or 4, which correspond to max host_id values of 250, 500, or 1000.
-	# Applicable only if LVM is compiled with support for lvmlockd+sanlock.
+	# When using persistent reservations, lvm will generate a PR key from the host_id
+	# if pr_key is not defined. All hosts using a sanlock shared VG with PR must use
+	# the same approach for configuring their PR key (pr_key or host_id.)
 	# This configuration option has an automatic default value.
 	# host_id = 0
 }
