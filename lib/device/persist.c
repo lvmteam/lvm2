@@ -550,8 +550,8 @@ static int dev_find_key(struct cmd_context *cmd, struct device *dev, int may_fai
 		/* eliminate repeated keys that appear for a multipath device */
 		if (dev_is_mpath(cmd, dev)) {
 			uint64_t *keys = *found_all;
-			int wi = 1;
-			for (int ri = 1; ri < *found_count; ri++) {
+			int ri, wi = 1;
+			for (ri = 1; ri < *found_count; ri++) {
 				if (keys[ri] != keys[wi - 1]) {
 					keys[wi] = keys[ri];
 					wi++;
