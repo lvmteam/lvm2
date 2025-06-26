@@ -16495,6 +16495,11 @@ LVRESIZE_FS_HELPER_PATH="$LIBEXECDIR/lvresize_fs_helper"
 printf "%s\n" "#define LVRESIZE_FS_HELPER_PATH \"$LVRESIZE_FS_HELPER_PATH\"" >>confdefs.h
 
 
+LVMPERSIST_PATH="$SBINDIR/lvmpersist"
+
+printf "%s\n" "#define LVMPERSIST_PATH \"$LVMPERSIST_PATH\"" >>confdefs.h
+
+
 ################################################################################
 
 # Check whether --with-dmeventd-pidfile was given.

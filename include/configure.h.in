@@ -598,6 +598,9 @@
 /* Define to 1 to include code that uses lvmlockd. */
 #undef LVMLOCKD_SUPPORT
 
+/* Path to lvmpersist script. */
+#undef LVMPERSIST_PATH
+
 /* Path to lvmpolld pidfile. */
 #undef LVMPOLLD_PIDFILE
 
@@ -612,9 +615,6 @@
 
 /* Path to lvresize_fs_helper script. */
 #undef LVRESIZE_FS_HELPER_PATH
-
-/* Path to lvmpersist script. */
-#undef LVMPERSIST_PATH
 
 /* Define to 1 if 'major', 'minor', and 'makedev' are declared in <mkdev.h>.
    */
