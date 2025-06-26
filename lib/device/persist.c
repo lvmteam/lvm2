@@ -173,7 +173,7 @@ static int read_key_file(struct cmd_context *cmd, struct volume_group *vg,
 		if (line[0] == '#')
 			continue;
 
-		strncpy(buf_key, line, sizeof(buf_key) - 1);
+		dm_strncpy(buf_key, line, sizeof(buf_key));
 		break;
 	}
 
@@ -205,7 +205,7 @@ static int read_key_file(struct cmd_context *cmd, struct volume_group *vg,
 	found_gen = (val & 0xFFFFFF0000) >> 16;
 
 	if (key_str)
-		strncpy(key_str, buf_key, PR_KEY_BUF_SIZE-1);
+		dm_strncpy(key_str, buf_key, PR_KEY_BUF_SIZE);
 
 	if (key_val)
 		*key_val = val;
@@ -368,7 +368,7 @@ static int dev_find_key_scsi(struct cmd_context *cmd, struct device *dev, int ma
 	uint32_t add_len_be, add_len;
 	uint32_t pr_gen_be, pr_gen;
 	uint64_t key_be, key;
-	uint64_t *all_keys;
+	uint64_t *all_keys = NULL;
 	int response_len;
 	int ret_bytes;
 	int num_keys;
