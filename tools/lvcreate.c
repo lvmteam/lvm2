@@ -908,6 +908,7 @@ static int _lvcreate_params(struct cmd_context *cmd,
 	persistent_ARG,\
 	readahead_ARG,\
 	setactivationskip_ARG,\
+	setautoactivation_ARG,\
 	test_ARG,\
 	type_ARG
 
