@@ -1859,7 +1859,8 @@ bad:
 static size_t _stats_group_tag_len(const struct dm_stats *dms,
 				   dm_bitset_t regions)
 {
-	int64_t i, j, next, nr_regions = 0;
+	int i, j, next;
+	int64_t nr_regions = 0;
 	size_t buflen = 0, id_len = 0;
 
 	/* check region ids and find last set bit */
@@ -2124,7 +2125,7 @@ out:
 static void _stats_clear_group_regions(struct dm_stats *dms, uint64_t group_id)
 {
 	struct dm_stats_group *group;
-	uint64_t i;
+	int i;
 
 	group = &dms->groups[group_id];
 	for (i = dm_bit_get_first(group->regions);
@@ -2499,7 +2500,7 @@ void dm_stats_destroy(struct dm_stats *dms)
  * i is a variable of type int that holds the current area_id.
  */
 #define _foreach_region_area(dms, rid, i)				\
-for ((i) = 0; (i) < _nr_areas_region(&dms->regions[(rid)]); (i)++)	\
+for ((i) = 0; (int)(i) < (int)_nr_areas_region(&dms->regions[(rid)]); (i)++)	\
 
 /*
  * Walk each region that is a member of group_id gid.
@@ -2507,7 +2508,7 @@ for ((i) = 0; (i) < _nr_areas_region(&dms->regions[(rid)]); (i)++)	\
  */
 #define _foreach_group_region(dms, gid, i)			\
 for ((i) = dm_bit_get_first((dms)->groups[(gid)].regions);	\
-     (i) != DM_STATS_GROUP_NOT_PRESENT;				\
+     (int)(i) != (int)DM_STATS_GROUP_NOT_PRESENT;		\
      (i) = dm_bit_get_next((dms)->groups[(gid)].regions, (i)))	\
 
 /*
@@ -2562,8 +2563,8 @@ uint64_t dm_stats_get_counter(const struct dm_stats *dms,
 			      dm_stats_counter_t counter,
 			      uint64_t region_id, uint64_t area_id)
 {
-	uint64_t i, j, sum = 0; /* aggregation */
-	int sum_regions = 0;
+	uint64_t sum = 0; /* aggregation */
+	int i, j, sum_regions = 0;
 	struct dm_stats_region *region;
 	struct dm_stats_counters *area;
 
@@ -3129,7 +3130,7 @@ int dm_stats_get_region_start(const struct dm_stats *dms, uint64_t *start,
 int dm_stats_get_region_len(const struct dm_stats *dms, uint64_t *len,
 			    uint64_t region_id)
 {
-	uint64_t i;
+	int i;
 	if (!dms || !dms->regions)
 		return_0;
 
@@ -3970,11 +3971,15 @@ static int _stats_create_group(struct dm_stats *dms, dm_bitset_t regions,
 			       const char *alias, uint64_t *group_id)
 {
 	struct dm_stats_group *group;
-	*group_id = dm_bit_get_first(regions);
+	int i = dm_bit_get_first(regions);
 
-	/* group has no regions? */
-	if (*group_id == DM_STATS_GROUP_NOT_PRESENT)
+	if (i < 0) {
+		/* group has no regions? */
+		*group_id = DM_STATS_GROUP_NOT_PRESENT;
 		return_0;
+	}
+
+	*group_id = (uint64_t)i;
 
 	group = &dms->groups[*group_id];
 
