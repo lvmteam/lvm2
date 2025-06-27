@@ -1303,7 +1303,7 @@ static int _vg_write_file(struct format_instance *fid __attribute__((unused)),
 	slash = strrchr(tc->path_edit, '/');
 
 	if (slash == 0)
-		strcpy(temp_dir, ".");
+		dm_strncpy(temp_dir, ".", sizeof(temp_dir));
 	else if (slash - tc->path_edit < PATH_MAX) {
 		dm_strncpy(temp_dir, tc->path_edit,
 			   (size_t) (slash - tc->path_edit + 1));
