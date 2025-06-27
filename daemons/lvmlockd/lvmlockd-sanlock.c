@@ -2044,10 +2044,10 @@ int lm_lock_sanlock(struct lockspace *ls, struct resource *r, int ld_mode,
 			owner->timestamp = (uint32_t)owner_host.timestamp;
 
 			if ((host_state = _host_flags_to_str(owner_host.flags)))
-				dm_strncpy(owner->state, host_state, OWNER_STATE_SIZE-1);
+				dm_strncpy(owner->state, host_state, sizeof(owner->state));
 
 			if (owner_name) {
-				dm_strncpy(owner->name, owner_name, OWNER_NAME_SIZE-1);
+				dm_strncpy(owner->name, owner_name, sizeof(owner->name));
 				free(owner_name);
 			}
 
@@ -2376,7 +2376,7 @@ int lm_vg_status_sanlock(struct lockspace *ls, struct action *act)
 	act->owner.timestamp = (uint32_t)hs->timestamp;
 
 	if ((host_state = _host_flags_to_str(hs->flags)))
-		dm_strncpy(act->owner.state, host_state, OWNER_STATE_SIZE-1);
+		dm_strncpy(act->owner.state, host_state, sizeof(act->owner.state));
 
 	free(hs);
 	return 0;
