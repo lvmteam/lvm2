@@ -1448,6 +1448,7 @@ int lockd_start_vg(struct cmd_context *cmd, struct volume_group *vg, int *exists
 	int result;
 	int ret;
 	struct lvmlockd_pvs lock_pvs;
+	const char *lock_type = vg->lock_type ?: "empty";
 
 	memset(uuid, 0, sizeof(uuid));
 
@@ -1473,13 +1474,12 @@ int lockd_start_vg(struct cmd_context *cmd, struct volume_group *vg, int *exists
 		opts = opt_buf;
 	}
 
-	log_debug("lockd start VG %s lock_type %s",
-		  vg->name, vg->lock_type ? vg->lock_type : "empty");
+	log_debug("lockd start VG %s lock_type %s", vg->name, lock_type);
 
 	if (!id_write_format(&vg->id, uuid, sizeof(uuid)))
 		return_0;
 
-	if (vg->lock_type && !strcmp(vg->lock_type, "sanlock")) {
+	if (!strcmp(lock_type, "sanlock")) {
 		/*
 		 * This is the big difference between starting
 		 * sanlock vgs vs starting dlm vgs: the internal
@@ -1498,13 +1498,13 @@ int lockd_start_vg(struct cmd_context *cmd, struct volume_group *vg, int *exists
 	 * is passed to lvmlockd, and the the PVs path will be used
 	 * to send SCSI commands for idm locking scheme.
 	 */
-	if (!strcmp(vg->lock_type, "idm")) {
+	if (!strcmp(lock_type, "idm")) {
 		_lockd_retrieve_vg_pv_list(vg, &lock_pvs);
 		reply = _lockd_send_with_pvs("start_vg",
 				&lock_pvs,
 				"pid = " FMTd64, (int64_t) getpid(),
 				"vg_name = %s", vg->name,
-				"vg_lock_type = %s", vg->lock_type,
+				"vg_lock_type = %s", lock_type,
 				"vg_lock_args = %s", vg->lock_args ?: "none",
 				"vg_uuid = %s", uuid[0] ? uuid : "none",
 				"version = " FMTd64, (int64_t) vg->seqno,
@@ -1517,7 +1517,7 @@ int lockd_start_vg(struct cmd_context *cmd, struct volume_group *vg, int *exists
 				NULL,
 				"pid = " FMTd64, (int64_t) getpid(),
 				"vg_name = %s", vg->name,
-				"vg_lock_type = %s", vg->lock_type,
+				"vg_lock_type = %s", lock_type,
 				"vg_lock_args = %s", vg->lock_args ?: "none",
 				"vg_uuid = %s", uuid[0] ? uuid : "none",
 				"version = " FMTd64, (int64_t) vg->seqno,
@@ -1538,7 +1538,7 @@ int lockd_start_vg(struct cmd_context *cmd, struct volume_group *vg, int *exists
 
 	switch (result) {
 	case 0:
-		log_print_unless_silent("VG %s starting %s lockspace", vg->name, vg->lock_type);
+		log_print_unless_silent("VG %s starting %s lockspace", vg->name, lock_type);
 		break;
 	case -ELOCKD:
 		log_error("VG %s start failed: lvmlockd not available", vg->name);
@@ -1554,16 +1554,16 @@ int lockd_start_vg(struct cmd_context *cmd, struct volume_group *vg, int *exists
 		ret = 1;
 		break;
 	case -EARGS:
-		log_error("VG %s start failed: invalid parameters for %s", vg->name, vg->lock_type);
+		log_error("VG %s start failed: invalid parameters for %s", vg->name, lock_type);
 		break;
 	case -EHOSTID:
 		log_error("VG %s start failed: invalid sanlock host_id, set in lvmlocal.conf", vg->name);
 		break;
 	case -EMANAGER:
-		log_error("VG %s start failed: lock manager %s is not running", vg->name, vg->lock_type);
+		log_error("VG %s start failed: lock manager %s is not running", vg->name, lock_type);
 		break;
 	case -EPROTONOSUPPORT:
-		log_error("VG %s start failed: lock manager %s is not supported by lvmlockd", vg->name, vg->lock_type);
+		log_error("VG %s start failed: lock manager %s is not supported by lvmlockd", vg->name, lock_type);
 		break;
 	case -ELOCKREPAIR: 
 		log_error("VG %s start failed: sanlock lease needs repair", vg->name);
@@ -1581,7 +1581,7 @@ int lockd_start_vg(struct cmd_context *cmd, struct volume_group *vg, int *exists
 	 * used in the in-progress start will be +1.  We want
 	 * to use the current generation number in the PR key.
 	 */
-	if (!result && vg->lock_type && !strcmp(vg->lock_type, "sanlock")) {
+	if (!result && !strcmp(lock_type, "sanlock")) {
 		uint32_t prev_gen = (uint32_t)daemon_reply_int(reply, "prev_generation", 0);
 		log_debug("lockd start update pr key with prev_gen %u", prev_gen);
 		if (!persist_key_update(cmd, vg, prev_gen)) {
