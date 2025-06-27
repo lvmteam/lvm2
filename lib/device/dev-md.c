@@ -379,7 +379,7 @@ static int _md_sysfs_attribute_scanf(struct dev_types *dt,
 
 out:
 	if (fclose(fp))
-		log_sys_error("fclose", path);
+		log_sys_debug("fclose", path);
 
 	return ret;
 }

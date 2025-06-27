@@ -131,7 +131,7 @@ void persist_key_file_remove(struct cmd_context *cmd, struct volume_group *vg)
 		return;
 
 	if (unlink(path))
-		stack;
+		log_sys_debug("unlink", path);
 }
 
 static int key_file_exists(struct cmd_context *cmd, struct volume_group *vg)
@@ -182,7 +182,8 @@ static int read_key_file(struct cmd_context *cmd, struct volume_group *vg,
 
 	if (!buf_key[0]) {
 		log_debug("key_file: empty");
-		unlink(path);
+		if (unlink(path))
+			log_sys_debug("unlink", path);
 		return 0;
 	}
 
@@ -191,13 +192,15 @@ static int read_key_file(struct cmd_context *cmd, struct volume_group *vg,
 
 	if (strlen(buf_key) >= PR_KEY_BUF_SIZE) {
 		log_debug("key_file: too long");
-		unlink(path);
+		if (unlink(path))
+			log_sys_debug("unlink", path);
 		return 0;
 	}
 
 	if (!parse_prkey(buf_key, &val)) {
 		log_debug("key_file: parse error %s", buf_key);
-		unlink(path);
+		if (unlink(path))
+			log_sys_debug("unlink", path);
 		return 0;
 	}
 
@@ -338,7 +341,8 @@ static int dev_read_reservation_scsi(struct cmd_context *cmd, struct device *dev
 	}
 	ret = 1;
 out:
-	close(fd);
+	if (close(fd))
+		log_sys_debug("close", devname);
 	return ret;
 }
 
@@ -493,7 +497,9 @@ static int dev_find_key_scsi(struct cmd_context *cmd, struct device *dev, int ma
 	ret = 1;
 out:
 	free(response_buf);
-	close(fd);
+	if (close(fd))
+		log_sys_debug("close", devname);
+
 	return ret;
 }
 

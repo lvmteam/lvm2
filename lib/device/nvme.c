@@ -366,7 +366,9 @@ int dev_read_reservation_nvme(struct cmd_context *cmd, struct device *dev, uint6
 
 out:
 	free(status);
-	close(fd);
+	if (close(fd))
+		log_sys_debug("close", devname);
+
 	return ret;
 }
 
@@ -490,7 +492,9 @@ int dev_find_key_nvme(struct cmd_context *cmd, struct device *dev, int may_fail,
 
 out:
 	free(status);
-	close(fd);
+	if (close(fd))
+		log_sys_debug("close", devname);
+
 	return ret;
 }
 
