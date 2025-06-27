@@ -22,6 +22,7 @@ static int vgexport_single(struct cmd_context *cmd __attribute__((unused)),
 			   struct processing_handle *handle __attribute__((unused)))
 {
 	struct pv_list *pvl;
+	const char *op;
 
 	if (lvs_in_vg_activated(vg)) {
 		log_error("Volume group \"%s\" has active logical volumes",
@@ -55,8 +56,7 @@ static int vgexport_single(struct cmd_context *cmd __attribute__((unused)),
 	if (!vg_write(vg) || !vg_commit(vg))
 		goto_bad;
 	
-	if (arg_is_set(cmd, persist_ARG)) {
-		const char *op = arg_str_value(cmd, persist_ARG, NULL);
+	if ((op = arg_str_value(cmd, persist_ARG, NULL))) {
 		if (!strcmp(op, "stop") && !persist_stop(cmd, vg))
 			log_warn("WARNING: PR stop failed, see lvmpersist stop.");
 	}
