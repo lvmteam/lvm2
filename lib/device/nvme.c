@@ -299,7 +299,7 @@ int dev_read_reservation_nvme(struct cmd_context *cmd, struct device *dev, uint6
 	struct nvme_resv_report_args args = { 0 };
 	struct nvme_resv_status *status = NULL;
 	uint64_t rkey;
-	uint32_t nsid;
+	uint32_t nsid = 0;
 	int status_size = NVME_PR_BUF_SIZE;
 	int status_entries;
 	int regctl;
@@ -382,7 +382,7 @@ int dev_find_key_nvme(struct cmd_context *cmd, struct device *dev, int may_fail,
 	struct nvme_resv_status *status = NULL;
 	uint64_t *all_keys;
 	uint64_t key;
-	uint32_t nsid;
+	uint32_t nsid = 0;
 	int status_size = NVME_PR_BUF_SIZE;
 	int status_entries;
 	int regctl;
