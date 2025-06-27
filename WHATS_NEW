@@ -1,5 +1,5 @@
-Version 2.03.33 - 
-==================
+Version 2.03.33 - 27th June 2025
+================================
   Various spelling, grammar, formatting, test, and build script improvements.
   Override LC_NUMERIC locale if unsuitable for json_std report format.
   Repair raid arrays with transiently lost devices.

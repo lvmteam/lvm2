@@ -1,0 +1,19 @@
+<!-- Page title -->
+[[!meta title="Version 2.03.33 - Bug Fix Release"]]
+
+Version 2.03.33
+===============
+
+Mostly bugfix release:
+
+* Use `lvconvert --repair` to repair raid arrays with transiently lost devices.
+* Override `LC_NUMERIC` locale if unsuitable for `json_std` report format.
+* Fail `dm_report_group_create` if radix char from locale unsuitable for `json_std`.
+* Escape the escape character itself on JSON report format output.
+
+<!-- remove the pending tag on release, remove draft tag once editing is complete -->
+[[!tag]]
+<!--
+For old releases add Release Timestamp like this, date from git show $COMMIT is fine.
+[[!meta date="Fri Jun 27 10:14:00 2025 +0200"]]
+-->
