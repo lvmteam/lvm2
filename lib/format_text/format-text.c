@@ -2079,6 +2079,7 @@ static void *_create_text_context(struct dm_pool *mem, struct text_context *tc)
 	struct text_context *new_tc;
 	const char *path;
 	char *tmp;
+	size_t len;
 
 	if (!tc)
 		return NULL;
@@ -2099,9 +2100,10 @@ static void *_create_text_context(struct dm_pool *mem, struct text_context *tc)
 
 	/* If path_edit not defined, create one from path_live with .tmp suffix. */
 	if (!tc->path_edit) {
-		if (!(tmp = dm_pool_alloc(mem, strlen(path) + 5)))
+		len = strlen(path) + 5;
+		if (!(tmp = dm_pool_alloc(mem, len)))
 			goto_bad;
-		sprintf(tmp, "%s.tmp", path);
+		(void)dm_snprintf(tmp, len, "%s.tmp", path);
 		new_tc->path_edit = tmp;
 	}
 	else if (!(new_tc->path_edit = dm_pool_strdup(mem, tc->path_edit)))
