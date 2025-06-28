@@ -380,8 +380,8 @@ static int _clog_ctr(char *uuid, uint64_t luid,
 	int disk_log;
 	char disk_path[PATH_MAX] = { 0 };
 	int unlink_path = 0;
-	long page_size;
-	int pages;
+	long ps;
+	size_t pages, page_size;
 
 	/* If core log request, then argv[0] will be region_size */
 	if (!strtoll(argv[0], &p, 0) || *p) {
@@ -488,14 +488,15 @@ static int _clog_ctr(char *uuid, uint64_t luid,
 	lc->sync_count = (log_sync == NOSYNC) ? region_count : 0;
 
 	if (disk_log) {
-		if ((page_size = sysconf(_SC_PAGESIZE)) < 0) {
+		if (((ps = sysconf(_SC_PAGESIZE)) <= 0) ||
+		    (ps > (1 << 24))) {
 			LOG_ERROR("Unable to read pagesize: %s",
 				  strerror(errno));
 			r = errno;
 			goto fail;
 		}
-		pages = *(lc->clean_bits) / page_size;
-		pages += *(lc->clean_bits) % page_size ? 1 : 0;
+		page_size = (size_t)ps;
+		pages = (*(lc->clean_bits) + page_size - 1) / page_size;
 		pages += 1; /* for header */
 
 		r = open(disk_path, O_RDWR | O_DIRECT);
