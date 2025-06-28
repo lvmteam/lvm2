@@ -3324,7 +3324,9 @@ static int _local_tz_offset(time_t t_local)
 	time_t t_gmt;
 
 	gmtime_r(&t_local, &tm_gmt);
-	t_gmt = mktime(&tm_gmt);
+
+	if ((t_gmt = mktime(&tm_gmt)) < 0)
+		return 0;
 
 	/*
 	 * gmtime returns time that is adjusted
@@ -3335,7 +3337,7 @@ static int _local_tz_offset(time_t t_local)
 	if (tm_gmt.tm_isdst)
 		t_gmt -= 3600;
 
-	return t_local - t_gmt;
+	return (int)(t_local - t_gmt);
 }
 
 static void _get_final_time(time_range_t range, struct tm *tm,
