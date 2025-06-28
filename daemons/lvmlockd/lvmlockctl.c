@@ -181,7 +181,8 @@ static int szscanf(const char *input, const char *format, ...)
 
 			} else {
 				/* unsupported format specifier */
-				return -1;
+				matched = -1;
+				break;
 			}
 
 			/* advance past 'd', 'u', or 's' character */
