@@ -79,7 +79,7 @@ static uint32_t _hweight_failed(struct dm_raid_superblock *sb)
 	uint32_t r = _hweight64(sb->failed_devices);
 
 	if (_get_sb_size(sb) == sizeof(*sb)) {
-		size_t i = DM_ARRAY_SIZE(sb->extended_failed_devices);
+		int i = (int)DM_ARRAY_SIZE(sb->extended_failed_devices);
 
 		while (i--)
 			r = max(r, _hweight64(sb->extended_failed_devices[i]));
