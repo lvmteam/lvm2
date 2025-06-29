@@ -164,7 +164,7 @@ static int szscanf(const char *input, const char *format, ...)
 
 				/* copy non-whitespace characters from input to dest */
 				n = 0;
-				while (*in != '\0' && !isspace((unsigned char)*in) && (n < dest_size-1)) {
+				while (*in != '\0' && !isspace((unsigned char)*in) && (n < (int)dest_size-1)) {
 					*out = *in;
 					out++;
 					in++;

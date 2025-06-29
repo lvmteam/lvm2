@@ -222,7 +222,7 @@ void dev_read_nvme_wwids(struct device *dev)
 		goto out;
 	}
 
-	for (i = 0; i < NVME_IDENTIFY_DATA_SIZE; i += len) {
+	for (i = 0; i < (int)NVME_IDENTIFY_DATA_SIZE; i += len) {
 		struct nvme_ns_id_desc *cur = (struct nvme_ns_id_desc *)(data + i);
 
 		if (cur->nidl == 0)
@@ -480,7 +480,7 @@ int dev_find_key_nvme(struct cmd_context *cmd, struct device *dev, int may_fail,
 				break;
 		}
 
-		if (find_host_id && (find_host_id == (key & 0xFFFF))) {
+		if (find_host_id && (find_host_id == (int)(key & 0xFFFF))) {
 			if (found_host_id_key)
 				*found_host_id_key = key;
 			if (!find_all)

@@ -2130,7 +2130,7 @@ static void _stats_clear_group_regions(struct dm_stats *dms, uint64_t group_id)
 
 	group = &dms->groups[group_id];
 	for (i = dm_bit_get_first(group->regions);
-	     i != DM_STATS_GROUP_NOT_PRESENT;
+	     i != (int)DM_STATS_GROUP_NOT_PRESENT;
 	     i = dm_bit_get_next(group->regions, i))
 		dms->regions[i].group_id = DM_STATS_GROUP_NOT_PRESENT;
 }

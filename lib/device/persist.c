@@ -486,7 +486,7 @@ static int dev_find_key_scsi(struct cmd_context *cmd, struct device *dev, int ma
 				break;
 		}
 
-		if (find_host_id && (find_host_id == (key & 0xFFFF))) {
+		if (find_host_id && (find_host_id == (int)(key & 0xFFFF))) {
 			if (found_host_id_key)
 				*found_host_id_key = key;
 			if (!find_all)
