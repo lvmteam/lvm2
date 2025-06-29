@@ -4844,6 +4844,7 @@ repeat:
 	else
 		send_len = MAX_SEND_LEN;
 
+	/* coverity[overflow_sink] - only positive 'ret' is used */
 	ret = sendto(fd, dump_buf + pos, send_len, MSG_NOSIGNAL | MSG_DONTWAIT,
 		     (struct sockaddr *)&dump_addr, dump_addrlen);
 	if (ret < 0) {

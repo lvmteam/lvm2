@@ -683,6 +683,7 @@ static int _get_status(struct message_data *message_data)
 	count = dm_list_size(&_thread_registry);
 	buffers = alloca(sizeof(char*) * count);
 	dm_list_iterate_items(thread, &_thread_registry) {
+		/* coverity[overflow_sink] - only positive 'current' is used */
 		if ((current = dm_asprintf(buffers + i, "0:%d %s %s %u %" PRIu32 ";",
 					   i, thread->dso_data->dso_name,
 					   thread->device.uuid, thread->events,
@@ -691,6 +692,7 @@ static int _get_status(struct message_data *message_data)
 			goto out;
 		}
 		++i;
+		/* coverity[overflow] - only positive 'current' is used */
 		size += current; /* count with trailing '\0' */
 	}
 	_unlock_mutex();

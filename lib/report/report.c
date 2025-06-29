@@ -926,6 +926,7 @@ static int _translate_time_items(struct dm_report *rh, struct time_info *info,
 
 		if (_is_time_num(id)) {
 			errno = 0;
+			/* coverity[check_return]  num is used through the switch() */
 			num = strtol(ti->s, NULL, 10);
 			if (errno) {
 				log_error("_translate_time_items: invalid time.");

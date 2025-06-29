@@ -1865,6 +1865,7 @@ static size_t _stats_group_tag_len(const struct dm_stats *dms,
 
 	/* check region ids and find last set bit */
 	i = dm_bit_get_first(regions);
+	/* coverity[overflow_sink] - only positive 'i & j' is used */
 	for (; i >= 0; i = dm_bit_get_next(regions, i)) {
 		/* length of region_id or range start in characters */
 		id_len = (i) ? 1 + (size_t) log10(i) : 1;
@@ -2593,17 +2594,20 @@ uint64_t dm_stats_get_counter(const struct dm_stats *dms,
 		/* group */
 		if (area_id & DM_STATS_WALK_GROUP)
 			_foreach_group_area(dms, region->group_id, i, j) {
+				/* coverity[overflow_sink] - only positive 'i & j' is used */
 				area = &dms->regions[i].counters[j];
 				sum += _stats_get_counter(dms, area, counter);
 			}
 		else
 			_foreach_group_region(dms, region->group_id, i) {
+				/* coverity[overflow_sink] - only positive 'i & j' is used */
 				area = &dms->regions[i].counters[area_id];
 				sum += _stats_get_counter(dms, area, counter);
 			}
 	} else if (area_id == DM_STATS_WALK_REGION) {
 		/* aggregate region */
 		_foreach_region_area(dms, region_id, j) {
+			/* coverity[overflow_sink] - only positive 'j' is used */
 			area = &dms->regions[region_id].counters[j];
 			sum += _stats_get_counter(dms, area, counter);
 		}
@@ -3150,6 +3154,7 @@ int dm_stats_get_region_len(const struct dm_stats *dms, uint64_t *len,
 		/* use sum of region sizes as group size */
 		if (_stats_region_is_grouped(dms, region_id))
 			_foreach_group_region(dms, dms->cur_group, i)
+				/* coverity[overflow_sink] - only positive 'i' is used */
 				*len += dms->regions[i].len;
 		else {
 			log_error("Group ID " FMTu64 " does not exist",

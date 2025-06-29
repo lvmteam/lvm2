@@ -522,6 +522,7 @@ int config_file_read_fd(struct dm_config_tree *cft, struct device *dev, dev_io_r
 		/* Note: also used for lvm.conf to read all settings */
 		for (rsize = 0; rsize < size; rsize += sz) {
 			do {
+				/* coverity[overflow_sink] - only positive 'sz' is used */
 				sz = read(dev_fd(dev), buf + rsize, size - rsize);
 			} while ((sz < 0) && ((errno == EINTR) || (errno == EAGAIN)));
 

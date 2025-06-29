@@ -3558,6 +3558,7 @@ int process_each_lv_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 		if (lv_is_removed(lvl->lv))
 			continue;
 
+		/* coverity[check_return]  lv_is_named_arg is checked as needed */
 		lv_is_named_arg = str_list_match_item(&found_arg_lvnames, lvl->lv->name);
 
 		lv_arg_pos = _find_lv_arg_position(cmd, lvl->lv);

@@ -1241,6 +1241,7 @@ static char *_slurp_stdin(void)
 	pos = buf;
 	do  {
 		do
+			/* coverity[overflow_sink] - only positive 'n' is used */
 			n = read(STDIN_FILENO, pos, (size_t) bufsize - total - 1);
 		while ((n < 0) && ((errno == EINTR) || (errno == EAGAIN)));
 
@@ -1253,6 +1254,7 @@ static char *_slurp_stdin(void)
 		if (!n)
 			break;
 
+		/* coverity[overflow] - only positive 'n' is used */
 		total += n;
 		pos += n;
 		if (total == bufsize - 1) {
@@ -1266,6 +1268,7 @@ static char *_slurp_stdin(void)
 		}
 	} while (1);
 
+	/* coverity[deref_overflow] - only positive 'n' was used */
 	buf[total] = '\0';
 
 	return buf;

@@ -23,6 +23,7 @@ static int _and_p(struct cmd_context *cmd, struct dev_filter *f, struct device *
 	struct dev_filter **filters;
 	int ret = 1;
 
+	/* coverity[unchecked_value] - return value is passed through */
 	dev_ext_enable(dev, external_device_info_source());
 
 	for (filters = (struct dev_filter **) f->private; *filters; ++filters) {
