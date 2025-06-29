@@ -1832,32 +1832,27 @@ int dm_mountinfo_read(dm_mountinfo_line_callback_fn read_fn, void *cb_data)
 
 static int _sysfs_get_dm_name(uint32_t major, uint32_t minor, char *buf, size_t buf_size)
 {
-	char *sysfs_path, *temp_buf = NULL;
+	char sysfs_path[PATH_MAX], temp_buf[2 * DM_NAME_LEN];
 	FILE *fp = NULL;
 	int r = 0;
 	size_t len;
 
-	if (!(sysfs_path = malloc(PATH_MAX)) ||
-	    !(temp_buf = malloc(PATH_MAX))) {
-		log_error("_sysfs_get_dm_name: failed to allocate temporary buffers");
-		goto bad;
-	}
-
-	if (dm_snprintf(sysfs_path, PATH_MAX, "%sdev/block/%" PRIu32 ":%" PRIu32
+	if (dm_snprintf(sysfs_path, sizeof(sysfs_path),
+			"%sdev/block/%" PRIu32 ":%" PRIu32
 			"/dm/name", _sysfs_dir, major, minor) < 0) {
-		log_error("_sysfs_get_dm_name: dm_snprintf failed");
+		log_error("_sysfs_get_dm_name: dm_snprintf failed.");
 		goto bad;
 	}
 
 	if (!(fp = fopen(sysfs_path, "r"))) {
-		if (errno != ENOENT)
-			log_sys_error("fopen", sysfs_path);
-		else
+		if (errno == ENOENT)
 			log_sys_debug("fopen", sysfs_path);
+                else
+			log_sys_error("fopen", sysfs_path);
 		goto bad;
 	}
 
-	if (!fgets(temp_buf, PATH_MAX, fp)) {
+	if (!fgets(temp_buf, sizeof(temp_buf), fp)) {
 		log_sys_error("fgets", sysfs_path);
 		goto bad;
 	}
@@ -1865,19 +1860,20 @@ static int _sysfs_get_dm_name(uint32_t major, uint32_t minor, char *buf, size_t 
 	len = strlen(temp_buf);
 
 	if (len > buf_size) {
-		log_error("_sysfs_get_dm_name: supplied buffer too small");
+		log_error("_sysfs_get_dm_name: supplied buffer too small.");
 		goto bad;
 	}
 
-	temp_buf[len ? len - 1 : 0] = '\0'; /* \n */
-	strcpy(buf, temp_buf);
+	if (len)
+		--len;  /* strip \n */
+
+	memcpy(buf, temp_buf, len);
+	buf[len] = '\0';
+
 	r = 1;
 bad:
 	if (fp && fclose(fp))
 		log_sys_error("fclose", sysfs_path);
-
-	free(temp_buf);
-	free(sysfs_path);
 
 	return r;
 }
