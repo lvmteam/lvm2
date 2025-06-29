@@ -422,19 +422,20 @@ static int _insert_lvconvert_layer(struct cmd_context *cmd,
 static int _failed_mirrors_count(struct logical_volume *lv)
 {
 	struct lv_segment *lvseg;
-	int ret = 0, r;
+	int ret = 0;
 	unsigned s;
 
 	dm_list_iterate_items(lvseg, &lv->segments) {
-		if (!seg_is_mirrored(lvseg))
-			return -1;
+		if (!seg_is_mirrored(lvseg)) {
+			log_debug(INTERNAL_ERROR "Segment is not mirrored.");
+			return 0;
+		}
 		for (s = 0; s < lvseg->area_count; s++) {
 			if (seg_type(lvseg, s) == AREA_LV) {
-				if (is_temporary_mirror_layer(seg_lv(lvseg, s))) {
-					if ((r = _failed_mirrors_count(seg_lv(lvseg, s))) > 0)
-						ret += r;
-				} else if (lv_is_partial(seg_lv(lvseg, s)))
-					++ ret;
+				if (is_temporary_mirror_layer(seg_lv(lvseg, s)))
+					ret += _failed_mirrors_count(seg_lv(lvseg, s));
+				else if (lv_is_partial(seg_lv(lvseg, s)))
+					++ret;
 			}
 			else if (seg_type(lvseg, s) == AREA_PV &&
 				 is_missing_pv(seg_pv(lvseg, s)))
@@ -447,23 +448,21 @@ static int _failed_mirrors_count(struct logical_volume *lv)
 
 static int _failed_logs_count(struct logical_volume *lv)
 {
-	int ret = 0, r;
+	int ret = 0;
 	unsigned s;
 	struct logical_volume *log_lv = first_seg(lv)->log_lv;
 	if (log_lv && lv_is_partial(log_lv)) {
-		if (lv_is_mirrored(log_lv)) {
-			if ((r = _failed_mirrors_count(log_lv)) > 0)
-				ret += r;
-		} else
-			ret += 1;
+		if (lv_is_mirrored(log_lv))
+			ret += _failed_mirrors_count(log_lv);
+		else
+			++ret;
 	}
 	for (s = 0; s < first_seg(lv)->area_count; s++) {
 		if (seg_type(first_seg(lv), s) == AREA_LV &&
-		    is_temporary_mirror_layer(seg_lv(first_seg(lv), s))) {
-                        if ((r = _failed_logs_count(seg_lv(first_seg(lv), s))) > 0)
-				ret += r;
-		}
+		    is_temporary_mirror_layer(seg_lv(first_seg(lv), s)))
+			ret += _failed_logs_count(seg_lv(first_seg(lv), s));
 	}
+
 	return ret;
 }
 
