@@ -1498,6 +1498,7 @@ int report_format_init(struct cmd_context *cmd)
 	struct single_report_args *single_args;
 	struct dm_report_group *new_report_group;
 	struct dm_report *tmp_log_rh = NULL;
+	const char * radixchar;
 
 	args.log_only = arg_is_set(cmd, logonly_ARG);
 	report_command_log = args.log_only || find_config_tree_bool(cmd, log_report_command_log_CFG, NULL);
@@ -1522,7 +1523,7 @@ int report_format_init(struct cmd_context *cmd)
 		cmd->report_strict_type_mode = 1;
 
 		/* For json_std, the radix character must be '.'. */
-		const char * radixchar = nl_langinfo(RADIXCHAR);
+		radixchar = nl_langinfo(RADIXCHAR);
 		if (radixchar && strcmp(radixchar, ".")) {
 			log_debug("Radix character for current locale is '%s', json_std requires '.', "
 				  "overriding LC_NUMERIC locale to 'C'", radixchar);

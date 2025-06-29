@@ -87,11 +87,14 @@ do { \
 static int szscanf(const char *input, const char *format, ...)
 {
 	va_list args;
-	va_start(args, format);
-	const char *fm = format;
-	const char *in = input;
+	const char *fm;
+	const char *in;
 	int matched = 0;
 	int n;
+
+	va_start(args, format);
+	fm = format;
+	in = input;
 
 	while (*fm != '\0') {
 
