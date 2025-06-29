@@ -4411,6 +4411,9 @@ static uint64_t _stats_map_extents(int fd, struct dm_pool *mem,
 	uint64_t expected = 0, nr_extents = next_extent;
 	unsigned int i;
 
+	if (!fiemap->fm_mapped_extents)
+		return 0;
+
 	/*
 	 * Loop over the returned extents adding the fm_pending extent
 	 * to the table of extents each time a discontinuity (or eof)
