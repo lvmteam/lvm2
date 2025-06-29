@@ -770,7 +770,7 @@ static size_t _align_val(size_t val)
 }
 static void *_align_ptr(void *ptr)
 {
-	return (void *)_align_val((size_t)ptr);
+	return (void *)(uintptr_t)_align_val((size_t)ptr);
 }
 
 static int _check_has_event_nr(void) {
