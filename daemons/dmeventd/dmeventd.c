@@ -680,7 +680,12 @@ static int _get_status(struct message_data *message_data)
 		return -EINVAL;
 
 	_lock_mutex();
-	count = dm_list_size(&_thread_registry);
+	if (!(count = dm_list_size(&_thread_registry))) {
+		_unlock_mutex();
+		ret = -EINVAL;
+		goto out;
+	}
+
 	buffers = alloca(sizeof(char*) * count);
 	dm_list_iterate_items(thread, &_thread_registry) {
 		/* coverity[overflow_sink] - only positive 'current' is used */
