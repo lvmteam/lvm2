@@ -2379,7 +2379,7 @@ void lvmcache_update_vg_from_read(struct volume_group *vg, int *incorrect_pv_cla
 		 * (since label_scan didn't know this without metadata.)
 		 */
 		dm_list_iterate_items(mda, &info->mdas) {
-			if (!mda_is_ignored(mda))
+			if (!_mda_is_ignored(mda))
 				continue;
 			log_debug("lvmcache_update_vg %s copy ignored mdas for %s", vg->name, dev_name(info->dev));
 			if (!lvmcache_fid_add_mdas_pv(info, vg->fid)) {

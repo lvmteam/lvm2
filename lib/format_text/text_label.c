@@ -344,7 +344,7 @@ static int _read_mda_header_and_metadata(const struct format_type *fmt,
 
 	mda_set_ignored(mda, rlocn_is_ignored(mdah->raw_locns));
 
-	if (mda_is_ignored(mda)) {
+	if (_mda_is_ignored(mda)) {
 		log_debug_metadata("Ignoring mda on device %s at offset " FMTu64,
 				   dev_name(mdac->area.dev),
 				   mdac->area.start);

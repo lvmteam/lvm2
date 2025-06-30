@@ -65,6 +65,12 @@ struct raw_locn {
 } __attribute__ ((packed));
 
 int rlocn_is_ignored(const struct raw_locn *rlocn);
+/* Use wrapper for checked results */
+static inline __attribute__((warn_unused_result))
+	int _rlocn_is_ignored(const struct raw_locn *rlocn)
+{
+	return rlocn_is_ignored(rlocn);
+}
 void rlocn_set_ignored(struct raw_locn *rlocn, unsigned mda_ignored);
 
 /* On disk */

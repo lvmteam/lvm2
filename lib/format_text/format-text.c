@@ -722,7 +722,7 @@ static int _vg_write_raw(struct format_instance *fid, struct volume_group *vg,
 
 	rlocn_old = &mdah->raw_locns[0];  /* slot0, committed metadata */
 
-	if (rlocn_is_ignored(rlocn_old))
+	if (_rlocn_is_ignored(rlocn_old))
 		rlocn_old = NULL;
 
 	else if (!rlocn_old->offset && !rlocn_old->size)
@@ -1047,7 +1047,7 @@ static int _vg_commit_raw_rlocn(struct format_instance *fid,
 	rlocn_slot0 = &mdab->raw_locns[0];
 	rlocn_slot1 = &mdab->raw_locns[1];
 
-	if (rlocn_is_ignored(rlocn_slot0) || (!rlocn_slot0->offset && !rlocn_slot0->size)) {
+	if (_rlocn_is_ignored(rlocn_slot0) || (!rlocn_slot0->offset && !rlocn_slot0->size)) {
 		rlocn_slot0->offset = 0;
 		rlocn_slot0->size = 0;
 		rlocn_slot0->checksum = 0;
@@ -1110,7 +1110,7 @@ static int _vg_commit_raw_rlocn(struct format_instance *fid,
 			   (!mdac->rlocn.size) ? "empty ": "",
 			   vg->seqno, dev_name(mdac->area.dev),
 			   (unsigned long long)mdac->area.start,
-			   mda_is_ignored(mda) ? "(ignored)" : "(used)");
+			   _mda_is_ignored(mda) ? "(ignored)" : "(used)");
 
 	log_debug_metadata("VG %s metadata %scommit %sslot0 offset %llu size %llu slot1 offset %llu size %llu.",
 			   vg->name,

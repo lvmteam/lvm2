@@ -1241,7 +1241,7 @@ static int _vg_ignore_mdas(struct volume_group *vg, uint32_t num_to_ignore)
 		return_0;
 
 	dm_list_iterate_items(mda, &vg->fid->metadata_areas_in_use)
-		if (!mda_is_ignored(mda) && (--mda_used_count,
+		if (!_mda_is_ignored(mda) && (--mda_used_count,
 		    dm_bit(mda_to_ignore_bs, mda_used_count))) {
 			mda_set_ignored(mda, 1);
 			if (!--num_to_ignore)
@@ -1279,7 +1279,7 @@ static int _vg_unignore_mdas(struct volume_group *vg, uint32_t num_to_unignore)
 		return_0;
 
 	dm_list_iterate_items_safe(mda, tmda, &vg->fid->metadata_areas_ignored)
-		if (mda_is_ignored(mda) && (--mda_free_count,
+		if (_mda_is_ignored(mda) && (--mda_free_count,
 		    dm_bit(mda_to_unignore_bs, mda_free_count))) {
 			mda_set_ignored(mda, 0);
 			dm_list_move(&vg->fid->metadata_areas_in_use,
@@ -1289,7 +1289,7 @@ static int _vg_unignore_mdas(struct volume_group *vg, uint32_t num_to_unignore)
 		}
 
 	dm_list_iterate_items(mda, &vg->fid->metadata_areas_in_use)
-		if (mda_is_ignored(mda) && (--mda_free_count,
+		if (_mda_is_ignored(mda) && (--mda_free_count,
 		    dm_bit(mda_to_unignore_bs, mda_free_count))) {
 			mda_set_ignored(mda, 0);
 			if (!--num_to_unignore)
@@ -3129,7 +3129,7 @@ static int _vg_commit_mdas(struct volume_group *vg)
 
 	/* Rearrange the metadata_areas_in_use so ignored mdas come first. */
 	dm_list_iterate_items_safe(mda, tmda, &vg->fid->metadata_areas_in_use)
-		if (mda_is_ignored(mda))
+		if (_mda_is_ignored(mda))
 			dm_list_move(&ignored, &mda->list);
 
 	dm_list_iterate_items_safe(mda, tmda, &ignored)
@@ -4049,8 +4049,8 @@ int fid_add_mda(struct format_instance *fid, struct metadata_area *mda,
 {
 	static char full_key[PATH_MAX];
 
-	dm_list_add(mda_is_ignored(mda) ? &fid->metadata_areas_ignored :
-		                          &fid->metadata_areas_in_use, &mda->list);
+	dm_list_add(_mda_is_ignored(mda) ? &fid->metadata_areas_ignored :
+		                           &fid->metadata_areas_in_use, &mda->list);
 
 	/* Return if the mda is not supposed to be indexed. */
 	if (!key)
@@ -4243,7 +4243,7 @@ int mdas_empty_or_ignored(struct dm_list *mdas)
 	if (dm_list_empty(mdas))
 		return 1;
 	dm_list_iterate_items(mda, mdas) {
-		if (mda_is_ignored(mda))
+		if (_mda_is_ignored(mda))
 			return 1;
 	}
 	return 0;

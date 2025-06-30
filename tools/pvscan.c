@@ -1065,10 +1065,10 @@ static int _online_devs(struct cmd_context *cmd, int do_all, struct dm_list *pvs
 		mda1 = lvmcache_get_dev_mda(dev, 1);
 		mda2 = lvmcache_get_dev_mda(dev, 2);
 
-		if (mda1 && !mda_is_ignored(mda1))
+		if (mda1 && !_mda_is_ignored(mda1))
 			vg = mda1->ops->vg_read(cmd, fid, "", mda1, NULL, NULL);
 
-		if (!vg && mda2 && !mda_is_ignored(mda2))
+		if (!vg && mda2 && !_mda_is_ignored(mda2))
 			vg = mda2->ops->vg_read(cmd, fid, "", mda2, NULL, NULL);
 
 		if (!vg) {

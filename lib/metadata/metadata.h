@@ -196,6 +196,12 @@ struct metadata_area *mda_copy(struct dm_pool *mem,
 			       struct metadata_area *mda);
 
 unsigned mda_is_ignored(struct metadata_area *mda);
+/* Use wrapper for checked results */
+static inline __attribute__((warn_unused_result))
+	unsigned _mda_is_ignored(struct metadata_area *mda)
+{
+	return mda_is_ignored(mda);
+}
 void mda_set_ignored(struct metadata_area *mda, unsigned mda_ignored);
 unsigned mda_locns_match(struct metadata_area *mda1, struct metadata_area *mda2);
 struct device *mda_get_device(struct metadata_area *mda);

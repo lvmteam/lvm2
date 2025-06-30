@@ -180,7 +180,7 @@ static int _count_unignored(struct metadata_area *mda, void *baton)
 {
 	uint32_t *count = baton;
 
-	if (!mda_is_ignored(mda))
+	if (!_mda_is_ignored(mda))
 		(*count) ++;
 
 	return 1;
@@ -346,7 +346,7 @@ static int _pv_mda_set_ignored_one(struct metadata_area *mda, void *baton)
 	struct _pv_mda_set_ignored_baton *b = baton;
 	struct metadata_area *vg_mda, *tmda;
 
-	if (mda_is_ignored(mda) && !b->mda_ignored) {
+	if (_mda_is_ignored(mda) && !b->mda_ignored) {
 		/* Changing an ignored mda to one in_use requires moving it */
 		dm_list_iterate_items_safe(vg_mda, tmda, b->mdas_ignored)
 			if (mda_locns_match(mda, vg_mda)) {
