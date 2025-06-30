@@ -3837,7 +3837,7 @@ static struct field_selection *_create_field_selection(struct dm_report *rh,
 				if (!(s_arr_size = dm_list_size(&fs->value->v.l->str_list.list)))
 					break;
 
-				if (!(s_arr = malloc(sizeof(char *) * s_arr_size))) {
+				if (!(s_arr = calloc(s_arr_size, sizeof(char *)))) {
 					log_error("dm_report: malloc failed for regex array "
 						  "for selection field %s", field_id);
 					goto error;
