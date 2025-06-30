@@ -4667,9 +4667,12 @@ static int _sort_rows(struct dm_report *rh)
 	struct row *(*rows)[];
 	uint32_t count = 0;
 	struct row *row;
+	size_t cnt_rows;
 
-	if (!(rows = dm_pool_alloc(rh->mem, sizeof(**rows) *
-				dm_list_size(&rh->rows)))) {
+	if (!(cnt_rows = dm_list_size(&rh->rows)))
+		return 1; /* nothing to sort */
+
+	if (!(rows = dm_pool_alloc(rh->mem, sizeof(**rows) * cnt_rows))) {
 		log_error("dm_report: sort array allocation failed");
 		return 0;
 	}
