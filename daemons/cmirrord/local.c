@@ -326,10 +326,11 @@ static int do_local_work(void *data __attribute__((unused)))
  *
  * Returns: 0 on success, -EXXX on failure
  */
-int kernel_send(struct dm_ulog_request *u_rq)
+int kernel_send(void *data)
 {
 	int r;
 	uint16_t size;
+	struct dm_ulog_request *u_rq = data;
 
 	if (!u_rq)
 		return -EINVAL;
@@ -353,7 +354,7 @@ int kernel_send(struct dm_ulog_request *u_rq)
 		size = sizeof(struct dm_ulog_request);
 	}
 
-	r = kernel_send_helper(u_rq, size);
+	r = kernel_send_helper(data, size);
 	if (r)
 		LOG_ERROR("Failed to send msg to kernel.");
 
