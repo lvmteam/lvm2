@@ -267,5 +267,26 @@ grep d1dd210d6b1312cb342b56d02bd5e651 out
 lvchange -an $vg
 lvremove -ff $vg
 
+# Usability of --setautoactivation
+lvcreate --setautoactivation y -l1 -T $vg/pool1
+lvcreate --setautoactivation n -l1 -T $vg/pool2
+
+check lv_field $vg/pool1 autoactivation "enabled"
+check lv_field $vg/pool2 autoactivation ""
+
+lvcreate --setautoactivation y -V1 -n $lv1 $vg/pool1
+lvcreate --setautoactivation n -V1 -n $lv2 $vg/pool2
+
+check lv_field $vg/$lv1 autoactivation "enabled"
+check lv_field $vg/$lv2 autoactivation ""
+
+lvcreate --setautoactivation y -V1 -n $lv3 -l1 -T $vg/pool3
+lvcreate --setautoactivation n -V1 -n $lv4 -l1 -T $vg/pool4
+
+check lv_field $vg/pool3 autoactivation "enabled"
+check lv_field $vg/pool4 autoactivation ""
+check lv_field $vg/$lv3 autoactivation "enabled"
+check lv_field $vg/$lv4 autoactivation ""
+lvremove -ff $vg
 
 vgremove -ff $vg
