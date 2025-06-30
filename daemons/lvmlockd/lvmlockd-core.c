@@ -1057,7 +1057,7 @@ static void lm_vg_status(struct lockspace *ls, struct action *act)
 		act->lm_rv = rv;
 }
 
-static int lm_prepare_lockspace(struct lockspace *ls, struct action *act)
+static int lm_prepare_lockspace(struct lockspace *ls, struct action *act, int repair)
 {
 	uint64_t prev_generation = 0;
 	int rv = -1;
@@ -1065,7 +1065,7 @@ static int lm_prepare_lockspace(struct lockspace *ls, struct action *act)
 	if (ls->lm_type == LD_LM_DLM) {
 		rv = lm_prepare_lockspace_dlm(ls);
 	} else if (ls->lm_type == LD_LM_SANLOCK) {
-		rv = lm_prepare_lockspace_sanlock(ls, &prev_generation);
+		rv = lm_prepare_lockspace_sanlock(ls, &prev_generation, repair);
 		/* borrowing action.owner to avoid adding another action field */
 		if (!rv)
 			act->owner.generation = (uint32_t)prev_generation;
@@ -1126,14 +1126,14 @@ static int lm_add_resource(struct lockspace *ls, struct resource *r)
 
 static int lm_lock(struct lockspace *ls, struct resource *r, int mode, struct action *act,
 		   struct val_blk *vb_out, int *retry, struct owner *owner,
-		   int adopt_only, int adopt_ok)
+		   int adopt_only, int adopt_ok, int repair)
 {
 	int rv = -1;
 
 	if (ls->lm_type == LD_LM_DLM)
 		rv = lm_lock_dlm(ls, r, mode, vb_out, adopt_only, adopt_ok);
 	else if (ls->lm_type == LD_LM_SANLOCK)
-		rv = lm_lock_sanlock(ls, r, mode, vb_out, retry, owner, adopt_only, adopt_ok);
+		rv = lm_lock_sanlock(ls, r, mode, vb_out, retry, owner, adopt_only, adopt_ok, repair);
 	else if (ls->lm_type == LD_LM_IDM)
 		rv = lm_lock_idm(ls, r, mode, vb_out, act->lv_uuid,
 				 &act->pvs, adopt_only, adopt_ok);
@@ -1309,7 +1309,8 @@ static int res_lock(struct lockspace *ls, struct resource *r, struct action *act
 
 	rv = lm_lock(ls, r, act->mode, act, &vb, retry, owner,
 		     act->flags & LD_AF_ADOPT_ONLY ? 1 : 0,
-		     act->flags & LD_AF_ADOPT ? 1 : 0);
+		     act->flags & LD_AF_ADOPT ? 1 : 0,
+		     act->flags & LD_AF_REPAIR ? 1 : 0);
 
 	if (rv && r->use_vb)
 		log_debug("%s:%s res_lock rv %d read vb %x %x %u",
@@ -2577,6 +2578,7 @@ static void *lockspace_thread_main(void *arg_in)
 	int error = 0;
 	int adopt_only = 0;
 	int adopt_ok = 0;
+	int repair = 0;
 	int wait_flag = 0;
 	int nodelay = 0;
 	int nocreate;
@@ -2604,6 +2606,8 @@ static void *lockspace_thread_main(void *arg_in)
 				adopt_ok = 1;
 			if (add_act->flags & LD_AF_NODELAY)
 				nodelay = 1;
+			if (add_act->flags & LD_AF_REPAIR)
+				repair = 1;
 		}
 	}
 	pthread_mutex_unlock(&ls->mutex);
@@ -2613,14 +2617,14 @@ static void *lockspace_thread_main(void *arg_in)
 		adopt_ok = 1;
 	}
 
-	log_debug("S %s lm_add_lockspace %s wait %d adopt_only %d adopt_ok %d",
-		  ls->name, lm_str(ls->lm_type), wait_flag, adopt_only, adopt_ok);
+	log_debug("S %s lm_add_lockspace %s act %d wait %d adopt_only %d adopt_ok %d repair %d",
+		  ls->name, lm_str(ls->lm_type), add_act ? 1 : 0, wait_flag, adopt_only, adopt_ok, repair);
 
 	/*
 	 * The prepare step does not wait for anything and is quick;
 	 * it tells us if the parameters are valid and the lm is running.
 	 */
-	error = lm_prepare_lockspace(ls, add_act);
+	error = lm_prepare_lockspace(ls, add_act, repair);
 
 	if (add_act && (!wait_flag || error)) {
 		/* send initial join result back to client */
@@ -4789,6 +4793,8 @@ static uint32_t str_to_opts(const char *str)
 		flags |= LD_AF_DISABLE;
 	if (strstr(str, "nodelay"))
 		flags |= LD_AF_NODELAY;
+	if (strstr(str, "repair"))
+		flags |= LD_AF_REPAIR;
 
 	/* FIXME: parse the flag values properly */
 	if (strstr(str, "adopt_only"))
@@ -5311,7 +5317,7 @@ skip_pvs_path:
 	dm_config_destroy(req.cft);
 	buffer_destroy(&req.buffer);
 
-	log_debug("recv %s[%d][%u] %s%s%s %s%s %s%s%s%s opts=%x",
+	log_debug("recv %s[%d][%u] %s%s%s %s%s %s%s%s%s opts=0x%x",
 		  cl->name[0] ? cl->name : "client", cl->pid, cl->id,
 		  op_mode_str(act->op, act->mode), act->rt ? "_" : "", rt_str(act->rt),
 		  act->vg_name[0] ? "vg=" : "",

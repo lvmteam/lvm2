@@ -118,6 +118,7 @@ struct client {
 #define LD_AF_SH_EXISTS            0x00100000
 #define LD_AF_ADOPT_ONLY           0x00200000 /* adopt orphan or fail */
 #define LD_AF_NODELAY              0x00400000
+#define LD_AF_REPAIR		   0x00800000
 
 /*
  * Number of times to repeat a lock request after
@@ -209,6 +210,7 @@ struct lockspace {
 	int8_t lm_type;			/* lock manager: LM_DLM, LM_SANLOCK */
 	void *lm_data;
 	uint32_t host_id;
+	uint64_t generation;
 	uint64_t free_lock_offset;	/* for sanlock, start search for free lock here */
 	struct pvs pvs;			/* for idm: PV list */
 
@@ -561,13 +563,13 @@ int lm_init_vg_sanlock(char *ls_name, char *vg_name, uint32_t flags, char *vg_ar
 int lm_init_lv_sanlock(struct lockspace *ls, char *ls_name, char *vg_name, char *lv_name, char *vg_args, char *lv_args, char *prev_args);
 int lm_free_lv_sanlock(struct lockspace *ls, struct resource *r);
 int lm_rename_vg_sanlock(char *ls_name, char *vg_name, uint32_t flags, char *vg_args);
-int lm_prepare_lockspace_sanlock(struct lockspace *ls, uint64_t *prev_generation);
+int lm_prepare_lockspace_sanlock(struct lockspace *ls, uint64_t *prev_generation, int repair);
 int lm_add_lockspace_sanlock(struct lockspace *ls, int adopt_only, int adopt_ok, int nodelay);
 int lm_rem_lockspace_sanlock(struct lockspace *ls, int free_vg);
 int lm_add_resource_sanlock(struct lockspace *ls, struct resource *r);
 int lm_lock_sanlock(struct lockspace *ls, struct resource *r, int ld_mode,
 		    struct val_blk *vb_out, int *retry, struct owner *owner,
-		    int adopt_only, int adopt_ok);
+		    int adopt_only, int adopt_ok, int repair);
 int lm_convert_sanlock(struct lockspace *ls, struct resource *r,
 		       int ld_mode, uint32_t r_version);
 int lm_unlock_sanlock(struct lockspace *ls, struct resource *r,
@@ -610,7 +612,7 @@ static inline int lm_rename_vg_sanlock(char *ls_name, char *vg_name, uint32_t fl
 	return -1;
 }
 
-static inline int lm_prepare_lockspace_sanlock(struct lockspace *ls, uint64_t *prev_generation)
+static inline int lm_prepare_lockspace_sanlock(struct lockspace *ls, uint64_t *prev_generation, int repair)
 {
 	return -1;
 }

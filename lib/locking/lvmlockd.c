@@ -1466,11 +1466,17 @@ int lockd_start_vg(struct cmd_context *cmd, struct volume_group *vg, int *exists
 
 	if ((cmd->lockopt & LOCKOPT_NODELAY) ||
 	    (cmd->lockopt & LOCKOPT_ADOPTLS) ||
-	    (cmd->lockopt & LOCKOPT_ADOPT)) {
-		(void) dm_snprintf(opt_buf, sizeof(opt_buf), "%s%s%s",
-			    (cmd->lockopt & LOCKOPT_NODELAY) ? "nodelay," : "",
-			    (cmd->lockopt & LOCKOPT_ADOPTLS) ? "adopt_only" : "",
-			    (cmd->lockopt & LOCKOPT_ADOPT) ? "adopt" : "");
+	    (cmd->lockopt & LOCKOPT_ADOPT) ||
+	    (cmd->lockopt & LOCKOPT_REPAIRVG) ||
+	    (cmd->lockopt & LOCKOPT_REPAIR)) {
+		if (dm_snprintf(opt_buf, sizeof(opt_buf), "%s%s%s%s",
+				(cmd->lockopt & LOCKOPT_NODELAY) ? "nodelay," : "",
+				(cmd->lockopt & LOCKOPT_ADOPTLS) ? "adopt_only," : "",
+				(cmd->lockopt & LOCKOPT_ADOPT) ? "adopt," : "",
+				(cmd->lockopt & (LOCKOPT_REPAIR|LOCKOPT_REPAIRVG)) ? "repair" : "") < 0) {
+			log_error("Options string too long %x", cmd->lockopt);
+			return 0;
+		}
 		opts = opt_buf;
 	}
 
@@ -1984,6 +1990,7 @@ out:
 int lockd_global(struct cmd_context *cmd, const char *def_mode)
 {
 	struct owner owner = { 0 };
+	char opt_buf[64] = {};
 	const char *mode = NULL;
 	const char *opts = NULL;
 	uint32_t lockd_flags;
@@ -2013,10 +2020,19 @@ int lockd_global(struct cmd_context *cmd, const char *def_mode)
 		return 0;
 	}
 
-	if (cmd->lockopt & LOCKOPT_ADOPTGL)
-		opts = "adopt_only";
-	else if (cmd->lockopt & LOCKOPT_ADOPT)
-		opts = "adopt";
+	if ((cmd->lockopt & LOCKOPT_ADOPTGL) ||
+	    (cmd->lockopt & LOCKOPT_ADOPT) ||
+	    (cmd->lockopt & LOCKOPT_REPAIRGL) ||
+	    (cmd->lockopt & LOCKOPT_REPAIR)) {
+		if (dm_snprintf(opt_buf, sizeof(opt_buf), "%s%s%s",
+			    (cmd->lockopt & LOCKOPT_ADOPTGL) ? "adopt_only" : "",
+			    (cmd->lockopt & LOCKOPT_ADOPT) ? "adopt" : "",
+			    (cmd->lockopt & (LOCKOPT_REPAIR|LOCKOPT_REPAIRGL)) ? "repair" : "") < 0) {
+			log_error("Options string too long %x", cmd->lockopt);
+			return 0;
+		}
+		opts = opt_buf;
+	}
 
 	if (!strcmp(mode, "sh") && cmd->lockd_global_ex)
 		return 1;
@@ -2272,6 +2288,7 @@ int lockd_vg(struct cmd_context *cmd, const char *vg_name, const char *def_mode,
 	     uint32_t flags, uint32_t *lockd_state)
 {
 	struct owner owner = { 0 };
+	char opt_buf[64] = {};
 	const char *mode = NULL;
 	const char *opts = NULL;
 	uint32_t lockd_flags;
@@ -2348,6 +2365,20 @@ int lockd_vg(struct cmd_context *cmd, const char *vg_name, const char *def_mode,
 		opts = "adopt_only";
 	else if (cmd->lockopt & LOCKOPT_ADOPT)
 		opts = "adopt";
+
+	if ((cmd->lockopt & LOCKOPT_ADOPTVG) ||
+	    (cmd->lockopt & LOCKOPT_ADOPT) ||
+	    (cmd->lockopt & LOCKOPT_REPAIRVG) ||
+	    (cmd->lockopt & LOCKOPT_REPAIR)) {
+		if (dm_snprintf(opt_buf, sizeof(opt_buf), "%s%s%s",
+			    (cmd->lockopt & LOCKOPT_ADOPTVG) ? "adopt_only" : "",
+			    (cmd->lockopt & LOCKOPT_ADOPT) ? "adopt" : "",
+			    (cmd->lockopt & (LOCKOPT_REPAIR|LOCKOPT_REPAIRVG)) ? "repair" : "") < 0) {
+			log_error("Options string too long %x.", cmd->lockopt);
+			return 0;
+		}
+		opts = opt_buf;
+	}
 
 	if (!strcmp(mode, "ex"))
 		*lockd_state |= LDST_EX;
@@ -2851,11 +2882,17 @@ int lockd_lv_name(struct cmd_context *cmd, struct volume_group *vg,
 
 	if ((flags & LDLV_PERSISTENT) ||
 	    (cmd->lockopt & LOCKOPT_ADOPTLV) ||
-	    (cmd->lockopt & LOCKOPT_ADOPT)) {
-		(void) dm_snprintf(opt_buf, sizeof(opt_buf), "%s%s%s",
+	    (cmd->lockopt & LOCKOPT_ADOPT) ||
+	    (cmd->lockopt & LOCKOPT_REPAIRLV) ||
+	    (cmd->lockopt & LOCKOPT_REPAIR)) {
+		if (dm_snprintf(opt_buf, sizeof(opt_buf), "%s%s%s%s",
 			    (flags & LDLV_PERSISTENT) ? "persistent," : "",
 			    (cmd->lockopt & LOCKOPT_ADOPTLV) ? "adopt_only" : "",
-			    (cmd->lockopt & LOCKOPT_ADOPT) ? "adopt" : "");
+			    (cmd->lockopt & LOCKOPT_ADOPT) ? "adopt" : "",
+			    (cmd->lockopt & (LOCKOPT_REPAIR|LOCKOPT_REPAIRLV)) ? "repair" : "") < 0) {
+			log_error("Options string too long %x.", cmd->lockopt);
+			return 0;
+		}
 		opts = opt_buf;
 	}
 
@@ -4456,6 +4493,14 @@ void lockd_lockopt_get_flags(const char *str, uint32_t *flags)
 			*flags |= LOCKOPT_ADOPT;
 		else if (!strcmp(argv[i], "nodelay"))
 			*flags |= LOCKOPT_NODELAY;
+		else if (!strcmp(argv[i], "repair"))
+			*flags |= LOCKOPT_REPAIR;
+		else if (!strcmp(argv[i], "repairgl"))
+			*flags |= LOCKOPT_REPAIRGL;
+		else if (!strcmp(argv[i], "repairvg"))
+			*flags |= LOCKOPT_REPAIRVG;
+		else if (!strcmp(argv[i], "repairlv"))
+			*flags |= LOCKOPT_REPAIRLV;
 		else
 			log_warn("Ignoring unknown lockopt value: %s", argv[i]);
 	}

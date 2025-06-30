@@ -218,6 +218,18 @@ int lm_data_size_sanlock(void)
 
 static uint64_t daemon_test_lv_count;
 
+static void _fclose(FILE *fp, char *name)
+{
+	if (fclose(fp))
+		log_warn("fclose error %d %s", errno, name ?: "");
+}
+
+static void _close(int fd)
+{
+	if (close(fd))
+		log_warn("close error %d fd %d", errno, fd);
+}
+
 /*
  * Copy a null-terminated string "str" into a fixed
  * size struct field "buf" which is not null terminated.
@@ -308,12 +320,72 @@ static int read_host_id_file(void)
 			break;
 		}
 	}
-	if (fclose(file))
-		log_debug("Failed to fclose host id file %s (%s).",
-			  daemon_host_id_file, strerror(errno));
+	_fclose(file, (char *)daemon_host_id_file);
 out:
 	log_debug("host_id %d from %s", host_id, daemon_host_id_file);
 	return host_id;
+}
+
+static int read_info_file(struct lockspace *ls, uint32_t *host_id, uint64_t *generation, int *sector_size, int *align_size)
+{
+	char line[MAX_LINE];
+	char path[PATH_MAX] = { 0 };
+	FILE *fp;
+
+	if (dm_snprintf(path, PATH_MAX-1, "/var/lib/lvm/lvmlockd_info_%s", ls->vg_name) < 0)
+		return -1;
+
+	if (!(fp = fopen(path, "r"))) {
+		log_debug("Failed to open info file");
+		return -1;
+	}
+
+	while (fgets(line, sizeof(line), fp)) {
+		if (line[0] == '#')
+			continue;
+		if (!strncmp(line, "host_id ", 8)) {
+			sscanf(line, "host_id %u", host_id);
+		} else if (!strncmp(line, "generation ", 11)) {
+			sscanf(line, "generation %llu", (unsigned long long *)generation);
+		} else if (!strncmp(line, "sector_size ", 12)) {
+			sscanf(line, "sector_size %d", sector_size);
+		} else if (!strncmp(line, "align_size ", 11)) {
+			sscanf(line, "align_size %d", align_size);
+		}
+	}
+
+	_fclose(fp, path);
+	log_debug("info file: read %u %llu %d %d", *host_id, (unsigned long long)*generation, *sector_size, *align_size);
+	return 0;
+}
+
+static int write_info_file(struct lockspace *ls)
+{
+	struct lm_sanlock *lms = (struct lm_sanlock *)ls->lm_data;
+	char path[PATH_MAX] = { 0 };
+	FILE *fp;
+	time_t t;
+
+	if (dm_snprintf(path, PATH_MAX-1, "/var/lib/lvm/lvmlockd_info_%s", ls->vg_name) < 0)
+		return -1;
+
+	if (!(fp = fopen(path, "w"))) {
+		log_debug("Failed to create info file");
+		return -1;
+	}
+
+	fprintf(fp, "# vg %s %s created %s", ls->vg_name, ls->vg_uuid, ctime(&t));
+	fprintf(fp, "host_id %u\n", ls->host_id);
+	fprintf(fp, "generation %llu\n", (unsigned long long)ls->generation);
+	fprintf(fp, "sector_size %d\n", lms->sector_size);
+	fprintf(fp, "align_size %d\n", lms->align_size);
+
+	if (fflush(fp))
+		log_warn("Failed to write/flush %s", path);
+	_fclose(fp, path);
+
+	log_debug("info file: wrote %u %llu %d %d", ls->host_id, (unsigned long long)ls->generation, lms->sector_size, lms->align_size);
+	return 0;
 }
 
 /* Prepare valid /dev/mapper/vgname-lvname with all the mangling */
@@ -370,7 +442,7 @@ static void _read_sysfs_size(dev_t devno, const char *name, uint64_t *val)
 	if (strlen(buf))
 		*val = strtoull(buf, NULL, 0);
 out:
-	(void)fclose(fp);
+	_fclose(fp, path);
 }
 
 /* Select sector/align size for a new VG based on what the device reports for
@@ -479,6 +551,7 @@ static int _lease_corrupt_error(int rv)
 {
 	if (rv == SANLK_LEADER_MAGIC ||
 	    rv == SANLK_LEADER_VERSION ||
+	    rv == SANLK_LEADER_DIFF ||
 	    rv == SANLK_LEADER_LOCKSPACE ||
 	    rv == SANLK_LEADER_RESOURCE ||
 	    rv == SANLK_LEADER_CHECKSUM ||
@@ -509,8 +582,10 @@ static int read_lockspace_info(char *path, uint32_t host_id, int *sector_size, i
 #endif
 		rv = sanlock_read_lockspace(&ss, 0, &io_timeout);
 
-	if (_lease_corrupt_error(rv))
+	if (_lease_corrupt_error(rv)) {
+		log_error("read_lockspace_info %s %u corrupt lease error %d", path, host_id, rv);
 		return -ELOCKREPAIR;
+	}
 
 	if (rv < 0) {
 		log_error("read_lockspace_info %s %u error %d", path, host_id, rv);
@@ -1471,7 +1546,7 @@ int lm_find_free_lock_sanlock(struct lockspace *ls, uint64_t lv_size_bytes)
  * This should also not create any major problems.
  */
 
-int lm_prepare_lockspace_sanlock(struct lockspace *ls, uint64_t *prev_generation)
+int lm_prepare_lockspace_sanlock(struct lockspace *ls, uint64_t *prev_generation, int repair)
 {
 	struct stat st;
 	struct lm_sanlock *lms = NULL;
@@ -1486,6 +1561,7 @@ int lm_prepare_lockspace_sanlock(struct lockspace *ls, uint64_t *prev_generation
 	int sector_size = 0;
 	int align_size = 0;
 	int align_mb = 0;
+	int retries = 0;
 	int gl_found;
 	int ret, rv;
 
@@ -1501,6 +1577,8 @@ int lm_prepare_lockspace_sanlock(struct lockspace *ls, uint64_t *prev_generation
 
 	memset(killargs, 0, sizeof(killargs));
 	snprintf(killargs, SANLK_PATH_LEN, "--kill %s", ls->vg_name);
+
+	log_debug("S %s prepare_lockspace_san host_id %u repair %d", ls->name, ls->host_id, repair);
 
 	rv = check_args_version(ls->vg_args, VG_LOCK_ARGS_MAJOR);
 	if (rv < 0) {
@@ -1602,7 +1680,63 @@ int lm_prepare_lockspace_sanlock(struct lockspace *ls, uint64_t *prev_generation
 		goto fail;
 	}
 
+ repair_retry:
+	sector_size = 0;
+	align_size = 0;
+
 	rv = read_lockspace_info(disk_path, lms->ss.host_id, &sector_size, &align_size, &align_mb, &ss_flags, &rs_flags, &hs);
+
+#if LOCKDSANLOCK_SUPPORT >= 410
+	if ((rv == -ELOCKREPAIR) && repair && !retries) {
+		uint64_t generation = 0;
+		uint32_t host_id = 0;
+
+		rv = read_info_file(ls, &host_id, &generation, &sector_size, &align_size);
+		if (rv < 0) {
+			log_error("S %s prepare_lockspace_san cannot repair lockspace no info file", lsname);
+			ret = -EINVAL;
+		}
+
+		if (host_id != lms->ss.host_id) {
+			log_error("S %s prepare_lockspace_san cannot repair lockspace other info host_id", lsname);
+			ret = -EINVAL;
+		}
+
+		hs.generation = generation;
+
+		if (sector_size == 512) {
+			lms->ss.flags |= SANLK_LSF_SECTOR512;
+			lms->ss.flags |= SANLK_LSF_ALIGN1M;
+		} else if (sector_size == 4096) {
+			lms->ss.flags |= SANLK_LSF_SECTOR4K;
+			if (align_size == ONE_MB)
+				lms->ss.flags |= SANLK_LSF_ALIGN1M;
+			else if (align_size == 2 * ONE_MB)
+				lms->ss.flags |= SANLK_LSF_ALIGN2M;
+			else if (align_size == 4 * ONE_MB)
+				lms->ss.flags |= SANLK_LSF_ALIGN4M;
+			else if (align_size == 8 * ONE_MB)
+				lms->ss.flags |= SANLK_LSF_ALIGN8M;
+		} else {
+			log_error("S %s prepare_lockspace_san cannot repair lockspace invalid sector_size", lsname);
+			ret = -EINVAL;
+		}
+
+		log_debug("S %s prepare_lockspace_san repair host %u lease", lsname, host_id);
+
+		rv = sanlock_init_lockspace_host(&lms->ss, NULL, generation, 0, 0, 0);
+		if (rv < 0) {
+			log_error("S %s prepare_lockspace_san repair host %u lease error %d", lsname, host_id, rv);
+			ret = -EMANAGER;
+		}
+		retries = 1;
+		goto repair_retry;
+	}
+#else
+	if ((rv == -ELOCKREPAIR) && repair && !retries)
+		log_debug("S %s prepare_lockspace_san sanlock does not support repair.", lsname);
+#endif
+
 	if (rv < 0) {
 		log_error("S %s prepare_lockspace_san cannot read lockspace info %d", lsname, rv);
 		ret = -EMANAGER;
@@ -1675,7 +1809,7 @@ out:
 
 fail:
 	if (lms && lms->sock)
-		close(lms->sock);
+		_close(lms->sock);
 	free(lms);
 	return ret;
 }
@@ -1683,7 +1817,9 @@ fail:
 int lm_add_lockspace_sanlock(struct lockspace *ls, int adopt_only, int adopt_ok, int nodelay)
 {
 	struct lm_sanlock *lms = (struct lm_sanlock *)ls->lm_data;
+	struct sanlk_host *hs = NULL;
 	uint32_t flags = 0;
+	int count = 0;
 	int rv;
 
 	if (daemon_test) {
@@ -1710,6 +1846,33 @@ int lm_add_lockspace_sanlock(struct lockspace *ls, int adopt_only, int adopt_ok,
 		goto fail;
 	}
 
+	rv = sanlock_get_hosts(ls->name, 0, &hs, &count, SANLK_GET_HOST_LOCAL);
+	if (rv < 0) {
+		log_error("S %s add_lockspace_san add_lockspace get_host error %d", ls->name, rv);
+		goto fail_rem;
+	}
+
+	if (!count || !hs) {
+		log_error("S %s add_lockspace_san add_lockspace get_host empty", ls->name);
+		goto fail_rem;
+	}
+
+	if ((uint32_t)hs->host_id != ls->host_id) {
+		log_error("S %s add_lockspace_san add_lockspace get_host invalid host_id", ls->name);
+		goto fail_rem;
+	}
+
+	if (!hs->generation) {
+		log_error("S %s add_lockspace_san add_lockspace get_host zero generation", ls->name);
+		goto fail_rem;
+	}
+
+	ls->generation = hs->generation;
+
+	free(hs);
+
+	write_info_file(ls);
+
 	/*
 	 * Don't let the lockspace be cleanly released if orphan locks
 	 * exist, because the orphan locks are still protecting resources
@@ -1721,17 +1884,17 @@ int lm_add_lockspace_sanlock(struct lockspace *ls, int adopt_only, int adopt_ok,
 	rv = sanlock_set_config(ls->name, 0, SANLK_CONFIG_USED_BY_ORPHANS, NULL);
 	if (rv < 0) {
 		log_error("S %s add_lockspace_san set_config error %d", ls->name, rv);
-		sanlock_rem_lockspace(&lms->ss, 0);
-		goto fail;
+		goto fail_rem;
 	}
 
 out:
 	log_debug("S %s add_lockspace_san done", ls->name);
 	return 0;
 
+fail_rem:
+	sanlock_rem_lockspace(&lms->ss, 0);
 fail:
-	if (close(lms->sock))
-		log_error("failed to close sanlock daemon socket connection");
+	_close(lms->sock);
 	free(lms);
 	ls->lm_data = NULL;
 	return rv;
@@ -1767,8 +1930,7 @@ int lm_rem_lockspace_sanlock(struct lockspace *ls, int free_vg)
 		}
 	}
 
-	if (close(lms->sock))
-		log_error("failed to close sanlock daemon socket connection");
+	_close(lms->sock);
 out:
 	free(lms);
 	ls->lm_data = NULL;
@@ -1845,7 +2007,7 @@ static const char *_host_flags_to_str(uint32_t flags)
 
 int lm_lock_sanlock(struct lockspace *ls, struct resource *r, int ld_mode,
 		    struct val_blk *vb_out, int *retry, struct owner *owner,
-		    int adopt_only, int adopt_ok)
+		    int adopt_only, int adopt_ok, int repair)
 {
 	struct lm_sanlock *lms = (struct lm_sanlock *)ls->lm_data;
 	struct rd_sanlock *rds = (struct rd_sanlock *)r->lm_data;
@@ -1857,6 +2019,7 @@ int lm_lock_sanlock(struct lockspace *ls, struct resource *r, int ld_mode,
 	uint32_t flags = 0;
 	struct val_blk vb = { 0 };
 	int added = 0;
+	int retries = 0;
 	int rv;
 
 	if (!r->lm_init) {
@@ -1955,6 +2118,8 @@ int lm_lock_sanlock(struct lockspace *ls, struct resource *r, int ld_mode,
 
 	memset(&opt, 0, sizeof(opt));
 	sprintf(opt.owner_name, "%s", "lvmlockd");
+
+ repair_retry:
 
 #if LOCKDSANLOCK_SUPPORT >= 400
 	rv = sanlock_acquire2(lms->sock, -1, flags, rs, &opt, &owner_host, &owner_name);
@@ -2068,9 +2233,20 @@ int lm_lock_sanlock(struct lockspace *ls, struct resource *r, int ld_mode,
 		return -EIOTIMEOUT;
 	}
 
+	if (_lease_corrupt_error(rv) && repair && !retries) {
+		log_debug("%s:%s lock_san acquire lease_corrupt %d repair", ls->name, r->name, rv);
+
+		rv = sanlock_write_resource(rs, 0, 0, 0);
+		if (rv < 0) {
+			log_error("%s:%s lock_san acquire lease repair write_resource error %d", ls->name, r->name, rv);
+			return rv;
+		}
+		retries = 1;
+		goto repair_retry;
+	}
+
 	if (rv < 0) {
-		log_error("%s:%s lock_san acquire error %d",
-			  ls->name, r->name, rv);
+		log_error("%s:%s lock_san acquire error %d", ls->name, r->name, rv);
 
 		/* if the gl has been disabled, remove and free the gl resource */
 		if ((rv == SANLK_LEADER_RESOURCE) && (r->type == LD_RT_GL)) {
@@ -2094,8 +2270,10 @@ int lm_lock_sanlock(struct lockspace *ls, struct resource *r, int ld_mode,
 		    rv == SANLK_DBLOCK_WRITE)
 			return -ELOCKIO;
 
-		if (_lease_corrupt_error(rv))
+		if (_lease_corrupt_error(rv)) {
+			log_debug("%s:%s lock_san lease corrupt repair %d retries %d", ls->name, r->name, repair, retries);
 			return -ELOCKREPAIR;
+		}
 
 		/*
 		 * The sanlock lockspace can disappear if the lease storage fails,

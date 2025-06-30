@@ -936,6 +936,7 @@ dnl -- Look for sanlock libraries
 AS_IF([test "$BUILD_LOCKDSANLOCK" = "yes"], [
 	LOCKDSANLOCK_SUPPORT=370
 	PKG_CHECK_EXISTS(libsanlock_client >= 4.0.0, [LOCKDSANLOCK_SUPPORT=400])
+	PKG_CHECK_EXISTS(libsanlock_client >= 4.1.0, [LOCKDSANLOCK_SUPPORT=410])
 	PKG_CHECK_MODULES(LIBSANLOCKCLIENT, libsanlock_client >= 3.7.0, [BUILD_LVMLOCKD="yes"])
 	AC_DEFINE_UNQUOTED([LOCKDSANLOCK_SUPPORT], [$LOCKDSANLOCK_SUPPORT], [Define version of sanlock.])
 ])
