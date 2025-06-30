@@ -3241,8 +3241,8 @@ static int _check_lv_rules(struct cmd_context *cmd, struct logical_volume *lv)
 					   &opts_match_count, &opts_unmatch_count);
 
 		if (rule->check_lvt_bits)
-			_lv_types_match(cmd, lv, rule->check_lvt_bits,
-					&lv_types_match_bits, &lv_types_unmatch_bits);
+			(void)_lv_types_match(cmd, lv, rule->check_lvt_bits,
+					      &lv_types_match_bits, &lv_types_unmatch_bits);
 
 		if (rule->check_lvp_bits)
 			_lv_props_match(cmd, lv, rule->check_lvp_bits,
