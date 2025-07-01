@@ -400,6 +400,15 @@ static int write_info_file(struct lockspace *ls)
 	return 0;
 }
 
+static void remove_info_file(struct lockspace *ls)
+{
+	char path[PATH_MAX] = { 0 };
+
+	if (dm_snprintf(path, sizeof(path), "/var/lib/lvm/lvmlockd_info_%s", ls->vg_name) < 0)
+		return;
+	unlink(path);
+}
+
 /* Prepare valid /dev/mapper/vgname-lvname with all the mangling */
 static int build_dm_path(char *path, size_t path_len,
 			 const char *vg_name, const char *lv_name)
@@ -1939,6 +1948,8 @@ int lm_rem_lockspace_sanlock(struct lockspace *ls, int free_vg)
 			log_error("S %s rem_lockspace free_vg write_lockspace error %d %s",
 				  ls->name, rv, lms->ss.host_id_disk.path);
 		}
+
+		remove_info_file(ls);
 	}
 
 	_close(lms->sock);
