@@ -2424,8 +2424,8 @@ static int release_rename(struct lockspace *ls, struct resource *r)
 	memcpy(&rd1, &rds->rs, sizeof(struct rd_sanlock));
 	memcpy(&rd2, &rds->rs, sizeof(struct rd_sanlock));
 
-	res1 = (struct sanlk_resource *)&rd1;
-	res2 = (struct sanlk_resource *)&rd2;
+	res1 = &rd1.rs;
+	res2 = &rd2.rs;
 
 	if (memcmp(res1->name, r->name, SANLK_NAME_LEN))
 		log_error("%s:%s unlock_san release rename bad name %.48s", ls->name, r->name, res1->name);
