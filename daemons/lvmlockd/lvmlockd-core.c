@@ -942,8 +942,10 @@ static void write_adopt_file(void)
 	}
 	pthread_mutex_unlock(&lockspaces_mutex);
 
-	fflush(fp);
-	(void) fclose(fp);
+	if (fflush(fp))
+		log_error("Failed to write adopt file");
+	if (fclose(fp))
+		log_error("Failed to close adopt file");
 }
 
 static int read_adopt_file(struct list_head *vg_lockd)
