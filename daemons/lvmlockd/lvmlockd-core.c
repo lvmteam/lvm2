@@ -6332,6 +6332,15 @@ static void adopt_locks(void)
 	return;
 
 fail:
+	list_for_each_entry_safe(ls, lsafe, &vg_lockd, list) {
+		list_for_each_entry_safe(r, rsafe, &ls->resources, list) {
+			list_del(&r->list);
+			free_resource(r);
+		}
+		list_del(&ls->list);
+		free(ls);
+	}
+
 	(void) unlink(adopt_file);
 	log_error("adopt_locks failed, reset host");
 }
