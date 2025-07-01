@@ -1224,8 +1224,7 @@ int lm_free_lv_sanlock(struct lockspace *ls, struct resource *r)
 
 	strcpy_name_len(rs->name, "#unused", SANLK_NAME_LEN);
 
-	if (!offset) {
-		lock_lv_offset_from_args(r->lv_args, &offset);
+	if (!offset && !lock_lv_offset_from_args(r->lv_args, &offset)) {
 		rds->rs.disks[0].offset = offset;
 		log_debug("%s:%s free_lv_san lock_args offset %llu", ls->name, r->name, (unsigned long long)offset);
 	}
