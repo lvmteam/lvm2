@@ -75,14 +75,17 @@ for i in 1 2 3; do
 		mirrors=$((j - 1))
 		if [ $i -eq 1 ]
 		then
-			[ $mirrors -eq 0 ] && lvconvert -y -m $mirrors $vg/$lv1
+			if [ $mirrors -eq 0 ]
+			then
+				[ $i -eq $j ] && not lvconvert -y -m $mirrors $vg/$lv1 || lvconvert -y -m $mirrors $vg/$lv1
+			fi
 		else
 			if [ $mirrors -eq 0 ]
 			then
 				not lvconvert -m $mirrors $vg/$lv1
 				lvconvert -y -m $mirrors $vg/$lv1
 			else
-				lvconvert -y -m $mirrors $vg/$lv1
+				[ $i -eq $j ] && not lvconvert -y -m $mirrors $vg/$lv1 || lvconvert -y -m $mirrors $vg/$lv1
 			fi
 		fi
 
