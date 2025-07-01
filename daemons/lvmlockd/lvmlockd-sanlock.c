@@ -332,7 +332,7 @@ static int read_info_file(struct lockspace *ls, uint32_t *host_id, uint64_t *gen
 	char path[PATH_MAX] = { 0 };
 	FILE *fp;
 
-	if (dm_snprintf(path, PATH_MAX-1, "/var/lib/lvm/lvmlockd_info_%s", ls->vg_name) < 0)
+	if (dm_snprintf(path, sizeof(path), "/var/lib/lvm/lvmlockd_info_%s", ls->vg_name) < 0)
 		return -1;
 
 	if (!(fp = fopen(path, "r"))) {
@@ -366,7 +366,7 @@ static int write_info_file(struct lockspace *ls)
 	FILE *fp;
 	time_t t = time(NULL);
 
-	if (dm_snprintf(path, PATH_MAX-1, "/var/lib/lvm/lvmlockd_info_%s", ls->vg_name) < 0)
+	if (dm_snprintf(path, sizeof(path), "/var/lib/lvm/lvmlockd_info_%s", ls->vg_name) < 0)
 		return -1;
 
 	if (!(fp = fopen(path, "w"))) {
