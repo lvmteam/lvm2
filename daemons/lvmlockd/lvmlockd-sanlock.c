@@ -312,8 +312,11 @@ static int read_host_id_file(void)
 		*sep = '\0';
 		memset(key_str, 0, sizeof(key_str));
 		memset(val_str, 0, sizeof(val_str));
-		(void) sscanf(key, "%63s", key_str);
-		(void) sscanf(val, "%63s", val_str);
+
+		if (sscanf(key, "%63s", key_str) != 1)
+			goto out;
+		if (sscanf(val, "%63s", val_str) != 1)
+			goto out;
 
 		if (!strcmp(key_str, "host_id")) {
 			host_id = atoi(val_str);
@@ -344,19 +347,28 @@ static int read_info_file(struct lockspace *ls, uint32_t *host_id, uint64_t *gen
 		if (line[0] == '#')
 			continue;
 		if (!strncmp(line, "host_id ", 8)) {
-			sscanf(line, "host_id %u", host_id);
+			if (sscanf(line, "host_id %u", host_id) != 1)
+				goto fail;
 		} else if (!strncmp(line, "generation ", 11)) {
-			sscanf(line, "generation %llu", (unsigned long long *)generation);
+			if (sscanf(line, "generation %llu", (unsigned long long *)generation) != 1)
+				goto fail;
 		} else if (!strncmp(line, "sector_size ", 12)) {
-			sscanf(line, "sector_size %d", sector_size);
+			if (sscanf(line, "sector_size %d", sector_size) != 1)
+				goto fail;
 		} else if (!strncmp(line, "align_size ", 11)) {
-			sscanf(line, "align_size %d", align_size);
+			if (sscanf(line, "align_size %d", align_size) != 1)
+				goto fail;
 		}
 	}
 
 	_fclose(fp, path);
 	log_debug("info file: read %u %llu %d %d", *host_id, (unsigned long long)*generation, *sector_size, *align_size);
 	return 0;
+
+fail:
+	_fclose(fp, path);
+	log_debug("Invalid info file values");
+	return -1;
 }
 
 static int write_info_file(struct lockspace *ls)
