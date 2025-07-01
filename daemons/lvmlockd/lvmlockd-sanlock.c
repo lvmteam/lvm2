@@ -364,7 +364,7 @@ static int write_info_file(struct lockspace *ls)
 	struct lm_sanlock *lms = (struct lm_sanlock *)ls->lm_data;
 	char path[PATH_MAX] = { 0 };
 	FILE *fp;
-	time_t t;
+	time_t t = time(NULL);
 
 	if (dm_snprintf(path, PATH_MAX-1, "/var/lib/lvm/lvmlockd_info_%s", ls->vg_name) < 0)
 		return -1;
