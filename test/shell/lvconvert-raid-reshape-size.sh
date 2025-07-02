@@ -9,6 +9,14 @@
 # You should have received a copy of the GNU General Public License
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA2110-1301 USA
+#
+
+#
+# Due to MD constraints, three issues must be considered when modifying stripe counts that alter the RAID-mapped device size:
+# - on a stripe adding reshape, the initial size remains until after the end when the device capacity is increased
+# - on a stripe removing reshape, the initial size is reduced before the reshape is allowed to start
+# - size changes are being reported asynchronously by the kernel, which requires polling for it for split seconds
+#
 
 LVM_SKIP_LARGE_TESTS=1
 SKIP_RESIZE=0
@@ -86,9 +94,9 @@ function _get_size
 	local reshape_len rimagesz
 
 	# Get any reshape size in sectors
-	# avoid using pipes as exit codes may cause test failure
+	# Avoid using pipes as exit codes may cause test failure
 	reshape_len="$(lvs --noheadings --nosuffix -aoreshapelen --unit s $vg/${lv}_rimage_0)"
-	# drop everything past 'S'
+	# Drop everything past 'S'
 	reshape_len="$(echo ${reshape_len/S*}|xargs)"
 
 	# Get rimage size - reshape length
@@ -286,11 +294,11 @@ function _test
 	aux wait_for_sync $vg $lv 0
 
 	# Delay its first 'PV' so that size can be evaluated before reshape finished too quick.
-	aux delay_dev "$dev1" $ms 0
+	aux delay_dev "$dev1" $ms 0 "$(( $(get first_extent_sector "$dev1") + 2048 ))"
 
 	# Reshape it to one more stripe and 256K stripe size
 	_reshape_layout $raid_type $(($data_stripes + 1)) $vg $lv 0 0 --stripesize 256K
-	[ $(_check_size $vg $lv $(($data_stripes + 1))) -ne 0 ] || die "LV size should still be small"
+	[ $(_check_size $vg $lv $data_stripes) -eq 0 ] || die "LV size should still be small"
 	fsck -fy "$DM_DEV_DIR/$vg/$lv"
 
 	# Reset delay
