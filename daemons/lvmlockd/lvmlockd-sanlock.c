@@ -329,6 +329,7 @@ out:
 	return host_id;
 }
 
+#if LOCKDSANLOCK_SUPPORT >= 410
 static int read_info_file(struct lockspace *ls, uint32_t *host_id, uint64_t *generation, int *sector_size, int *align_size)
 {
 	char line[MAX_LINE];
@@ -370,6 +371,7 @@ fail:
 	log_debug("Invalid info file values");
 	return -1;
 }
+#endif
 
 static int write_info_file(struct lockspace *ls)
 {
@@ -1700,7 +1702,9 @@ int lm_prepare_lockspace_sanlock(struct lockspace *ls, uint64_t *prev_generation
 		goto fail;
 	}
 
+#if LOCKDSANLOCK_SUPPORT >= 410
  repair_retry:
+#endif
 	sector_size = 0;
 	align_size = 0;
 
