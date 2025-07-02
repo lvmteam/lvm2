@@ -634,7 +634,7 @@ static inline int lm_add_resource_sanlock(struct lockspace *ls, struct resource 
 
 static inline int lm_lock_sanlock(struct lockspace *ls, struct resource *r, int ld_mode,
 		    struct val_blk *vb_out, int *retry, struct owner *owner,
-		    int adopt_only, int adopt_ok)
+		    int adopt_only, int adopt_ok, int repair)
 {
 	return -1;
 }
