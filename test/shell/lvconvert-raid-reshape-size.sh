@@ -116,6 +116,21 @@ function _check_size
 	[ "$(blockdev --getsz /dev/$vg/$lv)" -eq "$(_get_size $vg $lv $data_stripes)" ] && echo 0 || echo 1
 }
 
+function _check_size_timeout
+{
+	local count=60
+	local r=1
+
+	while [ $r -eq 1 -a $count -gt 0 ]
+	do
+		r=$(_check_size $*)
+		((count--))
+		sleep .05
+	done
+
+	echo $r
+}
+
 function _total_stripes
 {
 	local raid_type=$1
@@ -199,10 +214,9 @@ function _add_stripes
 	fsck -fy "$DM_DEV_DIR/$vg/$lv"
 	aux delay_dev "$dev1" 0 0
 	aux wait_for_sync $vg $lv 0
-	sleep 1
 
 	# Now size consistency has to be fine
-	[ $(_check_size $vg $lv $data_stripes) -eq 0 ] || die "LV size should be grown"
+	[ $(_check_size_timeout $vg $lv $data_stripes) -eq 0 ] || die "LV size should be grown"
 
 	# Check, use grown capacity for the filesystem and check again
 	if [ $SKIP_RESIZE -eq 0 ]
@@ -212,8 +226,6 @@ function _add_stripes
 	fi
 
 	fsck -fy "$DM_DEV_DIR/$vg/$lv"
-
-	udevadm settle
 }
 
 function _remove_stripes
@@ -259,14 +271,10 @@ function _remove_stripes
 	check lv_first_seg_field $vg/$lv datastripes $data_stripes
 	check lv_first_seg_field $vg/$lv stripes $(_total_stripes $raid_type $data_stripes)
 
-	sleep 1
-
 	# Now size consistency has to be fine
-	[ $(_check_size $vg $lv $data_stripes) -eq 0 ] || die "LV size should be completely reduced"
+	[ $(_check_size_timeout $vg $lv $data_stripes) -eq 0 ] || die "LV size should be completely reduced"
 
 	fsck -fy "$DM_DEV_DIR/$vg/$lv"
-
-	udevadm settle
 }
 
 function _test
@@ -307,9 +315,8 @@ function _test
 	# Wait for sync to finish to check frow extended LV size
 	aux wait_for_sync $vg $lv 0
 
-	[ $(_check_size $vg $lv $(($data_stripes + 1))) -eq 0 ] || die "LV size should be grown"
+	[ $(_check_size_timeout $vg $lv $(($data_stripes + 1))) -eq 0 ] || die "LV size should be grown"
 	fsck -fy "$DM_DEV_DIR/$vg/$lv"
-	udevadm settle
 
 	# Loop adding stripes and check size consistency on each iteration
 	for data_stripes in $tst_stripes
