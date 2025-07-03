@@ -30,6 +30,9 @@ aux kernel_at_least 6 9 0 || skip
 
 test "$(aux total_mem)" -gt 1048576 || skip "Not enough RAM for this test"
 
+# Timeout in seconds to check for size updates happening during/after.
+CHECK_SIZE_TIMEOUT=5
+
 # List of stripes to add or remove
 tst_stripes=""
 
@@ -52,11 +55,11 @@ function _get_pvs_stripes_and_delay
 
 		case $raid_type in
 		raid[45]*)
-			ms=30
+			ms=60
 			tst_stripes="5 4 11 9 15 13 19 18 22 21 25 23 28 30 31 29 33 31 34 33 37 45 41 50 55 60 63 30 15 10 8 3"
 			;;
 		raid6*)
-			ms=20
+			ms=40
 			tst_stripes="5 4 11 9 15 13 19 18 22 21 25 23 28 30 31 29 33 31 34 33 37 45 41 50 55 60 62 30 15 10 8 3"
 			;;
 		raid10*)
@@ -71,15 +74,15 @@ function _get_pvs_stripes_and_delay
 
 		case $raid_type in
 		raid[45]*)
-			ms=40
+			ms=60
 			tst_stripes="5 4 8 7 11 9 15 19 18 10"
 			;;
 		raid6*)
-			ms=25
+			ms=40
 			tst_stripes="5 4 8 7 11 9 15 18 10 5"
 			;;
 		raid10*)
-			ms=40
+			ms=50
 			tst_stripes="5 6 7 8 9 10"
 			;;
 		esac
@@ -118,7 +121,7 @@ function _check_size
 
 function _check_size_timeout
 {
-	local count=60
+	local count=$((CHECK_SIZE_TIMEOUT * 20))
 	local r=1
 
 	while [ $r -eq 1 -a $count -gt 0 ]
@@ -201,18 +204,19 @@ function _add_stripes
 
 	stripes=$(_total_stripes $raid_type $data_stripes)
 
-	aux delay_dev "$dev1" $ms 0
+	aux delay_dev "$dev1" $ms 0 "$(( $(get first_extent_sector "$dev1") + 2048 ))"
 	_reshape_layout $raid_type $data_stripes $vg $lv 0 1 --stripesize $stripesize
 
 	# Size has to be inconsistent until reshape finishes
 	[ $(_check_size $vg $lv $data_stripes) -ne 0 ] || die "LV size should be small"
+
+	aux delay_dev "$dev1" 0 0
 
 	check lv_first_seg_field $vg/$lv stripesize "$stripesize"
 	check lv_first_seg_field $vg/$lv datastripes $data_stripes
 	check lv_first_seg_field $vg/$lv stripes $stripes
 
 	fsck -fy "$DM_DEV_DIR/$vg/$lv"
-	aux delay_dev "$dev1" 0 0
 	aux wait_for_sync $vg $lv 0
 
 	# Now size consistency has to be fine
@@ -249,11 +253,13 @@ function _remove_stripes
 		fsck -fy "$DM_DEV_DIR/$vg/$lv"
 	fi
 
-	aux delay_dev "$dev1" $ms 0
+	aux delay_dev "$dev1" $ms 0 "$(( $(get first_extent_sector "$dev1") + 2048 ))"
 	_reshape_layout $raid_type $data_stripes $vg $lv 0 1 --force --stripesize $stripesize
 
 	# Size has to be inconsistent, as to be removed legs still exist
 	[ $(_check_size $vg $lv $cur_data_stripes) -ne 0 ] || die "LV size should be reduced but not rimage count"
+
+	aux delay_dev "$dev1" 0 0
 
 	check lv_first_seg_field $vg/$lv stripesize "$stripesize"
 	check lv_first_seg_field $vg/$lv datastripes $data_stripes
@@ -263,7 +269,6 @@ function _remove_stripes
 
 	# Have to remove freed legs before another restriping conversion. Will fail while reshaping is ongoing as stripes are still in use
 	not _reshape_layout $raid_type $(($data_stripes + 1)) 0 1 $vg $lv --force
-	aux delay_dev "$dev1" 0 0
 	aux wait_for_sync $vg $lv 1
 
 	# Remove freed legs as they are now idle has to succeed without --force
