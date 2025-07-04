@@ -126,22 +126,24 @@ function _check_size
 	local data_stripes=$3
 
 	# Compare size of LV with calculated one
-	[ "$(blockdev --getsz /dev/$vg/$lv)" -eq "$(_get_size $vg $lv $data_stripes)" ] && echo 0 || echo 1
+	test "$(blockdev --getsz /dev/$vg/$lv)" -eq "$(_get_size $vg $lv $data_stripes)"
 }
 
 function _check_size_timeout
 {
 	local count=$((CHECK_SIZE_TIMEOUT * 20))
-	local r=1
+	local r
 
-	while [ $r -eq 1 -a $count -gt 0 ]
+	while [ $count -gt 0 ]
 	do
-		r=$(_check_size $*)
+		_check_size $*
+		r=$?
+		[ $r -eq 0 ] && break
 		((count--))
 		sleep .05
 	done
 
-	echo $r
+	return $r
 }
 
 function _total_stripes
@@ -218,7 +220,7 @@ function _add_stripes
 	_reshape_layout $raid_type $data_stripes $vg $lv 0 1 --stripesize $stripesize
 
 	# Size has to be inconsistent until reshape finishes
-	[ $(_check_size $vg $lv $data_stripes) -ne 0 ] || die "LV size should be small"
+	_check_size $vg $lv $data_stripes || die "LV size should be small"
 
 	aux delay_dev "$dev1" 0 0
 
@@ -230,7 +232,7 @@ function _add_stripes
 	aux wait_for_sync $vg $lv 0
 
 	# Now size consistency has to be fine
-	[ $(_check_size_timeout $vg $lv $data_stripes) -eq 0 ] || die "LV size should be grown"
+	_check_size_timeout $vg $lv $data_stripes && die "LV size should be grown"
 
 	# Check, use grown capacity for the filesystem and check again
 	if [ $SKIP_RESIZE -eq 0 ]
@@ -267,7 +269,7 @@ function _remove_stripes
 	_reshape_layout $raid_type $data_stripes $vg $lv 0 1 --force --stripesize $stripesize
 
 	# Size has to be inconsistent, as to be removed legs still exist
-	[ $(_check_size $vg $lv $cur_data_stripes) -ne 0 ] || die "LV size should be reduced but not rimage count"
+	_check_size $vg $lv $cur_data_stripes && die "LV size should be reduced but not rimage count"
 
 	aux delay_dev "$dev1" 0 0
 
@@ -287,7 +289,7 @@ function _remove_stripes
 	check lv_first_seg_field $vg/$lv stripes $(_total_stripes $raid_type $data_stripes)
 
 	# Now size consistency has to be fine
-	[ $(_check_size_timeout $vg $lv $data_stripes) -eq 0 ] || die "LV size should be completely reduced"
+	_check_size_timeout $vg $lv $data_stripes || die "LV size should be completely reduced"
 
 	fsck -fy "$DM_DEV_DIR/$vg/$lv"
 }
@@ -307,7 +309,7 @@ function _test
 
 	# Create (data_stripes+1)-way striped $raid_type
 	_lvcreate $raid_type $data_stripes $(($data_stripes * ${rimagesz}))M $vg $lv --stripesize 128k
-	[ $(_check_size $vg $lv $data_stripes) -eq 0 ] || die "LV size bogus"
+	_check_size $vg $lv $data_stripes || die "LV size bogus"
 	check lv_first_seg_field $vg/$lv stripesize "128.00k"
 	aux wait_for_sync $vg $lv 0
 
@@ -316,7 +318,7 @@ function _test
 
 	# Reshape it to one more stripe and 256K stripe size
 	_reshape_layout $raid_type $(($data_stripes + 1)) $vg $lv 0 0 --stripesize 256K
-	[ $(_check_size $vg $lv $data_stripes) -eq 0 ] || die "LV size should still be small"
+	_check_size $vg $lv $data_stripes || die "LV size should still be small"
 	fsck -fy "$DM_DEV_DIR/$vg/$lv"
 
 	# Reset delay
@@ -325,7 +327,7 @@ function _test
 	# Wait for sync to finish to check frow extended LV size
 	aux wait_for_sync $vg $lv 0
 
-	[ $(_check_size_timeout $vg $lv $(($data_stripes + 1))) -eq 0 ] || die "LV size should be grown"
+	_check_size_timeout $vg $lv $(($data_stripes + 1)) || die "LV size should be grown"
 	fsck -fy "$DM_DEV_DIR/$vg/$lv"
 
 	# Loop adding stripes and check size consistency on each iteration
