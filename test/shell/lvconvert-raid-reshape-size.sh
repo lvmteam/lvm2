@@ -21,6 +21,8 @@
 LVM_SKIP_LARGE_TESTS=1
 SKIP_RESIZE=0
 
+UDEVOPTS="--noudevsync"
+
 . lib/inittest
 
 which mkfs.ext4 || skip
@@ -44,15 +46,26 @@ ms=0
 npvs=0
 pvsz=0
 
-function _get_pvs_stripes_and_delay
+function _get_pvs
+{
+	case $LVM_SKIP_LARGE_TESTS in
+	0)
+		npvs=64
+		pvsz=32
+		;;
+	*)
+		npvs=20
+		pvsz=16
+		;;
+	esac
+}
+
+function _get_stripes_and_delay
 {
 	local raid_type=$1
 
 	case $LVM_SKIP_LARGE_TESTS in
 	0)
-		npvs=64
-		pvsz=32
-
 		case $raid_type in
 		raid[45]*)
 			ms=60
@@ -69,9 +82,6 @@ function _get_pvs_stripes_and_delay
 		esac
 		;;
 	*)
-		npvs=20
-		pvsz=16
-
 		case $raid_type in
 		raid[45]*)
 			ms=60
@@ -183,7 +193,7 @@ function _reshape_layout
 
 	stripes=$(_total_stripes $raid_type $data_stripes)
 
-	lvconvert -y --ty $raid_type --stripes $data_stripes $opts $vg/$lv
+	lvconvert -y --ty $raid_type --stripes $data_stripes $UDEVOPTS $opts $vg/$lv
 	check lv_first_seg_field $vg/$lv1 segtype "$raid_type"
 
 	if [ $wait_for_reshape -eq 1 ]
@@ -290,12 +300,7 @@ function _test
 	local data_stripes=$4
 	local cur_data_stripes
 
-	_get_pvs_stripes_and_delay $raid_type
-
-	aux prepare_pvs $npvs $pvsz
-	get_devs
-
-	vgcreate $SHARED -s 1M "$vg" "${DEVICES[@]}"
+	_get_stripes_and_delay $raid_type
 
 	# Calculate maximum rimage size in MiB and subtract 3 extents to leave room for rounding
 	rimagesz=$(($(blockdev --getsz "$dev1") / 2048 - 3))
@@ -331,12 +336,21 @@ function _test
 							|| _remove_stripes $raid_type $vg $lv $data_stripes
 	done
 
-	vgremove -ff $vg
-	aux remove_dm_devs "${DEVICES[@]}"
+	lvremove -ff $vg
 }
+
+#
+# Main
+#
+_get_pvs
+aux prepare_pvs $npvs $pvsz
+get_devs
+vgcreate $SHARED -s 1M "$vg" "${DEVICES[@]}"
 
 # Test all respective RAID levels
 _test $vg $lv1 raid4 2
 _test $vg $lv1 raid5_ra 2
 _test $vg $lv1 raid6_nc 3
 _test $vg $lv1 raid10 2
+
+vgremove -ff $vg
