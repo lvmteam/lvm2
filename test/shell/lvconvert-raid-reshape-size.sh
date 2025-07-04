@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright (C) 2024 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2024,2025 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,
 # modify, copy, or redistribute it subject to the terms and conditions
@@ -19,18 +19,10 @@
 #
 
 LVM_SKIP_LARGE_TESTS=1
+SKIP_FSCK=1
 SKIP_RESIZE=0
 
 UDEVOPTS="--noudevsync"
-
-. lib/inittest
-
-which mkfs.ext4 || skip
-[ $SKIP_RESIZE -eq 0 ] && ( which resize2fs || skip )
-
-aux kernel_at_least 6 9 0 || skip
-
-test "$(aux total_mem)" -gt 1048576 || skip "Not enough RAM for this test"
 
 # Timeout in seconds to check for size updates happening during/after.
 CHECK_SIZE_TIMEOUT=5
@@ -46,9 +38,46 @@ ms=0
 npvs=0
 pvsz=0
 
+
+. lib/inittest
+
+aux kernel_at_least 6 9 0 || skip
+
+test "$(aux total_mem)" -gt 1048576 || skip "Not enough RAM for this test"
+
+which mkfs.ext4 || skip
+
+test "$SKIP_RESIZE" -eq 1 || ( which resize2fs || skip )
+
+# Delay its first 'PV' so that size can be evaluated before reshape finished too quick.
+function _delay_dev
+{
+	local dev=$1
+	local offset=$(( $(get first_extent_sector "$dev") + 2048 ))
+
+	aux delay_dev "$dev" "$ms" 0 "$offset"
+}
+
+# Reset delay
+function _restore_dev
+{
+	local dev=$1
+
+	aux enable_dev "$dev"
+}
+
+# Optimized filesystem check function with better error handling
+function _skip_or_fsck
+{
+	local device=$1
+	local options=${2:-y}
+
+	[ "$SKIP_FSCK" -eq 1 ] || fsck -f"$options" "$device"
+}
+
 function _get_pvs
 {
-	case $LVM_SKIP_LARGE_TESTS in
+	case "$LVM_SKIP_LARGE_TESTS" in
 	0)
 		npvs=64
 		pvsz=32
@@ -64,9 +93,9 @@ function _get_stripes_and_delay
 {
 	local raid_type=$1
 
-	case $LVM_SKIP_LARGE_TESTS in
+	case "$LVM_SKIP_LARGE_TESTS" in
 	0)
-		case $raid_type in
+		case "$raid_type" in
 		raid[45]*)
 			ms=60
 			tst_stripes="5 4 11 9 15 13 19 18 22 21 25 23 28 30 31 29 33 31 34 33 37 45 41 50 55 60 63 30 15 10 8 3"
@@ -82,7 +111,7 @@ function _get_stripes_and_delay
 		esac
 		;;
 	*)
-		case $raid_type in
+		case "$raid_type" in
 		raid[45]*)
 			ms=60
 			tst_stripes="5 4 8 7 11 9 15 19 18 10"
@@ -96,6 +125,7 @@ function _get_stripes_and_delay
 			tst_stripes="5 6 7 8 9 10"
 			;;
 		esac
+		;;
 	esac
 }
 
@@ -108,15 +138,15 @@ function _get_size
 
 	# Get any reshape size in sectors
 	# Avoid using pipes as exit codes may cause test failure
-	reshape_len="$(lvs --noheadings --nosuffix -aoreshapelen --unit s $vg/${lv}_rimage_0)"
+	reshape_len=$(lvs --noheadings --nosuffix -aoreshapelen --unit s "$vg/${lv}_rimage_0")
 	# Drop everything past 'S'
-	reshape_len="$(echo ${reshape_len/S*}|xargs)"
+	reshape_len=$(echo "${reshape_len/S*}"|xargs)
 
 	# Get rimage size - reshape length
-	rimagesz=$(($(blockdev --getsz /dev/mapper/${vg}-${lv}_rimage_0) - $reshape_len))
+	rimagesz=$(( $(blockdev --getsz "$DM_DEV_DIR/mapper/${vg}-${lv}_rimage_0") - reshape_len ))
 
 	# Calculate size of LV based on above sizes
-	echo $(($rimagesz * $data_stripes))
+	echo $(( rimagesz *  data_stripes ))
 }
 
 function _check_size
@@ -126,24 +156,20 @@ function _check_size
 	local data_stripes=$3
 
 	# Compare size of LV with calculated one
-	test "$(blockdev --getsz /dev/$vg/$lv)" -eq "$(_get_size $vg $lv $data_stripes)"
+	test "$(blockdev --getsz "/dev/$vg/$lv")" -eq "$(_get_size $vg $lv "$data_stripes")"
 }
 
 function _check_size_timeout
 {
-	local count=$((CHECK_SIZE_TIMEOUT * 20))
-	local r
+	local i
 
-	while [ $count -gt 0 ]
+	for i in $(seq 0 $((CHECK_SIZE_TIMEOUT * 20)))
 	do
-		_check_size $*
-		r=$?
-		[ $r -eq 0 ] && break
-		((count--))
+		_check_size "$@" && return
 		sleep .05
 	done
 
-	return $r
+	return 1
 }
 
 function _total_stripes
@@ -151,10 +177,10 @@ function _total_stripes
 	local raid_type=$1
 	local data_stripes=$2
 
-	case $raid_type in
-	raid[45]*) echo $(($data_stripes + 1)) ;;
-	raid6*)    echo $(($data_stripes + 2)) ;;
-	raid10*)   echo $(($data_stripes * 2)) ;;
+	case "$raid_type" in
+	raid[45]*) echo $(( data_stripes + 1 )) ;;
+	raid6*)    echo $(( data_stripes + 2 )) ;;
+	raid10*)   echo $(( data_stripes * 2 )) ;;
 	esac
 }
 
@@ -166,19 +192,18 @@ function _lvcreate
 	local vg=$4
 	local lv=$5
 	shift 5
-	local opts="$*"
 	local stripes
 
-	stripes=$(_total_stripes $raid_type $data_stripes)
+	stripes=$(_total_stripes "$raid_type" "$data_stripes")
 
-	lvcreate -y -aey --type $raid_type -i $data_stripes -L $size -n $lv $vg $opts
+	lvcreate -y -aey --type "$raid_type" -i "$data_stripes" -L "$size" -n $lv $vg "$@"
 
 	check lv_first_seg_field $vg/$lv segtype "$raid_type"
-	check lv_first_seg_field $vg/$lv datastripes $data_stripes
-	check lv_first_seg_field $vg/$lv stripes $stripes
+	check lv_first_seg_field $vg/$lv datastripes "$data_stripes"
+	check lv_first_seg_field $vg/$lv stripes "$stripes"
 
-	mkfs.ext4 "$DM_DEV_DIR/$vg/$lv"
-	fsck -fy "$DM_DEV_DIR/$vg/$lv"
+	echo y|mkfs.ext4 "$DM_DEV_DIR/$vg/$lv"
+	_skip_or_fsck "$DM_DEV_DIR/$vg/$lv"
 }
 
 function _reshape_layout
@@ -190,18 +215,21 @@ function _reshape_layout
 	local wait_for_reshape=$5
 	local ignore_a_chars=$6
 	shift 6
-	local opts="$*"
 	local stripes
 
-	stripes=$(_total_stripes $raid_type $data_stripes)
+	stripes=$(_total_stripes "$raid_type" "$data_stripes")
 
-	lvconvert -y --ty $raid_type --stripes $data_stripes $UDEVOPTS $opts $vg/$lv
+	# FIXME: replace this hack with --noudevsync with slowdown of 'write'
+	#        areas used for reshape operation.
+	#   ATM: command used to be 'sleeping' waiting for a cookie - delayed by udev
+	lvconvert -y --ty "$raid_type" --stripes "$data_stripes" $UDEVOPTS $vg/$lv "$@"
 	check lv_first_seg_field $vg/$lv1 segtype "$raid_type"
 
-	if [ $wait_for_reshape -eq 1 ]
+	if [ "$wait_for_reshape" -eq 1 ]
 	then
-		aux wait_for_sync $vg $lv $ignore_a_chars
-		fsck -fn "$DM_DEV_DIR/$vg/$lv"
+		_restore_dev "$dev1"
+		aux wait_for_sync $vg $lv "$ignore_a_chars"
+		_skip_or_fsck "$DM_DEV_DIR/$vg/$lv" "fn"
 	fi
 }
 
@@ -212,36 +240,37 @@ function _add_stripes
 	local lv=$3
 	local data_stripes=$4
 	local stripes=
-	local stripesize="$((16 << ($data_stripes % 5))).00k" # Stripe size variation
+	local stripesize="$((16 << (data_stripes % 5))).00k" # Stripe size variation
 
-	stripes=$(_total_stripes $raid_type $data_stripes)
+	stripes=$(_total_stripes "$raid_type" "$data_stripes")
 
-	aux delay_dev "$dev1" $ms 0 "$(( $(get first_extent_sector "$dev1") + 2048 ))"
-	_reshape_layout $raid_type $data_stripes $vg $lv 0 1 --stripesize $stripesize
+	_delay_dev "$dev1"
+	_reshape_layout "$raid_type" "$data_stripes" $vg $lv 0 1 --stripesize "$stripesize"
 
 	# Size has to be inconsistent until reshape finishes
-	_check_size $vg $lv $data_stripes || die "LV size should be small"
+	not _check_size $vg $lv "$data_stripes" || die "LV size should be small"
 
-	aux delay_dev "$dev1" 0 0
+	_restore_dev "$dev1"
 
 	check lv_first_seg_field $vg/$lv stripesize "$stripesize"
-	check lv_first_seg_field $vg/$lv datastripes $data_stripes
-	check lv_first_seg_field $vg/$lv stripes $stripes
+	check lv_first_seg_field $vg/$lv datastripes "$data_stripes"
+	check lv_first_seg_field $vg/$lv stripes "$stripes"
 
-	fsck -fy "$DM_DEV_DIR/$vg/$lv"
+	_skip_or_fsck "$DM_DEV_DIR/$vg/$lv"
 	aux wait_for_sync $vg $lv 0
 
 	# Now size consistency has to be fine
-	_check_size_timeout $vg $lv $data_stripes && die "LV size should be grown"
+	not _check_size_timeout $vg $lv "$data_stripes" || die "LV size should be grown"
 
 	# Check, use grown capacity for the filesystem and check again
-	if [ $SKIP_RESIZE -eq 0 ]
+	if [ "$SKIP_RESIZE" -eq 0 ]
 	then
+		# Mandatory fsck before resize2fs.
 		fsck -fy "$DM_DEV_DIR/$vg/$lv"
 		resize2fs "$DM_DEV_DIR/$vg/$lv"
 	fi
 
-	fsck -fy "$DM_DEV_DIR/$vg/$lv"
+	_skip_or_fsck "$DM_DEV_DIR/$vg/$lv"
 }
 
 function _remove_stripes
@@ -252,46 +281,47 @@ function _remove_stripes
 	local data_stripes=$4
 	local cur_data_stripes
 	local stripes
-	local stripesize="$((16 << ($data_stripes % 5))).00k" # Stripe size variation
+	local stripesize="$((16 << (data_stripes % 5))).00k" # Stripe size variation
 
 	cur_data_stripes=$(get lv_field "$vg/$lv" datastripes -a)
 	stripes=$(get lv_field "$vg/$lv" stripes -a)
 
-	# Check, shrink hilesystem to the resulting smaller size and check again
-	if [ $SKIP_RESIZE -eq 0 ]
+	# Check, shrink filesystem to the resulting smaller size and check again
+	if [ "$SKIP_RESIZE" -eq 0 ]
 	then
+		# Mandatory fsck before resize2fs.
 		fsck -fy "$DM_DEV_DIR/$vg/$lv"
-		resize2fs "$DM_DEV_DIR/$vg/$lv" $(_get_size $vg $lv $data_stripes)s
-		fsck -fy "$DM_DEV_DIR/$vg/$lv"
+		resize2fs "$DM_DEV_DIR/$vg/$lv" "$(_get_size $vg $lv "$data_stripes")s"
+		_skip_or_fsck "$DM_DEV_DIR/$vg/$lv"
 	fi
 
-	aux delay_dev "$dev1" $ms 0 "$(( $(get first_extent_sector "$dev1") + 2048 ))"
-	_reshape_layout $raid_type $data_stripes $vg $lv 0 1 --force --stripesize $stripesize
+	_delay_dev "$dev1"
+	_reshape_layout "$raid_type" "$data_stripes" $vg $lv 0 1 --force --stripesize "$stripesize"
 
 	# Size has to be inconsistent, as to be removed legs still exist
-	_check_size $vg $lv $cur_data_stripes && die "LV size should be reduced but not rimage count"
+	not _check_size $vg $lv "$cur_data_stripes" || die "LV size should be reduced but not rimage count"
 
-	aux delay_dev "$dev1" 0 0
+	_restore_dev "$dev1"
 
 	check lv_first_seg_field $vg/$lv stripesize "$stripesize"
-	check lv_first_seg_field $vg/$lv datastripes $data_stripes
-	check lv_first_seg_field $vg/$lv stripes $stripes
+	check lv_first_seg_field $vg/$lv datastripes "$data_stripes"
+	check lv_first_seg_field $vg/$lv stripes "$stripes"
 
-	fsck -fy "$DM_DEV_DIR/$vg/$lv"
+	_skip_or_fsck "$DM_DEV_DIR/$vg/$lv"
 
 	# Have to remove freed legs before another restriping conversion. Will fail while reshaping is ongoing as stripes are still in use
-	not _reshape_layout $raid_type $(($data_stripes + 1)) 0 1 $vg $lv --force
+	not _reshape_layout "$raid_type" $(( data_stripes + 1 )) 0 1 $vg $lv --force
 	aux wait_for_sync $vg $lv 1
 
 	# Remove freed legs as they are now idle has to succeed without --force
-	_reshape_layout $raid_type $data_stripes $vg $lv 1 1
-	check lv_first_seg_field $vg/$lv datastripes $data_stripes
-	check lv_first_seg_field $vg/$lv stripes $(_total_stripes $raid_type $data_stripes)
+	_reshape_layout "$raid_type" "$data_stripes" $vg $lv 1 1
+	check lv_first_seg_field $vg/$lv datastripes "$data_stripes"
+	check lv_first_seg_field $vg/$lv stripes "$(_total_stripes "$raid_type" "$data_stripes")"
 
 	# Now size consistency has to be fine
-	_check_size_timeout $vg $lv $data_stripes || die "LV size should be completely reduced"
+	_check_size_timeout $vg $lv "$data_stripes" || die "LV size should be completely reduced"
 
-	fsck -fy "$DM_DEV_DIR/$vg/$lv"
+	_skip_or_fsck "$DM_DEV_DIR/$vg/$lv" || return 0
 }
 
 function _test
@@ -301,41 +331,43 @@ function _test
 	local raid_type=$3
 	local data_stripes=$4
 	local cur_data_stripes
+	local rimagesz
 
-	_get_stripes_and_delay $raid_type
+	_get_stripes_and_delay "$raid_type"
 
 	# Calculate maximum rimage size in MiB and subtract 3 extents to leave room for rounding
-	rimagesz=$(($(blockdev --getsz "$dev1") / 2048 - 3))
+	rimagesz=$(( $(blockdev --getsz "$dev1") / 2048 - 3 ))
 
 	# Create (data_stripes+1)-way striped $raid_type
-	_lvcreate $raid_type $data_stripes $(($data_stripes * ${rimagesz}))M $vg $lv --stripesize 128k
-	_check_size $vg $lv $data_stripes || die "LV size bogus"
+	_lvcreate "$raid_type" "$data_stripes" $(( data_stripes * rimagesz ))M $vg $lv --stripesize 128k
+	_check_size $vg $lv "$data_stripes" || die "LV size bogus"
 	check lv_first_seg_field $vg/$lv stripesize "128.00k"
 	aux wait_for_sync $vg $lv 0
 
-	# Delay its first 'PV' so that size can be evaluated before reshape finished too quick.
-	aux delay_dev "$dev1" $ms 0 "$(( $(get first_extent_sector "$dev1") + 2048 ))"
+	_delay_dev "$dev1"
 
 	# Reshape it to one more stripe and 256K stripe size
-	_reshape_layout $raid_type $(($data_stripes + 1)) $vg $lv 0 0 --stripesize 256K
-	_check_size $vg $lv $data_stripes || die "LV size should still be small"
-	fsck -fy "$DM_DEV_DIR/$vg/$lv"
+	_reshape_layout "$raid_type" $(( data_stripes + 1 )) $vg $lv 0 0 --stripesize 256K
+	_check_size $vg $lv "$data_stripes" || die "LV size should still be small"
+	_skip_or_fsck "$DM_DEV_DIR/$vg/$lv"
 
-	# Reset delay
-	aux delay_dev "$dev1" 0 0
+	_restore_dev "$dev1"
 
 	# Wait for sync to finish to check frow extended LV size
 	aux wait_for_sync $vg $lv 0
 
-	_check_size_timeout $vg $lv $(($data_stripes + 1)) || die "LV size should be grown"
-	fsck -fy "$DM_DEV_DIR/$vg/$lv"
+	_check_size_timeout $vg $lv $(( data_stripes + 1 )) || die "LV size should be grown"
+	_skip_or_fsck "$DM_DEV_DIR/$vg/$lv"
 
 	# Loop adding stripes and check size consistency on each iteration
 	for data_stripes in $tst_stripes
 	do
 		cur_data_stripes=$(get lv_field "$vg/$lv" datastripes -a)
-		[ $cur_data_stripes -lt $data_stripes ] && _add_stripes $raid_type $vg $lv $data_stripes \
-							|| _remove_stripes $raid_type $vg $lv $data_stripes
+		if [ "$cur_data_stripes" -lt "$data_stripes" ]; then
+			_add_stripes "$raid_type" $vg $lv "$data_stripes"
+		else
+			_remove_stripes "$raid_type" $vg $lv "$data_stripes"
+		fi
 	done
 
 	lvremove -ff $vg
