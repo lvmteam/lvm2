@@ -884,7 +884,7 @@ int add_seg_to_segs_using_this_lv(struct logical_volume *lv,
 		}
 	}
 
-	log_very_verbose("Adding %s:" FMTu32 " as an user of %s.",
+	log_very_verbose("Adding %s:" FMTu32 " as a user of %s.",
 			 seg->lv->name, seg->le, lv->name);
 
 	if (!(sl = dm_pool_zalloc(lv->vg->vgmem, sizeof(*sl)))) {

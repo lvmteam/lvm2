@@ -272,7 +272,7 @@ class ObjectManager(AutomatedProperties):
 		For a given lvm asset return the dbus object path registered for it.
 		This method first looks up by uuid and then by lvm_id.  You
 		can search by just one by setting uuid == lvm_id (uuid or lvm_id).
-		If the object is not found and path_create is a not None, the
+		If the object is not found and path_create is not None, the
 		path_create function will be called to create a new object path and
 		register it with the object manager for the specified uuid & lvm_id.
 		Note: If path create is not None, uuid and lvm_id cannot be equal
@@ -295,7 +295,7 @@ class ObjectManager(AutomatedProperties):
 			if uuid == lvm_id:
 				path = self._id_lookup(lvm_id)
 			else:
-				# We have an uuid and a lvm_id we can do sanity checks to ensure
+				# We have a uuid and an lvm_id we can do sanity checks to ensure
 				# that they are consistent
 
 				# If a PV is missing its device path is '[unknown]' or some

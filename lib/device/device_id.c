@@ -2763,7 +2763,7 @@ int device_ids_match_dev(struct cmd_context *cmd, struct device *dev)
  * a device, is allowed to read a device to evaluate filters that need to see
  * data from the dev.
  *
- * When a device id of a particular type is obtained for a dev, a id for that
+ * When a device id of a particular type is obtained for a dev, an id for that
  * type is saved in dev->ids in case it needs to be checked again.
  *
  * When a device in dev-cache is matched to an entry in the devices file

@@ -523,7 +523,7 @@ static void _check_lv_segment(struct logical_volume *lv, struct lv_segment *seg,
 
 		if (seg->external_lv &&
 		    !lv_is_external_origin(seg->external_lv))
-			seg_error("external LV is not flagged as a external origin LV");
+			seg_error("external LV is not flagged as an external origin LV");
 
 		if (seg->merge_lv) {
 			if (!lv_is_thin_volume(seg->merge_lv))
