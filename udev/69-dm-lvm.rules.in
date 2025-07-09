@@ -52,6 +52,7 @@ GOTO="lvm_end"
 # Loop device:
 LABEL="next"
 KERNEL!="loop[0-9]*", GOTO="next"
+IMPORT{db}="LVM_LOOP_PV_ACTIVATED"
 ACTION=="add", ENV{LVM_LOOP_PV_ACTIVATED}=="1", GOTO="lvm_scan"
 ACTION=="change", ENV{LVM_LOOP_PV_ACTIVATED}!="1", TEST=="loop/backing_file", ENV{LVM_LOOP_PV_ACTIVATED}="1", GOTO="lvm_scan"
 GOTO="lvm_end"

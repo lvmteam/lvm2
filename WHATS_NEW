@@ -1,5 +1,6 @@
 Version 2.03.34 - 
 ==================
+  Fix autoactivation on top of loop dev PVs to trigger once for change uevents.
   lvconvert: reject raid1 LV non-changing image requests
   Fix support for lvcreate -T --setautoactivation.
   Add lvm.conf global/lvresize_fs_helper_executable.
