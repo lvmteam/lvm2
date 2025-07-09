@@ -1219,7 +1219,7 @@ static void _print_cmd_usage_option(const struct command_name *cname,
 static int _print_man(char *name, char *des_file, int secondary)
 {
 	const struct command_name *cname;
-	const struct command_name_args *cna;
+	const struct command_name_args *cna = NULL;
 	struct command *cmd, *prev_cmd = NULL;
 	char *lvmname = name;
 	int i, sep = 0;
@@ -1363,7 +1363,7 @@ static int _print_man(char *name, char *des_file, int secondary)
 		if (cname && (i == (COMMAND_COUNT - 1))) {
 			_print_cmd_usage_option(cname, cmd);
 		} else {
-			if (cna->variants > 1)
+			if (cna && cna->variants > 1)
 				sep = 1;
 		}
 	}
