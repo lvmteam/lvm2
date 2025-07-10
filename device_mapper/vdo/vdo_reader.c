@@ -153,7 +153,7 @@ static void _vdo_decode_header(struct vdo_header *h)
 
 static void _vdo_decode_geometry_region(struct vdo_volume_region *vr)
 {
-	vr->id = le32_to_cpu(vr->id);
+	vr->id = (enum vdo_volume_region_id) le32_to_cpu(vr->id);
 	vr->start_block = le64_to_cpu(vr->start_block);
 }
 

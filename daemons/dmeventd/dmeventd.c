@@ -965,7 +965,8 @@ static void _do_process_event(struct thread_status *thread)
 	if (!task)
 		log_error("Lost event in Thr %x.", (int)thread->thread);
 	else {
-		thread->dso_data->process_event(task, thread->current_events, &(thread->dso_private));
+		thread->dso_data->process_event(task, (enum dm_event_mask) thread->current_events,
+						&(thread->dso_private));
 		if (task != thread->wait_task)
 			dm_task_destroy(task);
 	}

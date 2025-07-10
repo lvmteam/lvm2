@@ -829,7 +829,7 @@ int dm_event_get_registered_device(struct dm_event_handler *dmevh, int next)
 	}
 
 	dm_event_handler_set_dso(dmevh, reply_dso);
-	dm_event_handler_set_event_mask(dmevh, reply_mask);
+	dm_event_handler_set_event_mask(dmevh, (enum dm_event_mask) reply_mask);
 
 	free(reply_dso);
 	reply_dso = NULL;
