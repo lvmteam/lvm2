@@ -3623,7 +3623,7 @@ int lvm2_main(int argc, char **argv)
 	if (is_static() && strcmp(base, "lvm.static") &&
 	    path_exists(LVM_PATH) &&
 	    !getenv("LVM_DID_EXEC")) {
-		if (setenv("LVM_DID_EXEC", base, 1))
+		if (setenv("LVM_DID_EXEC", "1", 1))
 			log_sys_error("setenv", "LVM_DID_EXEC");
 		if (execvp(LVM_PATH, argv) == -1)
 			log_sys_error("execvp", LVM_PATH);
