@@ -6068,7 +6068,6 @@ static int _fs_reduce_allow(struct cmd_context *cmd, struct logical_volume *lv,
 {
 	const char *fs_reduce_cmd = "";
 	const char *cmp_desc = "";
-	int equal = 0, smaller = 0, larger = 0;
 	int is_ext_fstype = 0;
 	int confirm_mount_change = 0;
 	int check_boundary = 1;
@@ -6117,11 +6116,11 @@ static int _fs_reduce_allow(struct cmd_context *cmd, struct logical_volume *lv,
 	}
 
 	if (check_boundary) {
-		if ((equal = (fsi->fs_last_byte == fsi->new_size_bytes)))
+		if (fsi->fs_last_byte == fsi->new_size_bytes)
 			cmp_desc = "equal to";
-		else if ((smaller = (fsi->fs_last_byte < fsi->new_size_bytes)))
+		else if (fsi->fs_last_byte < fsi->new_size_bytes)
 			cmp_desc = "smaller than";
-		else if ((larger = (fsi->fs_last_byte > fsi->new_size_bytes)))
+		else if (fsi->fs_last_byte > fsi->new_size_bytes)
 			cmp_desc = "larger than";
 
 		log_print_unless_silent("File system size (%s) is %s the requested size (%s).",
@@ -6131,7 +6130,7 @@ static int _fs_reduce_allow(struct cmd_context *cmd, struct logical_volume *lv,
 		/*
 		 * FS reduce is not needed, it's not using the affected space.
 		 */
-		if (smaller || equal) {
+		if (fsi->fs_last_byte <= fsi->new_size_bytes) {
 			log_print_unless_silent("File system reduce is not needed, skipping.");
 			fsi->needs_reduce = 0;
 			return 1;

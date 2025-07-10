@@ -3047,7 +3047,6 @@ int get_lvt_enum(struct logical_volume *lv)
 static int _lv_types_match(struct cmd_context *cmd, struct logical_volume *lv, uint64_t lvt_bits,
 			   uint64_t *match_bits, uint64_t *unmatch_bits)
 {
-	const struct lv_type *type;
 	int lvt_enum;
 	int found_a_match = 0;
 	int match;
@@ -3059,9 +3058,6 @@ static int _lv_types_match(struct cmd_context *cmd, struct logical_volume *lv, u
 
 	for (lvt_enum = 1; lvt_enum < LVT_COUNT; lvt_enum++) {
 		if (!lvt_bit_is_set(lvt_bits, lvt_enum))
-			continue;
-
-		if (!(type = get_lv_type(lvt_enum)))
 			continue;
 
 		/*
@@ -3093,7 +3089,6 @@ static int _lv_types_match(struct cmd_context *cmd, struct logical_volume *lv, u
 static int _lv_props_match(struct cmd_context *cmd, struct logical_volume *lv, uint64_t lvp_bits,
 			   uint64_t *match_bits, uint64_t *unmatch_bits)
 {
-	const struct lv_prop *prop;
 	int lvp_enum;
 	int found_a_mismatch = 0;
 	int match;
@@ -3105,9 +3100,6 @@ static int _lv_props_match(struct cmd_context *cmd, struct logical_volume *lv, u
 
 	for (lvp_enum = 1; lvp_enum < LVP_COUNT; lvp_enum++) {
 		if (!lvp_bit_is_set(lvp_bits, lvp_enum))
-			continue;
-
-		if (!(prop = get_lv_prop(lvp_enum)))
 			continue;
 
 		match = _lv_is_prop(cmd, lv, lvp_enum);

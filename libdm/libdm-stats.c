@@ -4413,7 +4413,7 @@ static uint64_t _stats_map_extents(int fd, struct dm_pool *mem,
 				   uint64_t next_extent,
 				   int *eof)
 {
-	uint64_t expected = 0, nr_extents = next_extent;
+	uint64_t expected, nr_extents = next_extent;
 	unsigned int i;
 
 	if (!fiemap->fm_mapped_extents)

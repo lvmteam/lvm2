@@ -520,8 +520,7 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 	struct vgcreate_params vp_new;
 	struct vgcreate_params vp_def;
 	const char *vg_name_from, *vg_name_to;
-	struct volume_group *vg_to = NULL, *vg_from = NULL;
-	struct lvmcache_vginfo *vginfo_to;
+	struct volume_group *vg_to, *vg_from = NULL;
 	int opt;
 	int existing_vg = 0;
 	int r = ECMD_FAILED;
@@ -563,7 +562,7 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 	if (!lvmcache_label_scan(cmd))
 		return_ECMD_FAILED;
 
-	if (!(vginfo_to = lvmcache_vginfo_from_vgname(vg_name_to, NULL))) {
+	if (!lvmcache_vginfo_from_vgname(vg_name_to, NULL)) {
 		if (!validate_name(vg_name_to)) {
 			log_error("Invalid vg name %s.", vg_name_to);
 			return ECMD_FAILED;

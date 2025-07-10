@@ -604,7 +604,6 @@ static int _split_mirror_images(struct logical_volume *lv,
 	struct cmd_context *cmd = lv->vg->cmd;
 	char layer_name[NAME_LEN], format[NAME_LEN];
 	const char *lv_name;
-	int act;
 	int deactivation_failed = 0, updated_mda = 0;
 
 	if (!lv_is_mirrored(lv)) {
@@ -759,7 +758,7 @@ static int _split_mirror_images(struct logical_volume *lv,
 	if (!lv_update_and_reload(lv))
 		return_0;
 
-	if ((act = lv_is_active(lv_lock_holder(lv)))) {
+	if (lv_is_active(lv_lock_holder(lv))) {
 		if (!_activate_lv_like_model(lv, new_lv)) {
 			log_error("Failed to rename newly split LV in the kernel");
 			return 0;

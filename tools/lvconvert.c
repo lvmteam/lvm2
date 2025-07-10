@@ -4436,7 +4436,6 @@ static int _lv_create_cachevol(struct cmd_context *cmd,
 	struct dm_list *use_pvh;
 	struct pv_list *pvl;
 	const char *device_name = "";
-	struct device *dev_fast;
 	char *dev_argv[MAX_CACHEDEVS];
 	int dev_argc = 0;
 	uint64_t cache_size_sectors = 0;
@@ -4480,7 +4479,7 @@ static int _lv_create_cachevol(struct cmd_context *cmd,
 			goto add_dev_arg;
 		}
 
-		if (!(dev_fast = dev_cache_get(cmd, device_name, cmd->filter))) {
+		if (!dev_cache_get(cmd, device_name, cmd->filter)) {
 			log_error("Device %s not found.", device_name);
 			return 0;
 		}
@@ -6306,7 +6305,6 @@ int lvconvert_writecache_attach_single(struct cmd_context *cmd,
 {
 	struct volume_group *vg = lv->vg;
 	struct logical_volume *lv_update;
-	struct logical_volume *lv_wcorig;
 	struct logical_volume *lv_fast;
 	struct writecache_settings settings = { 0 };
 	const char *fast_name;
@@ -6454,11 +6452,11 @@ int lvconvert_writecache_attach_single(struct cmd_context *cmd,
 	 *
 	 * - lv_fast keeps its existing name and id, becomes hidden.
 	 *
-	 * - lv_wcorig gets new name (existing name + _wcorig suffix),
+	 * - writecache origin gets new name (existing name + _wcorig suffix),
 	 *   gets new id, becomes hidden, gets segments from lv.
 	 */
 
-	if (!(lv_wcorig = _lv_writecache_create(cmd, lv_update, lv_fast, block_size_sectors, &settings)))
+	if (!_lv_writecache_create(cmd, lv_update, lv_fast, block_size_sectors, &settings))
 		goto_bad;
 
 	/*
