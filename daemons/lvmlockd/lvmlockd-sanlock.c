@@ -2447,8 +2447,8 @@ static int release_rename(struct lockspace *ls, struct resource *r)
 	if (!res_args)
 		return -ENOMEM;
 
-	memcpy(&rd1, &rds->rs, sizeof(struct rd_sanlock));
-	memcpy(&rd2, &rds->rs, sizeof(struct rd_sanlock));
+	rd1.rs = rds->rs;
+	rd2.rs = rds->rs;
 
 	res1 = &rd1.rs;
 	res2 = &rd2.rs;
