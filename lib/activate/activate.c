@@ -1760,7 +1760,8 @@ int target_register_events(struct cmd_context *cmd, const char *dso, const struc
 		return_0;
 
 	if (!(dmevh = _create_dm_event_handler(cmd, uuid, dso, timeout,
-					       DM_EVENT_ALL_ERRORS | (timeout ? DM_EVENT_TIMEOUT : 0))))
+					       timeout ? DM_EVENT_ERROR_AND_TIMEOUT_MASK :
+					       DM_EVENT_ALL_ERRORS)))
 		return_0;
 
 	r = set ? dm_event_register_handler(dmevh) : dm_event_unregister_handler(dmevh);
