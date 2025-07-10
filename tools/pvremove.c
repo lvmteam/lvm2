@@ -29,7 +29,7 @@ int pvremove(struct cmd_context *cmd, int argc, char **argv)
 	pvcreate_params_set_defaults(&pp);
 
 	pp.is_remove = 1;
-	pp.force = arg_count(cmd, force_ARG);
+	pp.force = arg_force_value(cmd);
 	pp.yes = arg_count(cmd, yes_ARG);
 	pp.pv_count = argc;
 	pp.pv_names = argv;

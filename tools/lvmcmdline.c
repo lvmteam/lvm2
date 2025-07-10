@@ -381,6 +381,21 @@ percent_type_t arg_percent_value(const struct cmd_context *cmd, int a, const per
 	return arg_is_set(cmd, a) ? cmd->opt_arg_values[a].percent : def;
 }
 
+force_t arg_force_value(const struct cmd_context *cmd)
+{
+	int f;
+
+	switch ((f = arg_count(cmd, force_ARG))) {
+	case 0: return PROMPT;
+	case 1: return DONT_PROMPT;
+	default:
+		log_debug("Changing force level %d to %d.",
+			  f, DONT_PROMPT_OVERRIDE);
+		/* fall through */
+	case 2: return DONT_PROMPT_OVERRIDE;
+	}
+}
+
 int arg_count_increment(struct cmd_context *cmd, int a)
 {
 	return cmd->opt_arg_values[a].count++;

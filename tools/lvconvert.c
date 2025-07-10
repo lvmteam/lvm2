@@ -3116,7 +3116,7 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 		.activate = CHANGE_AN,
 		.do_zero = 1,
 		.do_wipe_signatures = _get_wipe_signatures(cmd),
-		.force = arg_count(cmd, force_ARG),
+		.force = arg_force_value(cmd),
 		.yes = arg_count(cmd, yes_ARG),
 	};
 	int is_active;
@@ -3383,7 +3383,7 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 						  .do_wipe_signatures = 1,
 						  .is_metadata = 1,
 						  .yes = arg_count(cmd, yes_ARG),
-						  .force = arg_count(cmd, force_ARG) } )) {
+						  .force = arg_force_value(cmd) } )) {
 				log_error("Aborting. Failed to wipe metadata lv.");
 				goto bad;
 			}
@@ -5616,7 +5616,7 @@ static int _lvconvert_to_vdopool_single(struct cmd_context *cmd,
 		.do_zero = arg_int_value(cmd, zero_ARG, 1),
 		.do_wipe_signatures = _get_wipe_signatures(cmd),
 		.yes = arg_count(cmd, yes_ARG),
-		.force = arg_count(cmd, force_ARG)
+		.force = arg_force_value(cmd)
 	};
 
 	if (vcp.lv_name) {
@@ -5986,7 +5986,7 @@ static int _writecache_zero(struct cmd_context *cmd, struct logical_volume *lv)
 		.do_wipe_signatures = 1, /* optional, to print warning if clobbering something */
 		.do_zero = 1,            /* required for dm-writecache to work */
 		.yes = arg_count(cmd, yes_ARG),
-		.force = arg_count(cmd, force_ARG)
+		.force = arg_force_value(cmd)
 	};
 	int ret;
 

@@ -148,6 +148,7 @@ const void *arg_ptr_value(const struct cmd_context *cmd, int a, const void *def)
 sign_t arg_sign_value(const struct cmd_context *cmd, int a, const sign_t def);
 percent_type_t arg_percent_value(const struct cmd_context *cmd, int a, const percent_type_t def);
 int arg_count_increment(struct cmd_context *cmd, int a);
+force_t arg_force_value(const struct cmd_context *cmd);
 
 unsigned grouped_arg_count(const struct arg_values *av, int a);
 unsigned grouped_arg_is_set(const struct arg_values *av, int a);
