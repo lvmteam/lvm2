@@ -19,7 +19,6 @@
 #include "misc/dm-ioctl.h"
 #include "vdo/target.h"
 
-#include <stdarg.h>
 #include <string.h>
 #include <sys/utsname.h>
 
