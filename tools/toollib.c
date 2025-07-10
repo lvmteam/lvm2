@@ -499,7 +499,7 @@ int vgcreate_params_set_defaults(struct cmd_context *cmd,
 		extent_size = find_config_tree_int64(cmd,
 				allocation_physical_extent_size_CFG, NULL) * 2;
 		if (extent_size < 0) {
-			log_error(_pe_size_may_not_be_negative_msg);
+			log_error("%s", _pe_size_may_not_be_negative_msg);
 			return 0;
 		}
 		vp_def->extent_size = (uint32_t) extent_size;
@@ -545,7 +545,7 @@ int vgcreate_params_set_from_args(struct cmd_context *cmd,
 	    arg_uint_value(cmd, physicalextentsize_ARG, vp_def->extent_size);
 
 	if (arg_sign_value(cmd, physicalextentsize_ARG, SIGN_NONE) == SIGN_MINUS) {
-		log_error(_pe_size_may_not_be_negative_msg);
+		log_error("%s", _pe_size_may_not_be_negative_msg);
 		return 0;
 	}
 

@@ -4075,8 +4075,11 @@ out_reserved_values:
 	log_warn(" ");
 }
 
-static const char _sel_syntax_error_at_msg[] = "Selection syntax error at '%s'.";
-static const char _sel_help_ref_msg[] = "Use \'help\' for selection to get more help.";
+static void _parse_syntax_error(const char *s)
+{
+	log_error("Selection syntax error at '%s'.", s);
+	log_error("Use \'help\' for selection to get more help.");
+}
 
 /*
  * Selection parser
@@ -4220,8 +4223,7 @@ static struct selection_node *_parse_selection(struct dm_report *rh,
 
 	return sn;
 bad:
-	log_error(_sel_syntax_error_at_msg, s);
-	log_error(_sel_help_ref_msg);
+	_parse_syntax_error(s);
 	*next = s;
 	return NULL;
 }
@@ -4235,7 +4237,6 @@ static struct selection_node *_parse_ex(struct dm_report *rh,
 					const char *s,
 					const char **next)
 {
-	static const char _ps_expected_msg[] = "Syntax error: left parenthesis expected at \'%s\'";
 	static const char _pe_expected_msg[] = "Syntax error: right parenthesis expected at \'%s\'";
 	struct selection_node *sn = NULL;
 	uint32_t t;
@@ -4245,7 +4246,7 @@ static struct selection_node *_parse_ex(struct dm_report *rh,
 	if (t == SEL_MODIFIER_NOT) {
 		/* '!' '(' EXPRESSION ')' */
 		if (!_tok_op_log(*next, &tmp, SEL_PRECEDENCE_PS)) {
-			log_error(_ps_expected_msg, *next);
+			log_error("Syntax error: left parenthesis expected at \'%s\'", *next);
 			goto error;
 		}
 		if (!(sn = _parse_or_ex(rh, tmp, next, NULL)))
@@ -4386,8 +4387,7 @@ static int _report_set_selection(struct dm_report *rh, const char *selection, in
 	next = _skip_space(fin);
 	if (*next) {
 		log_error("Expecting logical operator");
-		log_error(_sel_syntax_error_at_msg, next);
-		log_error(_sel_help_ref_msg);
+		_parse_syntax_error(next);
 		goto bad;
 	}
 
