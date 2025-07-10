@@ -28,11 +28,6 @@
 #include "target.h"
 
 #include "lib/mm/xlate.h"
-//#include "linux/byteorder/big_endian.h"
-//#include "linux/byteorder/little_endian.h"
-//#define le32_to_cpu __le32_to_cpu
-//#define le64_to_cpu __le64_to_cpu
-
 
 #include <errno.h>
 #include <fcntl.h>
@@ -140,36 +135,36 @@ struct vdo_volume_geometry_4 {
 
 static void _vdo_decode_version(struct vdo_version_number *v)
 {
-	v->major_version = le32_to_cpu(v->major_version);
-	v->minor_version = le32_to_cpu(v->minor_version);
+	v->major_version = le32toh(v->major_version);
+	v->minor_version = le32toh(v->minor_version);
 }
 
 static void _vdo_decode_header(struct vdo_header *h)
 {
-	h->id = le32_to_cpu(h->id);
+	h->id = le32toh(h->id);
 	_vdo_decode_version(&h->version);
-	h->size = le64_to_cpu(h->size);
+	h->size = le64toh(h->size);
 }
 
 static void _vdo_decode_geometry_region(struct vdo_volume_region *vr)
 {
-	vr->id = (enum vdo_volume_region_id) le32_to_cpu(vr->id);
-	vr->start_block = le64_to_cpu(vr->start_block);
+	vr->id = (enum vdo_volume_region_id) le32toh(vr->id);
+	vr->start_block = le64toh(vr->start_block);
 }
 
 static void _vdo_decode_volume_geometry(struct vdo_volume_geometry *vg)
 {
-	vg->release_version = le32_to_cpu(vg->release_version);
-	vg->nonce = le64_to_cpu(vg->nonce);
-	vg->bio_offset = le64_to_cpu(vg->bio_offset);
+	vg->release_version = le32toh(vg->release_version);
+	vg->nonce = le64toh(vg->nonce);
+	vg->bio_offset = le64toh(vg->bio_offset);
 	_vdo_decode_geometry_region(&vg->regions[VDO_DATA_REGION]);
 }
 
 static void _vdo_decode_volume_geometry_4(struct vdo_volume_geometry *vg,
 					  struct vdo_volume_geometry_4 *vg_4)
 {
-	vg->release_version = le32_to_cpu(vg_4->release_version);
-	vg->nonce = le64_to_cpu(vg_4->nonce);
+	vg->release_version = le32toh(vg_4->release_version);
+	vg->nonce = le64toh(vg_4->nonce);
 	vg->bio_offset = 0;
 	vg->regions[VDO_DATA_REGION] = vg_4->regions[VDO_DATA_REGION];
 	_vdo_decode_geometry_region(&vg->regions[VDO_DATA_REGION]);
@@ -177,17 +172,17 @@ static void _vdo_decode_volume_geometry_4(struct vdo_volume_geometry *vg,
 
 static void _vdo_decode_config(struct vdo_config *vc)
 {
-	vc->logical_blocks = le64_to_cpu(vc->logical_blocks);
-	vc->physical_blocks = le64_to_cpu(vc->physical_blocks);
-	vc->slab_size = le64_to_cpu(vc->slab_size);
-	vc->recovery_journal_size = le64_to_cpu(vc->recovery_journal_size);
-	vc->slab_journal_blocks = le64_to_cpu(vc->slab_journal_blocks);
+	vc->logical_blocks = le64toh(vc->logical_blocks);
+	vc->physical_blocks = le64toh(vc->physical_blocks);
+	vc->slab_size = le64toh(vc->slab_size);
+	vc->recovery_journal_size = le64toh(vc->recovery_journal_size);
+	vc->slab_journal_blocks = le64toh(vc->slab_journal_blocks);
 }
 
 static void _vdo_decode_pvc(struct vdo_component_41_0 *pvc)
 {
 	_vdo_decode_config(&pvc->config);
-	pvc->nonce = le64_to_cpu(pvc->nonce);
+	pvc->nonce = le64toh(pvc->nonce);
 }
 
 bool dm_vdo_parse_logical_size(const char *vdo_path, uint64_t *logical_blocks)

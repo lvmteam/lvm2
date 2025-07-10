@@ -313,15 +313,15 @@ static int dev_read_reservation_scsi(struct cmd_context *cmd, struct device *dev
 
 	memcpy(&pr_gen_be, response_buf + 0, 4);
 	memcpy(&add_len_be, response_buf + 4, 4);
-	pr_gen = be32_to_cpu(pr_gen_be);
-	add_len = be32_to_cpu(add_len_be);
+	pr_gen = be32toh(pr_gen_be);
+	add_len = be32toh(add_len_be);
 	num = add_len / 16;
 
 	log_debug("dev_read_reservation %s pr_gen %u add_len %u num %d", devname, pr_gen, add_len, num);
 
 	if (num > 0) {
 		memcpy(&key_be, response_buf + 8, 8);
-		key = be64_to_cpu(key_be);
+		key = be64toh(key_be);
 
 		pr_type_byte = response_buf[21];
 		pr_type_scsi = pr_type_byte & 0xf; /* top half of byte is scope */
@@ -440,8 +440,8 @@ static int dev_find_key_scsi(struct cmd_context *cmd, struct device *dev, int ma
 
 	memcpy(&pr_gen_be, response_buf + 0, 4);
 	memcpy(&add_len_be, response_buf + 4, 4);
-	pr_gen = be32_to_cpu(pr_gen_be);
-	add_len = be32_to_cpu(add_len_be);
+	pr_gen = be32toh(pr_gen_be);
+	add_len = be32toh(add_len_be);
 	num_keys = add_len / 8;
 
 	log_debug("dev_find_key %s pr_gen %u num %d", devname, pr_gen, num_keys);
@@ -472,7 +472,7 @@ static int dev_find_key_scsi(struct cmd_context *cmd, struct device *dev, int ma
 		unsigned char *p = response_buf + 8 + (i * 8);
 
 		memcpy(&key_be, p, 8);
-		key = be64_to_cpu(key_be);
+		key = be64toh(key_be);
 
 		log_debug("dev_find_key %s 0x%llx", devname, (unsigned long long)key);
 

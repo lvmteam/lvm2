@@ -2124,9 +2124,9 @@ int lm_lock_sanlock(struct lockspace *ls, struct resource *r, int ld_mode,
 
 	if (daemon_test) {
 		if (rds->vb) {
-			vb_out->version = le16_to_cpu(rds->vb->version);
-			vb_out->flags = le16_to_cpu(rds->vb->flags);
-			vb_out->r_version = le32_to_cpu(rds->vb->r_version);
+			vb_out->version = le16toh(rds->vb->version);
+			vb_out->flags = le16toh(rds->vb->flags);
+			vb_out->r_version = le32toh(rds->vb->r_version);
 		}
 		return 0;
 	}
@@ -2348,9 +2348,9 @@ int lm_lock_sanlock(struct lockspace *ls, struct resource *r, int ld_mode,
 
 		memcpy(rds->vb, &vb, sizeof(vb));
 
-		vb_out->version = le16_to_cpu(vb.version);
-		vb_out->flags = le16_to_cpu(vb.flags);
-		vb_out->r_version = le32_to_cpu(vb.r_version);
+		vb_out->version = le16toh(vb.version);
+		vb_out->flags = le16toh(vb.flags);
+		vb_out->r_version = le32toh(vb.r_version);
 	}
 out:
 	return rv;
@@ -2375,10 +2375,10 @@ int lm_convert_sanlock(struct lockspace *ls, struct resource *r,
 	if (rds->vb && r_version && (r->mode == LD_LK_EX)) {
 		if (!rds->vb->version) {
 			/* first time vb has been written */
-			rds->vb->version = cpu_to_le16(VAL_BLK_VERSION);
+			rds->vb->version = htole16(VAL_BLK_VERSION);
 		}
 		if (r_version)
-			rds->vb->r_version = cpu_to_le32(r_version);
+			rds->vb->r_version = htole32(r_version);
 		memcpy(&vb, rds->vb, sizeof(vb));
 
 		log_debug("%s:%s convert_san set r_version %u",
@@ -2501,9 +2501,9 @@ int lm_unlock_sanlock(struct lockspace *ls, struct resource *r,
 	if (daemon_test) {
 		if (rds->vb && r_version && (r->mode == LD_LK_EX)) {
 			if (!rds->vb->version)
-				rds->vb->version = cpu_to_le16(VAL_BLK_VERSION);
+				rds->vb->version = htole16(VAL_BLK_VERSION);
 			if (r_version)
-				rds->vb->r_version = cpu_to_le32(r_version);
+				rds->vb->r_version = htole32(r_version);
 		}
 		return 0;
 	}
@@ -2511,10 +2511,10 @@ int lm_unlock_sanlock(struct lockspace *ls, struct resource *r,
 	if (rds->vb && r_version && (r->mode == LD_LK_EX)) {
 		if (!rds->vb->version) {
 			/* first time vb has been written */
-			rds->vb->version = cpu_to_le16(VAL_BLK_VERSION);
+			rds->vb->version = htole16(VAL_BLK_VERSION);
 		}
 		if (r_version)
-			rds->vb->r_version = cpu_to_le32(r_version);
+			rds->vb->r_version = htole32(r_version);
 		memcpy(&vb, rds->vb, sizeof(vb));
 
 		log_debug("%s:%s unlock_san set r_version %u",

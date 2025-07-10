@@ -407,7 +407,7 @@ out:
 /* Change bit ordering for devno to generate more compact bTree */
 static inline uint32_t _shuffle_devno(dev_t d)
 {
-	return cpu_to_be32(d);
+	return htobe32(d);
 	//return (d & 0xff) << 24 | (d & 0xff00) << 8 | (d & 0xff0000) >> 8 | (d & 0xff000000) >> 24;
 	//return (d & 0xff000000) >> 24 | (d & 0xffff00) | ((d & 0xff) << 24);
 	//return (uint32_t) d;

@@ -643,19 +643,19 @@ static int _has_gpt_partition_table(struct device *dev)
 
 	/* the gpt table is always written using LE on disk */
 
-	if (le64_to_cpu(gpt_header.magic) != PART_GPT_MAGIC)
+	if (le64toh(gpt_header.magic) != PART_GPT_MAGIC)
 		return 0;
 
-	entries_start = le64_to_cpu(gpt_header.part_entries_lba) * lbs;
-	nr_entries = le32_to_cpu(gpt_header.nr_part_entries);
-	sz_entry = le32_to_cpu(gpt_header.sz_part_entry);
+	entries_start = le64toh(gpt_header.part_entries_lba) * lbs;
+	nr_entries = le32toh(gpt_header.nr_part_entries);
+	sz_entry = le32toh(gpt_header.sz_part_entry);
 
 	for (i = 0; i < nr_entries; i++) {
 		if (!dev_read_bytes(dev, entries_start + (uint64_t)i * sz_entry,
 				    sizeof(gpt_part_entry), &gpt_part_entry))
 			return_0;
 
-		/* just check if the guid is nonzero, no need to call le64_to_cpu here */
+		/* just check if the guid is nonzero, no need to call le64toh here */
 		if (gpt_part_entry.part_type_guid)
 			return 1;
 	}
@@ -690,7 +690,7 @@ static int _has_partition_table(struct device *dev)
 	/* FIXME Check for other types of partition table too */
 
 	/* Check for msdos partition table */
-	if (buf.magic == xlate16(PART_MSDOS_MAGIC)) {
+	if (buf.magic == htole16(PART_MSDOS_MAGIC)) {
 		for (p = 0; p < 4; ++p) {
 			/* Table is invalid if boot indicator not 0 or 0x80 */
 			if (buf.part[p].boot_ind & 0x7f) {

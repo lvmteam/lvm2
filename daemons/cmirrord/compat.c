@@ -52,19 +52,19 @@ static void v5_data_endian_switch(struct clog_request *rq, int to_network __attr
 		case DM_ULOG_GET_REGION_SIZE:
 		case DM_ULOG_GET_SYNC_COUNT:
 			pu64 = (uint64_t *)rq->u_rq.data;
-			*pu64 = xlate64(*pu64);
+			*pu64 = htole64(*pu64);
 			break;
 		case DM_ULOG_IS_CLEAN:
 		case DM_ULOG_IN_SYNC:
 			pi64 = (int64_t *)rq->u_rq.data;
-			*pi64 = xlate64(*pi64);
+			*pi64 = htole64(*pi64);
 			break;
 		case DM_ULOG_GET_RESYNC_WORK:
 		case DM_ULOG_IS_REMOTE_RECOVERING:
 			pi64 = (int64_t *)rq->u_rq.data;
 			pu64 = ((uint64_t *)rq->u_rq.data) + 1;
-			*pi64 = xlate64(*pi64);
-			*pu64 = xlate64(*pu64);
+			*pi64 = htole64(*pi64);
+			*pu64 = htole64(*pu64);
 			break;
 		default:
 			LOG_ERROR("Unknown request type, %u", rq_type);
@@ -94,7 +94,7 @@ static void v5_data_endian_switch(struct clog_request *rq, int to_network __attr
 		case DM_ULOG_IN_SYNC:
 		case DM_ULOG_IS_REMOTE_RECOVERING:
 			pu64 = (uint64_t *)rq->u_rq.data;
-			*pu64 = xlate64(*pu64);
+			*pu64 = htole64(*pu64);
 			break;
 		case DM_ULOG_MARK_REGION:
 		case DM_ULOG_CLEAR_REGION:
@@ -102,13 +102,13 @@ static void v5_data_endian_switch(struct clog_request *rq, int to_network __attr
 
 			pu64 = (uint64_t *)rq->u_rq.data;
 			for (i = 0; i < end; i++)
-				pu64[i] = xlate64(pu64[i]);
+				pu64[i] = htole64(pu64[i]);
 			break;
 		case DM_ULOG_SET_REGION_SYNC:
 			pu64 = (uint64_t *)rq->u_rq.data;
 			pi64 = ((int64_t *)rq->u_rq.data) + 1;
-			*pu64 = xlate64(*pu64);
-			*pi64 = xlate64(*pi64);
+			*pu64 = htole64(*pu64);
+			*pi64 = htole64(*pi64);
 			break;
 		default:
 			LOG_ERROR("Unknown request type, %u", rq_type);
@@ -124,15 +124,15 @@ static int v5_endian_to_network(struct clog_request *rq)
 
 	size = sizeof(*rq) + u_rq->data_size;
 
-	u_rq->error = xlate32(u_rq->error);
-	u_rq->seq = xlate32(u_rq->seq);
+	u_rq->error = htole32(u_rq->error);
+	u_rq->seq = htole32(u_rq->seq);
 
-	rq->originator = xlate32(rq->originator);
+	rq->originator = htole32(rq->originator);
 
 	v5_data_endian_switch(rq, 1);
 
-	u_rq->request_type = xlate32(u_rq->request_type);
-	u_rq->data_size = xlate32(u_rq->data_size);
+	u_rq->request_type = htole32(u_rq->request_type);
+	u_rq->data_size = htole32(u_rq->data_size);
 
 	return size;
 }
@@ -142,7 +142,7 @@ int clog_request_to_network(struct clog_request *rq)
 	int r;
 
 	/* FIXME: Remove this safety check */
-	if (rq->u.version[0] != xlate64(rq->u.version[1])) {
+	if (rq->u.version[0] != htole64(rq->u.version[1])) {
 		LOG_ERROR("Programmer error:  version[0] must be LE");
 		exit(EXIT_FAILURE);
 	}
@@ -165,12 +165,12 @@ static int v5_endian_from_network(struct clog_request *rq)
 	int size;
 	struct dm_ulog_request *u_rq = &rq->u_rq;
 
-	u_rq->error = xlate32(u_rq->error);
-	u_rq->seq = xlate32(u_rq->seq);
-	u_rq->request_type = xlate32(u_rq->request_type);
-	u_rq->data_size = xlate32(u_rq->data_size);
+	u_rq->error = htole32(u_rq->error);
+	u_rq->seq = htole32(u_rq->seq);
+	u_rq->request_type = htole32(u_rq->request_type);
+	u_rq->data_size = htole32(u_rq->data_size);
 
-	rq->originator = xlate32(rq->originator);
+	rq->originator = htole32(rq->originator);
 
 	size = sizeof(*rq) + u_rq->data_size;
 
@@ -182,7 +182,7 @@ static int v5_endian_from_network(struct clog_request *rq)
 int clog_request_from_network(void *data, size_t data_len)
 {
 	uint64_t *vp = data;
-	uint64_t version = xlate64(vp[0]);
+	uint64_t version = htole64(vp[0]);
 	struct clog_request *rq = data;
 
 	switch (version) {

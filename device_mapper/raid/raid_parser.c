@@ -58,7 +58,7 @@ struct dm_raid_superblock {
 
 static size_t _get_sb_size(const struct dm_raid_superblock *sb)
 {
-	return (FEATURE_FLAG_SUPPORTS_V190 & le32_to_cpu(sb->compat_features)) ?
+	return (FEATURE_FLAG_SUPPORTS_V190 & le32toh(sb->compat_features)) ?
 	       sizeof(*sb) : ((char *) &sb->flags - (char *) sb);
 }
 
@@ -120,7 +120,7 @@ static int _count_or_clear_failed_devices(const char *dev_path, bool clear, uint
 	}
 
 	/* FIXME: big endian??? */
-	if (sb->magic != cpu_to_be32(DM_RAID_SB_MAGIC)) {
+	if (sb->magic != htobe32(DM_RAID_SB_MAGIC)) {
 		log_error("No RAID signature on %s.", dev_path);
 		goto out;
 	}

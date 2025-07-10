@@ -240,9 +240,9 @@ static int _write_log_header(struct cmd_context *cmd, struct logical_volume *lv)
 		uint64_t nr_regions;
 	} log_header;
 
-	log_header.magic = xlate32(MIRROR_MAGIC);
-	log_header.version = xlate32(MIRROR_DISK_VERSION);
-	log_header.nr_regions = xlate64((uint64_t)-1);
+	log_header.magic = htole32(MIRROR_MAGIC);
+	log_header.version = htole32(MIRROR_DISK_VERSION);
+	log_header.nr_regions = htole64((uint64_t)-1);
 
 	if (dm_snprintf(name, sizeof(name), "%s%s/%s", cmd->dev_dir,
 			lv->vg->name, lv->name) < 0) {

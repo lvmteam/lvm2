@@ -61,7 +61,7 @@ int dev_is_lvm1(struct device *dev, char *buf, int buflen)
 	uint32_t version;
 	int ret;
 
-	version = xlate16(pvd->version);
+	version = htole16(pvd->version);
 
 	if (pvd->id[0] == 'H' && pvd->id[1] == 'M' &&
 	    (version == 1 || version == 2))
@@ -128,9 +128,9 @@ struct pool_disk {
 };
 
 #define CPIN_8(x, y, z) {memcpy((x), (y), (z));}
-#define CPIN_16(x, y) {(x) = xlate16_be((y));}
-#define CPIN_32(x, y) {(x) = xlate32_be((y));}
-#define CPIN_64(x, y) {(x) = xlate64_be((y));}
+#define CPIN_16(x, y) {(x) = htobe16((y));}
+#define CPIN_32(x, y) {(x) = htobe32((y));}
+#define CPIN_64(x, y) {(x) = htobe64((y));}
 
 static void pool_label_in(struct pool_disk *pl, void *buf)
 {

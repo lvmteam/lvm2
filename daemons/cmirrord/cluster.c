@@ -197,7 +197,7 @@ int cluster_send(struct clog_request *rq)
 	iov.iov_base = rq;
 	iov.iov_len = sizeof(struct clog_request) + rq->u_rq.data_size;
 
-	rq->u.version[0] = xlate64(CLOG_TFR_VERSION);
+	rq->u.version[0] = htole64(CLOG_TFR_VERSION);
 	rq->u.version[1] = CLOG_TFR_VERSION;
 
 	r = clog_request_to_network(rq);

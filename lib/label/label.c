@@ -144,7 +144,7 @@ int label_remove(struct device *dev)
 		wipe = 0;
 
 		if (!memcmp(lh->id, LABEL_ID, sizeof(lh->id))) {
-			if (xlate64(lh->sector_xl) == sector)
+			if (htole64(lh->sector_xl) == sector)
 				wipe = 1;
 		} else {
 			dm_list_iterate_items(li, &_labellers) {
@@ -197,18 +197,18 @@ int label_write(struct device *dev, struct label *label)
 	memset(buf, 0, LABEL_SIZE);
 
 	memcpy(lh->id, LABEL_ID, sizeof(lh->id));
-	lh->sector_xl = xlate64(label->sector);
-	lh->offset_xl = xlate32(sizeof(*lh));
+	lh->sector_xl = htole64(label->sector);
+	lh->offset_xl = htole32(sizeof(*lh));
 
 	if (!(label->labeller->ops->write)(label, buf))
 		return_0;
 
-	lh->crc_xl = xlate32(calc_crc(INITIAL_CRC, (uint8_t *)&lh->offset_xl, LABEL_SIZE -
+	lh->crc_xl = htole32(calc_crc(INITIAL_CRC, (uint8_t *)&lh->offset_xl, LABEL_SIZE -
 				      ((uint8_t *) &lh->offset_xl - (uint8_t *) lh)));
 
 	log_very_verbose("%s: Writing label to sector %" PRIu64 " with stored offset %"
 			 PRIu32 ".", dev_name(dev), label->sector,
-			 xlate32(lh->offset_xl));
+			 htole32(lh->offset_xl));
 
 	if (!label_scan_open(dev)) {
 		log_error("Failed to open device %s", dev_name(dev));
@@ -291,15 +291,15 @@ static struct labeller *_find_lvm_header(struct device *dev,
 				log_error("Ignoring additional label on %s at sector %llu",
 					  dev_name(dev), (unsigned long long)(block_sector + sector));
 			}
-			if (xlate64(lh->sector_xl) != sector) {
+			if (htole64(lh->sector_xl) != sector) {
 				log_warn("%s: Label for sector %llu found at sector %llu - ignoring.",
 					 dev_name(dev),
-					 (unsigned long long)xlate64(lh->sector_xl),
+					 (unsigned long long)htole64(lh->sector_xl),
 					 (unsigned long long)(block_sector + sector));
 				continue;
 			}
 			if (calc_crc(INITIAL_CRC, (uint8_t *)&lh->offset_xl,
-				     LABEL_SIZE - ((uint8_t *) &lh->offset_xl - (uint8_t *) lh)) != xlate32(lh->crc_xl)) {
+				     LABEL_SIZE - ((uint8_t *) &lh->offset_xl - (uint8_t *) lh)) != htole32(lh->crc_xl)) {
 				log_very_verbose("Label checksum incorrect on %s - ignoring", dev_name(dev));
 				continue;
 			}

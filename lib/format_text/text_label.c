@@ -44,8 +44,8 @@ struct _dl_setup_baton {
 static int _da_setup(struct disk_locn *da, void *baton)
 {
 	struct _dl_setup_baton *p = baton;
-	p->pvh_dlocn_xl->offset = xlate64(da->offset);
-	p->pvh_dlocn_xl->size = xlate64(da->size);
+	p->pvh_dlocn_xl->offset = htole64(da->offset);
+	p->pvh_dlocn_xl->size = htole64(da->size);
 	p->pvh_dlocn_xl++;
 	return 1;
 }
@@ -63,8 +63,8 @@ static int _mda_setup(struct metadata_area *mda, void *baton)
 	if (mdac->area.dev != p->dev)
 		return 1;
 
-	p->pvh_dlocn_xl->offset = xlate64(mdac->area.start);
-	p->pvh_dlocn_xl->size = xlate64(mdac->area.size);
+	p->pvh_dlocn_xl->offset = htole64(mdac->area.start);
+	p->pvh_dlocn_xl->size = htole64(mdac->area.size);
 	p->pvh_dlocn_xl++;
 
 	return 1;
@@ -74,8 +74,8 @@ static int _dl_null_termination(void *baton)
 {
 	struct _dl_setup_baton *p = baton;
 
-	p->pvh_dlocn_xl->offset = xlate64(UINT64_C(0));
-	p->pvh_dlocn_xl->size = xlate64(UINT64_C(0));
+	p->pvh_dlocn_xl->offset = htole64(UINT64_C(0));
+	p->pvh_dlocn_xl->size = htole64(UINT64_C(0));
 	p->pvh_dlocn_xl++;
 
 	return 1;
@@ -99,9 +99,9 @@ static int _text_write(struct label *label, void *buf)
 
 	memcpy(lh->type, LVM2_LABEL, sizeof(lh->type));
 
-	pvhdr = (struct pv_header *) ((char *) buf + xlate32(lh->offset_xl));
+	pvhdr = (struct pv_header *) ((char *) buf + htole32(lh->offset_xl));
 	info = (struct lvmcache_info *) label->info;
-	pvhdr->device_size_xl = xlate64(lvmcache_device_size(info));
+	pvhdr->device_size_xl = htole64(lvmcache_device_size(info));
 	memcpy(pvhdr->pv_uuid, &lvmcache_device(info)->pvid, sizeof(struct id));
 	if (!id_write_format((const struct id *)pvhdr->pv_uuid, buffer,
 			     sizeof(buffer))) {
@@ -124,8 +124,8 @@ static int _text_write(struct label *label, void *buf)
 	 * PV header extension
 	 */
 	pvhdr_ext = (struct pv_header_extension *) ((char *) baton.pvh_dlocn_xl);
-	pvhdr_ext->version = xlate32(PV_HEADER_EXTENSION_VSN);
-	pvhdr_ext->flags = xlate32(lvmcache_ext_flags(info));
+	pvhdr_ext->version = htole32(PV_HEADER_EXTENSION_VSN);
+	pvhdr_ext->flags = htole32(lvmcache_ext_flags(info));
 
 	/* List of bootloader area locations */
 	baton.pvh_dlocn_xl = &pvhdr_ext->bootloader_areas_xl[0];
@@ -133,20 +133,20 @@ static int _text_write(struct label *label, void *buf)
 	_dl_null_termination(&baton);
 
 	/* Create debug message with ba, da and mda locations */
-	ba1 = (xlate64(pvhdr_ext->bootloader_areas_xl[0].offset) ||
-	       xlate64(pvhdr_ext->bootloader_areas_xl[0].size)) ? 0 : -1;
+	ba1 = (htole64(pvhdr_ext->bootloader_areas_xl[0].offset) ||
+	       htole64(pvhdr_ext->bootloader_areas_xl[0].size)) ? 0 : -1;
 
-	da1 = (xlate64(pvhdr->disk_areas_xl[0].offset) ||
-	       xlate64(pvhdr->disk_areas_xl[0].size)) ? 0 : -1;
+	da1 = (htole64(pvhdr->disk_areas_xl[0].offset) ||
+	       htole64(pvhdr->disk_areas_xl[0].size)) ? 0 : -1;
 
 	mda1 = da1 + 2;
 	mda2 = mda1 + 1;
 	
-	if (!xlate64(pvhdr->disk_areas_xl[mda1].offset) &&
-	    !xlate64(pvhdr->disk_areas_xl[mda1].size))
+	if (!htole64(pvhdr->disk_areas_xl[mda1].offset) &&
+	    !htole64(pvhdr->disk_areas_xl[mda1].size))
 		mda1 = mda2 = 0;
-	else if (!xlate64(pvhdr->disk_areas_xl[mda2].offset) &&
-		 !xlate64(pvhdr->disk_areas_xl[mda2].size))
+	else if (!htole64(pvhdr->disk_areas_xl[mda2].offset) &&
+		 !htole64(pvhdr->disk_areas_xl[mda2].size))
 		mda2 = 0;
 
 	log_debug_metadata("%s: Preparing PV label header %s size " FMTu64 " with"
@@ -157,31 +157,31 @@ static int _text_write(struct label *label, void *buf)
 			   dev_name(lvmcache_device(info)), buffer, lvmcache_device_size(info),
 			   (ba1 > -1) ? " ba1 (" : "",
 			   (ba1 > -1) ? 1 : 0,
-			   (ba1 > -1) ? xlate64(pvhdr_ext->bootloader_areas_xl[ba1].offset) >> SECTOR_SHIFT : 0,
+			   (ba1 > -1) ? htole64(pvhdr_ext->bootloader_areas_xl[ba1].offset) >> SECTOR_SHIFT : 0,
 			   (ba1 > -1) ? "s, " : "",
 			   (ba1 > -1) ? 1 : 0,
-			   (ba1 > -1) ? xlate64(pvhdr_ext->bootloader_areas_xl[ba1].size) >> SECTOR_SHIFT : 0,
+			   (ba1 > -1) ? htole64(pvhdr_ext->bootloader_areas_xl[ba1].size) >> SECTOR_SHIFT : 0,
 			   (ba1 > -1) ? "s)" : "",
 			   (da1 > -1) ? " da1 (" : "",
 			   (da1 > -1) ? 1 : 0,
-			   (da1 > -1) ? xlate64(pvhdr->disk_areas_xl[da1].offset) >> SECTOR_SHIFT : 0,
+			   (da1 > -1) ? htole64(pvhdr->disk_areas_xl[da1].offset) >> SECTOR_SHIFT : 0,
 			   (da1 > -1) ? "s, " : "",
 			   (da1 > -1) ? 1 : 0,
-			   (da1 > -1) ? xlate64(pvhdr->disk_areas_xl[da1].size) >> SECTOR_SHIFT : 0,
+			   (da1 > -1) ? htole64(pvhdr->disk_areas_xl[da1].size) >> SECTOR_SHIFT : 0,
 			   (da1 > -1) ? "s)" : "",
 			   mda1 ? " mda1 (" : "",
 			   mda1 ? 1 : 0,
-			   mda1 ? xlate64(pvhdr->disk_areas_xl[mda1].offset) >> SECTOR_SHIFT : 0,
+			   mda1 ? htole64(pvhdr->disk_areas_xl[mda1].offset) >> SECTOR_SHIFT : 0,
 			   mda1 ? "s, " : "",
 			   mda1 ? 1 : 0,
-			   mda1 ? xlate64(pvhdr->disk_areas_xl[mda1].size) >> SECTOR_SHIFT : 0,
+			   mda1 ? htole64(pvhdr->disk_areas_xl[mda1].size) >> SECTOR_SHIFT : 0,
 			   mda1 ? "s)" : "",
 			   mda2 ? " mda2 (" : "",
 			   mda2 ? 1 : 0,
-			   mda2 ? xlate64(pvhdr->disk_areas_xl[mda2].offset) >> SECTOR_SHIFT : 0,
+			   mda2 ? htole64(pvhdr->disk_areas_xl[mda2].offset) >> SECTOR_SHIFT : 0,
 			   mda2 ? "s, " : "",
 			   mda2 ? 1 : 0,
-			   mda2 ? xlate64(pvhdr->disk_areas_xl[mda2].size) >> SECTOR_SHIFT : 0,
+			   mda2 ? htole64(pvhdr->disk_areas_xl[mda2].size) >> SECTOR_SHIFT : 0,
 			   mda2 ? "s)" : "");
 
 	if (da1 < 0) {
@@ -431,7 +431,7 @@ static int _text_read(struct cmd_context *cmd, struct labeller *labeller, struct
 	/*
 	 * PV header base
 	 */
-	pvhdr = (struct pv_header *) ((char *) label_buf + xlate32(lh->offset_xl));
+	pvhdr = (struct pv_header *) ((char *) label_buf + htole32(lh->offset_xl));
 
 	memcpy(pvid, &pvhdr->pv_uuid, ID_LEN);
 	strncpy(vgid, FMT_TEXT_ORPHAN_VG_NAME, ID_LEN);
@@ -455,7 +455,7 @@ static int _text_read(struct cmd_context *cmd, struct labeller *labeller, struct
 				  vgid, 0, is_duplicate)))
 		return_0;
 
-	lvmcache_set_device_size(info, xlate64(pvhdr->device_size_xl));
+	lvmcache_set_device_size(info, htole64(pvhdr->device_size_xl));
 
 	lvmcache_del_das(info);
 	lvmcache_del_mdas(info);
@@ -463,20 +463,20 @@ static int _text_read(struct cmd_context *cmd, struct labeller *labeller, struct
 
 	/* Data areas holding the PEs */
 	dlocn_xl = pvhdr->disk_areas_xl;
-	while ((offset = xlate64(dlocn_xl->offset))) {
-		lvmcache_add_da(info, offset, xlate64(dlocn_xl->size));
+	while ((offset = htole64(dlocn_xl->offset))) {
+		lvmcache_add_da(info, offset, htole64(dlocn_xl->size));
 		dlocn_xl++;
 	}
 
 	dlocn_xl++;
 
 	/* Metadata areas */
-	while ((offset = xlate64(dlocn_xl->offset))) {
+	while ((offset = htole64(dlocn_xl->offset))) {
 
 		/*
 		 * This just calls add_mda() above, replacing info with info->mdas.
 		 */
-		lvmcache_add_mda(info, dev, offset, xlate64(dlocn_xl->size), 0, &mda);
+		lvmcache_add_mda(info, dev, offset, htole64(dlocn_xl->size), 0, &mda);
 
 		dlocn_xl++;
 		mda_count++;
@@ -497,7 +497,7 @@ static int _text_read(struct cmd_context *cmd, struct labeller *labeller, struct
 	 * PV header extension
 	 */
 	pvhdr_ext = (struct pv_header_extension *) ((char *) dlocn_xl);
-	if (!(ext_version = xlate32(pvhdr_ext->version)))
+	if (!(ext_version = htole32(pvhdr_ext->version)))
 		goto scan_mdas;
 
 	if (ext_version != PV_HEADER_EXTENSION_VSN)
@@ -505,15 +505,15 @@ static int _text_read(struct cmd_context *cmd, struct labeller *labeller, struct
 				   ext_version, dev_name(dev));
 
 	/* Extension version */
-	lvmcache_set_ext_version(info, xlate32(pvhdr_ext->version));
+	lvmcache_set_ext_version(info, htole32(pvhdr_ext->version));
 
 	/* Extension flags */
-	lvmcache_set_ext_flags(info, xlate32(pvhdr_ext->flags));
+	lvmcache_set_ext_flags(info, htole32(pvhdr_ext->flags));
 
 	/* Bootloader areas */
 	dlocn_xl = pvhdr_ext->bootloader_areas_xl;
-	while ((offset = xlate64(dlocn_xl->offset))) {
-		lvmcache_add_ba(info, offset, xlate64(dlocn_xl->size));
+	while ((offset = htole64(dlocn_xl->offset))) {
+		lvmcache_add_ba(info, offset, htole64(dlocn_xl->size));
 		dlocn_xl++;
 	}
 

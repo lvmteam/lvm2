@@ -663,7 +663,7 @@ static int _check_label_header(struct label_header *lh, uint64_t labelsector,
 		bad++;
 	}
 
-	if (xlate64(lh->sector_xl) != labelsector) {
+	if (htole64(lh->sector_xl) != labelsector) {
 		log_print("CHECK: label_header.sector expected %d", (int)labelsector);
 		bad++;
 	}
@@ -671,12 +671,12 @@ static int _check_label_header(struct label_header *lh, uint64_t labelsector,
 	crc = calc_crc(INITIAL_CRC, (uint8_t *)&lh->offset_xl,
 		       LABEL_SIZE - ((uint8_t *) &lh->offset_xl - (uint8_t *) lh));
 
-	if (crc != xlate32(lh->crc_xl)) {
+	if (crc != htole32(lh->crc_xl)) {
 		log_print("CHECK: label_header.crc expected 0x%x", crc);
 		bad++;
 	}
 
-	if (xlate32(lh->offset_xl) != 32) {
+	if (htole32(lh->offset_xl) != 32) {
 		log_print("CHECK: label_header.offset expected 32");
 		bad++;
 	}
@@ -727,7 +727,7 @@ static int _check_mda_header(struct mda_header *mh, int mda_num, uint64_t mda_of
 	crc = calc_crc(INITIAL_CRC, (uint8_t *)mh->magic,
 		       MDA_HEADER_SIZE - sizeof(mh->checksum_xl));
 
-	if (crc != xlate32(mh->checksum_xl)) {
+	if (crc != htole32(mh->checksum_xl)) {
 		log_print("CHECK: mda_header_%d.checksum expected 0x%x", mda_num, crc);
 		bad++;
 	}
@@ -738,17 +738,17 @@ static int _check_mda_header(struct mda_header *mh, int mda_num, uint64_t mda_of
 		bad++;
 	}
 
-	if (xlate32(mh->version) != FMTT_VERSION) {
+	if (htole32(mh->version) != FMTT_VERSION) {
 		log_print("CHECK: mda_header_%d.version expected %u", mda_num, FMTT_VERSION);
 		bad++;
 	}
 
-	if (xlate64(mh->start) != mda_offset) {
+	if (htole64(mh->start) != mda_offset) {
 		log_print("CHECK: mda_header_%d.start does not match pv_header.disk_locn.offset %llu", mda_num, (unsigned long long)mda_offset);
 		bad++;
 	}
 
-	if (xlate64(mh->size) != mda_size) {
+	if (htole64(mh->size) != mda_size) {
 		log_print("CHECK: mda_header_%d.size does not match pv_header.disk_locn.size %llu", mda_num, (unsigned long long)mda_size);
 		bad++;
 	}
@@ -786,10 +786,10 @@ static int _dump_raw_locn(struct device *dev, struct devicefile *def, int print_
 	int ri = rlocn_index; /* 0 or 1 */
 	int wrapped = 0;
 
-	meta_offset = xlate64(rlocn->offset);
-	meta_size = xlate64(rlocn->size);
-	meta_checksum = xlate32(rlocn->checksum);
-	meta_flags = xlate32(rlocn->flags);
+	meta_offset = htole64(rlocn->offset);
+	meta_size = htole64(rlocn->size);
+	meta_checksum = htole32(rlocn->checksum);
+	meta_flags = htole32(rlocn->flags);
 
 	if (meta_offset + meta_size > mda_size)
 		wrapped = 1;
@@ -1042,9 +1042,9 @@ static int _dump_label_and_pv_header(struct cmd_context *cmd, uint64_t labelsect
 	if (print_fields) {
 		log_print("label_header at %llu", (unsigned long long)lh_offset);
 		log_print("label_header.id %s", _chars_to_str(lh->id, str, 8, 256, "label_header.id"));
-		log_print("label_header.sector %llu", (unsigned long long)xlate64(lh->sector_xl));
-		log_print("label_header.crc 0x%x", xlate32(lh->crc_xl));
-		log_print("label_header.offset %u", xlate32(lh->offset_xl));
+		log_print("label_header.sector %llu", (unsigned long long)htole64(lh->sector_xl));
+		log_print("label_header.crc 0x%x", htole32(lh->crc_xl));
+		log_print("label_header.offset %u", htole32(lh->offset_xl));
 		log_print("label_header.type %s", _chars_to_str(lh->type, str, 8, 256, "label_header.type"));
 	}
 
@@ -1068,7 +1068,7 @@ static int _dump_label_and_pv_header(struct cmd_context *cmd, uint64_t labelsect
 	if (print_fields) {
 		log_print("pv_header at %llu", (unsigned long long)pvh_offset);
 		log_print("pv_header.pv_uuid %s", _chars_to_str(pvh->pv_uuid, str, ID_LEN, 256, "pv_header.pv_uuid"));
-		log_print("pv_header.device_size %llu", (unsigned long long)xlate64(pvh->device_size_xl));
+		log_print("pv_header.device_size %llu", (unsigned long long)htole64(pvh->device_size_xl));
 	}
 
 	if (!_check_pv_header(pvh))
@@ -1083,14 +1083,14 @@ static int _dump_label_and_pv_header(struct cmd_context *cmd, uint64_t labelsect
 	dlocn = pvh->disk_areas_xl;
 	dlocn_offset = pvh_offset + 40; /* from start of disk */
 
-	while (xlate64(dlocn->offset)) {
+	while (htole64(dlocn->offset)) {
 		if (print_fields) {
 			log_print("pv_header.disk_locn[%d] at %llu # location of data area", di,
 				  (unsigned long long)dlocn_offset);
 			log_print("pv_header.disk_locn[%d].offset %llu", di,
-				  (unsigned long long)xlate64(dlocn->offset));
+				  (unsigned long long)htole64(dlocn->offset));
 			log_print("pv_header.disk_locn[%d].size %llu", di,
-				  (unsigned long long)xlate64(dlocn->size));
+				  (unsigned long long)htole64(dlocn->size));
 		}
 		di++;
 		dlocn++;
@@ -1102,9 +1102,9 @@ static int _dump_label_and_pv_header(struct cmd_context *cmd, uint64_t labelsect
 		log_print("pv_header.disk_locn[%d] at %llu # location list end", di,
 			  (unsigned long long) dlocn_offset);
 		log_print("pv_header.disk_locn[%d].offset %llu", di,
-			  (unsigned long long)xlate64(dlocn->offset));
+			  (unsigned long long)htole64(dlocn->offset));
 		log_print("pv_header.disk_locn[%d].size %llu", di,
-			  (unsigned long long)xlate64(dlocn->size));
+			  (unsigned long long)htole64(dlocn->size));
 	}
 
 	/* advance past the all-zero dlocn struct */
@@ -1116,19 +1116,19 @@ static int _dump_label_and_pv_header(struct cmd_context *cmd, uint64_t labelsect
 	if ((void *)dlocn != (void *)(buf + dlocn_offset - lh_offset))
 		log_print("CHECK: problem with pv_header.disk_locn[%d] offset calculation", di);
 
-	while (xlate64(dlocn->offset)) {
+	while (htole64(dlocn->offset)) {
 		if (print_fields) {
 			log_print("pv_header.disk_locn[%d] at %llu # location of metadata area", di,
 				  (unsigned long long)dlocn_offset);
 			log_print("pv_header.disk_locn[%d].offset %llu", di,
-				  (unsigned long long)xlate64(dlocn->offset));
+				  (unsigned long long)htole64(dlocn->offset));
 			log_print("pv_header.disk_locn[%d].size %llu", di,
-				  (unsigned long long)xlate64(dlocn->size));
+				  (unsigned long long)htole64(dlocn->size));
 		}
 
 		if (!mda_count) {
-			*mda1_offset = xlate64(dlocn->offset);
-			*mda1_size = xlate64(dlocn->size);
+			*mda1_offset = htole64(dlocn->offset);
+			*mda1_size = htole64(dlocn->size);
 
 			/*
 			 * mda1 offset is page size from machine that created it,
@@ -1142,8 +1142,8 @@ static int _dump_label_and_pv_header(struct cmd_context *cmd, uint64_t labelsect
 					  di, (unsigned long long)*mda1_offset);
 			}
 		} else {
-			*mda2_offset = xlate64(dlocn->offset);
-			*mda2_size = xlate64(dlocn->size);
+			*mda2_offset = htole64(dlocn->offset);
+			*mda2_size = htole64(dlocn->size);
 
 			/*
 			 * No fixed location for second mda, so we have to look for
@@ -1164,9 +1164,9 @@ static int _dump_label_and_pv_header(struct cmd_context *cmd, uint64_t labelsect
 		log_print("pv_header.disk_locn[%d] at %llu # location list end", di,
 			  (unsigned long long) dlocn_offset);
 		log_print("pv_header.disk_locn[%d].offset %llu", di,
-			  (unsigned long long)xlate64(dlocn->offset));
+			  (unsigned long long)htole64(dlocn->offset));
 		log_print("pv_header.disk_locn[%d].size %llu", di,
-			  (unsigned long long)xlate64(dlocn->size));
+			  (unsigned long long)htole64(dlocn->size));
 	}
 
 	/* advance past the all-zero dlocn struct */
@@ -1189,8 +1189,8 @@ static int _dump_label_and_pv_header(struct cmd_context *cmd, uint64_t labelsect
 
 	if (print_fields) {
 		log_print("pv_header_extension at %llu", (unsigned long long)pvhe_offset);
-		log_print("pv_header_extension.version %u", xlate32(pvhe->version));
-		log_print("pv_header_extension.flags %u", xlate32(pvhe->flags));
+		log_print("pv_header_extension.version %u", htole32(pvhe->version));
+		log_print("pv_header_extension.flags %u", htole32(pvhe->flags));
 	}
 
 	/*
@@ -1202,14 +1202,14 @@ static int _dump_label_and_pv_header(struct cmd_context *cmd, uint64_t labelsect
 	dlocn = pvhe->bootloader_areas_xl;
 	dlocn_offset = pvhe_offset + 8;
 
-	while (xlate64(dlocn->offset)) {
+	while (htole64(dlocn->offset)) {
 		if (print_fields) {
 			log_print("pv_header_extension.disk_locn[%d] at %llu # bootloader area", di,
 				  (unsigned long long)dlocn_offset);
 			log_print("pv_header_extension.disk_locn[%d].offset %llu", di,
-				  (unsigned long long)xlate64(dlocn->offset));
+				  (unsigned long long)htole64(dlocn->offset));
 			log_print("pv_header_extension.disk_locn[%d].size %llu", di,
-				  (unsigned long long)xlate64(dlocn->size));
+				  (unsigned long long)htole64(dlocn->size));
 		}
 
 		di++;
@@ -1222,9 +1222,9 @@ static int _dump_label_and_pv_header(struct cmd_context *cmd, uint64_t labelsect
 		log_print("pv_header_extension.disk_locn[%d] at %llu # location list end", di,
 			  (unsigned long long) dlocn_offset);
 		log_print("pv_header_extension.disk_locn[%d].offset %llu", di,
-			  (unsigned long long)xlate64(dlocn->offset));
+			  (unsigned long long)htole64(dlocn->offset));
 		log_print("pv_header_extension.disk_locn[%d].size %llu", di,
-			  (unsigned long long)xlate64(dlocn->size));
+			  (unsigned long long)htole64(dlocn->size));
 	}
 
 	if (bad)
@@ -1289,11 +1289,11 @@ static int _dump_mda_header(struct cmd_context *cmd, struct settings *set,
 
 	if (print_fields) {
 		log_print("mda_header_%d at %llu # metadata area", mda_num, (unsigned long long)mda_offset);
-		log_print("mda_header_%d.checksum 0x%x", mda_num, xlate32(mh->checksum_xl));
+		log_print("mda_header_%d.checksum 0x%x", mda_num, htole32(mh->checksum_xl));
 		log_print("mda_header_%d.magic 0x%s", mda_num, _chars_to_hexstr(mh->magic, str, 16, 256, "mda_header.magic"));
-		log_print("mda_header_%d.version %u", mda_num, xlate32(mh->version));
-		log_print("mda_header_%d.start %llu", mda_num, (unsigned long long)xlate64(mh->start));
-		log_print("mda_header_%d.size %llu", mda_num, (unsigned long long)xlate64(mh->size));
+		log_print("mda_header_%d.version %u", mda_num, htole32(mh->version));
+		log_print("mda_header_%d.start %llu", mda_num, (unsigned long long)htole64(mh->start));
+		log_print("mda_header_%d.size %llu", mda_num, (unsigned long long)htole64(mh->size));
 	}
 
 	if (!_check_mda_header(mh, mda_num, mda_offset, mda_size, found_header))
@@ -1937,13 +1937,13 @@ static int _repair_label_header(struct cmd_context *cmd, const char *repair,
 
 	memcpy(lh->id, LABEL_ID, sizeof(lh->id));
 	memcpy(lh->type, LVM2_LABEL, sizeof(lh->type));
-	lh->sector_xl =  xlate64(labelsector);
-	lh->offset_xl = xlate32(32);
+	lh->sector_xl =  htole64(labelsector);
+	lh->offset_xl = htole32(32);
 
 	crc = calc_crc(INITIAL_CRC, (uint8_t *)&lh->offset_xl,
 	               LABEL_SIZE - ((uint8_t *) &lh->offset_xl - (uint8_t *) lh));
 
-	lh->crc_xl = xlate32(crc);
+	lh->crc_xl = htole32(crc);
        
 	log_print("Writing label_header.crc 0x%08x", crc);
 
@@ -2133,12 +2133,12 @@ static int _check_for_mda2(struct cmd_context *cmd, struct device *dev,
 	if (memcmp(mh->magic, FMTT_MAGIC, sizeof(mh->magic)))
 		goto fail;
 
-	if (xlate32(mh->version) != FMTT_VERSION) {
+	if (htole32(mh->version) != FMTT_VERSION) {
 		log_print("Skipping mda2 (wrong mda_header.version)");
 		goto fail;
 	}
 
-	if (xlate64(mh->start) != mda_offset) {
+	if (htole64(mh->start) != mda_offset) {
 		log_print("Skipping mda2 (wrong mda_header.start)");
 		goto fail;
 	}
@@ -2403,16 +2403,16 @@ static int _repair_pv_header(struct cmd_context *cmd, const char *repair,
 	/* set label_header (except crc) */
 	memcpy(lh->id, LABEL_ID, sizeof(lh->id));
 	memcpy(lh->type, LVM2_LABEL, sizeof(lh->type));
-	lh->sector_xl =  xlate64(labelsector);
-	lh->offset_xl = xlate32(32);
+	lh->sector_xl =  htole64(labelsector);
+	lh->offset_xl = htole32(32);
 
 	/* set pv_header */
 	memcpy(pvh->pv_uuid, &pvid, ID_LEN);
-	pvh->device_size_xl = xlate64(device_size);
+	pvh->device_size_xl = htole64(device_size);
 
 	/* set data area location */
 	data_offset = (pe_start_sectors << SECTOR_SHIFT);
-	pvh->disk_areas_xl[0].offset = xlate64(data_offset);
+	pvh->disk_areas_xl[0].offset = htole64(data_offset);
 	pvh->disk_areas_xl[0].size = 0;
 
 	/* set end of data areas */
@@ -2425,15 +2425,15 @@ static int _repair_pv_header(struct cmd_context *cmd, const char *repair,
 	if (mda_count > 0) {
 		mda1_offset = 4096;
 		mda1_size = (pe_start_sectors << SECTOR_SHIFT) - 4096;
-		pvh->disk_areas_xl[di].offset = xlate64(mda1_offset);
-		pvh->disk_areas_xl[di].size = xlate64(mda1_size);
+		pvh->disk_areas_xl[di].offset = htole64(mda1_offset);
+		pvh->disk_areas_xl[di].size = htole64(mda1_size);
 		di++;
 	}
 
 	/* set second metadata area location */
 	if (mda_count > 1) {
-		pvh->disk_areas_xl[di].offset = xlate64(mda2_offset);
-		pvh->disk_areas_xl[di].size = xlate64(mda2_size);
+		pvh->disk_areas_xl[di].offset = htole64(mda2_offset);
+		pvh->disk_areas_xl[di].size = htole64(mda2_size);
 		di++;
 	}
 
@@ -2444,8 +2444,8 @@ static int _repair_pv_header(struct cmd_context *cmd, const char *repair,
 
 	/* set pv_header_extension */
 	pvhe = (struct pv_header_extension *)((char *)pvh + sizeof(struct pv_header) + (di * sizeof(struct disk_locn)));
-	pvhe->version = xlate32(PV_HEADER_EXTENSION_VSN);
-	pvhe->flags = xlate32(PV_EXT_USED);
+	pvhe->version = htole32(PV_HEADER_EXTENSION_VSN);
+	pvhe->flags = htole32(PV_EXT_USED);
 	pvhe->bootloader_areas_xl[0].offset = 0;
 	pvhe->bootloader_areas_xl[0].size = 0;
 
@@ -2453,7 +2453,7 @@ static int _repair_pv_header(struct cmd_context *cmd, const char *repair,
 			    LABEL_SIZE - ((uint8_t *) &lh->offset_xl - (uint8_t *) lh));
 
 	/* set label_header crc (last) */
-	lh->crc_xl = xlate32(head_crc);
+	lh->crc_xl = htole32(head_crc);
 
 	/*
 	 * Write the updated header sector.
@@ -2519,15 +2519,15 @@ static int _update_mda(struct cmd_context *cmd, struct metadata_file *mf, struct
 
 	mh = (struct mda_header *)buf;
 	memcpy(mh->magic, FMTT_MAGIC, sizeof(mh->magic));
-	mh->version = xlate32(FMTT_VERSION);
-	mh->start = xlate64(mda_offset);
-	mh->size = xlate64(mda_size);
+	mh->version = htole32(FMTT_VERSION);
+	mh->start = htole64(mda_offset);
+	mh->size = htole64(mda_size);
 
 	rlocn0 = mh->raw_locns;
 	rlocn0->flags = 0;
-	rlocn0->offset = xlate64(512); /* text begins 512 from start of mda_header */
-	rlocn0->size = xlate64(mf->text_size);
-	rlocn0->checksum = xlate32(mf->text_crc);
+	rlocn0->offset = htole64(512); /* text begins 512 from start of mda_header */
+	rlocn0->size = htole64(mf->text_size);
+	rlocn0->checksum = htole32(mf->text_crc);
 
 	rlocn1 = (struct raw_locn *)((char *)mh->raw_locns + 24);
 	rlocn1->flags = 0;
@@ -2537,7 +2537,7 @@ static int _update_mda(struct cmd_context *cmd, struct metadata_file *mf, struct
 
 	crc = calc_crc(INITIAL_CRC, (uint8_t *)mh->magic,
 		       MDA_HEADER_SIZE - sizeof(mh->checksum_xl));
-	mh->checksum_xl = xlate32(crc);
+	mh->checksum_xl = htole32(crc);
 
 	log_print("Writing metadata at %llu length %llu crc 0x%08x mda%d",
 		  (unsigned long long)(mda_offset + 512),

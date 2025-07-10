@@ -556,9 +556,9 @@ int lm_lock_idm(struct lockspace *ls, struct resource *r, int ld_mode,
 
 	if (daemon_test) {
 		if (rdi->vb) {
-			vb_out->version = le16_to_cpu(rdi->vb->version);
-			vb_out->flags = le16_to_cpu(rdi->vb->flags);
-			vb_out->r_version = le32_to_cpu(rdi->vb->r_version);
+			vb_out->version = le16toh(rdi->vb->version);
+			vb_out->flags = le16toh(rdi->vb->flags);
+			vb_out->r_version = le32toh(rdi->vb->r_version);
 		}
 		return 0;
 	}

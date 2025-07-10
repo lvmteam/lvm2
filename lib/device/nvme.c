@@ -210,7 +210,7 @@ void dev_read_nvme_wwids(struct device *dev)
 
 	/* Avoid using nvme_identify_ns_descs before ver 1.3. */
 	if (!nvme_identify_ctrl(fd, ctrl_id)) {
-		if (le32_to_cpu(ctrl_id->ver) < 0x10300)
+		if (le32toh(ctrl_id->ver) < 0x10300)
 			goto_out;
 	}
 
@@ -358,7 +358,7 @@ int dev_read_reservation_nvme(struct cmd_context *cmd, struct device *dev, uint6
 
 	for (i = 0; i < regctl; i++) {
 		if (status->regctl_eds[i].rcsts) {
-			rkey = le64_to_cpu(status->regctl_eds[i].rkey);
+			rkey = le64toh(status->regctl_eds[i].rkey);
 			*holder_ret = rkey;
 			break;
 		}
@@ -466,7 +466,7 @@ int dev_find_key_nvme(struct cmd_context *cmd, struct device *dev, int may_fail,
 	}
 
 	for (i = 0; i < num_keys; i++) {
-		key = le64_to_cpu(status->regctl_eds[i].rkey);
+		key = le64toh(status->regctl_eds[i].rkey);
 
 		log_debug("dev_find_key %s 0x%llx", devname, (unsigned long long)key);
 

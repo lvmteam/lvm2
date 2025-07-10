@@ -177,15 +177,15 @@ static void _xlate_mdah(struct mda_header *mdah)
 {
 	struct raw_locn *rl;
 
-	mdah->version = xlate32(mdah->version);
-	mdah->start = xlate64(mdah->start);
-	mdah->size = xlate64(mdah->size);
+	mdah->version = htole32(mdah->version);
+	mdah->start = htole64(mdah->start);
+	mdah->size = htole64(mdah->size);
 
 	rl = &mdah->raw_locns[0];
 	while (rl->offset) {
-		rl->checksum = xlate32(rl->checksum);
-		rl->offset = xlate64(rl->offset);
-		rl->size = xlate64(rl->size);
+		rl->checksum = htole32(rl->checksum);
+		rl->offset = htole64(rl->offset);
+		rl->size = htole64(rl->size);
 		rl++;
 	}
 }
@@ -203,7 +203,7 @@ static int _raw_read_mda_header(struct mda_header *mdah, struct device_area *dev
 		return 0;
 	}
 
-	if (mdah->checksum_xl != xlate32(calc_crc(INITIAL_CRC, (uint8_t *)mdah->magic,
+	if (mdah->checksum_xl != htole32(calc_crc(INITIAL_CRC, (uint8_t *)mdah->magic,
 						  MDA_HEADER_SIZE -
 						  sizeof(mdah->checksum_xl)))) {
 		log_warn("WARNING: wrong checksum %x in mda header on %s at %llu",
@@ -271,7 +271,7 @@ static int _raw_write_mda_header(const struct format_type *fmt,
 	mdah->start = start_byte;
 
 	_xlate_mdah(mdah);
-	mdah->checksum_xl = xlate32(calc_crc(INITIAL_CRC, (uint8_t *)mdah->magic,
+	mdah->checksum_xl = htole32(calc_crc(INITIAL_CRC, (uint8_t *)mdah->magic,
 					     MDA_HEADER_SIZE -
 					     sizeof(mdah->checksum_xl)));
 

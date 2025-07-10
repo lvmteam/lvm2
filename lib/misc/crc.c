@@ -109,10 +109,10 @@ static uint32_t _calc_crc_new(uint32_t initial, const uint8_t *buf, uint32_t siz
 	_initialise_crc32();
 
 	for (;size >= 16; size -= 16) {
-		a = xlate32(*ptr++) ^ crc;
-		b = xlate32(*ptr++);
-		c = xlate32(*ptr++);
-		d = xlate32(*ptr++);
+		a = htole32(*ptr++) ^ crc;
+		b = htole32(*ptr++);
+		c = htole32(*ptr++);
+		d = htole32(*ptr++);
 
 		crc = _crc32_lookup[ 0][(d >> 24) & 0xff] ^
 		      _crc32_lookup[ 1][(d >> 16) & 0xff] ^
@@ -155,7 +155,7 @@ static uint32_t _calc_crc_new(uint32_t initial, const uint8_t *buf, uint32_t siz
 
 	/* Process 4 bytes per iteration */
 	while (start < end) {
-		crc = crc ^ xlate32(*start++);
+		crc = crc ^ htole32(*start++);
 		crc = _crctab[crc & 0xff] ^ crc >> 8;
 		crc = _crctab[crc & 0xff] ^ crc >> 8;
 		crc = _crctab[crc & 0xff] ^ crc >> 8;
