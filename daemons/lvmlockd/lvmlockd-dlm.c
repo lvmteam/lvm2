@@ -31,7 +31,6 @@
 #include <errno.h>
 #include <endian.h>
 #include <fcntl.h>
-#include <byteswap.h>
 #include <syslog.h>
 #include <dirent.h>
 

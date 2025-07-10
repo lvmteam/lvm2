@@ -28,7 +28,6 @@
 #include "lib/config/config.h"
 #include "lib/metadata/segtype.h"
 #include "lib/misc/sharedlib.h"
-#include "lib/metadata/metadata.h"
 #include "lib/misc/lvm-signal.h"
 
 #include <limits.h>

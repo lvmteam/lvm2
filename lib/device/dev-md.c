@@ -17,7 +17,7 @@
 #include "lib/device/dev-type.h"
 #include "lib/mm/xlate.h"
 #include "lib/misc/crc.h"
-#include "lib/commands/toolcontext.h"
+
 #ifdef UDEV_SYNC_SUPPORT
 #include <libudev.h> /* for MD detection using udev db records */
 #include "lib/device/dev-ext-udev-constants.h"
