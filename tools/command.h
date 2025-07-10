@@ -32,7 +32,7 @@ struct command_function {
 };
 
 struct command_name {
-	const char *name;
+	const char name[16];
 	const char *desc; /* general command description from commands.h */
 	command_fn fn; /* old style */
 	unsigned int flags;

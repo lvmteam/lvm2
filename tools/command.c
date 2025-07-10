@@ -292,20 +292,16 @@ err:
 
 unsigned command_id_to_enum(const char *str)
 {
-	int i;
-	unsigned first = 1, last = CMD_COUNT - 1, middle;
+	const char *name;
 
-	while (first <= last) {
-		middle = first + (last - first) / 2;
-		if ((i = strcmp(cmd_names[middle].name, str)) < 0)
-			first = middle + 1;
-		else if (i > 0)
-			last = middle - 1;
-		else
-			return cmd_names[middle].cmd_enum;
-	}
+	/* Skip 1st. element for bsearch() */
+	if ((name = bsearch(str, cmd_names[1].name, CMD_COUNT - 1,
+			    sizeof(cmd_names[0]),
+			    (int (*)(const void*, const void*))strcmp)))
+		return (name - cmd_names[0].name) / sizeof(cmd_names[0]);
 
 	log_error("Cannot find command %s.", str);
+
 	return CMD_NONE;
 }
 
@@ -390,40 +386,31 @@ static uint64_t _lv_to_bits(struct command *cmd, char *name)
 
 static unsigned _find_lvm_command_enum(const char *name)
 {
-	int first = 0, last, middle;
-	int i;
-
 #ifdef MAN_PAGE_GENERATOR
 	/* Validate cmd_names & command_names arrays are properly sorted */
-	static int _command_names_count = -1;
+	static int _names_validated = 0;
+	int i;
 
-	if (_command_names_count == -1) {
-		for (i = 1; i < CMD_COUNT - 2; i++)
+	if (!_names_validated) {
+		for (i = 1; i < CMD_COUNT - 1; i++)
 			if (strcmp(cmd_names[i].name, cmd_names[i + 1].name) > 0) {
 				log_error("File cmds.h has unsorted name entry %s.",
 					  cmd_names[i].name);
 				return 0;
 			}
-		for (i = 1; i < LVM_COMMAND_COUNT; ++i) /* assume > 1 */
-			if (strcmp(command_names[i - 1].name, command_names[i].name) > 0) {
+		for (i = 0; i < LVM_COMMAND_COUNT - 1; ++i) /* assume > 1 */
+			if (strcmp(command_names[i].name, command_names[i + 1].name) > 0) {
 				log_error("File commands.h has unsorted name entry %s.",
 					  command_names[i].name);
 				return 0;
 			}
-		_command_names_count = i - 1;
+		_names_validated = 1;
 	}
 #endif
-	last = LVM_COMMAND_COUNT - 1;
-
-	while (first <= last) {
-		middle = first + (last - first) / 2;
-		if ((i = strcmp(command_names[middle].name, name)) < 0)
-			first = middle + 1;
-		else if (i > 0)
-			last = middle - 1;
-		else
-			return middle;
-	}
+	if ((name = bsearch(name, command_names[0].name, LVM_COMMAND_COUNT,
+			    sizeof(command_names[0]),
+			    (int (*)(const void*, const void*))strcmp)))
+		return (name - command_names[0].name) / sizeof(command_names[0]);
 
 	return LVM_COMMAND_COUNT;
 }
