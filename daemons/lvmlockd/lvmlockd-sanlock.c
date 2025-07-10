@@ -323,8 +323,11 @@ static int read_host_id_file(void)
 			break;
 		}
 	}
-	_fclose(file, (char *)daemon_host_id_file);
+
 out:
+	if (file)
+		_fclose(file, (char *)daemon_host_id_file);
+
 	log_debug("host_id %d from %s", host_id, daemon_host_id_file);
 	return host_id;
 }
