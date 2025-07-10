@@ -1715,16 +1715,25 @@ static void _print_usage_def(struct command *cmd, int opt_enum, struct arg_def *
 		printf(" ...");
 }
 
-static void _print_opt(int opt_enum)
+static void _print_opt_with_align(int opt_enum, unsigned align)
 {
 	if (opt_names[opt_enum].short_opt)
 		printf(" -%c|", opt_names[opt_enum].short_opt);
 	else
-		printf("    ");
+		fputs(align ? "    " : " ", stdout);
 
 	printf("%s", opt_names[opt_enum].long_opt);
 }
 
+static inline void _print_opt(int opt_enum)
+{
+	_print_opt_with_align(opt_enum, 0);
+}
+
+static inline void _print_aligned_opt(int opt_enum)
+{
+	_print_opt_with_align(opt_enum, 1);
+}
 
 void print_usage(struct command *cmd, int longhelp, int desc_first)
 {
@@ -1775,7 +1784,7 @@ void print_usage(struct command *cmd, int longhelp, int desc_first)
 					printf(",\n\t ");
 				first = 0;
 
-				_print_opt(opt_enum);
+				_print_aligned_opt(opt_enum);
 
 				if (cmd->required_opt_args[ro].def.val_bits)
 					_print_usage_def(cmd, opt_enum, &cmd->required_opt_args[ro].def);
@@ -1856,7 +1865,7 @@ void print_usage(struct command *cmd, int longhelp, int desc_first)
 
 				printf("\n\t[");
 
-				_print_opt(opt_enum);
+				_print_aligned_opt(opt_enum);
 
 				if (cmd->optional_opt_args[oo].def.val_bits)
 					_print_usage_def(cmd, opt_enum, &cmd->optional_opt_args[oo].def);
@@ -1905,7 +1914,7 @@ void print_usage_common_lvm(const struct command_name *cname, struct command *cm
 
 			printf("\n\t[");
 
-			_print_opt(opt_enum);
+			_print_aligned_opt(opt_enum);
 
 			if (lvm_all.optional_opt_args[oo].def.val_bits)
 				_print_usage_def(cmd, opt_enum, &lvm_all.optional_opt_args[oo].def);
@@ -1966,7 +1975,7 @@ void print_usage_common_cmd(const struct command_name *cname, struct command *cm
 				if (cmd->optional_opt_args[oo].opt != opt_enum)
 					continue;
 
-				_print_opt(opt_enum);
+				_print_aligned_opt(opt_enum);
 
 				if (cmd->optional_opt_args[oo].def.val_bits)
 					_print_usage_def(cmd, opt_enum, &cmd->optional_opt_args[oo].def);
