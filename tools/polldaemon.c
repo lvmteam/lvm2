@@ -80,7 +80,7 @@ static int _check_lv_status(struct cmd_context *cmd,
 	}
 
 	progress = parms->poll_fns->poll_progress(cmd, lv, name, parms);
-	fflush(stdout);
+	(void) fflush(stdout);
 
 	if (progress == PROGRESS_CHECK_FAILED)
 		return_0;

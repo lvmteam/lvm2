@@ -411,7 +411,8 @@ static void remove_info_file(struct lockspace *ls)
 
 	if (dm_snprintf(path, sizeof(path), "/var/lib/lvm/lvmlockd_info_%s", ls->vg_name) < 0)
 		return;
-	unlink(path);
+
+	(void) unlink(path);
 }
 
 /* Prepare valid /dev/mapper/vgname-lvname with all the mangling */

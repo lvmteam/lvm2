@@ -951,7 +951,7 @@ char yes_no_prompt(const char *prompt, ...)
 			va_start(ap, prompt);
 			vfprintf(stderr, prompt, ap);
 			va_end(ap);
-			fflush(stderr);
+			(void) fflush(stderr);
 
 			if (c == EOF)
 				break;

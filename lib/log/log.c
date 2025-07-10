@@ -738,7 +738,7 @@ static void _vprint_log(int level, const char *file, int line, int dm_errno_or_c
 			/* Typically only log_warn goes to out_stream */
 			stream = (use_stderr || (level != _LOG_WARN)) ? err_stream : out_stream;
 			if (stream == err_stream)
-				fflush(out_stream);
+				(void) fflush(out_stream);
 			fprintf(stream, "%s%s%s", buf, _msg_prefix, indent_spaces);
 			vfprintf(stream, trformat, ap);
 			fputc('\n', stream);
@@ -783,7 +783,7 @@ static void _vprint_log(int level, const char *file, int line, int dm_errno_or_c
 		}
 
 		fputc('\n', _log_file);
-		fflush(_log_file);
+		(void) fflush(_log_file);
 	}
 
 	if (_syslog && (_log_while_suspended || !critical_section())) {

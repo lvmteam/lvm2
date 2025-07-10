@@ -7384,7 +7384,7 @@ doit:
 
 			if (_count > 1 && r) {
 				putchar('\n');
-				fflush(stdout);
+				(void) fflush(stdout);
 				/* wait for --interval and update timestamps */
 				if (!_do_report_wait()) {
 					ret = 1;

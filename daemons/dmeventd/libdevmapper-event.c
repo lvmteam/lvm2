@@ -988,7 +988,7 @@ void dm_event_log(const char *subsys, int level, const char *file,
 			fprintf(stream, "%28s:%4d %s", file, line, indent);
 		vfprintf(stream, _(format), ap);
 		fputc('\n', stream);
-		fflush(stream);
+		(void) fflush(stream);
 	}
 
 	pthread_mutex_unlock(&_log_mutex);

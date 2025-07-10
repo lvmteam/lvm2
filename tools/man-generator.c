@@ -1718,7 +1718,7 @@ int main(int argc, char *argv[])
 
 out_free:
 	if (stdout_buf) {
-		fflush(stdout);
+		(void) fflush(stdout);
 		setlinebuf(stdout);
 		free(stdout_buf);
 	}
