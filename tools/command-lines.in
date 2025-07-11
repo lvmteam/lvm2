@@ -973,7 +973,7 @@ OP: PV ...
 IO: --stripes 1
 ID: lvcreate_mirror_or_raid1
 DESC: Create a raid1 or mirror LV.
-DESC: Implicit type is defined by lvm.conf global/mirror_segfault_default.
+DESC: Implicit type is defined by lvm.conf global/mirror_segtype_default.
 AUTOTYPE: raid1
 AUTOTYPE: mirror
 
