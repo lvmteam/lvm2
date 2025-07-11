@@ -15,7 +15,7 @@ lvmreport \(em LVM reporting and related features
 .
 .SH DESCRIPTION
 .
-LVM uses single reporting infrastructure that sets standard on LVM command's
+LVM uses a single reporting infrastructure that sets standard on LVM command's
 output and it provides wide range of configuration settings and command line
 options to customize report and filter the report's output.
 .
@@ -24,12 +24,12 @@ options to customize report and filter the report's output.
 .SS Categorization based on reporting facility
 .
 Based on functionality, commands which make use of the reporting infrastructure
-are divided in two groups:
+are divided into two groups:
 .
 .TP
 .B Report-oriented commands
 These commands inform about current LVM state and their primary role is to
-display this information in compendious way. To make a distinction, we will
+display this information in a concise way. To make a distinction, we will
 name this report as \fBmain report\fP. The set of report-only commands include:
 pvs, vgs, lvs, pvdisplay, vgdisplay, lvdisplay, lvm devtypes, lvm fullreport.
 For further information about main report, see \fBMain report specifics\fP.
@@ -44,7 +44,7 @@ lvremove, pvresize, vgextend, vgreduce, lvextend, lvreduce, lvresize, lvrename,
 pvscan, vgscan, lvscan, pvmove, vgcfgbackup, vgck, vgconvert, vgexport,
 vgimport, vgmknodes.
 .P
-If enabled, so called \fBlog report\fP is either displayed solely
+If enabled, so-called \fBlog report\fP is either displayed solely
 (for processing-oriented commands) or in addition to main report
 (for report-oriented commands). The log report contains a log of operations,
 messages and per-object status with complete object identification collected
@@ -55,7 +55,7 @@ information about this report type.
 .
 When describing reporting functionality and features in this text, we will
 use terms \fBrow\fP and \fBcolumn\fP. By row we mean series of values reported
-for single entity (for example single PV, VG or LV). Each value from the row
+for a single entity (for example single PV, VG or LV). Each value from the row
 then belongs to a column of certain type. The columns have \fBcolumn headings\fP
 which are short descriptions for the columns. The columns are referenced by
 \fBcolumn names\fP. Please note that this text is also using term \fBfield\fP
@@ -65,8 +65,9 @@ is abbreviated as \fBcol\fP in configuration.
 .SS Common report configuration settings and command line options
 .
 There are common configuration settings and command line options which apply
-to both \fBmain report\fP and \fBlog report\fP. Following lists contain all
-of them, separated into groups based on their use.
+to both \fBmain report\fP and \fBlog report\fP.
+The following lists contain all of them,
+separated into groups based on their use.
 .
 .SS Common configuration settings
 .
@@ -135,7 +136,7 @@ global configuration settings that this option overrides.
 .
 .TP
 \fB-o\fP|\fB--options\fP \fB+\fP\fIFieldSet\fP
-Fields to include to current field set. See \fBmain report specifics\fP\ and
+Fields to include in current field set. See \fBmain report specifics\fP\ and
 \fBlog report specifics\fP for information about field sets configured with
 global configuration settings that this option extends.
 .
@@ -166,8 +167,8 @@ global configuration settings that this option overrides.
 .TP
 \fB-O\fP|\fB--sort\fP \fB-\fP\fIFieldSet\fP
 Fields to sort by in descending order. See \fBmain report specifics\fP and
-\fBlog report specifics\fP for information about fields sets configured with
-global configuration settings that this options overrides.
+\fBlog report specifics\fP for information about field sets configured with
+global configuration settings that this option overrides.
 .RE
 .
 .TP

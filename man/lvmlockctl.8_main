@@ -7,7 +7,7 @@ lvmlockctl \(em Control for lvmlockd
 .SH SYNOPSIS
 .
 .B lvmlockctl
-.RI [ Ioptions ]
+.RI [ options ]
 .
 .SH DESCRIPTION
 .

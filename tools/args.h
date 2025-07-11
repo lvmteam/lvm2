@@ -71,7 +71,7 @@ arg(alloc_ARG, '\0', "alloc", alloc_VAL, 0, 0,
     "\\fBnormal\\fP applies common sense rules such as not placing parallel stripes\n"
     "on the same PV.\n"
     "\\fBinherit\\fP applies the VG policy to an LV.\n"
-    "\\fBcontiguous\\fP requires new PEs be placed adjacent to existing PEs.\n"
+    "\\fBcontiguous\\fP requires new PEs to be placed adjacent to existing PEs.\n"
     "\\fBcling\\fP places new PEs on the same PV as existing PEs in the same\n"
     "stripe of the LV.\n"
     "If there are sufficient PEs for an allocation, but normal does not\n"

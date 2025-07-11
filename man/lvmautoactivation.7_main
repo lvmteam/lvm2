@@ -58,7 +58,7 @@ systemd/udev runs blkid to identify /dev/name as an LVM PV
 udev rule 69-dm-lvm-metad.rules is run for /dev/name
 .
 .IP \[bu]
-the lvm udev rule runs the systemd service lvm2-pvscan@X:Yservice
+the lvm udev rule runs the systemd service lvm2-pvscan@X:Y.service
 .
 .IP \[bu]
 the lvm2-pvscan service runs:

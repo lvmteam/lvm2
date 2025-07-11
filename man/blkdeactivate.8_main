@@ -44,7 +44,7 @@ blkdeactivate \(em utility to deactivate block devices
 .SH DESCRIPTION
 .
 The blkdeactivate utility deactivates block devices. For mounted
-block devices, it attempts to unmount it automatically before
+block devices, it attempts to unmount them automatically before
 trying to deactivate. The utility currently supports
 device-mapper devices (DM), including LVM volumes and
 software RAID MD devices. LVM volumes are handled directly
@@ -109,7 +109,7 @@ Comma-separated list of MD RAID specific options:
 .
 .TP
 .B wait
-Wait MD device's resync, recovery or reshape action to complete
+Wait for MD device's resync, recovery or reshape action to complete
 before deactivation.
 .
 .RE

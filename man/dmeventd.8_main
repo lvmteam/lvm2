@@ -59,8 +59,8 @@ Each extra d adds more debugging information.
 .TP
 \fB-e\fP \fIexit_on_path\fP
 Specifies the file path whose presence is checked by the daemon when it
-receives a signal (SIGINT, SIGTERM) and allows to exit even if there are still
-monitored devices.
+receives a signal (SIGINT, SIGTERM) and allows it to exit even
+if there are still monitored devices.
 This can help with system shutdown where devices
 have not been unmonitored properly.
 To disable this behavior set this to the empty string "".
@@ -125,7 +125,7 @@ it gets umounted if possible.
 .
 .TP
 .B Thin
-Monitors how full a thin pool data and metadata is becoming and emits
+Monitors how full thin pool data and metadata are becoming and emits
 a warning to syslog when it exceeds 80% full.
 The warning is repeated when more than 85%, 90% and 95%
 of the thin pool is filled. See
@@ -145,12 +145,12 @@ Such external command can e.g. remove some unneeded snapshots,
 use \fBfstrim\fP(8) to recover free space in a thin pool,
 but also can use \fBlvextend --use-policies\fP if other actions
 have not released enough space.
-Command is executed with environmental variable
+Command is executed with environment variable
 \fBLVM_RUN_BY\%_DM\%EVENTD=1\fP
 so any lvm2 command executed in this environment
 will not try to interact with dmeventd.
 To see the fullness of a thin pool command
-may check these two environmental variables
+may check these two environment variables
 \fBDMEVENTD\%_THIN\%_POOL\%_DATA\fP and
 \fBDMEVENTD\%_THIN\%_POOL\%_METADATA\fP.
 Command can also read status with tools like \fBlvs\fP(8).
@@ -177,11 +177,11 @@ Such external command can e.g. remove some unneeded space
 with \fBfstrim\fP(8),
 but also can use \fBlvextend --use-policies\fP
 if other actions have not released enough space.
-Command is executed with environmental variable
+Command is executed with environment variable
 \fBLVM_RUN_BY\%_DMEVENTD=1\fP so any lvm2 command executed
 in this environment will not try to interact with dmeventd.
 To see the fullness of a VDO pool command may check this
-environmental variable \fBDMEVENTD_VDO_POOL\fP.
+environment variable \fBDMEVENTD_VDO_POOL\fP.
 Command can also read status with tools like \fBlvs\fP(8).
 .
 .SH ENVIRONMENT VARIABLES
@@ -189,13 +189,13 @@ Command can also read status with tools like \fBlvs\fP(8).
 .TP
 .B DMEVENTD_THIN_POOL_DATA
 Variable is set by thin plugin and is available to executed program.
-Value presents actual usage of thin pool data volume.
+Value represents actual usage of thin pool data volume.
 Variable is not set when error event is processed.
 .
 .TP
 .B DMEVENTD_THIN_POOL_METADATA
 Variable is set by thin plugin and is available to executed program.
-Value presents actual usage of thin pool metadata volume.
+Value represents actual usage of thin pool metadata volume.
 Variable is not set when error event is processed.
 .
 .TP

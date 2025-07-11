@@ -62,13 +62,13 @@ for extracting statistics from VDO volumes.
 .
 .TP
 .B VDODataLV
-VDO data LV is large hidden LV with the _vdata suffix.
+VDO data LV is a large hidden LV with the _vdata suffix.
 It is created in a VG used by the VDO kernel target
 to store all data and metadata blocks.
 .
 .TP
 .B VDOPoolLV
-VDO pool LV is pool for virtual VDOLV(s),
+VDO pool LV is a pool for virtual VDOLV(s),
 which are the size of used VDODataLV.
 Only a single VDOLV is currently supported.
 .
@@ -125,7 +125,7 @@ DESTROYS\fP the content of such volume and the volume is immediately
 formatted by \fBvdoformat\fP(8) as a VDO pool data volume. You can
 specify the virtual size of the VDOLV associated with this VDOPoolLV.
 If you do not specify the virtual size, it will be set to the maximum size
-that can keep 100% incompressible data there.
+that can keep 100% incompressible data in it.
 .P
 .B lvconvert --type vdo-pool -n
 .I VDOLV
@@ -161,7 +161,7 @@ Disable or enable the compression and deduplication for VDOPoolLV
 .
 .SS \n+[step]. Change the default settings used for creating a VDOPoolLV
 .
-VDO allows to set a large variety of options. Lots of these settings
+VDO allows you to set a large variety of options. Lots of these settings
 can be specified in lvm.conf or profile settings. You can prepare
 a number of different profiles in the
 \fI#DEFAULT_SYS_DIR#/profile\fP

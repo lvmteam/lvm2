@@ -41,7 +41,7 @@ numeric suffix.
 .P
 In the usage section below, when creating a pool and the name is omitted
 the new LV pool name is generated with the
-"vpool" for vdo-pools  for prefix and a unique numeric suffix.
+"vpool" prefix for vdo-pools and a unique numeric suffix.
 .P
 Pool name can be specified together with \fIVG\fP name i.e.:
 vg00/mythinpool.
