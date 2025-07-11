@@ -484,7 +484,7 @@ command line.
 \fBnormal\fP applies common sense rules such as not placing parallel stripes
 on the same PV.
 \fBinherit\fP applies the VG policy to an LV.
-\fBcontiguous\fP requires new PEs be placed adjacent to existing PEs.
+\fBcontiguous\fP requires new PEs to be placed adjacent to existing PEs.
 \fBcling\fP places new PEs on the same PV as existing PEs in the same
 stripe of the LV.
 If there are sufficient PEs for an allocation, but normal does not
