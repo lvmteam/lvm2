@@ -5165,7 +5165,7 @@ static void _check_pvcreate_prompt(struct cmd_context *cmd,
 	}
 
 	if (answer_yes && answer_no) {
-		log_warn("WARNING: prompt answer yes is overridden by prompt answer no.");
+		log_warn("WARNING: Prompt answer yes is overridden by prompt answer no.");
 		answer_yes = 0;
 	}
 

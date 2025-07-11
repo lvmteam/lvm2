@@ -92,7 +92,7 @@ static void _cb_set_destroy(struct cb_set *cbs)
 	// never be in flight IO.
 	if (!dm_list_empty(&cbs->allocated)) {
 		// bail out
-		log_warn("WARNING: async io still in flight.");
+		log_warn("WARNING: Async io still in flight.");
 		return;
 	}
 

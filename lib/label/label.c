@@ -446,7 +446,7 @@ static int _process_block(struct cmd_context *cmd, struct dev_filter *f,
 			 * lvmcache with empty info->mdas, and it will behave
 			 * like a PV with no mdas (a common configuration.)
 			 */
-			log_warn("WARNING: scan failed to get metadata summary from %s PVID %s", dev_name(dev), dev->pvid);
+			log_warn("WARNING: Scan failed to get metadata summary from %s PVID %s.", dev_name(dev), dev->pvid);
 		}
 	}
  out:
@@ -856,9 +856,9 @@ void prepare_open_file_limit(struct cmd_context *cmd, unsigned int num_devs)
 	rv = prlimit(0, RLIMIT_NOFILE, &new, &old);
 	if (rv < 0) {
 		if (errno == EPERM)
-			log_warn("WARNING: permission error setting open file limit for scanning %u devices.", num_devs);
+			log_warn("WARNING: Permission error setting open file limit for scanning %u devices.", num_devs);
 		else
-			log_warn("WARNING: cannot set open file limit for scanning %u devices.", num_devs);
+			log_warn("WARNING: Cannot set open file limit for scanning %u devices.", num_devs);
 		return;
 	}
 #endif
@@ -1421,9 +1421,9 @@ int label_scan(struct cmd_context *cmd)
 		if ((remainder = (want_size_kb % 1024)))
 			want_size_kb = want_size_kb + 1024 - remainder;
 
-		log_warn("WARNING: metadata may not be usable with current io_memory_size %d KiB",
+		log_warn("WARNING: Metadata may not be usable with current io_memory_size %d KiB.",
 			 io_memory_size());
-		log_warn("WARNING: increase lvm.conf io_memory_size to at least %llu KiB",
+		log_warn("WARNING: Increase lvm.conf io_memory_size to at least %llu KiB.",
 			 (unsigned long long)want_size_kb);
 	}
 

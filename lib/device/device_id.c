@@ -1335,7 +1335,7 @@ int device_ids_read(struct cmd_context *cmd)
 			continue;
 
 		if (!(du = zalloc(sizeof(struct dev_use)))) {
-			log_warn("WARNING: failed to process devices file entry.");
+			log_warn("WARNING: Failed to process devices file entry.");
 			continue;
 		}
 
@@ -1380,7 +1380,7 @@ int device_ids_read(struct cmd_context *cmd)
 		}
 
 		if (line_error) {
-			log_warn("WARNING: failed to process devices file entry.");
+			log_warn("WARNING: Failed to process devices file entry.");
 			free_du(du);
 			continue;
 		}
@@ -1691,12 +1691,12 @@ int device_ids_write(struct cmd_context *cmd)
 	if (_devices_file_version[0]) {
 		if (sscanf(_devices_file_version, "%u.%u.%u", &df_major, &df_minor, &df_counter) != 3) {
 			/* don't update a file we can't parse */
-			log_warn("WARNING: not updating devices file with unparsed version.");
+			log_warn("WARNING: Not updating devices file with unparsed version.");
 			return 0;
 		}
 		if (df_major > DEVICES_FILE_MAJOR) {
 			/* don't update a file with a newer major version */
-			log_warn("WARNING: not updating devices file with larger major version.");
+			log_warn("WARNING: Not updating devices file with larger major version.");
 			return 0;
 		}
 	}
@@ -1895,7 +1895,7 @@ int device_ids_version_unchanged(struct cmd_context *cmd)
 	FILE *fp;
 
 	if (!(fp = fopen(cmd->devices_file_path, "r"))) {
-		log_warn("WARNING: cannot open devices file to read.");
+		log_warn("WARNING: Cannot open devices file to read.");
 		return 0;
 	}
 
@@ -2068,12 +2068,12 @@ int device_id_add(struct cmd_context *cmd, struct device *dev, const char *pvid_
 				log_error("The specified --deviceidtype %s is unknown.", idtype_arg);
 				return 0;
 			}
-			log_warn("WARNING: ignoring unknown device_id type %s.", idtype_arg);
+			log_warn("WARNING: Ignoring unknown device_id type %s.", idtype_arg);
 		} else {
 			if (id_arg) {
 				if ((idname = strdup(id_arg)))
 					goto id_done;
-				log_warn("WARNING: ignoring device_id name %s.", id_arg);
+				log_warn("WARNING: Ignoring device_id name %s.", id_arg);
 			}
 
 			if ((idname = device_id_system_read(cmd, dev, idtype)))
@@ -2084,7 +2084,7 @@ int device_id_add(struct cmd_context *cmd, struct device *dev, const char *pvid_
 				return 0;
 			}
 
-			log_warn("WARNING: ignoring deviceidtype %s which is not available for device.", idtype_arg);
+			log_warn("WARNING: Ignoring deviceidtype %s which is not available for device.", idtype_arg);
 			idtype = 0;
 		}
 	}
@@ -2173,13 +2173,13 @@ id_done:
 			  du_devname->devname);
 
 	if (du_pvid && (du_pvid->dev != dev))
-		log_warn("WARNING: adding device %s with PVID %s which is already used for %s device_id %s.",
+		log_warn("WARNING: Adding device %s with PVID %s which is already used for %s device_id %s.",
 			 dev_name(dev), pvid, du_pvid->dev ? dev_name(du_pvid->dev) : "missing device",
 			 du_pvid->idname ?: "none");
 
 	if (du_devid && (du_devid->dev != dev)) {
 		if (!du_devid->dev) {
-			log_warn("WARNING: adding device %s with idname %s which is already used for missing device.",
+			log_warn("WARNING: Adding device %s with idname %s which is already used for missing device.",
 				 dev_name(dev), id->idname);
 		} else {
 			int ret1, ret2;
@@ -2191,7 +2191,7 @@ id_done:
 				log_debug("Using separate entries for partitions of same device %s part %d %s part %d.",
 					  dev_name(dev), part, dev_name(du_devid->dev), du_devid->part);
 			} else {
-				log_warn("WARNING: adding device %s with idname %s which is already used for %s.",
+				log_warn("WARNING: Adding device %s with idname %s which is already used for %s.",
 					 dev_name(dev), id->idname, dev_name(du_devid->dev));
 			}
 		}
@@ -2305,7 +2305,7 @@ void device_id_pvremove(struct cmd_context *cmd, struct device *dev)
 		return;
 
 	if (!(du = get_du_for_dev(cmd, dev))) {
-		log_warn("WARNING: devices to use does not include %s", dev_name(dev));
+		log_warn("WARNING: Devices to use does not include %s.", dev_name(dev));
 		return;
 	}
 
@@ -3241,7 +3241,7 @@ void device_ids_validate(struct cmd_context *cmd, struct dm_list *scanned_devs, 
 
 			/* This shouldn't happen since idname was used to match du and dev */
 			if (!du->idname || strcmp(devname, du->idname)) {
-				log_warn("WARNING: fixing devices file IDNAME %s for PVID %s device %s",
+				log_warn("WARNING: Fixing devices file IDNAME %s for PVID %s device %s.",
 					  du->idname ?: ".", du->pvid, dev_name(dev));
 				if (!(tmpdup = strdup(devname)))
 					continue;
@@ -4065,10 +4065,10 @@ void device_ids_search(struct cmd_context *cmd, struct dm_list *new_devs,
 		dm_list_iterate_items_safe(dil, dil2, &search_pvids) {
 			if (!memcmp(dil->pvid, dev->pvid, ID_LEN)) {
 				if (dil->dev) {
-					log_warn("WARNING: found PVID %s on multiple devices %s %s.",
+					log_warn("WARNING: Found PVID %s on multiple devices %s %s.",
 						 dil->pvid, dev_name(dil->dev), dev_name(dev));
-					log_warn("WARNING: duplicate PVIDs should be changed to be unique.");
-					log_warn("WARNING: use lvmdevices to select a device for PVID %s.", dil->pvid);
+					log_warn("WARNING: Duplicate PVIDs should be changed to be unique.");
+					log_warn("WARNING: Use lvmdevices to select a device for PVID %s.", dil->pvid);
 					dm_list_del(&dil->list);
 				} else {
 					log_debug("Search for PVID %s found on %s.", dil->pvid, dev_name(dev));
@@ -4166,7 +4166,7 @@ void device_ids_search(struct cmd_context *cmd, struct dm_list *new_devs,
 
 		if (!cmd->filter->passes_filter(cmd, cmd->filter, dev, NULL)) {
 			/* I don't think this would happen */
-			log_warn("WARNING: new device %s for PVID %s is excluded: %s.",
+			log_warn("WARNING: New device %s for PVID %s is excluded: %s.",
 				 dev_name(dev), dil->pvid, dev_filtered_reason(dev));
 			if (du) /* Should not happen 'du' is NULL */
 				du->dev = NULL;
@@ -4335,7 +4335,7 @@ static int _lock_devices_file(struct cmd_context *cmd, int mode, int nonblock, i
 
 	if (_devices_file_locked) {
 		/* shouldn't happen */
-		log_warn("WARNING: devices file already locked %d", mode);
+		log_warn("WARNING: Devices file already locked %d.", mode);
 		return 0;
 	}
 
@@ -4351,7 +4351,7 @@ static int _lock_devices_file(struct cmd_context *cmd, int mode, int nonblock, i
 
 	if (_devices_fd != -1) {
 		/* shouldn't happen */
-		log_warn("WARNING: devices file lock file already open %d", _devices_fd);
+		log_warn("WARNING: Devices file lock file already open %d.", _devices_fd);
 		return 0;
 	}
 
@@ -4401,16 +4401,16 @@ void unlock_devices_file(struct cmd_context *cmd)
 
 	if (_devices_fd == -1) {
 		/* shouldn't happen */
-		log_warn("WARNING: devices file unlock no fd");
+		log_warn("WARNING: Devices file unlock no fd.");
 		return;
 	}
 
 	if (!_devices_file_locked)
-		log_warn("WARNING: devices file unlock not locked");
+		log_warn("WARNING: Devices file unlock not locked.");
 
 	ret = flock(_devices_fd, LOCK_UN);
 	if (ret)
-		log_warn("WARNING: devices file unlock errno %d", errno);
+		log_warn("WARNING: Devices file unlock errno %d.", errno);
 
 	_devices_file_locked = 0;
 

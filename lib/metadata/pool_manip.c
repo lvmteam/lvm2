@@ -760,7 +760,7 @@ int handle_pool_metadata_spare(struct volume_group *vg, uint32_t extents,
 		/* TODO: Not showing when lvm.conf would define 'n' ? */
 		if (DEFAULT_POOL_METADATA_SPARE && extents)
 			/* Warn if there would be any user */
-			log_warn("WARNING: recovery of pools without pool "
+			log_warn("WARNING: Recovery of pools without pool "
 				 "metadata spare LV is not automated.");
 		return 1;
 	}

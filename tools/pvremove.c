@@ -38,7 +38,7 @@ int pvremove(struct cmd_context *cmd, int argc, char **argv)
 	if (!lock_global(cmd, "ex")) {
 		/* Let pvremove -ff skip locks */
 		if (pp.force == DONT_PROMPT_OVERRIDE)
-			log_warn("WARNING: skipping global lock for force.");
+			log_warn("WARNING: Skipping global lock for force.");
 		else
 			return_ECMD_FAILED;
 	}

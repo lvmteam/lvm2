@@ -648,7 +648,7 @@ static int vg_is_registered_by_host_id(struct cmd_context *cmd, struct volume_gr
 		if (first_key == found_key)
 			continue;
 
-		log_warn("WARNING: inconsistent reservation keys for host_id %d: 0x%llx 0x%llx (generation %u %u)",
+		log_warn("WARNING: Inconsistent reservation keys for host_id %d: 0x%llx 0x%llx (generation %u %u).",
 			 host_id, (unsigned long long)first_key, (unsigned long long)found_key,
 			 first_gen, found_gen);
 		errors++;
@@ -1219,12 +1219,12 @@ int persist_check(struct cmd_context *cmd, struct volume_group *vg,
 				if (!our_key_val)
 					our_key_val = found_key_val;
 				else if (our_key_val != found_key_val)
-					log_warn("WARNING: unexpected local key 0x%llx (previous 0x%llx) on %s.",
+					log_warn("WARNING: Unexpected local key 0x%llx (previous 0x%llx) on %s.",
 						 (unsigned long long)found_key_val, (unsigned long long)our_key_val, dev_name(dev));
 
 				found_key_gen = (found_key_val & 0xFFFFFF0000) >> 16;
 				if (current_sanlock_gen && (found_key_gen != current_sanlock_gen))
-					log_warn("WARNING: local key 0x%llx generation %u (expect %u) on %s.",
+					log_warn("WARNING: Local key 0x%llx generation %u (expect %u) on %s.",
 						 (unsigned long long)found_key_val, found_key_gen, current_sanlock_gen, dev_name(dev));
 
 				if (current_sanlock_gen && (found_key_gen == current_sanlock_gen))
@@ -1237,18 +1237,18 @@ int persist_check(struct cmd_context *cmd, struct volume_group *vg,
 				other_key_count = found_key_count;
 
 			if (!vg_is_shared(vg) && (found_key_count > 1))
-				log_warn("WARNING: unexpected number of registered keys %d (expect 1) on %s.",
+				log_warn("WARNING: Unexpected number of registered keys %d (expect 1) on %s.",
 				 	 found_key_count, dev_name(dev));
 
 			if (vg_is_shared(vg) && other_key_count && (found_key_count != other_key_count))
-				log_warn("WARNING: unexpected number of registered keys %d (vs %d) on %s.",
+				log_warn("WARNING: Unexpected number of registered keys %d (vs %d) on %s.",
 					  found_key_count, other_key_count, dev_name(dev));
 
 			if (!vg_is_shared(vg) && (found_key_count == 1) && found_keys) {
 				if (!one_key_val)
 					one_key_val = found_keys[0];
 				else if (one_key_val != found_keys[0])
-					log_warn("WARNING: unexpected registered key 0x%llx (other 0x%llx) on %s.",
+					log_warn("WARNING: Unexpected registered key 0x%llx (other 0x%llx) on %s.",
 						 (unsigned long long)found_keys[0], (unsigned long long)one_key_val,
 						 dev_name(dev));
 			}
@@ -1273,7 +1273,7 @@ int persist_check(struct cmd_context *cmd, struct volume_group *vg,
 		}
 
 		if (!prtype && found_key_count)
-			log_warn("WARNING: registered keys without a reservation on %s.", dev_name(dev));
+			log_warn("WARNING: Registered keys without a reservation on %s.", dev_name(dev));
 
 		if (!prtype) {
 			pv_no_res++;
@@ -1296,21 +1296,21 @@ int persist_check(struct cmd_context *cmd, struct volume_group *vg,
 			if (!other_holder)
 				other_holder = holder;
 			else if (other_holder != holder)
-				log_warn("WARNING: unexpected reservation holder 0x%llx (other 0x%llx) on %s.",
+				log_warn("WARNING: Unexpected reservation holder 0x%llx (other 0x%llx) on %s.",
 					 (unsigned long long)holder, (unsigned long long)other_holder, dev_name(dev));
 		} else {
 			pv_res_other_type++;
-			log_warn("WARNING: unexpected reservation type %s on %s.",
+			log_warn("WARNING: Unexpected reservation type %s on %s.",
 				 prtype_to_str(prtype), dev_name(dev));
 		}
 
 		if (vg_is_shared(vg)) {
 			if (prtype != PR_TYPE_WEAR)
-				log_warn("WARNING: expected reservation type WEAR (found %s) for shared VG on %s.",
+				log_warn("WARNING: Expected reservation type WEAR (found %s) for shared VG on %s.",
 					 prtype_to_str(prtype), dev_name(dev));
 		} else {
 			if ((prtype != PR_TYPE_WEAR) && dev_is_mpath(cmd, dev))
-				log_warn("WARNING: expected reservation type WEAR (found %s) for multipath on %s.",
+				log_warn("WARNING: Expected reservation type WEAR (found %s) for multipath on %s.",
 					 prtype_to_str(prtype), dev_name(dev));
 		}
 	}
@@ -1318,7 +1318,7 @@ int persist_check(struct cmd_context *cmd, struct volume_group *vg,
 	if (our_key_val && !local_key && local_host_id &&
 	    vg->lock_type && !strcmp(vg->lock_type, "sanlock") &&
 	    !lockd_vg_is_started(cmd, vg, &current_sanlock_gen))
-		log_warn("WARNING: skipped key generation check (VG not started.)");
+		log_warn("WARNING: Skipped key generation check (VG not started.)");
 
 	/* Summarize results for all devices */
 
@@ -1340,15 +1340,15 @@ int persist_check(struct cmd_context *cmd, struct volume_group *vg,
 			log_print_unless_silent("key for local host is registered on %d of %d devices: 0x%llx", pv_reg, pv_count, (unsigned long long)our_key_val);
 
 		if (pv_no_reg)
-			log_warn("WARNING: key for local host is missing on %d of %d devices.", pv_no_reg, pv_count);
+			log_warn("WARNING: Key for local host is missing on %d of %d devices.", pv_no_reg, pv_count);
 	}
 
 	if (!vg_is_shared(vg) && one_key_val) {
 		if (pv_res_local && (one_key_val != our_key_val))
-			log_warn("WARNING: unexpected mismatch between local key 0x%llx and one registered key 0x%llx.",
+			log_warn("WARNING: Unexpected mismatch between local key 0x%llx and one registered key 0x%llx.",
 				 (unsigned long long)our_key_val, (unsigned long long)one_key_val);
 		if (pv_res_other && other_holder && (one_key_val != other_holder))
-			log_warn("WARNING: unexpected mismatch between holder key 0x%llx and one registered key 0x%llx.",
+			log_warn("WARNING: Unexpected mismatch between holder key 0x%llx and one registered key 0x%llx.",
 				 (unsigned long long)other_holder, (unsigned long long)one_key_val);
 		else if (one_key_val != our_key_val)
 			log_print_unless_silent("key for other host is registered: 0x%llx", (unsigned long long)one_key_val);
@@ -1380,7 +1380,7 @@ int persist_check(struct cmd_context *cmd, struct volume_group *vg,
 			log_print_unless_silent("reservation WEAR for other host");
 
 		if (pv_res_wear_local && pv_res_wear_other)
-			log_warn("WARNING: unexpected WEAR reservation for other host.");
+			log_warn("WARNING: Unexpected WEAR reservation for other host.");
 	} else {
 		if (pv_res_wear_local || pv_res_wear_other)
 			log_print_unless_silent("reservation WEAR for registered hosts");
@@ -1411,7 +1411,7 @@ int persist_check(struct cmd_context *cmd, struct volume_group *vg,
 		log_print_unless_silent("updating incorrect key file value 0x%llx to 0x%llx",
 					(unsigned long long)file_key, (unsigned long long)our_key_val);
 		if (!write_key_file(cmd, vg, our_key_val))
-			log_warn("WARNING: failed to update key file.");
+			log_warn("WARNING: Failed to update key file.");
 	}
 
 	return 1;
@@ -1995,10 +1995,10 @@ int persist_start(struct cmd_context *cmd, struct volume_group *vg,
 
 		if (vg_is_shared(vg)) {
 			if (prtype != PR_TYPE_WEAR)
-				log_warn("WARNING: expected prtype WEAR for shared VG on %s", dev_name(dev));
+				log_warn("WARNING: Expected prtype WEAR for shared VG on %s.", dev_name(dev));
 		} else {
 			if ((prtype != PR_TYPE_WE) && !dev_is_mpath(cmd, dev))
-				log_warn("WARNING: expected prtype WE on %s", dev_name(dev));
+				log_warn("WARNING: Expected prtype WE on %s.", dev_name(dev));
 		}
 	}
 

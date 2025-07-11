@@ -62,13 +62,13 @@ int text_read_metadata_summary(const struct format_type *fmt,
 					 offset2, size2, checksum_fn,
 					 vgsummary->mda_checksum,
 					 checksum_only, 1, 1)) {
-			log_warn("WARNING: invalid metadata text from %s at %llu.",
+			log_warn("WARNING: Invalid metadata text from %s at %llu.",
 				 dev_name(dev), (unsigned long long)offset);
 			goto out;
 		}
 	} else {
 		if (!config_file_read_from_file(cft)) {
-			log_warn("WARNING: invalid metadata text from file.");
+			log_warn("WARNING: Invalid metadata text from file.");
 			goto out;
 		}
 	}
@@ -157,12 +157,12 @@ struct volume_group *text_read_metadata(struct format_instance *fid,
 		if (!config_file_read_fd(cft, dev, MDA_CONTENT_REASON(primary_mda), offset, size,
 					 offset2, size2, checksum_fn, checksum,
 					 skip_parse, 1, 0)) {
-			log_warn("WARNING: couldn't read volume group metadata from %s.", dev_name(dev));
+			log_warn("WARNING: Couldn't read volume group metadata from %s.", dev_name(dev));
 			goto out;
 		}
 	} else {
 		if (!config_file_read_from_file(cft)) {
-			log_warn("WARNING: couldn't read volume group metadata from file.");
+			log_warn("WARNING: Couldn't read volume group metadata from file.");
 			goto out;
 		}
 	}

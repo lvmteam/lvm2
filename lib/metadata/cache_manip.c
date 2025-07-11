@@ -1175,8 +1175,8 @@ int cache_vol_set_params(struct cmd_context *cmd,
 		log_warn("WARNING: Data redundancy could be lost with writeback caching of raid logical volume!");
 
 	if (lv_is_thin_pool_data(cache_lv)) {
-		log_warn("WARNING: thin pool data will not be automatically extended when cached.");
-		log_warn("WARNING: manual splitcache is required before extending thin pool data.");
+		log_warn("WARNING: Thin pool data will not be automatically extended when cached.");
+		log_warn("WARNING: Manual splitcache is required before extending thin pool data.");
 	}
 
 	cache_seg->chunk_size = chunk_size;

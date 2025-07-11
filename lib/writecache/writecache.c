@@ -325,13 +325,13 @@ static int _writecache_add_target_line(struct dev_manager *dm,
 	}
 
 	if (!_writecache_cleaner_supported && seg->writecache_settings.cleaner_set && seg->writecache_settings.cleaner) {
-		log_warn("WARNING: ignoring writecache setting \"cleaner\" which is not supported by kernel for LV %s.", seg->lv->name);
+		log_warn("WARNING: Ignoring writecache setting \"cleaner\" which is not supported by kernel for LV %s.", seg->lv->name);
 		seg->writecache_settings.cleaner = 0;
 		seg->writecache_settings.cleaner_set = 0;
 	}
 
 	if (!_writecache_max_age_supported && seg->writecache_settings.max_age_set) {
-		log_warn("WARNING: ignoring writecache setting \"max_age\" which is not supported by kernel for LV %s.", seg->lv->name);
+		log_warn("WARNING: Ignoring writecache setting \"max_age\" which is not supported by kernel for LV %s.", seg->lv->name);
 		seg->writecache_settings.max_age = 0;
 		seg->writecache_settings.max_age_set = 0;
 	}

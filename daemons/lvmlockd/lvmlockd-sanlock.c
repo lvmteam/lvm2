@@ -513,13 +513,13 @@ static int get_sizes_device(char *path, uint64_t *dev_size, int *sector_size, in
 	}
 
 	if (physical_block_size && (physical_block_size != 512) && (physical_block_size != 4096)) {
-		log_warn("WARNING: invalid block sizes physical %u logical %u for %s",
+		log_warn("WARNING: Invalid block sizes physical %u logical %u for %s",
 			 physical_block_size, logical_block_size, path);
 		physical_block_size = 0;
 	}
 
 	if (logical_block_size && (logical_block_size != 512) && (logical_block_size != 4096)) {
-		log_warn("WARNING: invalid block sizes physical %u logical %u for %s",
+		log_warn("WARNING: Invalid block sizes physical %u logical %u for %s",
 			 physical_block_size, logical_block_size, path);
 		logical_block_size = 0;
 	}
@@ -530,7 +530,7 @@ static int get_sizes_device(char *path, uint64_t *dev_size, int *sector_size, in
 	}
 
 	if (!physical_block_size || !logical_block_size) {
-		log_warn("WARNING: incomplete block size information physical %u logical %u for %s",
+		log_warn("WARNING: Incomplete block size information physical %u logical %u for %s",
 			 physical_block_size, logical_block_size, path);
 		if (!physical_block_size)
 			physical_block_size = logical_block_size;
@@ -539,7 +539,7 @@ static int get_sizes_device(char *path, uint64_t *dev_size, int *sector_size, in
 	}
 
 	if ((logical_block_size == 4096) && (physical_block_size == 512)) {
-		log_warn("WARNING: mixed block sizes physical %u logical %u (using 4096) for %s",
+		log_warn("WARNING: Mixed block sizes physical %u logical %u (using 4096) for %s",
 			 physical_block_size, logical_block_size, path);
 		*sector_size = 4096;
 		*align_size = 8 * ONE_MB;
@@ -548,7 +548,7 @@ static int get_sizes_device(char *path, uint64_t *dev_size, int *sector_size, in
 	}
 
 	if ((physical_block_size == 4096) && (logical_block_size == 512)) {
-		log_warn("WARNING: mixed block sizes physical %u logical %u (using 4096) for %s",
+		log_warn("WARNING: Mixed block sizes physical %u logical %u (using 4096) for %s",
 			 physical_block_size, logical_block_size, path);
 		*sector_size = 4096;
 		*align_size = 8 * ONE_MB;

@@ -4060,7 +4060,7 @@ merge:
 			continue;
 
 		if (_extents_overlap(ext, next)) {
-			log_warn("WARNING: region IDs " FMTu64 " and "
+			log_warn("WARNING: Region IDs " FMTu64 " and "
 				 FMTu64 " overlap. Some events will be "
 				 "counted twice.", ext->id, next->id);
 			/* merge larger extent into smaller */

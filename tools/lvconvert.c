@@ -1913,8 +1913,8 @@ static int _lvconvert_split_and_keep_cachevol(struct cmd_context *cmd,
 	 */
 	if ((cache_mode != CACHE_MODE_WRITETHROUGH) && lv_is_partial(lv_fast)) {
 		if (!arg_is_set(cmd, force_ARG)) {
-			log_warn("WARNING: writeback cache on %s is not complete and cannot be flushed.", display_lvname(lv_fast));
-			log_warn("WARNING: cannot detach writeback cache from %s without --force.", display_lvname(lv));
+			log_warn("WARNING: Writeback cache on %s is not complete and cannot be flushed.", display_lvname(lv_fast));
+			log_warn("WARNING: Cannot detach writeback cache from %s without --force.", display_lvname(lv));
 			log_error("Conversion aborted.");
 			return 0;
 		}
@@ -3687,8 +3687,8 @@ static int _cache_vol_attach(struct cmd_context *cmd,
 		goto_out;
 
 	if (cache_mode == CACHE_MODE_WRITEBACK) {
-		log_warn("WARNING: repairing a damaged cachevol is not yet possible.");
-		log_warn("WARNING: cache mode writethrough is suggested for safe operation.");
+		log_warn("WARNING: Repairing a damaged cachevol is not yet possible.");
+		log_warn("WARNING: Cache mode writethrough is suggested for safe operation.");
 		if (!arg_is_set(cmd, yes_ARG) &&
 		    yes_no_prompt("Continue using writeback without repair?") == 'n')
 			goto_out;
@@ -5723,8 +5723,8 @@ static int _lvconvert_detach_writecache(struct cmd_context *cmd,
 
 	if (lv_is_partial(lv_fast) || (!active_begin && arg_is_set(cmd, force_ARG))) {
 		if (!arg_is_set(cmd, force_ARG)) {
-			log_warn("WARNING: writecache on %s is not complete and cannot be flushed.", display_lvname(lv_fast));
-			log_warn("WARNING: cannot detach writecache from %s without --force.", display_lvname(lv));
+			log_warn("WARNING: Writecache on %s is not complete and cannot be flushed.", display_lvname(lv_fast));
+			log_warn("WARNING: Cannot detach writecache from %s without --force.", display_lvname(lv));
 			log_error("Conversion aborted.");
 			return 0;
 		}
@@ -6177,8 +6177,8 @@ skip_fs:
 					block_size, lbs_4k ? 4096 : 512, pbs_4k ? 4096 : 512);
 
 		if (block_size != 512) {
-			log_warn("WARNING: unable to detect a file system block size on %s", display_lvname(lv));
-			log_warn("WARNING: using a writecache block size larger than the file system block size may corrupt the file system.");
+			log_warn("WARNING: Unable to detect a file system block size on %s.", display_lvname(lv));
+			log_warn("WARNING: Using a writecache block size larger than the file system block size may corrupt the file system.");
 			if (!arg_is_set(cmd, yes_ARG) &&
 			    yes_no_prompt("Use writecache block size %u? [y/n]: ", block_size) == 'n')  {
 				log_error("Conversion aborted.");
@@ -6282,7 +6282,7 @@ static int _check_writecache_memory(struct cmd_context *cmd, struct logical_volu
 	 * confirm if writecache needs > 90% of main memory.
 	 */
 	if (need_mem_bytes >= (proc_mem_bytes / 2)) {
-		log_warn("WARNING: writecache size %s will use %llu GiB of system memory (%llu GiB).",
+		log_warn("WARNING: Writecache size %s will use %llu GiB of system memory (%llu GiB).",
 			  display_size(cmd, lv_fast->size),
 			  (unsigned long long)need_mem_gb,
 			  (unsigned long long)proc_mem_gb);

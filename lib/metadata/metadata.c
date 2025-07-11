@@ -2898,10 +2898,10 @@ static void _wipe_outdated_pvs(struct cmd_context *cmd, struct volume_group *vg)
 
 		if (mdas) {
 			dm_list_iterate_items(mda, mdas) {
-				log_warn("WARNING: wiping mda on outdated PV %s", dev_name(dev));
+				log_warn("WARNING: Wiping mda on outdated PV %s.", dev_name(dev));
 
 				if (!text_wipe_outdated_pv_mda(cmd, dev, mda))
-					log_warn("WARNING: failed to wipe mda on outdated PV %s", dev_name(dev));
+					log_warn("WARNING: Failed to wipe mda on outdated PV %s.", dev_name(dev));
 			}
 		}
 
@@ -2916,10 +2916,10 @@ static void _wipe_outdated_pvs(struct cmd_context *cmd, struct volume_group *vg)
 		lvmcache_set_ext_version(info, PV_HEADER_EXTENSION_VSN);
 		lvmcache_set_ext_flags(info, ext_flags);
 
-		log_warn("WARNING: wiping header on outdated PV %s", dev_name(dev));
+		log_warn("WARNING: Wiping header on outdated PV %s.", dev_name(dev));
 
 		if (!label_write(dev, label))
-			log_warn("WARNING: failed to wipe header on outdated PV %s", dev_name(dev));
+			log_warn("WARNING: Failed to wipe header on outdated PV %s.", dev_name(dev));
 
 		lvmcache_del(info);
 	}
@@ -3026,7 +3026,7 @@ int vg_write(struct volume_group *vg)
 
 		new_pvl->pv = pvl->pv;
 		dm_list_add(&vg->pv_write_list, &new_pvl->list);
-		log_warn("WARNING: updating PV header on %s for VG %s.", pv_dev_name(pvl->pv), vg->name);
+		log_warn("WARNING: Updating PV header on %s for VG %s.", pv_dev_name(pvl->pv), vg->name);
 	}
 
 	dm_list_iterate_items_safe(pvl, pvl_safe, &vg->pv_write_list) {
@@ -3041,7 +3041,7 @@ int vg_write(struct volume_group *vg)
 			continue;
 
 		if (!(mda_dev = mda_get_device(mda))) {
-			log_warn("WARNING: mda without device.");
+			log_warn("WARNING: Mda without device.");
 			continue;
 		}
 
@@ -3057,7 +3057,7 @@ int vg_write(struct volume_group *vg)
 		 * we see the old metadata.
 		 */
 		if (lvmcache_has_old_metadata(vg->cmd, vg->name, vgid, mda_dev)) {
-			log_warn("WARNING: updating old metadata to %u on %s for VG %s.",
+			log_warn("WARNING: Updating old metadata to %u on %s for VG %s.",
 				 vg->seqno, dev_name(mda_dev), vg->name);
 		}
 
@@ -4506,7 +4506,7 @@ void vg_write_commit_bad_mdas(struct cmd_context *cmd, struct volume_group *vg)
 		    (mda->bad_fields & BAD_MDA_INTERNAL) ||
 		    (mda->bad_fields & BAD_MDA_MAGIC) ||
 		    (mda->bad_fields & BAD_MDA_START)) {
-			log_warn("WARNING: not repairing bad metadata (0x%x) for mda%d on %s",
+			log_warn("WARNING: Not repairing bad metadata (0x%x) for mda%d on %s.",
 				 mda->bad_fields, mda->mda_num, dev_name(dev));
 			continue;
 		}
@@ -4525,23 +4525,23 @@ void vg_write_commit_bad_mdas(struct cmd_context *cmd, struct volume_group *vg)
 		if (mda->bad_fields & BAD_MDA_VERSION)
 			mda->ignore_bad_fields |= BAD_MDA_VERSION;
 
-		log_warn("WARNING: repairing bad metadata (0x%x) in mda%d at %llu on %s.",
+		log_warn("WARNING: Repairing bad metadata (0x%x) in mda%d at %llu on %s.",
 			 mda->bad_fields, mda->mda_num, (unsigned long long)mda->header_start, dev_name(dev));
 
 		if (!mda->ops->vg_write(vg->fid, vg, mda)) {
-			log_warn("WARNING: failed to write VG %s metadata to bad mda%d at %llu on %s.",
+			log_warn("WARNING: Failed to write VG %s metadata to bad mda%d at %llu on %s.",
 				 vg->name, mda->mda_num, (unsigned long long)mda->header_start, dev_name(dev));
 			continue;
 		}
 
 		if (!mda->ops->vg_precommit(vg->fid, vg, mda)) {
-			log_warn("WARNING: failed to precommit VG %s metadata to bad mda%d at %llu on %s.",
+			log_warn("WARNING: Failed to precommit VG %s metadata to bad mda%d at %llu on %s.",
 				 vg->name, mda->mda_num, (unsigned long long)mda->header_start, dev_name(dev));
 			continue;
 		}
 
 		if (!mda->ops->vg_commit(vg->fid, vg, mda)) {
-			log_warn("WARNING: failed to commit VG %s metadata to bad mda%d at %llu on %s.",
+			log_warn("WARNING: Failed to commit VG %s metadata to bad mda%d at %llu on %s.",
 				 vg->name, mda->mda_num, (unsigned long long)mda->header_start, dev_name(dev));
 			continue;
 		}
@@ -4852,7 +4852,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 		if (vg->seqno == vg_ret->seqno) {
 			release_vg(vg);
 		} else if (vg->seqno > vg_ret->seqno) {
-			log_warn("WARNING: ignoring metadata seqno %u on %s for seqno %u on %s for VG %s.",
+			log_warn("WARNING: Ignoring metadata seqno %u on %s for seqno %u on %s for VG %s.",
 				 vg_ret->seqno, dev_name(dev_ret),
 				 vg->seqno, dev_name(mda_dev), vg->name);
 			found_old_metadata = 1;
@@ -4861,7 +4861,7 @@ static struct volume_group *_vg_read(struct cmd_context *cmd,
 			dev_ret = mda_dev;
 			vg_fmtdata = NULL;
 		} else { /* vg->seqno < vg_ret->seqno */
-			log_warn("WARNING: ignoring metadata seqno %u on %s for seqno %u on %s for VG %s.",
+			log_warn("WARNING: Ignoring metadata seqno %u on %s for seqno %u on %s for VG %s.",
 				 vg->seqno, dev_name(mda_dev),
 				 vg_ret->seqno, dev_name(dev_ret), vg->name);
 			found_old_metadata = 1;
@@ -5029,7 +5029,7 @@ struct volume_group *vg_read(struct cmd_context *cmd, const char *vg_name, const
 	 * name, but if the vgs have the same lv name, activating those lvs will fail.
 	 */
 	if (activating && original_vgid_set && is_duplicate_vgname)
-		log_warn("WARNING: activating multiple VGs with the same name is dangerous and may fail.");
+		log_warn("WARNING: Activating multiple VGs with the same name is dangerous and may fail.");
 
 	if (!(vg = _vg_read(cmd, vg_name, vgid, 0, writing, &incorrect_pv_claim))) {
 		unlock_vg(cmd, NULL, vg_name);
@@ -5047,7 +5047,7 @@ struct volume_group *vg_read(struct cmd_context *cmd, const char *vg_name, const
 	_check_pv_ext(cmd, vg);
 
 	if (!vg_strip_outdated_historical_lvs(vg))
-		log_warn("WARNING: failed to strip outdated historical lvs.");
+		log_warn("WARNING: Failed to strip outdated historical lvs.");
 
 	/*
 	 * Check for missing devices in the VG.  In most cases a VG cannot be

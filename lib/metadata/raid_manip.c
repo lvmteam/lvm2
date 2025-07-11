@@ -2013,7 +2013,7 @@ static int _raid_reshape_remove_images(struct logical_volume *lv,
 		log_print_unless_silent("If that leaves the logical volume larger than %llu extents due to stripe rounding,",
 					(unsigned long long) extend_le_count);
 		log_print_unless_silent("you may want to grow the content afterwards (filesystem etc.)");
-		log_warn("WARNING: to remove freed stripes after the conversion has finished, you have to run \"lvconvert --stripes %u %s\"",
+		log_warn("WARNING: To remove freed stripes after the conversion has finished, you have to run \"lvconvert --stripes %u %s\".",
 			 new_stripes, display_lvname(lv));
 
 		if (!force) {
@@ -2095,7 +2095,7 @@ static int _raid_reshape_remove_images(struct logical_volume *lv,
 	else {
 		seg->stripe_size = stripe_size;
 		if (stripe_size_changed)
-			log_warn("WARNING: ignoring --stripesize on conversion of %s to 1 stripe.",
+			log_warn("WARNING: Ignoring --stripesize on conversion of %s to 1 stripe.",
 				 display_lvname(lv));
 	}
 
@@ -6478,11 +6478,11 @@ static int _conversion_options_allowed(const struct lv_segment *seg_from,
 	/* Can't reshape stripes or stripe size when performing a takeover! */
 	if (!_is_same_level(seg_from->segtype, *segtype_to)) {
 		if (*stripes && *stripes != _data_rimages_count(seg_from, seg_from->area_count))
-			log_warn("WARNING: ignoring --stripes option on takeover of %s (reshape afterwards).",
+			log_warn("WARNING: Ignoring --stripes option on takeover of %s (reshape afterwards).",
 				 display_lvname(seg_from->lv));
 
 		if (!seg_is_raid1(seg_from) && new_stripe_size_supplied)
-			log_warn("WARNING: ignoring --stripesize option on takeover of %s (reshape afterwards).",
+			log_warn("WARNING: Ignoring --stripesize option on takeover of %s (reshape afterwards).",
 				 display_lvname(seg_from->lv));
 	}
 

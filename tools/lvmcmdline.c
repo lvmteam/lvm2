@@ -3271,7 +3271,7 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 	locking_type = find_config_tree_int(cmd, global_locking_type_CFG, NULL);
 
 	if (locking_type == 3)
-		log_warn("WARNING: see lvmlockd(8) for information on using cluster/clvm VGs.");
+		log_warn("WARNING: See lvmlockd(8) for information on using cluster/clvm VGs.");
 
 	if ((locking_type == 0) || (locking_type == 5)) {
 		log_warn("WARNING: locking_type (%d) is deprecated, using --nolocking.", locking_type);

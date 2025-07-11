@@ -185,7 +185,7 @@ int pvscan_display_cmd(struct cmd_context *cmd, int argc, char **argv)
 	}
 
 	if (arg_is_set(cmd, exported_ARG) || arg_is_set(cmd, novolumegroup_ARG))
-		log_warn("WARNING: only considering physical volumes %s",
+		log_warn("WARNING: Only considering physical volumes %s.",
 			  arg_is_set(cmd, exported_ARG) ?
 			  "of exported volume group(s)" : "in no volume group");
 

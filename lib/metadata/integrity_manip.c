@@ -848,7 +848,7 @@ void lv_clear_integrity_recalculate_metadata(struct logical_volume *lv)
 	}
 
 	if (!vg_write(vg) || !vg_commit(vg)) {
-		log_warn("WARNING: failed to clear integrity recalculate flag for %s",
+		log_warn("WARNING: Failed to clear integrity recalculate flag for %s.",
 			 display_lvname(lv));
 	}
 }

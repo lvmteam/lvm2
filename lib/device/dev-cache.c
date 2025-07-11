@@ -1715,7 +1715,7 @@ static struct device *_dev_cache_get(struct cmd_context *cmd, const char *name, 
 		 * a warning to look for any other unknown cases.
 		 */
 		if (MAJOR(st.st_rdev) != cmd->dev_types->device_mapper_major) {
-			log_warn("WARNING: new device appeared %u:%u %s",
+			log_warn("WARNING: New device appeared %u:%u %s.",
 				  MAJOR(st.st_rdev), (MINOR(st.st_rdev)), name);
 		}
 #endif
@@ -1785,7 +1785,7 @@ static struct device *_dev_cache_get(struct cmd_context *cmd, const char *name, 
 		 * a warning to look for any other unknown cases.
 		 */
 		if (MAJOR(st.st_rdev) != cmd->dev_types->device_mapper_major) {
-			log_warn("WARNING: new device appeared %u:%u %s.",
+			log_warn("WARNING: New device appeared %u:%u %s.",
 				  MAJOR(st.st_rdev), MINOR(st.st_rdev), name);
 		}
 #endif

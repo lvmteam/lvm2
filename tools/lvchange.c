@@ -736,8 +736,8 @@ static int _lvchange_cache(struct cmd_context *cmd,
 		goto_out;
 
 	if (seg_is_cache(seg) && lv_is_cache_vol(seg->pool_lv) && (mode == CACHE_MODE_WRITEBACK)) {
-		log_warn("WARNING: repairing a damaged cachevol is not yet possible.");
-		log_warn("WARNING: cache mode writethrough is suggested for safe operation.");
+		log_warn("WARNING: Repairing a damaged cachevol is not yet possible.");
+		log_warn("WARNING: Cache mode writethrough is suggested for safe operation.");
 		if (!arg_is_set(cmd, yes_ARG) &&
 			yes_no_prompt("Continue using writeback without repair?") == 'n')
 			goto_out;

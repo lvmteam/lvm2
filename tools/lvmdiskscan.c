@@ -95,7 +95,7 @@ int lvmdiskscan(struct cmd_context *cmd, int argc __attribute__((unused)),
 	_pv_parts_found = 0;
 
 	if (arg_is_set(cmd, lvmpartition_ARG))
-		log_warn("WARNING: only considering LVM devices");
+		log_warn("WARNING: Only considering LVM devices.");
 
 	/* Call before using dev_iter which uses filters which want bcache data. */
 	label_scan(cmd);

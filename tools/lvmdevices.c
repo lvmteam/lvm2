@@ -826,7 +826,7 @@ int lvmdevices(struct cmd_context *cmd, int argc, char **argv)
 		cmd->filter_deviceid_skip = 1;
 
 		if (!cmd->filter->passes_filter(cmd, cmd->filter, dev, NULL)) {
-			log_warn("WARNING: adding device %s that is excluded: %s.",
+			log_warn("WARNING: Adding device %s that is excluded: %s.",
 				 dev_name(dev), dev_filtered_reason(dev));
 		}
 
@@ -896,7 +896,7 @@ int lvmdevices(struct cmd_context *cmd, int argc, char **argv)
 			goto_bad;
 
 		if (strncmp(devname, "/dev/", 5))
-			log_warn("WARNING: to remove a device by device id, include --deviceidtype.");
+			log_warn("WARNING: To remove a device by device id, include --deviceidtype.");
 
 		/*
 		 * No filter because we always want to allow removing a device
@@ -948,7 +948,7 @@ int lvmdevices(struct cmd_context *cmd, int argc, char **argv)
 		}
 
 		if (!strncmp(idname, "/dev/", 5))
-			log_warn("WARNING: to remove a device by name, do not include --deviceidtype.");
+			log_warn("WARNING: To remove a device by name, do not include --deviceidtype.");
 
 		if (!(du = get_du_for_device_id(cmd, idtype, idname))) {
 			log_error("No devices file entry with device id %s %s.", idtype_str, idname);

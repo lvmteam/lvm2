@@ -84,7 +84,7 @@ static int _process_raid_event(struct dso_state *state, char *params, const char
 		 */
 		if (!state->warned && status->insync_regions < status->total_regions) {
 			state->warned = 1;
-			log_warn("WARNING: waiting for resynchronization to finish "
+			log_warn("WARNING: Waiting for resynchronization to finish "
 				 "before initiating repair on RAID device %s.", device);
 			/* Fall through to allow lvconvert to run. */
 		}

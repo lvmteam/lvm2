@@ -1771,7 +1771,7 @@ int lockd_global_create(struct cmd_context *cmd, const char *def_mode, const cha
 	if (cmd->lockd_gl_disable) {
 		log_debug("lockd global create disabled %s", def_mode ?: "");
 		if (def_mode && !strcmp(def_mode, "ex"))
-			log_warn("WARNING: skipping global lock in lvmlockd.");
+			log_warn("WARNING: Skipping global lock in lvmlockd.");
 		goto out;
 	}
 
@@ -2043,7 +2043,7 @@ int lockd_global(struct cmd_context *cmd, const char *def_mode)
 	if (cmd->lockd_gl_disable) {
 		log_debug("lockd global disabled %s", def_mode ?: "");
 		if (def_mode && !strcmp(def_mode, "ex"))
-			log_warn("WARNING: skipping global lock in lvmlockd.");
+			log_warn("WARNING: Skipping global lock in lvmlockd.");
 		goto allow;
 	}
  req:
@@ -2323,7 +2323,7 @@ int lockd_vg(struct cmd_context *cmd, const char *vg_name, const char *def_mode,
 	if (cmd->lockd_vg_disable) {
 		log_debug("lockd VG disabled %s", def_mode ?: "");
 		if (def_mode && !strcmp(def_mode, "ex"))
-			log_warn("WARNING: skipping VG lock in lvmlockd.");
+			log_warn("WARNING: Skipping VG lock in lvmlockd.");
 		return 1;
 	}
 
@@ -2835,7 +2835,7 @@ int lockd_lv_name(struct cmd_context *cmd, struct volume_group *vg,
 			if (!_query_lv(cmd, vg, lv_name, lv_uuid, lock_args, &ex, &sh))
 				return 1;
 			if (sh) {
-				log_warn("WARNING: shared LV may require refresh on other hosts where it is active.");
+				log_warn("WARNING: Shared LV may require refresh on other hosts where it is active.");
 				return 1;
 			}
 		}
@@ -2845,7 +2845,7 @@ int lockd_lv_name(struct cmd_context *cmd, struct volume_group *vg,
 	if (cmd->lockd_lv_disable) {
 		log_debug("lockd_lv disabled %s %s/%s", def_mode ?: "", vg->name, lv_name);
 		if (def_mode && strcmp(def_mode, "un"))
-			log_warn("WARNING: skipping LV lock in lvmlockd.");
+			log_warn("WARNING: Skipping LV lock in lvmlockd.");
 		return 1;
 	}
 
@@ -2969,7 +2969,7 @@ int lockd_lv_name(struct cmd_context *cmd, struct volume_group *vg,
 
 		if (lockd_flags & LD_RF_SH_EXISTS) {
 			if (flags & LDLV_SH_EXISTS_OK) {
-				log_warn("WARNING: extending LV with a shared lock, other hosts may require LV refresh.");
+				log_warn("WARNING: Extending LV with a shared lock, other hosts may require LV refresh.");
 				cmd->lockd_lv_sh_for_ex = 1;
 				return 1;
 			}

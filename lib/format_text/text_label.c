@@ -332,7 +332,7 @@ static int _read_mda_header_and_metadata(const struct format_type *fmt,
  retry:
 
 	if (!(mdah = raw_read_mda_header(fmt, &mdac->area, (mda->mda_num == 1), 0, bad_fields))) {
-		log_warn("WARNING: bad metadata header on %s at %llu.",
+		log_warn("WARNING: Bad metadata header on %s at %llu.",
 			 dev_name(mdac->area.dev),
 			 (unsigned long long)mdac->area.start);
 		mda->header_start = mdac->area.start;
@@ -389,7 +389,7 @@ static int _read_mda_header_and_metadata(const struct format_type *fmt,
 			goto retry;
 		}
 
-		log_warn("WARNING: bad metadata text on %s in mda%d",
+		log_warn("WARNING: Bad metadata text on %s in mda%d.",
 			 dev_name(mdac->area.dev), mda->mda_num);
 		*bad_fields |= BAD_MDA_TEXT;
 		return 0;
@@ -574,8 +574,8 @@ static int _text_read(struct cmd_context *cmd, struct labeller *labeller, struct
 			 * used by vg_read/vg_write, but keep track of it in
 			 * lvmcache for repair.
 			 */
-			log_warn("WARNING: scanning %s mda1 failed to read metadata summary.", dev_name(dev));
-			log_warn("WARNING: repair VG metadata on %s with vgck --updatemetadata.", dev_name(dev));
+			log_warn("WARNING: Scanning %s mda1 failed to read metadata summary.", dev_name(dev));
+			log_warn("WARNING: Repair VG metadata on %s with vgck --updatemetadata.", dev_name(dev));
 
 			dm_list_del(&mda1->list);
 			mda1->bad_fields = bad_fields;
@@ -624,8 +624,8 @@ static int _text_read(struct cmd_context *cmd, struct labeller *labeller, struct
 			 * used by vg_read/vg_write, but keep track of it in
 			 * lvmcache for repair.
 			 */
-			log_warn("WARNING: scanning %s mda2 failed to read metadata summary.", dev_name(dev));
-			log_warn("WARNING: repair VG metadata on %s with vgck --updatemetadata.", dev_name(dev));
+			log_warn("WARNING: Scanning %s mda2 failed to read metadata summary.", dev_name(dev));
+			log_warn("WARNING: Repair VG metadata on %s with vgck --updatemetadata.", dev_name(dev));
 
 			dm_list_del(&mda2->list);
 			mda2->bad_fields = bad_fields;

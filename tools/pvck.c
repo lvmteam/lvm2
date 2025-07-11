@@ -596,9 +596,9 @@ static int _dump_all_text(struct cmd_context *cmd, struct settings *set, const c
 		 */
 
 		if (!_text_buf_parsable(text_buf, text_size))
-			log_warn("WARNING: parse error for metadata at %llu", (unsigned long long)(mda_offset + buf_off));
+			log_warn("WARNING: Parse error for metadata at %llu.", (unsigned long long)(mda_offset + buf_off));
 		if (bad_end)
-			log_warn("WARNING: unexpected terminating bytes for metadata at %llu", (unsigned long long)(mda_offset + buf_off));
+			log_warn("WARNING: Unexpected terminating bytes for metadata at %llu.", (unsigned long long)(mda_offset + buf_off));
 
 		if (arg_is_set(cmd, verbose_ARG)) {
 			char *str1, *str2;
@@ -636,7 +636,7 @@ static int _dump_all_text(struct cmd_context *cmd, struct settings *set, const c
 	}
 
 	if (multiple_vgs)
-		log_warn("WARNING: metadata from multiple VGs was found.");
+		log_warn("WARNING: Metadata from multiple VGs was found.");
 
 	if (fp) {
 		if (fflush(fp))
@@ -1998,7 +1998,7 @@ static int _get_pv_info_from_metadata(struct cmd_context *cmd, struct settings *
 	}
 
 	if (pvid_cur_valid && set->pvid_set && memcmp(&pvid_cur, &pvid_set, ID_LEN)) {
-		log_warn("WARNING: existing PV UUID %s does not match pv_uuid setting %s.",
+		log_warn("WARNING: Existing PV UUID %s does not match pv_uuid setting %s.",
 			 pvid_cur, pvid_set);
 
 		memcpy(&pvid_use, &pvid_set, ID_LEN);
@@ -2287,7 +2287,7 @@ static int _repair_pv_header(struct cmd_context *cmd, const char *repair,
 		log_warn("WARNING: PV will have no metadata with zero metadata areas.");
 
 	} else if (!mda_count) {
-		log_warn("WARNING: no previous metadata areas found on device.");
+		log_warn("WARNING: No previous metadata areas found on device.");
 
 		if (arg_is_set(cmd, yes_ARG) ||
 		    yes_no_prompt("Should a metadata area be included? ") == 'y') {
@@ -2908,7 +2908,7 @@ static int _check_metadata_file(struct cmd_context *cmd, struct metadata_file *m
 	if (text_buf[text_size-1] != '\0' ||
 	    text_buf[text_size-2] != '\n' ||
 	    text_buf[text_size-3] != '\n')
-		log_warn("WARNING: unexpected final bytes of raw metadata, expected \\n\\n\\0.");
+		log_warn("WARNING: Unexpected final bytes of raw metadata, expected \\n\\n\\0.");
 
 	if (_check_vgname_start(text_buf, &namelen)) {
 		if (!(vgid = strstr(text_buf, "id = "))) {
@@ -2919,7 +2919,7 @@ static int _check_metadata_file(struct cmd_context *cmd, struct metadata_file *m
 		return 1;
 	}
 
-	log_warn("WARNING: file data does not begin with a VG name and may be invalid.");
+	log_warn("WARNING: File data does not begin with a VG name and may be invalid.");
 
 	if (!arg_is_set(cmd, yes_ARG) &&
 	    yes_no_prompt("Write input file data to disk?") == 'n') {

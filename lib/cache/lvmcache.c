@@ -314,7 +314,7 @@ static struct lvmcache_vginfo *_vginfo_lookup(const char *vgname, const char *vg
 	if (vgid_arg) {
 		if ((vginfo = dm_hash_lookup(_vgid_hash, vgid))) {
 			if (vgname && strcmp(vginfo->vgname, vgname)) {
-				log_warn("WARNING: lookup found duplicate VGID %s for VGs %s and %s.", vgid, vginfo->vgname, vgname);
+				log_warn("WARNING: Lookup found duplicate VGID %s for VGs %s and %s.", vgid, vginfo->vgname, vgname);
 				if ((vginfo = dm_hash_lookup(_vgname_hash, vgname))) {
 					if (!memcmp(vginfo->vgid, vgid, ID_LEN))
 						return vginfo;
@@ -1890,7 +1890,7 @@ static int _lvmcache_update_vgname(struct cmd_context *cmd,
 
 	vginfo = lvmcache_vginfo_from_vgid(vgid);
 	if (vginfo && strcmp(vginfo->vgname, vgname)) {
-		log_warn("WARNING: fix duplicate VGID %s for VGs %s and %s (see vgchange -u).", vgid_dashed, vgname, vginfo->vgname);
+		log_warn("WARNING: Fix duplicate VGID %s for VGs %s and %s (see vgchange -u).", vgid_dashed, vgname, vginfo->vgname);
 		vginfo = lvmcache_vginfo_from_vgname(vgname, NULL);
 		if (vginfo && memcmp(vginfo->vgid, vgid, ID_LEN)) {
 			log_error("Ignoring %s with conflicting VG info %s %s.", dev_name(info->dev), vgid_dashed, vgname);
@@ -1953,7 +1953,7 @@ static int _lvmcache_update_vgname(struct cmd_context *cmd,
 
 				log_warn("WARNING: VG name %s is used by VGs %s and %s.",
 					 vgname, vgid_dashed, other_dashed);
-				log_warn("WARNING: fix duplicate VG names with vgrename uuid, or vgrename --devices");
+				log_warn("WARNING: Fix duplicate VG names with vgrename uuid, or vgrename --devices.");
 			}
 
 			if (!vginfo_is_allowed && !other_is_allowed) {
@@ -2227,7 +2227,7 @@ int lvmcache_update_vgname_and_id(struct cmd_context *cmd, struct lvmcache_info 
 		 */
 
 		if ((vginfo->mda_size != vgsummary->mda_size) || (vginfo->mda_checksum != vgsummary->mda_checksum)) {
-			log_warn("WARNING: scan of VG %s from %s mda%d found mda_checksum %x mda_size %zu vs %x %zu",
+			log_warn("WARNING: Scan of VG %s from %s mda%d found mda_checksum %x mda_size %zu vs %x %zu.",
 				 vgname, dev_name(info->dev), vgsummary->mda_num,
 				 vgsummary->mda_checksum, vgsummary->mda_size,
 				 vginfo->mda_checksum, vginfo->mda_size);
@@ -2312,7 +2312,7 @@ void lvmcache_update_vg_from_read(struct volume_group *vg, int *incorrect_pv_cla
 		if (found)
 			continue;
 
-		log_warn("WARNING: outdated PV %s seqno %u has been removed in current VG %s seqno %u.",
+		log_warn("WARNING: Outdated PV %s seqno %u has been removed in current VG %s seqno %u.",
 			 dev_name(info->dev), info->summary_seqno, vg->name, vginfo->seqno);
 
 		if (!_outdated_warning++)
