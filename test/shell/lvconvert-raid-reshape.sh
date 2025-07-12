@@ -10,20 +10,18 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA2110-1301 USA
 
-
-
 LVM_SKIP_LARGE_TESTS=0
 
 . lib/inittest --skip-with-lvmpolld
 
 case "$(uname -r)" in
-5.19*) skip "Skippen test that kills this kernel" ;;
+5.19*) skip "Skipping test that crashes this kernel version" ;;
 esac
 
 which mkfs.ext4 || skip
 aux have_raid 1 14 0 || skip
 
-test "$(aux total_mem)" -gt 1048576 || skip "Not enough RAM for this test"
+test "$(aux total_mem)" -gt 1048576 || skip "Insufficient RAM for this test"
 
 if [ $LVM_SKIP_LARGE_TESTS -eq 0 ]
 then

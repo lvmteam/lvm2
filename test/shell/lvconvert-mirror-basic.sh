@@ -51,7 +51,6 @@ test_lvconvert() {
 	local finish_log_type=$4
 	local start_log_count
 	local finish_log_count
-	local max_log_count
 	local alloc=""
 	local active="-aey"
 	local i
@@ -69,11 +68,6 @@ test_lvconvert() {
 
 	start_log_count=$(log_name_to_count $start_log_type)
 	finish_log_count=$(log_name_to_count $finish_log_type)
-	if [ $finish_log_count -gt $start_log_count ]; then
-		max_log_count=$finish_log_count
-	else
-		max_log_count=$start_log_count
-	fi
 
 	if [ $start_count -gt 0 ]; then
 		# Are there extra devices for the log or do we overlap
