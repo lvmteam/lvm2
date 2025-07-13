@@ -1162,6 +1162,7 @@ static struct dm_ioctl *_flatten(struct dm_task *dmt, unsigned repeat_count)
 	struct target *t;
 	struct dm_target_msg *tmsg;
 	size_t len = sizeof(struct dm_ioctl);
+	size_t newname_len = 0, message_len = 0, geometry_len = 0;
 	char *b, *e;
 	int count = 0;
 
@@ -1210,14 +1211,20 @@ static struct dm_ioctl *_flatten(struct dm_task *dmt, unsigned repeat_count)
 		return NULL;
 	}
 
-	if (dmt->newname)
-		len += strlen(dmt->newname) + 1;
+	if (dmt->newname) {
+		newname_len = strlen(dmt->newname) + 1;
+		len += newname_len;
+	}
 
-	if (dmt->message)
-		len += sizeof(struct dm_target_msg) + strlen(dmt->message) + 1;
+	if (dmt->message) {
+		message_len = strlen(dmt->message) + 1;
+		len += sizeof(struct dm_target_msg) + message_len;
+	}
 
-	if (dmt->geometry)
-		len += strlen(dmt->geometry) + 1;
+	if (dmt->geometry) {
+		geometry_len = strlen(dmt->geometry) + 1;
+		len += geometry_len;
+	}
 
 	/*
 	 * Give len a minimum size so that we have space to store
@@ -1342,16 +1349,16 @@ static struct dm_ioctl *_flatten(struct dm_task *dmt, unsigned repeat_count)
 				goto_bad;
 
 	if (dmt->newname)
-		strcpy(b, dmt->newname);
+		memcpy(b, dmt->newname, newname_len);
 
 	if (dmt->message) {
 		tmsg = (struct dm_target_msg *) b;
 		tmsg->sector = dmt->sector;
-		strcpy(tmsg->message, dmt->message);
+		memcpy(tmsg->message, dmt->message, message_len);
 	}
 
 	if (dmt->geometry)
-		strcpy(b, dmt->geometry);
+		memcpy(b, dmt->geometry, geometry_len);
 
 	return dmi;
 
