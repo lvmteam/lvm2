@@ -1,7 +1,9 @@
 Version 2.03.34 - 
 ==================
+  Use glibc standard functions htoX, Xtoh functions for endian conversion.
+  Fix structure copying within sanlock's release_rename().
   Fix autoactivation on top of loop dev PVs to trigger once for change uevents.
-  lvconvert: reject raid1 LV non-changing image requests
+  lvconvert: reject raid1 and mirror LV non-changing image requests
   Fix support for lvcreate -T --setautoactivation.
   Add lvm.conf global/lvresize_fs_helper_executable.
   Enable lvm to use persistent reservations on a VG.
