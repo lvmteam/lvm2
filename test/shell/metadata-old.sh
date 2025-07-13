@@ -48,7 +48,7 @@ lvremove $vg/$lv2
 aux enable_dev "$dev2"
 
 pvs 2>&1 | tee out
-grep "ignoring metadata seqno" out
+grep -i "Ignoring metadata seqno" out
 pvs "$dev1"
 pvs "$dev2"
 pvs "$dev3"
@@ -60,7 +60,7 @@ not lvs $vg/$lv2
 vgck --updatemetadata $vg
 
 pvs 2>&1 | tee out
-not grep "ignoring metadata seqno" out
+not grep -i "Ignoring metadata seqno" out
 pvs "$dev1"
 pvs "$dev2"
 pvs "$dev3"
@@ -89,7 +89,7 @@ lvremove $vg/$lv2
 aux enable_dev "$dev2"
 
 pvs 2>&1 | tee out
-grep "ignoring metadata seqno" out
+grep -i "Ignoring metadata seqno" out
 pvs "$dev1"
 pvs "$dev2"
 pvs "$dev3"
@@ -101,7 +101,7 @@ not lvs $vg/$lv2
 lvcreate -n $lv3 -l1 -an $vg
 
 pvs 2>&1 | tee out
-not grep "ignoring metadata seqno" out
+not grep -i "Ignoring metadata seqno" out
 pvs "$dev1"
 pvs "$dev2"
 pvs "$dev3"
@@ -145,7 +145,7 @@ dd if=meta2 of="$dev2"
 dd if=meta3 of="$dev3"
 
 pvs 2>&1 | tee out
-grep "ignoring metadata seqno" out
+grep -i "Ignoring metadata seqno" out
 pvs "$dev1"
 pvs "$dev2"
 pvs "$dev3"
@@ -162,7 +162,7 @@ lvs $vg/$lv3
 lvcreate -n $lv4 -l1 -an $vg
 
 pvs 2>&1 | tee out
-not grep "ignoring metadata seqno" out
+not grep -i "Ignoring metadata seqno" out
 pvs "$dev1"
 pvs "$dev2"
 pvs "$dev3"

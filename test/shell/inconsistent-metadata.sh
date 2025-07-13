@@ -38,7 +38,7 @@ makeold
 
 # reports old metadata
 vgs $vg 2>&1 | tee cmd.out
-grep "ignoring metadata" cmd.out
+grep -i "Ignoring metadata" cmd.out
 check lv_field $vg/resized lv_size "8.00m"
 
 # corrects old metadata
@@ -46,7 +46,7 @@ lvcreate -l1 -an $vg
 
 # no old report
 vgs $vg 2>&1 | tee cmd.out
-not grep "ignoring metadata" cmd.out
+not grep -i "Ignoring metadata" cmd.out
 check lv_field $vg/resized lv_size "8.00m"
 
 

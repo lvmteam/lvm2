@@ -215,7 +215,7 @@ aux enable_dev "$dev2"
 
 # Both old and bad metadata are reported.
 pvs 2>&1 | tee out
-grep "ignoring metadata seqno" out
+grep -i "Ignoring metadata seqno" out
 grep "Checksum error" out
 pvs "$dev1"
 pvs "$dev2"
@@ -229,7 +229,7 @@ not lvs $vg/$lv2
 vgck --updatemetadata $vg
 
 pvs 2>&1 | tee out
-not grep "ignoring metadata seqno" out
+not grep -i "Ignoring metadata seqno" out
 not grep "Checksum error" out
 pvs "$dev1"
 pvs "$dev2"

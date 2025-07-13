@@ -53,7 +53,7 @@ dd if=meta1-bad of="$dev1" bs=4k seek=1
 
 # pvs reports bad metadata header
 pvs 2>&1 | tee out
-grep "bad metadata header" out
+grep -i "Bad metadata header" out
 
 pvs "$dev1"
 pvs "$dev2"
@@ -67,7 +67,7 @@ lvcreate -l1 $vg
 vgck --updatemetadata $vg
 
 pvs 2>&1 | tee out
-not grep "bad metadata header" out
+not grep -i "Bad metadata header" out
 
 pvs "$dev1"
 pvs "$dev2"
