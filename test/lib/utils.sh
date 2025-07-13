@@ -193,10 +193,11 @@ STACKTRACE() {
 			echo "<======== Tree ========>"
 			dmsetup ls --tree | sed -e "s,^,## DMTREE:   ,"
 			echo "<======== Recursive list of $DM_DEV_DIR ========>"
-			ls -lR -I bsg -I bus -I char -Idma_heap -I dri \
+			ls -lR -I accel -I bsg -I bus -I char -I cpu \
+			   -I dma_heap -I dri \
 			   -I hugepages -I input -I mqueue \
 			   -I net -I pts -I shm -I snd \
-			   -I tty?* -I usb -I vfio -I vcs?* \
+			   -I tty?* -I usb -I v4l -I vfio -I vcs?* \
 			   -I virtio-ports \
 			   "$DM_DEV_DIR" | sed -e "s,^,## LS_LR:	,"
 			echo "<======== Udev DB content ========>"
