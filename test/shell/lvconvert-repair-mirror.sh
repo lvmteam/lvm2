@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright (C) 2016 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2016-2025 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,
 # modify, copy, or redistribute it subject to the terms and conditions
@@ -27,24 +27,24 @@ aux lvmconf 'allocation/mirror_logs_require_separate_pvs = 1'
 
 aux prepare_vg 5
 
-################### Check lost mirror leg #################
-#
-# NOTE: using  --regionsize 1M  has  major impact on my box
-# on read performance while mirror is synchronized
-# with the default 512K - my C2D T61 reads just couple MB/s!
-#
-lvcreate -aey --type mirror -L10 --regionsize 1M -m1 -n $lv1 $vg "$dev1" "$dev2" "$dev3"
-"$MKFS" "$DM_DEV_DIR/$vg/$lv1"
-mkdir "$MOUNT_DIR"
+mkdir -p "$MOUNT_DIR"
 
-aux delay_dev "$dev2" 0 500 "$(get first_extent_sector "$dev2"):"
-aux delay_dev "$dev4" 0 500 "$(get first_extent_sector "$dev4"):"
+trap 'cleanup_mounted_and_teardown' EXIT
+
+################### Check repair for lost mirror leg and log #################
+#
+for i in "$dev2" "$dev3"
+do
+
+lvcreate -aey --type mirror -L10 --regionsize 64k -m1 -n $lv1 $vg "$dev1" "$dev2" "$dev3"
+"$MKFS" "$DM_DEV_DIR/$vg/$lv1"
+
+aux delay_dev "$i" 0 10 "$(get first_extent_sector "$i"):"
 #
 # Enforce synchronization
 # ATM requires unmounted/unused LV??
 #
 lvchange --yes --resync $vg/$lv1
-trap 'cleanup_mounted_and_teardown' EXIT
 mount "$DM_DEV_DIR/$vg/$lv1" "$MOUNT_DIR"
 
 # run 'dd' operation during failure of 'mlog/mimage' device
@@ -57,13 +57,12 @@ PERCENT=${PERCENT%%\.*}  # cut decimal
 test "$PERCENT" -lt 50 || skip
 #lvs -a -o+devices $vg
 
-#aux disable_dev "$dev3"
-aux disable_dev "$dev2"
+aux disable_dev "$i"
 
 lvconvert --yes --repair $vg/$lv1
-lvs -a $vg
 
-aux enable_dev "$dev2"
+aux enable_dev "$i"
+vgck --updatemetadata $vg
 
 wait
 # dd MAY NOT HAVE produced any error message
@@ -73,5 +72,6 @@ lvs -a -o+devices $vg
 umount "$MOUNT_DIR"
 fsck -n "$DM_DEV_DIR/$vg/$lv1"
 
-aux enable_dev "$dev4"
 lvremove -ff $vg
+
+done
