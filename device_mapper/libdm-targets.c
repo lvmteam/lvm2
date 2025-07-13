@@ -335,11 +335,19 @@ int dm_get_status_cache(struct dm_pool *mem, const char *params,
 
 	/* Read in policy args */
 	pp = p;
-	if (!(p = _skip_fields(p, 1)) ||
-	    !(s->policy_name = dm_pool_zalloc(mem, (p - pp))))
+	if (!(p = _skip_fields(p, 1)))
+		goto_bad;
+
+	i = p - pp;
+	if ((i < 1) ||
+	    !(s->policy_name = dm_pool_zalloc(mem, i)))
+		goto_bad;
+
+	dm_strncpy(s->policy_name, pp, i);
+
+	if (sscanf(p, "%d", &s->policy_argc) != 1)
 		goto bad;
-	if (sscanf(pp, "%s %d", s->policy_name, &s->policy_argc) != 2)
-		goto bad;
+
 	if (s->policy_argc &&
 	    (!(s->policy_argv = dm_pool_zalloc(mem, sizeof(char *) * s->policy_argc)) ||
 	     !(p = _skip_fields(p, 1)) ||
