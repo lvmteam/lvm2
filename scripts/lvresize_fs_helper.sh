@@ -25,13 +25,23 @@ logmsg() {
 }
 
 btrfs_devid() {
-	local devpath="$1"
-	local devid
+	local devpath=$1
+	local devid devinfo tmp_devpath
+	local old_IFS=$IFS
 
-	devpath="$(readlink "$devpath")"
+	devpath=$(readlink -e "$devpath")
 
-	# It could be a multi-devices btrfs so call grep.
-	devid="$(LC_ALL=C btrfs filesystem show "$devpath" | grep "$devpath"$ )"
+	IFS=$'\n'
+	# It could be a multi-devices btrfs, filter the output.
+	# Device in `btrfs filesystem show $devpath` could be /dev/mapper/* so call `readlink -e`
+	for devinfo in $(LC_ALL=C btrfs filesystem show "$devpath" | grep -P '\tdevid'); do
+		tmp_devpath=$(readlink -e "$(echo "$devinfo" | awk '{print $8}')")
+		if [ "$tmp_devpath" = "$devpath" ]; then
+			devid="$(echo "$devinfo" | awk '{print $2}')"
+			break
+		fi
+	done
+	IFS=$old_IFS
 
 	# if DM_DEV_DIR is not /dev/ e.g /tmp, output of btrfs filesystem show would be like:
 	# Label: none  uuid: d17f6974-267f-4140-8d71-83d4afd36a72
@@ -40,14 +50,12 @@ btrfs_devid() {
 	#
 	# But the VOLUME here is /tmp/mapper/LVMTEST120665vg-LV1
 	if [ -z "$devid" ];then
-		tmp_path="${devpath/#${DM_DEV_DIR}//dev}"
-		devid="$(LC_ALL=C btrfs filesystem show "$devpath" | grep "$tmp_path"$)"
+		tmp_devpath=${devpath/#${DM_DEV_DIR}//dev}
+		devid=$(LC_ALL=C btrfs filesystem show "$devpath" | grep "$tmp_devpath"$)
 		devid=${devid##*devid}
+		devid=${devid%%size*}
+		devid=$(echo "$devid" |sed 's/^[ \t]*//g'|sed 's/[ \t]*$'//g)
 	fi
-
-	devid=${devid##*devid}
-	devid=${devid%%size*}
-	devid="$(echo "$devid" |sed 's/^[ \t]*//g'|sed 's/[ \t]*$'//g)"
 
 	echo "$devid"
 }
