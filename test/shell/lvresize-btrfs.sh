@@ -52,32 +52,43 @@ scrub_btrfs() {
 	btrfs scrub start -B "$1"
 }
 
+btrfs_path_major_minor()
+{
+	local STAT
+
+	STAT=$(stat --format "echo \$((0x%t)):\$((0x%T))" "$(readlink -e "$1")") || \
+		die "Cannot get major:minor for \"$1\"."
+	eval "$STAT"
+}
+
 btrfs_devid() {
 	local devpath=$1
-	local devid
+	local devid devinfo major_minor path_major_minor
+	local IFS=$'\n'
 
-	devpath=$(readlink "$devpath")
+	major_minor=$(btrfs_path_major_minor "$devpath")
 
-	# It could be a multi-device BTRFS filesystem, so call grep.
-	devid=$(LC_ALL=C btrfs filesystem show "$devpath" | grep "$devpath"$ || true)
+	# It could be a multi-devices btrfs, filter the output.
+	# Device in `btrfs filesystem show $devpath` could be /dev/mapper/* so call `readlink -e`
+	for devinfo in $(LC_ALL=C btrfs filesystem show "$devpath"); do
+		case "$devinfo" in
+		*devid*)
+			path_major_minor=$(btrfs_path_major_minor "${devinfo#* path }")
+			# compare Major:Minor
+			[ "$major_minor" = "$path_major_minor" ] || continue
+			devid=${devinfo##*devid}
+			devid=${devid%%size*}
 
-	# if DM_DEV_DIR is not /dev/ e.g /tmp, output of btrfs filesystem show would be like:
-	# Label: none  uuid: d17f6974-267f-4140-8d71-83d4afd36a72
-	# 		 Total devices 1 FS bytes used 144.00KiB
-	# 		 devid    1 size 256.00MiB used 16.75MiB path /dev/mapper/LVMTEST120665vg-LV1
-	#
-	# But the VOLUME here is /tmp/mapper/LVMTEST120665vg-LV1
-	if [ -z "$devid" ];then
-		tmp_path=${devpath/#${DM_DEV_DIR}//dev}
-		devid=$(LC_ALL=C btrfs filesystem show "$devpath" | grep "$tmp_path"$)
-		devid=${devid##*devid}
-	fi
+			# trim all prefix and postfix spaces from devid
+			devid=${devid#"${devid%%[![:space:]]*}"}
+			echo "${devid%"${devid##*[![:space:]]}"}"
+			return 0
+			;;
+		esac
+	done
 
-	devid=${devid##*devid}
-	devid=${devid%%size*}
-	devid=$(echo "$devid" |sed 's/^[ \t]*//g'|sed 's/[ \t]*$'//g)
-
-	echo "$devid"
+	# fail, devid not found
+	return 1
 }
 
 # in MiB
