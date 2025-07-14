@@ -490,7 +490,11 @@ void fs_unlock(void)
 {
 	/* Do not allow syncing device name with suspended devices */
 	if (!dm_get_suspended_counter()) {
-		log_debug_activation("Syncing device names");
+		if (!dm_udev_get_sync_support())
+			log_debug_activation("Not syncing device names (--noudevsync ?  %d).",
+					     dm_udev_get_checking());
+		else
+			log_debug_activation("Syncing device names");
 		/* Wait for all processed udev devices */
 		if (!dm_udev_wait(_fs_cookie))
 			stack;
