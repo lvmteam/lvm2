@@ -18,11 +18,15 @@
 # - size changes are being reported asynchronously by the kernel, which requires polling for it for split seconds
 #
 
-LVM_SKIP_LARGE_TESTS=1
-SKIP_FSCK=1
-SKIP_RESIZE=0
+LVM_SKIP_LARGE_TESTS=${LVM_SKIP_LARGE_TESTS:-1}
+SKIP_FSCK=${SKIP_FSCK:-1}
+SKIP_RESIZE=${SKIP_RESIZE:-0}
 
-UDEVOPTS="--noudevsync"
+# With the use of 'hack' --noudevsync we need to also make sure our device paths are
+# present in the system, otherwise we will not be able to open created LVs
+# since we are not wait for udev to create them.
+# FIXME: it would be better to not need this
+declare -a UDEVOPTS=( "--noudevsync" "--config" "activation/verify_udev_operations=1" )
 
 # Timeout in seconds to check for size updates happening during/after.
 CHECK_SIZE_TIMEOUT=5
@@ -84,7 +88,7 @@ function _get_pvs
 		;;
 	*)
 		npvs=20
-		pvsz=16
+		pvsz=6
 		;;
 	esac
 }
@@ -222,7 +226,7 @@ function _reshape_layout
 	# FIXME: replace this hack with --noudevsync with slowdown of 'write'
 	#        areas used for reshape operation.
 	#   ATM: command used to be 'sleeping' waiting for a cookie - delayed by udev
-	lvconvert -y --ty "$raid_type" --stripes "$data_stripes" $UDEVOPTS $vg/$lv "$@"
+	lvconvert -y --ty "$raid_type" --stripes "$data_stripes" "${UDEVOPTS[@]}" $vg/$lv "$@"
 	check lv_first_seg_field $vg/$lv1 segtype "$raid_type"
 
 	if [ "$wait_for_reshape" -eq 1 ]
@@ -349,9 +353,9 @@ function _test
 	# Reshape it to one more stripe and 256K stripe size
 	_reshape_layout "$raid_type" $(( data_stripes + 1 )) $vg $lv 0 0 --stripesize 256K
 	_check_size $vg $lv "$data_stripes" || die "LV size should still be small"
-	_skip_or_fsck "$DM_DEV_DIR/$vg/$lv"
 
 	_restore_dev "$dev1"
+	_skip_or_fsck "$DM_DEV_DIR/$vg/$lv"
 
 	# Wait for sync to finish to check frow extended LV size
 	aux wait_for_sync $vg $lv 0
