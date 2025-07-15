@@ -692,7 +692,8 @@ struct lvresize_params {
 
 	int approx_alloc;
 	int extents_are_pes;	/* Is 'extents' counting PEs or LEs? */
-	int size_changed;	/* Was there actually a size change */
+	int size_changed;	/* Was there actually a size change for LV */
+	int fs_size_changed;    /* Was there actually a size change for FS */
 	int extend_fs_error;    /* FS extend error after LV extend success */
 	int vg_changed_error;   /* VG metadata was modified during fs resize */
 
