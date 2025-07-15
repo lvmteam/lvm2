@@ -16,6 +16,8 @@
 
 . lib/inittest --skip-with-lvmpolld
 
+aux have_raid_resizable || skip "Skip with buggy md raid resize"
+
 # FIXME  update test to make something useful on <16T
 aux can_use_16T || skip
 

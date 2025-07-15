@@ -1990,6 +1990,20 @@ have_raid() {
 	esac
 }
 
+have_raid_resizable() {
+	# Check if the kernel can resize raid volume without killing leg.
+	# MD core has had a bug in handling read-ahead requests.
+	# This results in marking raid with suspended leg as failed.
+	# Bug was fixed from kernel 6.16
+	# Fixing kernel commit: 9f346f7d4ea73692b82f5102ca8698e4040469ea
+	# Patch was backported to most 6.15 releases.
+	# Note: Fixing test for this failure would likely require full raid
+	# array resync, so it's better to skip the test for affected kernels.
+	case "$(uname -r)" in
+	  6.1[34]*) return 1 ;;
+	esac
+}
+
 have_raid4 () {
 	local r=0
 
