@@ -88,7 +88,7 @@ function _get_pvs
 		;;
 	*)
 		npvs=20
-		pvsz=6
+		pvsz=10
 		;;
 	esac
 }
@@ -140,14 +140,17 @@ function _get_size
 	local data_stripes=$3
 	local reshape_len rimagesz
 
+	# Get rimage size early
+	rimagesz=$(blockdev --getsz "$DM_DEV_DIR/mapper/${vg}-${lv}_rimage_0")
+
 	# Get any reshape size in sectors
 	# Avoid using pipes as exit codes may cause test failure
 	reshape_len=$(lvs --noheadings --nosuffix -aoreshapelen --unit s "$vg/${lv}_rimage_0")
 	# Drop everything past 'S'
-	reshape_len=$(echo "${reshape_len/S*}"|xargs)
+	reshape_len=${reshape_len/S*}
 
 	# Get rimage size - reshape length
-	rimagesz=$(( $(blockdev --getsz "$DM_DEV_DIR/mapper/${vg}-${lv}_rimage_0") - reshape_len ))
+	rimagesz=$(( rimagesz - reshape_len ))
 
 	# Calculate size of LV based on above sizes
 	echo $(( rimagesz *  data_stripes ))
