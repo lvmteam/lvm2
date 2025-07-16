@@ -5259,8 +5259,10 @@ static int _lvresize_adjust_size(struct volume_group *vg,
 					display_size(vg->cmd, size));
 	}
 
-	if (!(*extents = extents_from_size(vg->cmd, size, extent_size)))
-		return_0;
+	if (!(*extents = extents_from_size(vg->cmd, size, extent_size))) {
+		log_error("Incorrect resulting size of 0 extents.");
+		return 0;
+	}
 
 	return 1;
 }
