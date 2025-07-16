@@ -73,11 +73,13 @@ for i in 1 2 3; do
 		fi
 
 		mirrors=$((j - 1))
+		NOT=not
+		test $i -eq $j || NOT=
 		if [ $i -eq 1 ]
 		then
 			if [ $mirrors -eq 0 ]
 			then
-				[ $i -eq $j ] && not lvconvert -y -m $mirrors $vg/$lv1 || lvconvert -y -m $mirrors $vg/$lv1
+				$NOT lvconvert -y -m $mirrors $vg/$lv1
 			fi
 		else
 			if [ $mirrors -eq 0 ]
@@ -85,7 +87,7 @@ for i in 1 2 3; do
 				not lvconvert -m $mirrors $vg/$lv1
 				lvconvert -y -m $mirrors $vg/$lv1
 			else
-				[ $i -eq $j ] && not lvconvert -y -m $mirrors $vg/$lv1 || lvconvert -y -m $mirrors $vg/$lv1
+				$NOT lvconvert -y -m $mirrors $vg/$lv1
 			fi
 		fi
 
