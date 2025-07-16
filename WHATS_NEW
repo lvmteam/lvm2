@@ -1,5 +1,6 @@
 Version 2.03.34 - 
 ==================
+  Enhanced lvresize -r support for btrfs.
   Use glibc standard functions htoX, Xtoh functions for endian conversion.
   Fix structure copying within sanlock's release_rename().
   Fix autoactivation on top of loop dev PVs to trigger once for change uevents.
