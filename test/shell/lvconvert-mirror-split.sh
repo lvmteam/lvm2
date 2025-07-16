@@ -36,8 +36,13 @@ lvremove -f $vg
 
 lvcreate -aey --type mirror -m 1 -l 2 -n $lv1 $vg
 aux wait_for_sync $vg $lv1
-sleep 2 < "$DM_DEV_DIR/mapper/${vg}-${lv1}_mimage_0" &
-sleep 2 < "$DM_DEV_DIR/mapper/${vg}-${lv1}_mlog" &
+
+# Longer delay with Valrind
+SLEEP=2
+test "${LVM_VALGRIND:-0}" -eq 0 || SLEEP=8
+
+sleep "$SLEEP" < "$DM_DEV_DIR/mapper/${vg}-${lv1}_mimage_0" &
+sleep "$SLEEP" < "$DM_DEV_DIR/mapper/${vg}-${lv1}_mlog" &
 
 # do not waste 'testing' time on 'retry deactivation' loops
 not lvconvert --splitmirrors 1 -n $lv2 -v $vg/$lv1 --config 'activation/retry_deactivation = 0' 
