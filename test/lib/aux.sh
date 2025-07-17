@@ -518,7 +518,9 @@ kill_sleep_kill_() {
 	if test -s "$pidfile" ; then
 		pid=$(< "$pidfile")
 		rm -f "$pidfile"
-		test "$pidfile" = "LOCAL_LVMDBUSD" && killall -9 lvmdbusd || true
+		if test "$pidfile" = "LOCAL_LVMDBUSD"; then
+			killall -9 lvmdbusd || true
+		fi
 		kill -TERM "$pid" 2>/dev/null || return 0
 		for i in {0..10} ; do
 			ps "$pid" >/dev/null || return 0
