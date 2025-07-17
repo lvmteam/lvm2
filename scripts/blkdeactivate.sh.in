@@ -235,7 +235,7 @@ deactivate_dm () {
 }
 
 deactivate_lvm () {
-	local DM_VG_NAME; local DM_LV_NAME
+	local DM_VG_NAME DM_LV_NAME
 
 	eval "$(eval "$DMSETUP" splitname --nameprefixes --noheadings --rows "$name" LVM "$ERR")"
 	test -b "$DEV_DIR/$DM_VG_NAME/$DM_LV_NAME" || return 0
@@ -380,7 +380,11 @@ deactivate_all() {
 
 	test "$MPATHD_RUNNING" -eq 1 && {
 		echo -n "  [DM]: disabling queueing on all multipath devices... "
-		eval "$MPATHD" $MPATHD_OPTS disablequeueing maps "$ERR" | grep '^ok$' >"$DEV_DIR/null" && echo "done" || echo "failed"
+		if eval "$MPATHD" $MPATHD_OPTS disablequeueing maps "$ERR" | grep '^ok$' >"$DEV_DIR/null" ; then
+			echo "done"
+		else
+			echo "failed"
+		fi
 	}
 
 	if test $# -eq 0; then
@@ -452,7 +456,7 @@ deactivate_all() {
 }
 
 get_dmopts() {
-	ORIG_IFS=$IFS; IFS=','
+	local IFS=','
 
 	for opt in $1; do
 		case $opt in
@@ -462,12 +466,10 @@ get_dmopts() {
 			*) echo "$opt: unknown DM option"
 		esac
 	done
-
-	IFS=$ORIG_IFS
 }
 
 get_lvmopts() {
-	ORIG_IFS=$IFS; IFS=','
+	local IFS=','
 
 	for opt in $1; do
 		case "$opt" in
@@ -477,12 +479,10 @@ get_lvmopts() {
 			*) echo "$opt: unknown LVM option"
 		esac
 	done
-
-	IFS=$ORIG_IFS
 }
 
 get_mdraidopts() {
-	ORIG_IFS=$IFS; IFS=','
+	local IFS=','
 
 	for opt in $1; do
 		case "$opt" in
@@ -491,12 +491,10 @@ get_mdraidopts() {
 			*) echo "$opt: unknown MD RAID option"
 		esac
 	done
-
-	IFS=$ORIG_IFS
 }
 
 get_mpathopts() {
-	ORIG_IFS=$IFS; IFS=','
+	local IFS=','
 
 	for opt in $1; do
 		case "$opt" in
@@ -505,12 +503,10 @@ get_mpathopts() {
 			*) echo "$opt: unknown DM-multipath option"
 		esac
 	done
-
-	IFS=$ORIG_IFS
 }
 
 get_vdoopts() {
-        ORIG_IFS=$IFS; IFS=','
+	local IFS=','
 
         for opt in $1; do
                 case "$opt" in
@@ -519,8 +515,6 @@ get_vdoopts() {
                         *) echo "$opt: unknown VDO option"
                 esac
         done
-
-        IFS=$ORIG_IFS
 }
 
 set_env() {
