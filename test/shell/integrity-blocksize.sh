@@ -15,7 +15,7 @@
 
 aux have_integrity 1 5 0 || skip
 
-losetup -h | grep sector-size || skip
+losetup -h | grep sector-size || skip "Loop without sector-size support"
 
 
 cleanup_mounted_and_teardown()
@@ -23,10 +23,10 @@ cleanup_mounted_and_teardown()
 	umount "$mnt" || true
 	vgremove -ff $vg1 $vg2 || true
 
-	test -n "${LOOP1-}" && { losetup -d "$LOOP1" || true ; }
-	test -n "${LOOP2-}" && { losetup -d "$LOOP2" || true ; }
-	test -n "${LOOP3-}" && { losetup -d "$LOOP3" || true ; }
-	test -n "${LOOP4-}" && { losetup -d "$LOOP4" || true ; }
+	test -n "${LOOP1-}" && should losetup -d "$LOOP1"
+	test -n "${LOOP2-}" && should losetup -d "$LOOP2"
+	test -n "${LOOP3-}" && should losetup -d "$LOOP3"
+	test -n "${LOOP4-}" && should losetup -d "$LOOP4"
 
 	rm -f loop[abcd]
 	aux teardown
@@ -72,8 +72,8 @@ aux extend_devices "$LOOP1" "$LOOP2" "$LOOP3" "$LOOP4"
 
 aux lvmconf 'devices/scan = "/dev"'
 
-vgcreate $vg1 "$LOOP1" "$LOOP2"
-vgcreate $vg2 "$LOOP3" "$LOOP4"
+vgcreate $vg1 -s 64k "$LOOP1" "$LOOP2"
+vgcreate $vg2 -s 64k "$LOOP3" "$LOOP4"
 
 # LOOP1/LOOP2 have LBS 512 and PBS 512
 # LOOP3/LOOP4 have LBS 4K and PBS 4K
