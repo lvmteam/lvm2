@@ -155,7 +155,9 @@ cleanup() {
 
 	[ -z "$PROMPTING" ] || echo "No"
 
-	[ -e "$VDO_CONFIG_RESTORE" ] && { dry cp -a "$VDO_CONFIG_RESTORE" "${VDO_CONFIG:-"$DEFAULT_VDO_CONFIG"}" || true ; }
+	if [ -e "$VDO_CONFIG_RESTORE" ]; then
+		dry cp -a "$VDO_CONFIG_RESTORE" "${VDO_CONFIG:-"$DEFAULT_VDO_CONFIG"}" || true
+	fi
 
 	if [ -n "$VDO_DM_SNAPSHOT_NAME" ]; then
 		dry "$LVM" vgchange -an --devices "$VDO_DM_SNAPSHOT_DEVICE" "$VGNAME" &>/dev/null || true
@@ -166,8 +168,9 @@ cleanup() {
 		dry "$DMSETUP" remove "$VDO_DM_SNAPSHOT_NAME" &>/dev/null || true
 	fi
 
-
-	[ -n "$VDO_SNAPSHOT_LOOP" ] && { dry "$LOSETUP" -d "$VDO_SNAPSHOT_LOOP" || true ; }
+	if [ -n "$VDO_SNAPSHOT_LOOP" ]; then
+		dry "$LOSETUP" -d "$VDO_SNAPSHOT_LOOP" || true
+	fi
 
 	[ -z "$VDO_INCONSISTENT" ] || echo "$TOOL: VDO volume import process exited unexpectedly!" >&2
 
