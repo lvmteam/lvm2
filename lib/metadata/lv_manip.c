@@ -7088,6 +7088,7 @@ int lv_resize(struct cmd_context *cmd, struct logical_volume *lv,
 				log_error("Filesystem resize failed.");
 				goto out;
 			}
+			lp->fs_size_changed = 1;
 		} else {
 			/* New approach to fs handling using fs info. */
 			if (!_fs_reduce(cmd, lv_top, lp))
@@ -7189,6 +7190,7 @@ int lv_resize(struct cmd_context *cmd, struct logical_volume *lv,
 				lp->extend_fs_error = 1;
 				goto out;
 			}
+			lp->fs_size_changed = 1;
 		} else {
 			/* New approach to fs handling using fs info. */
 			if (!_fs_extend(cmd, lv_top, lp, &fsinfo)) {
