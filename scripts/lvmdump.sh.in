@@ -107,8 +107,15 @@ else
 fi
 
 if test -d "$dir" ; then
-	(shopt -s nullglob dotglob; test -r "$dir" -a -w "$dir" -a -x "$dir" && cd "$dir" && files=(*) && ((! ${#files[@]}))) || \
-		die 5 "Fatal: directory $dir already exists and is not empty or inaccessible"
+	# Check if directory is accessible and empty
+	if ! test -r "$dir" || ! test -w "$dir" || ! test -x "$dir"; then
+		die 5 "Fatal: directory $dir already exists and is not accessible"
+	fi
+
+	# Check if directory is empty (including hidden files)
+	if ! (shopt -s nullglob dotglob; cd "$dir" && files=(*) && [ ${#files[@]} -eq 0 ]); then
+		die 5 "Fatal: directory $dir already exists and is not empty"
+	fi
 else
 	test -e "$dir" && die 3 "Fatal: $dir already exists"
 	"$MKDIR" -p "$dir" || die 4 "Fatal: could not create $dir"
