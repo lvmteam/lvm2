@@ -340,7 +340,6 @@ static int _lvresize_single(struct cmd_context *cmd, struct logical_volume *lv,
 	if (ret || lp->extend_fs_error)
 		log_print_unless_silent("Logical volume %s successfully resized.",
 					display_lvname(lv));
-
 	if (!ret)
 		return ECMD_FAILED;
 	return ECMD_PROCESSED;

@@ -76,8 +76,7 @@ lvcreate -L10  -n pool $vg
 lvconvert --yes --thinpool $vg/pool --poolmetadata meta --config 'allocation/thin_pool_crop_metadata=1'
 
 # No change with cropping
-not lvresize -l+1 $vg/pool_tmeta --config 'allocation/thin_pool_crop_metadata=1' 2>err
-grep "No size change." err
+lvresize -l+1 $vg/pool_tmeta --config 'allocation/thin_pool_crop_metadata=1'
 dmsetup table ${vg}-pool_tmeta | grep 33161216
 
 # Resizes to 'uncropped' size 16GiB with ANY size

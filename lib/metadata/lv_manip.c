@@ -5259,10 +5259,8 @@ static int _lvresize_adjust_size(struct volume_group *vg,
 					display_size(vg->cmd, size));
 	}
 
-	if (!(*extents = extents_from_size(vg->cmd, size, extent_size))) {
-		log_error("Incorrect resulting size of 0 extents.");
-		return 0;
-	}
+	if (!(*extents = extents_from_size(vg->cmd, size, extent_size)))
+		return_0;
 
 	return 1;
 }
@@ -6552,8 +6550,6 @@ static int _fs_reduce(struct cmd_context *cmd, struct logical_volume *lv,
 	if (!fs_reduce_script(cmd, lv, &fsinfo, lp->fsmode))
 		goto_out;
 
-	lp->fs_size_changed = 1;
-
 	if (!lock_vol(cmd, lv->vg->name, LCK_VG_WRITE, NULL)) {
 		log_error("Failed to lock VG, cannot reduce LV.");
 		ret = 0;
@@ -6633,8 +6629,6 @@ static int _fs_extend_check_fsinfo(struct cmd_context *cmd, struct logical_volum
 static int _fs_extend(struct cmd_context *cmd, struct logical_volume *lv,
 		      struct lvresize_params *lp, struct fs_info *fsinfo)
 {
-	int ret;
-
 	/*
 	 * fs extend is not needed
 	 */
@@ -6662,10 +6656,7 @@ static int _fs_extend(struct cmd_context *cmd, struct logical_volume *lv,
 	 */
 	unlock_vg(cmd, lv->vg, lv->vg->name);
 
-	if ((ret = fs_extend_script(cmd, lv, fsinfo, lp->fsmode)))
-		lp->fs_size_changed = 1;
-
-	return ret;
+	return fs_extend_script(cmd, lv, fsinfo, lp->fsmode);
 }
 
 int lv_resize(struct cmd_context *cmd, struct logical_volume *lv,
@@ -7088,7 +7079,6 @@ int lv_resize(struct cmd_context *cmd, struct logical_volume *lv,
 				log_error("Filesystem resize failed.");
 				goto out;
 			}
-			lp->fs_size_changed = 1;
 		} else {
 			/* New approach to fs handling using fs info. */
 			if (!_fs_reduce(cmd, lv_top, lp))
@@ -7190,7 +7180,6 @@ int lv_resize(struct cmd_context *cmd, struct logical_volume *lv,
 				lp->extend_fs_error = 1;
 				goto out;
 			}
-			lp->fs_size_changed = 1;
 		} else {
 			/* New approach to fs handling using fs info. */
 			if (!_fs_extend(cmd, lv_top, lp, &fsinfo)) {
@@ -7209,11 +7198,6 @@ int lv_resize(struct cmd_context *cmd, struct logical_volume *lv,
 			stack;
 		if (!deactivate_lv(cmd, lv_top))
 			log_warn("Problem deactivating %s.", display_lvname(lv_top));
-	}
-
-	if (ret && !((lp->size_changed || lp->fs_size_changed || lp_meta.size_changed))) {
-		log_error("No size change.");
-		return 0;
 	}
 
 	return ret;

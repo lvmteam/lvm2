@@ -37,8 +37,7 @@ lvs -a $vg
 
 # this should resolve to resize to same actual size
 not lvreduce -l-100%FREE $vg/$lv1
-not lvreduce -r -f -l-100%FREE $vg/$lv1 2>err
-grep "No size change." err
+lvreduce -r -f -l-100%FREE $vg/$lv1
 "$FSCK" -n "$lvdev"
 
 # size should remain the same
