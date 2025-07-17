@@ -679,7 +679,7 @@ lvremove -f $vg
 ######################################
 
 lvcreate -n $lv -L 16M $vg
-mkswap /dev/$vg/$lv
+mkswap "$DM_DEV_DIR/$vg/$lv"
 
 # FSSIZE reported since util-linux/blkid v2.39 and later only
 blkid -p "$DM_DEV_DIR/$vg/$lv" | grep FSSIZE && {
