@@ -6477,6 +6477,11 @@ static int _fs_reduce(struct cmd_context *cmd, struct logical_volume *lv,
 	 * 2MB for LUKS1 and 16MB for LUKS2.)
 	 */
 	if (fsinfo.needs_crypt) {
+		if (fsinfo.crypt_offset_bytes >= fsinfo.new_size_bytes) {
+			log_error("Crypt header requires %s, not enough space left for crypt data.",
+				  display_size(cmd, fsinfo.crypt_offset_bytes >> SECTOR_SHIFT));
+			goto out;
+		}
 		fsinfo.new_size_bytes -= fsinfo.crypt_offset_bytes;
 		log_print_unless_silent("File system size %llub is adjusted for crypt data offset %ub.",
 					(unsigned long long)fsinfo.new_size_bytes, fsinfo.crypt_offset_bytes);
