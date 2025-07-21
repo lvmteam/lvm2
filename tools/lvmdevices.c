@@ -925,7 +925,8 @@ int lvmdevices(struct cmd_context *cmd, int argc, char **argv)
  dev_del:
 		dm_list_del(&du->list);
 		free_du(du);
-		device_ids_write(cmd);
+		if (!device_ids_write(cmd))
+			goto_bad;
 		goto out;
 	}
 
@@ -967,7 +968,8 @@ int lvmdevices(struct cmd_context *cmd, int argc, char **argv)
 
 		dm_list_del(&du->list);
 		free_du(du);
-		device_ids_write(cmd);
+		if (!device_ids_write(cmd))
+			goto_bad;
 		goto out;
 	}
 
@@ -1008,7 +1010,8 @@ int lvmdevices(struct cmd_context *cmd, int argc, char **argv)
 		}
 
 		free_du(du);
-		device_ids_write(cmd);
+		if (!device_ids_write(cmd))
+			goto_bad;
 		goto out;
 	}
 
