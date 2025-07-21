@@ -1712,12 +1712,12 @@ int device_ids_write(struct cmd_context *cmd)
 		log_sys_debug("unlink", tmppath);
 
 	if (!(fp = fopen(tmppath, "w+"))) {
-		log_warn("Cannot open to write %s.", tmppath);
+		log_error("Cannot open to write %s.", tmppath);
 		goto out;
 	}
 
 	if ((dir_fd = open(dirpath, O_RDONLY)) < 0) {
-		log_sys_debug("open", dirpath);
+		log_sys_error("open", dirpath);
 		goto out;
 	}
 
