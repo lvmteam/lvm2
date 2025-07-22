@@ -92,6 +92,10 @@ static const size_t THREAD_STACK_SIZE = 300 * 1024;
 /* Default idle exit timeout 1 hour (in seconds) */
 static const time_t DMEVENTD_IDLE_EXIT_TIMEOUT = 60 * 60;
 
+/* Default grace period for thread cleanup 10 seconds */
+static const time_t DMEVENTD_DEFAULT_GRACE_PERIOD = 10;
+static time_t _grace_period = DMEVENTD_DEFAULT_GRACE_PERIOD;
+
 static int _systemd_activation = 0;
 static int _foreground = 0;
 static time_t _idle_since = 0;
@@ -209,7 +213,8 @@ struct message_data {
 /* There are three states a thread can attain. */
 enum {
 	DM_THREAD_REGISTERING,	/* Registering, transitions to RUNNING */
-	DM_THREAD_RUNNING,	/* Working on events, transitions to DONE */
+	DM_THREAD_RUNNING,	/* Working on events, transitions to GRACE or DONE */
+	DM_THREAD_GRACE_PERIOD,	/* Thread awaits reuse for a grace period */
 	DM_THREAD_DONE		/* Terminated and cleanup is pending */
 };
 
@@ -233,12 +238,15 @@ struct thread_status {
 	} device;
 	int processing;		/* Set when event is being processed */
 
-	int status;		/* See DM_THREAD_{REGISTERING,RUNNING,DONE} */
+	int status;		/* See DM_THREAD_{REGISTERING,RUNNING,GRACE_PERIOD,DONE} */
 
 	int events;		/* bitfield for event filter. */
 	int current_events;	/* bitfield for occurred events. */
 	struct dm_task *wait_task;
 	int pending;		/* Set when event filter change is pending */
+	int used;		/* Count thread reusage (for debugging) */
+	pthread_cond_t grace_cond;   /* Condition variable for grace period wait */
+	pthread_mutex_t grace_mutex; /* Mutex for grace period synchronization */
 	time_t next_time;
 	uint32_t timeout;
 	struct dm_list timeout_list;
@@ -395,11 +403,18 @@ static void _free_thread_status(struct thread_status *thread)
 	_lib_put(thread->dso_data);
 	if (thread->wait_task)
 		dm_task_destroy(thread->wait_task);
+
+	/* Clean up grace period synchronization */
+	pthread_cond_destroy(&thread->grace_cond);
+	pthread_mutex_destroy(&thread->grace_mutex);
+
 	free(thread->device.uuid);
 	free(thread->device.name);
 	free(thread);
 }
 
+static int _lock_mutex(void);
+static int _unlock_mutex(void);
 /* Note: events_field must not be 0, ensured by caller */
 static struct thread_status *_alloc_thread_status(const struct message_data *data,
 						  struct dso_data *dso_data)
@@ -426,6 +441,17 @@ static struct thread_status *_alloc_thread_status(const struct message_data *dat
 	/* Until real name resolved, use UUID */
 	if (!(thread->device.name = strdup(data->device_uuid)))
 		goto_out;
+
+	/* Initialize grace period synchronization */
+	if (pthread_cond_init(&thread->grace_cond, NULL)) {
+		log_error("Failed to initialize grace period condition variable.");
+		goto_out;
+	}
+	if (pthread_mutex_init(&thread->grace_mutex, NULL)) {
+		log_error("Failed to initialize grace period mutex.");
+		pthread_cond_destroy(&thread->grace_cond);
+		goto_out;
+	}
 
 	/* runs ioctl and may register lvm2 plugin */
 	thread->processing = 1;
@@ -629,9 +655,9 @@ fail:
 
 static struct dm_task *_get_device_status(struct thread_status *ts)
 {
-	struct dm_task *dmt = dm_task_create(DM_DEVICE_STATUS);
+	struct dm_task *dmt;
 
-	if (!dmt)
+	if (!(dmt = dm_task_create(DM_DEVICE_STATUS)))
 		return_NULL;
 
 	if (!dm_task_set_uuid(dmt, ts->device.uuid)) {
@@ -663,6 +689,21 @@ static struct thread_status *_lookup_thread_status(struct message_data *data)
 	dm_list_iterate_items(thread, &_thread_registry)
 		if (!strcmp(data->device_uuid, thread->device.uuid))
 			return thread;
+
+	return NULL;
+}
+
+static struct thread_status *_lookup_grace_thread_status(struct message_data *data)
+{
+	struct thread_status *thread;
+
+	dm_list_iterate_items(thread, &_thread_registry_unused)
+		if ((thread->status == DM_THREAD_GRACE_PERIOD) &&
+		    !strcmp(data->device_uuid, thread->device.uuid) &&
+		    !strcmp(data->dso_name, thread->dso_data->dso_name)) {
+			DEBUGLOG("Found reusable thread %x in grace period.",(int)thread->thread);
+			return thread;
+		}
 
 	return NULL;
 }
@@ -795,7 +836,11 @@ static void *_timeout_thread(void *unused __attribute__((unused)))
 			if (thread->next_time <= curr_time) {
 				thread->next_time = curr_time + thread->timeout;
 				_lock_mutex();
-				if (thread->processing) {
+				if (thread->status != DM_THREAD_RUNNING) {
+					/* Skip wake up of non running thread (i.e. in grace period) */
+					log_debug("Skipping SIGALRM to non running Thr %x for timeout.",
+						  (int) thread->thread);
+				} else if (thread->processing) {
 					/* Cannot signal processing monitoring thread */
 					log_debug("Skipping SIGALRM to processing Thr %x for timeout.",
 						  (int) thread->thread);
@@ -881,6 +926,43 @@ enum {
 	DM_WAIT_INTR,
 	DM_WAIT_FATAL
 };
+
+/* Reset pending signal for a task/thread */
+static int _reset_pending_signal(int signal)
+{
+	sigset_t prev_mask, mask;
+	struct sigaction prev_act, act = { .sa_handler = SIG_IGN };
+
+	sigemptyset(&act.sa_mask);
+
+	sigemptyset(&prev_mask);
+
+	sigemptyset(&mask);
+	sigaddset(&mask, signal);
+
+	if (pthread_sigmask(SIG_SETMASK, &mask, &prev_mask) != 0) {
+		log_sys_error("pthread_sigmask", "ignore signal");
+		return 0; /* What better */
+	}
+
+	if (sigaction(signal, &act, &prev_act) < 0) {
+		log_sys_error("sigaction", "ignore signal");
+		return 0;
+	}
+
+	if (sigaction(signal, &prev_act, NULL) < 0) {
+		log_sys_error("sigaction", "restore signal");
+		return 0;
+	}
+
+	/* And also restore the process's original sigmask */
+	if (pthread_sigmask(SIG_SETMASK, &prev_mask, NULL) < 0) {
+		log_sys_error("pthread_sigmask", "restore signal");
+		return 0;
+	}
+
+	return 1;
+}
 
 /* Wait on a device until an event occurs. */
 static int _event_wait(struct thread_status *thread)
@@ -985,6 +1067,12 @@ static void _thread_unused(struct thread_status *thread)
 	LINK(thread, &_thread_registry_unused);
 }
 
+static void _thread_used(struct thread_status *thread)
+{
+	UNLINK_THREAD(thread);
+	LINK_THREAD(thread);
+}
+
 /* Thread cleanup handler to unregister device. */
 static void _monitor_unregister(void *arg)
 {
@@ -1021,31 +1109,10 @@ static void _monitor_unregister(void *arg)
 		kill(getpid(), SIGINT);
 }
 
-/* Device monitoring thread. */
-static void *_monitor_thread(void *arg)
+static int _monitor_events(struct thread_status *thread)
 {
-	struct thread_status *thread = arg;
-	int ret;
+	int ret = 0;
 	sigset_t pendmask;
-
-	pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, NULL);
-	pthread_cleanup_push(_monitor_unregister, thread);
-
-	if (!_fill_device_data(thread)) {
-		log_error("Failed to fill device data for %s.", thread->device.uuid);
-		_lock_mutex();
-		goto out;
-	}
-
-	if (!_do_register_device(thread)) {
-		log_error("Failed to register device %s.", thread->device.name);
-		_lock_mutex();
-		goto out;
-	}
-
-	_lock_mutex();
-	thread->status = DM_THREAD_RUNNING;
-	thread->processing = 0;
 
 	/* Loop awaiting/analyzing device events. */
 	while (thread->events) {
@@ -1092,6 +1159,89 @@ static void *_monitor_thread(void *arg)
 				break;
 		}
 	}
+
+	return ret;
+}
+
+/* Thread awaits condition wake up for a grace period */
+static void _monitor_grace_period_wait(struct thread_status *thread)
+{
+	int ret;
+
+	/* Wait during grace period */
+	struct timespec grace_timeout = { .tv_sec = time(NULL) + _grace_period };
+
+	DEBUGLOG("Thread %x entering grace period for %ld seconds.",
+		 (int)thread->thread, _grace_period);
+
+	pthread_mutex_lock(&thread->grace_mutex);
+	ret = pthread_cond_timedwait(&thread->grace_cond, &thread->grace_mutex, &grace_timeout);
+	pthread_mutex_unlock(&thread->grace_mutex);
+
+	DEBUGLOG("Thread %x wakeup grace period  (%d).", (int)thread->thread, ret);
+}
+
+/* Device monitoring thread. */
+static void *_monitor_thread(void *arg)
+{
+	struct thread_status *thread = arg;
+	int ret;
+
+	pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, NULL);
+	pthread_cleanup_push(_monitor_unregister, thread);
+
+	if (!_fill_device_data(thread)) {
+		log_error("Failed to fill device data for %s.", thread->device.uuid);
+		_lock_mutex();
+		goto out;
+	}
+
+	if (!_do_register_device(thread)) {
+		log_error("Failed to register device %s.", thread->device.name);
+		_lock_mutex();
+		goto out;
+	}
+
+	_lock_mutex();
+
+	/* Main monitoring loop with grace period support */
+	while (thread->events) {
+		DEBUGLOG("Monitoring %s with Thr %x  (events: %x, used: %d).",
+			 thread->device.name, (int)thread->thread,
+			 thread->events, thread->used);
+
+		thread->status = DM_THREAD_RUNNING;
+		thread->processing = 0;
+		thread->used++;
+
+		ret = _monitor_events(thread);
+
+		/* No grace period when set to 0
+		 * or there were left some processing events which is an error state
+		 * or there is on going exit
+                 * or there was fatal error while waiting for some event */
+		if (!_grace_period || thread->events || _exit_now || (ret == DM_WAIT_FATAL))
+			break;
+
+		thread->status = DM_THREAD_GRACE_PERIOD;	/* No events - enter grace period */
+		_thread_unused(thread);
+		_unlock_mutex();
+
+		DEBUGLOG("Gracing %s with Thr %x  (events: %x, used: %d).",
+			 thread->device.name, (int)thread->thread,
+			 thread->events, thread->used);
+
+		_monitor_grace_period_wait(thread);
+
+		_lock_mutex();
+		_thread_used(thread);
+
+		/* Before restarting event loop reset any pending SIGALRM signal */
+		if (!_reset_pending_signal(SIGALRM)) {
+			stack;
+			break; /* Something is wrong... */
+		}
+	}
 out:
 	/* ';' fixes gcc compilation problem with older pthread macros
 	 * "label at end of compound statement" */
@@ -1120,6 +1270,18 @@ static int _update_events(struct thread_status *thread, int events)
 	thread->events = events;
 	thread->pending = DM_EVENT_REGISTRATION_PENDING;
 
+	/* If needed, wake up thread waiting in grace period */
+	if ((events || _exit_now) && (thread->status == DM_THREAD_GRACE_PERIOD)) {
+		_unlock_mutex();
+		DEBUGLOG("Waking up thread %x waiting in grace period (events=%x).",
+			 (int)thread->thread, events);
+		pthread_mutex_lock(&thread->grace_mutex);
+		pthread_cond_signal(&thread->grace_cond);
+		pthread_mutex_unlock(&thread->grace_mutex);
+		_lock_mutex();
+		return 0;
+	}
+
 	/* Only non-processing threads can be notified */
 	if (!thread->processing) {
 		DEBUGLOG("Sending SIGALRM to wakeup Thr %x.", (int)thread->thread);
@@ -1134,9 +1296,7 @@ static int _update_events(struct thread_status *thread, int events)
 		}
 	}
 
-	/* Threads with no events has to be moved to unused */
-	if (!thread->events)
-		_thread_unused(thread);
+	/* Threads with no events will enter grace period in their main loop */
 
 	return -ret;
 }
@@ -1238,7 +1398,8 @@ static int _register_for_event(struct message_data *message_data)
 
 	_lock_mutex();
 
-	if ((thread = _lookup_thread_status(message_data))) {
+	if ((thread = _lookup_thread_status(message_data)) ||
+	    (thread = _lookup_grace_thread_status(message_data))) {
 		/* OR event # into events bitfield. */
 		ret = _update_events(thread, (thread->events | message_data->events_field));
 	} else {
@@ -1352,11 +1513,13 @@ static int _get_registered_dev(struct message_data *message_data, int next)
 
 	/*
 	 * If we didn't get a match, try the threads waiting to be deleted.
+	 * Threads in grace period are skipped.
 	 * FIXME Do something similar if 'next' is set.
 	 */
 	if (!hit && !next)
 		dm_list_iterate_items(thread, &_thread_registry_unused)
-			if (_want_registered_device(message_data->dso_name,
+			if ((thread->status != DM_THREAD_GRACE_PERIOD) &&
+			    _want_registered_device(message_data->dso_name,
 						    message_data->device_uuid, thread)) {
 				hit = thread;
 				goto reg;
@@ -1441,8 +1604,8 @@ static int _open_fifo(const char *path)
 {
 	struct stat st;
 	int fd = -1;
- 
- 	/*
+
+	/*
 	 * FIXME Explicitly verify the code's requirement that path is secure:
 	 * - All parent directories owned by root without group/other write access unless sticky.
 	 */
@@ -1731,8 +1894,8 @@ static void _process_request(struct dm_event_fifos *fifos)
 	free(msg.data);
 
 	if (cmd == DM_EVENT_CMD_DIE) {
+		_exit_now = DM_SCHEDULED_EXIT; /* No grace period */
 		_unregister_all_threads();
-		_exit_now = DM_SCHEDULED_EXIT;
 		log_info("dmeventd exiting for restart.");
 	}
 }
@@ -2265,16 +2428,18 @@ bad:
 static void _usage(char *prog, FILE *file)
 {
 	fprintf(file, "Usage:\n"
-		"%s [-d [-d [-d]]] [-e path] [-f] [-h] [i] [-l] [-R] [-V] [-?]\n\n"
+		"%s [-d [-d [-d]]] [-e path] [-g seconds] [-f] [-h] [i] [-l] [-R] [-V] [-?]\n\n"
 		"   -d       Log debug messages to syslog (-d, -dd, -ddd)\n"
 		"   -e       Select a file path checked on exit\n"
+		"   -g       Grace period for thread cleanup (0-300 seconds, default: %d)\n"
 		"   -f       Don't fork, run in the foreground\n"
 		"   -h       Show this help information\n"
 		"   -i       Query running instance of dmeventd for info\n"
 		"   -l       Log to stdout,stderr instead of syslog\n"
 		"   -?       Show this help information on stderr\n"
 		"   -R       Restart dmeventd\n"
-		"   -V       Show version of dmeventd\n\n", prog);
+		"   -V       Show version of dmeventd\n\n", prog,
+		(int)_grace_period);
 }
 
 int main(int argc, char *argv[])
@@ -2294,7 +2459,7 @@ int main(int argc, char *argv[])
 
 	optopt = optind = opterr = 0;
 	optarg = (char*) "";
-	while ((opt = getopt(argc, argv, ":?e:fhiVdlR")) != EOF) {
+	while ((opt = getopt(argc, argv, ":?e:g:fhiVdlR")) != EOF) {
 		switch (opt) {
 		case 'h':
 			_usage(argv[0], stdout);
@@ -2314,6 +2479,13 @@ int main(int argc, char *argv[])
 				return EXIT_FAILURE;
 			}
 			_exit_on=optarg;
+			break;
+		case 'g':
+			_grace_period = (time_t)atoi(optarg);
+			if (_grace_period < 0 || _grace_period > 300) {
+				fprintf(stderr, "dmeventd: grace period must be between 0 and 300 seconds.\n");
+				return EXIT_FAILURE;
+			}
 			break;
 		case 'f':
 			_foreground++;

@@ -223,10 +223,12 @@ void process_event(struct dm_task *dmt,
 	}
 
 #if THIN_DEBUG
-	log_debug("Thin pool status " FMTu64 "/" FMTu64 "  "
-		  FMTu64 "/" FMTu64 ".",
+	log_debug("Thin pool status " FMTu64 "/" FMTu64 " (" FMTu64 ") "
+		  FMTu64 "/" FMTu64 " (" FMTu64").",
+		  tps->used_data_blocks, tps->total_data_blocks,
+		  state->known_data_size,
 		  tps->used_metadata_blocks, tps->total_metadata_blocks,
-		  tps->used_data_blocks, tps->total_data_blocks);
+		  state->known_metadata_size);
 #endif
 
 	/* Thin pool size had changed. Clear the threshold. */
@@ -382,10 +384,9 @@ int register_device(const char *device,
 	} else /* Unsupported command format */
 		goto inval;
 
+	state->max_fails = 1;
 	state->pid = -1;
 	*user = state;
-
-	log_info("Monitoring thin pool %s.", device);
 
 	return 1;
 inval:
@@ -430,7 +431,6 @@ int unregister_device(const char *device,
 	_restore_thread_signals(state);
 
 	dmeventd_lvm2_exit_with_pool(state);
-	log_info("No longer monitoring thin pool %s.", device);
 
 	return 1;
 }

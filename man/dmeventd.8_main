@@ -27,6 +27,8 @@ dmeventd \(em Device-mapper event daemon
 .RB [ -e\ \c
 .IR exit_on_path ]
 .RB [ -f ]
+.RB [ -g\ \c
+.IR seconds ]
 .RB [ -h ]
 .RB [ -i ]
 .RB [ -l ]
@@ -69,6 +71,15 @@ Default value is "\fI#DEFAULT_DMEVENTD_EXIT_ON_PATH#\fP".
 .TP
 .B -f
 Don't fork, run in the foreground.
+.
+.TP
+\fB-g\fP \fIseconds\fP
+Set the grace period for monitoring thread cleanup (0-300 seconds, default: 10).
+During this period, monitoring threads that have finished processing events
+will wait for potential reuse rather than immediately terminating.
+If the same device and plugin combination is registered again within
+the grace period, the existing thread is reused, significantly reducing
+overhead. Set to 0 to disable thread reuse.
 .
 .TP
 .B -h
