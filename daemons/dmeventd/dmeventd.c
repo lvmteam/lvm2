@@ -606,11 +606,14 @@ static int _fill_device_data(struct thread_status *ts)
 	if (!dm_task_run(dmt))
 		goto fail;
 
-	free(ts->device.name);
-	if (!(ts->device.name = strdup(dm_task_get_name(dmt))))
+	if (!dm_task_get_info(dmt, &dmi))
 		goto fail;
 
-	if (!dm_task_get_info(dmt, &dmi))
+	if (!dmi.exists)
+		goto fail;
+
+	free(ts->device.name);
+	if (!(ts->device.name = strdup(dm_task_get_name(dmt))))
 		goto fail;
 
 	ts->device.major = dmi.major;
