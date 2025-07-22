@@ -45,10 +45,10 @@
 
 struct dso_state {
 	struct dm_pool *mem;
-	int metadata_percent_check;
-	int metadata_percent;
-	int data_percent_check;
-	int data_percent;
+	dm_percent_t metadata_percent_check;
+	dm_percent_t metadata_percent;
+	dm_percent_t data_percent_check;
+	dm_percent_t data_percent;
 	uint64_t known_metadata_size;
 	uint64_t known_data_size;
 	unsigned fails;
