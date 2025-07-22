@@ -64,6 +64,16 @@ umount "$mount_dir"
 cryptsetup close $cr
 lvremove -f $vg/$lv
 
+#lvreduce ext4 on LUKS1 with not enough space left for crypt data
+lvcreate -n $lv -L256M $vg
+echo 93R4P4pIqAH8 | cryptsetup luksFormat -i1 --type luks1 "$DM_DEV_DIR/$vg/$lv"
+echo 93R4P4pIqAH8 | cryptsetup luksOpen "$DM_DEV_DIR/$vg/$lv" $cr
+mkfs.ext4 /dev/mapper/$cr
+not lvreduce -L1M --yes --fs resize $vg/$lv 2>err
+grep "not enough space left for crypt data" err
+cryptsetup close $cr
+lvremove -f $vg/$lv
+
 # lvextend xfs on LUKS1
 lvcreate -n $lv -L 320M $vg
 echo 93R4P4pIqAH8 | cryptsetup luksFormat -i1 --type luks1 "$DM_DEV_DIR/$vg/$lv"
