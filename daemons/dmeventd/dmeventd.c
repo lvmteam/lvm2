@@ -904,6 +904,9 @@ static int _event_wait(struct thread_status *thread)
 	}
 
 	if (dm_task_run(thread->wait_task)) {
+		/* Recheck device info whether is still exists */
+		if (!_fill_device_data(thread))
+			goto disappeared; /* device is gone... */
 		thread->current_events |= DM_EVENT_DEVICE_ERROR;
 		ret = DM_WAIT_INTR;
 		/* Update event_nr */
@@ -912,6 +915,7 @@ static int _event_wait(struct thread_status *thread)
 	} else {
 		switch (dm_task_get_errno(thread->wait_task)) {
 		case ENXIO:
+disappeared:
 			log_error("%s disappeared, detaching.",
 				  thread->device.name);
 			ret = DM_WAIT_FATAL;
