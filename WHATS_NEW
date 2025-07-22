@@ -1,5 +1,6 @@
 Version 2.03.34 - 
 ==================
+  Fix lvmdevices --deldev/--delpvid to error out if devices file not writeable.
   Fix lvresize corruption in LV->crypt->FS stack if near crypt min size limit.
   Enhanced lvresize -r support for btrfs.
   Use glibc standard functions htoX, Xtoh functions for endian conversion.
