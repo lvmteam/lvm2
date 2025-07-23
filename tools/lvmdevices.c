@@ -560,6 +560,7 @@ restart4:
 
 int lvmdevices(struct cmd_context *cmd, int argc, char **argv)
 {
+	static const char failed_to_write_devices_file_msg[] = "Failed to write devices file.";
 	struct dm_list search_pvids;
 	struct dm_list found_devs;
 	struct dm_list scan_devs;
@@ -752,8 +753,10 @@ int lvmdevices(struct cmd_context *cmd, int argc, char **argv)
 
 		if (arg_is_set(cmd, update_ARG)) {
 			if (update_needed || !dm_list_empty(&found_devs) || cmd->devices_file_hash_mismatch) {
-				if (!device_ids_write(cmd))
+				if (!device_ids_write(cmd)) {
+					log_error(failed_to_write_devices_file_msg);
 					goto_bad;
+				}
 				log_print("Updated devices file to version %s", devices_file_version());
 			} else {
 				log_print("No update for devices file is needed.");
@@ -835,8 +838,10 @@ int lvmdevices(struct cmd_context *cmd, int argc, char **argv)
 
 		if (!device_id_add(cmd, dev, dev->pvid, deviceidtype, NULL, 1))
 			goto_bad;
-		if (!device_ids_write(cmd))
+		if (!device_ids_write(cmd)) {
+			log_error(failed_to_write_devices_file_msg);
 			goto_bad;
+		}
 		goto out;
 	}
 
@@ -884,8 +889,10 @@ int lvmdevices(struct cmd_context *cmd, int argc, char **argv)
 			if (!device_id_add(cmd, devl->dev, devl->dev->pvid, deviceidtype, NULL, 1))
 				goto_bad;
 		}
-		if (!device_ids_write(cmd))
+		if (!device_ids_write(cmd)) {
+			log_error(failed_to_write_devices_file_msg);
 			goto_bad;
+		}
 		goto out;
 	}
 
@@ -925,8 +932,10 @@ int lvmdevices(struct cmd_context *cmd, int argc, char **argv)
  dev_del:
 		dm_list_del(&du->list);
 		free_du(du);
-		if (!device_ids_write(cmd))
+		if (!device_ids_write(cmd)) {
+			log_error(failed_to_write_devices_file_msg);
 			goto_bad;
+		}
 		goto out;
 	}
 
@@ -968,8 +977,10 @@ int lvmdevices(struct cmd_context *cmd, int argc, char **argv)
 
 		dm_list_del(&du->list);
 		free_du(du);
-		if (!device_ids_write(cmd))
+		if (!device_ids_write(cmd)) {
+			log_error(failed_to_write_devices_file_msg);
 			goto_bad;
+		}
 		goto out;
 	}
 
@@ -1010,8 +1021,10 @@ int lvmdevices(struct cmd_context *cmd, int argc, char **argv)
 		}
 
 		free_du(du);
-		if (!device_ids_write(cmd))
+		if (!device_ids_write(cmd)) {
+			log_error(failed_to_write_devices_file_msg);
 			goto_bad;
+		}
 		goto out;
 	}
 
