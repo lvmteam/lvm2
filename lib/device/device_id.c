@@ -1712,12 +1712,12 @@ int device_ids_write(struct cmd_context *cmd)
 		log_sys_debug("unlink", tmppath);
 
 	if (!(fp = fopen(tmppath, "w+"))) {
-		log_error("Cannot open to write %s.", tmppath);
+		log_warn("WARNING: %s: cannot open for writing: %s.", tmppath, strerror(errno));
 		goto out;
 	}
 
 	if ((dir_fd = open(dirpath, O_RDONLY)) < 0) {
-		log_sys_error("open", dirpath);
+		log_warn("WARNING: %s: cannot open directory: %s.", dirpath, strerror(errno));
 		goto out;
 	}
 
@@ -1730,7 +1730,7 @@ int device_ids_write(struct cmd_context *cmd)
 	fb_size = names_len + 256 + (128 * dm_list_size(&cmd->use_devices));
 
 	if (!(fb = malloc(fb_size))) {
-		log_error("Failed to allocate buffer size %d for devices file.", fb_size);
+		log_warn("Failed to allocate buffer size %d for devices file.", fb_size);
 		goto out;
 	}
 
@@ -1744,7 +1744,7 @@ int device_ids_write(struct cmd_context *cmd)
 		num = snprintf(fb + pos, len - pos, "HOSTNAME=%s\n", cmd->hostname);
 
 	if (num >= len - pos) {
-		log_error("Failed to write buffer for devices file content.");
+		log_warn("Failed to write buffer for devices file content.");
 		goto out;
 	}
 	pos += num;
@@ -1754,7 +1754,7 @@ int device_ids_write(struct cmd_context *cmd)
 
 	num = snprintf(fb + pos, len - pos, "%s\n", version_buf);
 	if (num >= len - pos) {
-		log_error("Failed to write buffer for devices file content.");
+		log_warn("Failed to write buffer for devices file content.");
 		goto out;
 	}
 	pos += num;
@@ -1783,7 +1783,7 @@ int device_ids_write(struct cmd_context *cmd)
 					du->idname ?: ".", devname, pvid);
 		}
 		if (num >= len - pos) {
-			log_error("Failed to write buffer for devices file content.");
+			log_warn("Failed to write buffer for devices file content.");
 			goto out;
 		}
 		pos += num;
@@ -1802,17 +1802,17 @@ int device_ids_write(struct cmd_context *cmd)
 			    "# HASH=%u\n",
 			    cmd->name, cmd->device_ids_auto_import ? " (auto)" : "",
 			    getpid(), ctime(&t), hash)) < 0) {
-		log_error("Failed to write buffer for devices file content.");
+		log_warn("Failed to write buffer for devices file content.");
 		goto out;
 	}
 	fc[fc_bytes] = '\0';
 
 	if (fputs(fc, fp) < 0) {
-		log_error("Failed to write devices file header.");
+		log_warn("Failed to write devices file header.");
 		goto out;
 	}
 	if (fputs(fb, fp) < 0) {
-		log_error("Failed to write devices file.");
+		log_warn("Failed to write devices file.");
 		goto out;
 	}
 	if (fflush(fp) < 0)
@@ -1827,7 +1827,7 @@ int device_ids_write(struct cmd_context *cmd)
 	fp = NULL;
 
 	if (rename(tmppath, cmd->devices_file_path) < 0) {
-		log_error("Failed to replace devices file.");
+		log_warn("WARNING: %s: failed to replace devices file: %s", cmd->devices_file_path, strerror(errno));
 		goto out;
 	}
 
