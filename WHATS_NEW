@@ -1,5 +1,7 @@
 Version 2.03.34 - 
 ==================
+  Dmeventd no longer calls 'action commands' on removed devices.
+  Fix reader of VDO metadata on 32bit architecture.
   Fix lvmdevices --deldev/--delpvid to error out if devices file not writeable.
   Fix lvresize corruption in LV->crypt->FS stack if near crypt min size limit.
   Enhanced lvresize -r support for btrfs.
