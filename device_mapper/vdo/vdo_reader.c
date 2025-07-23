@@ -67,7 +67,7 @@ enum {
 struct vdo_header {
 	uint32_t id; /* The component this is a header for */
 	struct vdo_version_number version; /* The version of the data format */
-	size_t size; /* The size of the data following this header */
+	uint64_t size; /* The size of the data following this header */
 } __packed;
 
 struct vdo_geometry_block {
