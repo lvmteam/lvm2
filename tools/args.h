@@ -325,7 +325,15 @@ arg(fs_ARG, '\0', "fs", string_VAL, 0, 0,
     "(deprecated.) Warning: this option does not prevent lvreduce from destroying\n"
     "file systems that are unmounted (or mounted if prompts are skipped.)\n"
     "\\fBignore\\fP: Resize the LV without checking for or handling a file system.\n"
-    "Warning: using ignore when reducing the LV size may destroy the file system.\n")
+    "Warning: using ignore when reducing the LV size may destroy the file system.\n"
+    ".sp\n"
+    "Note: If resizing an LV without a file system and the new LV size matches\n"
+    "the existing size, the command returns a \\fBnon-zero status code\\fP (failure).\n"
+    "However, if a file system resize is also requested along with the LV resize,\n"
+    "and the sizes already match, the command returns a \\fBzero status code\\fP\n"
+    "(success). This occurs because the external commands called to resize the file\n"
+    "system return success even if the new and old file system sizes are identical.\n"
+    "LVM follows the command status code behavior in this scenario.\n")
 
 arg(fsmode_ARG, '\0', "fsmode", string_VAL, 0, 0,
     "Control file system mounting behavior for fs resize.\n"

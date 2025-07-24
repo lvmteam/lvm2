@@ -578,6 +578,14 @@ control mounting behavior, and --nofsck to disable fsck.
 file systems that are unmounted (or mounted if prompts are skipped.)
 \fBignore\fP: Resize the LV without checking for or handling a file system.
 Warning: using ignore when reducing the LV size may destroy the file system.
+.sp
+Note: If resizing an LV without a file system and the new LV size matches
+the existing size, the command returns a \fBnon-zero status code\fP (failure).
+However, if a file system resize is also requested along with the LV resize,
+and the sizes already match, the command returns a \fBzero status code\fP
+(success). This occurs because the external commands called to resize the file
+system return success even if the new and old file system sizes are identical.
+LVM follows the command status code behavior in this scenario.
 .
 .TP
 .O_fsmode
