@@ -170,7 +170,7 @@ static int _move_lvs(struct volume_group *vg_from, struct volume_group *vg_to)
 
 		}
 
-		if (vg_with == vg_from)
+		if (!vg_with || vg_with == vg_from)
 			continue;
 
 		/* Move this LV */
