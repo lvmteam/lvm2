@@ -396,9 +396,10 @@ during lockstart.)
 .SS vgextend
 .P
 For local VGs, vgextend starts PR on the new devices before adding them to
-the VG.  For shared VGs, the user must use lvmpersist to start PR on the
-new devices, from all hosts, before running vgextend.  vgextend verifies
-that the reservation and keys on the new devices match the existing devices.
+the VG (the require or autostart setting must be enabled.)  For shared
+VGs, the user must use lvmpersist to start PR on the new devices, from all
+hosts, before running vgextend.  vgextend verifies that the reservation
+and keys on the new devices match the existing devices.
 .P
 .SS vgremove
 The vgremove command stops PR on the VG's devices only if "require" or

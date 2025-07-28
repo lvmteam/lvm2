@@ -99,7 +99,8 @@ static int _vgextend_single(struct cmd_context *cmd, const char *vg_name,
 		goto_out;
 
 	/* If the VG is using PR, then get PR on new devs. */
-	if (!persist_start_extend(cmd, vg))
+	if ((vg->pr & (VG_PR_REQUIRE|VG_PR_AUTOSTART)) &&
+	    !persist_start_extend(cmd, vg))
 		goto_out;
 
 	if (arg_is_set(cmd, metadataignore_ARG)) {

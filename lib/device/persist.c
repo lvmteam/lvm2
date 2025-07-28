@@ -545,10 +545,12 @@ static int dev_find_key(struct cmd_context *cmd, struct device *dev, int may_fai
 		ret = dev_find_key_nvme(cmd, dev, may_fail, find_key, found_key,
 					 find_host_id, found_host_id_key,
 					 find_all, found_count, found_all);
-	else
+	else if (dev_is_scsi(cmd, dev) || dev_is_mpath(cmd, dev))
 		ret = dev_find_key_scsi(cmd, dev, may_fail, find_key, found_key,
 					 find_host_id, found_host_id_key,
 					 find_all, found_count, found_all);
+	else
+		return_0;
 
 	if (ret && found_all && found_count && *found_all && *found_count > 1) {
 		qsort(*found_all, *found_count, sizeof(uint64_t), _compare_uint64);
@@ -1688,7 +1690,7 @@ int persist_start_extend(struct cmd_context *cmd, struct volume_group *vg)
 	 * is registered on any device.  If so, then PR is in use.  If not, PR
 	 * not in use.
 	 */
-	if (!dev_find_key(cmd, check_dev, 0, our_key_val, &found, 0, NULL, 0, NULL, NULL))
+	if (!dev_find_key(cmd, check_dev, 1, our_key_val, &found, 0, NULL, 0, NULL, NULL))
 		return 1;
 	if (!found)
 		return 1;
