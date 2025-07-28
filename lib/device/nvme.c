@@ -395,15 +395,15 @@ int dev_find_key_nvme(struct cmd_context *cmd, struct device *dev, int may_fail,
 	devname = dev_name(dev);
 
 	if ((fd = open(devname, O_RDONLY)) < 0) {
-		log_error("dev_read_reservation %s open error %d", devname, errno);
+		log_error("dev_find_key_nvme %s open error %d", devname, errno);
 		return 0;
 	}
 
 	if (nvme_get_nsid(fd, &nsid)) {
 		if (may_fail)
-			log_debug("dev_read_reservation %s nvme_get_nsid error %d", devname, errno);
+			log_debug("dev_find_key_nvme %s nvme_get_nsid error %d", devname, errno);
 		else
-			log_error("dev_read_reservation %s nvme_get_nsid error %d", devname, errno);
+			log_error("dev_find_key_nvme %s nvme_get_nsid error %d", devname, errno);
 		goto out;
 	}
 
@@ -421,21 +421,21 @@ int dev_find_key_nvme(struct cmd_context *cmd, struct device *dev, int may_fail,
 
 	if ((err = nvme_resv_report(&args))) {
 		if (may_fail)
-			log_debug("dev_read_reservation %s error %d", devname, err);
+			log_debug("dev_find_key_nvme %s error %d", devname, err);
 		else
-			log_error("dev_read_reservation %s error %d", devname, err);
+			log_error("dev_find_key_nvme %s error %d", devname, err);
 		goto out;
 	}
 
 	regctl = status->regctl[0] | (status->regctl[1] << 8);
 	status_entries = (status_size - 64) / 64;
 	if (status_entries < regctl) {
-		log_warn("dev_read_reservation %s too many entries %d limit %d", devname, regctl, status_entries);
+		log_warn("dev_find_key_nvme %s too many entries %d limit %d", devname, regctl, status_entries);
 		regctl = status_entries;
 	}
 	num_keys = regctl;
 
-	log_debug("dev_find_key %s num %d", devname, num_keys);
+	log_debug("dev_find_key_nvme %s num %d", devname, num_keys);
 
 	/* caller wants just a count of all keys */
 	if (find_all && found_count && !found_all) {
@@ -468,7 +468,7 @@ int dev_find_key_nvme(struct cmd_context *cmd, struct device *dev, int may_fail,
 	for (i = 0; i < num_keys; i++) {
 		key = le64toh(status->regctl_eds[i].rkey);
 
-		log_debug("dev_find_key %s 0x%llx", devname, (unsigned long long)key);
+		log_debug("dev_find_key_nvme %s 0x%llx", devname, (unsigned long long)key);
 
 		if (find_all && found_count && found_all)
 			all_keys[i] = key;
