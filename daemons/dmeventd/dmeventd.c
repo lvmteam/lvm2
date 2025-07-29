@@ -685,7 +685,7 @@ static int _get_status(struct message_data *message_data)
 	_lock_mutex();
 	if (!(count = dm_list_size(&_thread_registry))) {
 		_unlock_mutex();
-		ret = -EINVAL;
+		ret = 0;        /* no monitored devices */
 		goto out;
 	}
 
