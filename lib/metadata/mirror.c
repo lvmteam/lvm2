@@ -774,6 +774,17 @@ static int _split_mirror_images(struct logical_volume *lv,
 
 		if (!sync_local_dev_names(lv->vg->cmd))
 			stack;
+
+		if (!deactivate_lv(lv->vg->cmd, new_lv))
+			return_0;
+
+		if (!sync_local_dev_names(lv->vg->cmd))
+			stack;
+
+		if (!_activate_lv_like_model(lv, new_lv)) {
+			log_error("Failed to rename newly split LV in the kernel");
+			return 0;
+		}
 	}
 
 	/* Remove original mirror layer if it has been converted to error */

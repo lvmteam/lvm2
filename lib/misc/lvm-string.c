@@ -264,10 +264,9 @@ char *build_dm_uuid(struct dm_pool *mem, const struct logical_volume *lv,
 			lv_is_cache_pool_data(lv) ? "cdata" :
 			lv_is_cache_pool_metadata(lv) ? "cmeta" :
 			lv_is_cache_vol(lv) ? "cvol" :
-			// FIXME: dm-tree needs fixes for mirrors/raids
-			//lv_is_mirror_image(lv) ? "mimage" :
-			//lv_is_mirror_log(lv) ? "mlog" :
-			((lv_is_raid_image(lv) ||
+			((lv_is_mirror_image(lv) ||
+			  lv_is_mirror_log(lv) ||
+			  lv_is_raid_image(lv) ||
 			  lv_is_raid_metadata(lv)) &&
 			 !lv_is_visible(lv)) ? "real" :
 			lv_is_thin_pool(lv) ? "pool" :
@@ -277,6 +276,11 @@ char *build_dm_uuid(struct dm_pool *mem, const struct logical_volume *lv,
 			lv_is_vdo_pool_data(lv) ? "vdata" :
 			NULL;
 	}
+
+	/* Temporary mirror layer can be only recognized by checking its name.
+	 * LV appears as public LV for initial activation. */
+	if (!layer && strstr(lv->name, MIRROR_SYNC_LAYER "_"))
+		layer = "real";
 
 	if (!(dlid = dm_build_dm_uuid(mem, UUID_PREFIX, lvid, layer)))
 		log_error("Failed to build LVM dlid for %s.",
