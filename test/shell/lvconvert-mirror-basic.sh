@@ -94,16 +94,13 @@ test_lvconvert() {
 	if [ "$finish_count" -eq 0 ]; then
 		mirrorlog=""
 		finish_log_type=""
-		finish_log_count=$start_log_count
 	else
 		mirrorlog="--mirrorlog"
 	fi
 
-	if [ $start_count -eq $finish_count ] && [ $start_log_count -eq $finish_log_count ]; then
-		not lvconvert --type mirror -m $finish_count $mirrorlog $finish_log_type $vg/$lv1 $alloc
-	else
+	[ $start_count -eq $finish_count ] && \
+		not lvconvert --type mirror -m $finish_count $mirrorlog $finish_log_type $vg/$lv1 $alloc || \
 		lvconvert --type mirror -m $finish_count $mirrorlog $finish_log_type $vg/$lv1 $alloc
-	fi
 
 	test "$active" = "-an" || lvchange "$active" $vg/$lv1
 
