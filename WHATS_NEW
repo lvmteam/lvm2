@@ -1,5 +1,6 @@
 Version 2.03.34 - 
 ==================
+  Support dmeventd restart when there are no monitored devices.
   Dmeventd no longer calls 'action commands' on removed devices.
   Fix reader of VDO metadata on 32bit architecture.
   Fix lvmdevices --deldev/--delpvid to error out if devices file not writeable.
@@ -8,7 +9,6 @@ Version 2.03.34 -
   Use glibc standard functions htoX, Xtoh functions for endian conversion.
   Fix structure copying within sanlock's release_rename().
   Fix autoactivation on top of loop dev PVs to trigger once for change uevents.
-  lvconvert: reject raid1 and mirror LV non-changing image requests
   Fix support for lvcreate -T --setautoactivation.
   Add lvm.conf global/lvresize_fs_helper_executable.
   Enable lvm to use persistent reservations on a VG.
