@@ -1,5 +1,5 @@
-Version 2.03.34 - 
-==================
+Version 2.03.34 - 30th July 2025
+================================
   Support dmeventd restart when there are no monitored devices.
   Dmeventd no longer calls 'action commands' on removed devices.
   Fix reader of VDO metadata on 32bit architecture.
@@ -9,6 +9,7 @@ Version 2.03.34 -
   Use glibc standard functions htoX, Xtoh functions for endian conversion.
   Fix structure copying within sanlock's release_rename().
   Fix autoactivation on top of loop dev PVs to trigger once for change uevents.
+  Add lvmlockd --lockopt repair to reinitialize corrupted sanlock leases.
   Fix support for lvcreate -T --setautoactivation.
   Add lvm.conf global/lvresize_fs_helper_executable.
   Enable lvm to use persistent reservations on a VG.

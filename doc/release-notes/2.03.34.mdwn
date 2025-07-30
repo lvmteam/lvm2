@@ -1,0 +1,30 @@
+<!-- Page title -->
+[[!meta title="Version 2.03.34 - Bug Fix Release"]]
+
+Version 2.03.34
+===============
+
+Add *Persisten Reservations* and many mostly small fixes.
+
+* **NEW** Add support for **persistent reservations** controlling access to shared PVs.
+    * See [lvmpersist(8)](https://man7.org/linux/man-pages/man8/lvmpersist.8.html) for more details.
+* Add `lvmlockd --lockopt repair` to reinitialize corrupted sanlock leases.
+* Add *lvm.conf* `global/lvresize_fs_helper_executable`.
+* Fix lvresize corruption in LV->crypt->FS stack if near crypt min size limit.
+* Support dmeventd restart when there are no monitored devices.
+* Dmeventd no longer calls 'action commands' on removed devices.
+* Enhanced `lvresize -r` support for btrfs.
+* Fix reader of VDO metadata on 32bit architecture.
+* Fix `lvmdevices --deldev/--delpvid` to error out if devices file not writeable.
+* Use glibc standard functions htoX, Xtoh functions for endian conversion.
+* Fix structure copying within sanlock's `release_rename()`.
+* Fix autoactivation on top of loop dev PVs to trigger once for change uevents.
+* Fix support for `lvcreate -T --setautoactivation`.
+* Fix many issues found by coverity static analysis, gcc warnings, typos, tests, and other clean ups.
+
+<!-- remove the pending tag on release, remove draft tag once editing is complete -->
+[[!tag]]
+<!--
+For old releases add Release Timestamp like this, date from git show $COMMIT is fine.
+[[!meta date="Wed Jul 30 15:35:00 2025 +0200"]]
+-->
