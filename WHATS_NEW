@@ -1,3 +1,6 @@
+Version 2.03.35 - 
+==================
+
 Version 2.03.34 - 30th July 2025
 ================================
   Support dmeventd restart when there are no monitored devices.
