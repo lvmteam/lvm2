@@ -34,7 +34,7 @@ check raid_leg_status $vg $lv "DA"
 
 # Conversion to 2 legs does nothing on degraded 2-legged raid1 LV
 lvconvert -y -m1 $vg/$lv 2>&1 | tee out
-grep "already has 2 images" out
+grep "is 2 already" out
 # Check it remains degraded after the successful "conversion"
 check raid_leg_status $vg $lv "DA"
 
