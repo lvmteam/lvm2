@@ -1265,11 +1265,8 @@ static int _lvconvert_mirrors(struct cmd_context *cmd,
 
 	/* Nothing to do?  (Probably finishing collapse.) */
 	if ((old_mimage_count == new_mimage_count) &&
-	    (old_log_count == new_log_count)) {
-		log_error("Volume %s has already image count %u and log count %u.",
-			  display_lvname(lv), new_mimage_count, new_log_count);
-		return 0;
-	}
+	    (old_log_count == new_log_count))
+		return 1;
 
 	if (!_lvconvert_mirrors_aux(cmd, lv, lp, NULL,
 				    new_mimage_count, new_log_count, lp->pvh))
