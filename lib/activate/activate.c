@@ -681,6 +681,49 @@ int get_dm_active_devices(const struct volume_group *vg, struct dm_list **devs,
 }
 
 /*
+ * Check for active devices with private "-real" UUID suffix
+ * when public device doesn't exist.
+ *
+ * This function extends _lv_info() functionality to handle edge cases
+ * where a visible LV has no active device with its public UUID,
+ * but there might be an active device using a private "-real" suffixed UUID.
+ * This situation typically occurs during RAID/mirror operations
+ * where internal LV components transition to public LVs but retain their
+ * private device mapper UUIDs.
+ *
+ * The function:
+ * - Skips LVs that already have "-real" in their UUID (likely internal components)
+ * - Queries device mapper for a device using the LV name with "real" layer
+ * - Populates dminfo structure if such device exists
+ *
+ * These 'orphan' LVs with private UUIDs need explicit activation to be
+ * properly managed before they can be deactivated with their correct
+ * public UUIDs.
+ *
+ * TODO: automate removal of orphan LVs with -real suffix
+ *       using LV_PENDING_DELETE to reduce this workaround code.
+ */
+static int _lv_info_real(const struct logical_volume *lv,
+			 struct dm_info *dminfo)
+{
+	const char *dlid;
+
+	if (!(dlid = build_dm_uuid(lv->vg->cmd->mem, lv, NULL)))
+		return_0;
+
+	if (strstr(dlid, "-real")) {
+		/* UUID has "-real" suffix (likely MIRROR_SYNC_LAYER), skip */
+		return 1;
+	}
+
+	if (!dev_manager_info(lv->vg->cmd, lv, "real", 0, 0, 0,
+			      dminfo, NULL, NULL))
+		return_0;
+
+	return 1;
+}
+
+/*
  * When '*info' is NULL, returns 1 only when LV is active.
  * When '*info' != NULL, returns 1 when info structure is populated.
  */
@@ -723,6 +766,10 @@ static int _lv_info(struct cmd_context *cmd, const struct logical_volume *lv,
 			      &dminfo,
 			      (info) ? &info->read_ahead : NULL,
 			      seg_status))
+		return_0;
+
+	if (!dminfo.exists && !use_layer && lv_is_visible(lv) &&
+	    !_lv_info_real(lv, &dminfo))
 		return_0;
 
 	if (!info)

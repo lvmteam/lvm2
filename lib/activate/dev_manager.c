@@ -3567,6 +3567,68 @@ static int _add_segment_to_dtree(struct dev_manager *dm,
 	return 1;
 }
 
+/*
+ * Check if a visible LV is active but still uses a private "-real" UUID suffix.
+ *
+ * This situation occurs during certain operations like RAID leg splits,
+ * where an LV transitions from being an internal component (with "-real" suffix)
+ * to a public LV, but the device mapper device retains the old private UUID.
+ *
+ * This function detects such inconsistencies by:
+ * 1. Constructing a potential "-real" suffixed UUID for the given LV
+ * 2. Searching for an active device with that UUID but without "-real" in its name
+ * 3. If found, updating UUID parameter to use the private UUID
+ *
+ * Note: Such LVs should be deactivated and reactivated to use the correct public UUID.
+ */
+static int _lv_adjust_real_uuid(struct dev_manager *dm,	struct dm_tree *dtree,
+				const struct logical_volume *lv,
+				char **dlid)
+{
+	struct dm_tree_node *dnode;
+	const struct dm_info *dinfo;
+	const char *s;
+	char *uuid;
+
+	/* Only check visible LVs that are neither origin nor snapshot */
+	if (!lv_is_visible(lv) ||
+	    lv_is_origin(lv) ||
+	    lv_is_cow(lv))
+		return 1;
+
+	/* Currently only a few LV types can be RAID/mirror orphans, for example:
+	 * legs cannot be cached, however old mirror log can be mirrored */
+	if (!lv_is_linear(lv) &&
+	    !lv_is_striped(lv) &&
+	    !lv_is_mirrored(lv) &&
+	    !lv_is_error(lv) &&
+	    !lv_is_zero(lv))
+		return 1;
+
+	if (!(uuid = build_dm_uuid(dm->mem, lv, "real")))
+		return_0;
+
+	/* Temporarily disable suffix masking. Exact match is required. */
+	dm_tree_set_optional_uuid_suffixes(dtree, NULL);
+
+	if ((dnode = dm_tree_find_node_by_uuid(dtree, uuid)) &&
+	    (dinfo = dm_tree_node_get_info(dnode)) && dinfo->exists) {
+		s = strstr(dm_tree_node_get_name(dnode), "-real");
+		/* Ignore devices whose names end with "-real" suffix */
+		if (!s || s[5]) {
+			log_debug("Adjusting UUID to %s for LV %s active as %s.",
+				  uuid, display_lvname(lv),
+				  dm_tree_node_get_name(dnode));
+			*dlid = uuid;
+		}
+	}
+
+	/* Restore suffix handling. */
+	_set_optional_uuid_suffixes(dtree);
+
+	return 1;
+}
+
 static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 				const struct logical_volume *lv, struct lv_activate_opts *laopts,
 				const char *layer)
@@ -3691,6 +3753,9 @@ static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 	    dm_tree_node_get_context(dnode))
 		return 1;
 
+	/* Use UUID with -real private suffix for such active LV. */
+	if (!layer && !_lv_adjust_real_uuid(dm, dtree, lv, &dlid))
+		return_0;
 	/*
 	 * Add LV to dtree.
 	 * If we're working with precommitted metadata, clear any

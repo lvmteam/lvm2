@@ -267,8 +267,9 @@ char *build_dm_uuid(struct dm_pool *mem, const struct logical_volume *lv,
 			// FIXME: dm-tree needs fixes for mirrors/raids
 			//lv_is_mirror_image(lv) ? "mimage" :
 			//lv_is_mirror_log(lv) ? "mlog" :
-			//lv_is_raid_image(lv) ? "rimage" :
-			//lv_is_raid_metadata(lv) ? "rmeta" :
+			((lv_is_raid_image(lv) ||
+			  lv_is_raid_metadata(lv)) &&
+			 !lv_is_visible(lv)) ? "real" :
 			lv_is_thin_pool(lv) ? "pool" :
 			lv_is_thin_pool_data(lv) ? "tdata" :
 			lv_is_thin_pool_metadata(lv) ? "tmeta" :
