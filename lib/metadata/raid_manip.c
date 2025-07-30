@@ -3311,11 +3311,6 @@ int lv_raid_change_image_count(struct logical_volume *lv, int yes, uint32_t new_
 		return 0;
 	}
 
-	if (new_count == seg->area_count) {
-		log_error("Image count on %s is %u already.", display_lvname(lv), new_count);
-		return 0;
-	}
-
 	if (new_count != 1 && /* Already prompted for in _raid_remove_images() */
 	    !yes && yes_no_prompt("Are you sure you want to convert %s LV %s to %s%u images %s resilience? [y/n]: ",
 				  lvseg_name(first_seg(lv)), display_lvname(lv), level, new_count, resil) == 'n') {
