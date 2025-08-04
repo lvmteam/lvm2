@@ -24,7 +24,7 @@ create_vg_() {
 
 aux have_raid 1 3 0 || skip
 
-aux prepare_pvs 5 10
+aux prepare_pvs 6 10
 
 #
 # vgsplit can be done into a new or existing VG
@@ -57,3 +57,18 @@ COMM "vgsplit correctly splits RAID LV into $i VG ($j args)"
 		vgremove -f $vg2
 	done
 done
+
+# ONLY TEST WHEN INTEGRITY IS AVAILABLE!
+if aux have_integrity 1 5 0; then
+for i in raid1 raid4 raid5 raid6 raid10
+do
+COMM "vgsplit correctly splits $i LV with integrity enabled"
+		create_vg_ $vg1 "$dev1" "$dev2" "$dev3" "$dev4" "$dev5" "$dev6"
+		lvcreate -an -Zn -l 1 --type $i --raidintegrity y -n $lv1 $vg1 $dev1 $dev2 $dev3 $dev4 $dev5
+		fail vgsplit $vg1 $vg2 "$dev1" 2>&1 | tee err
+		grep "Can't split LV LV1 between two Volume Groups" err
+		vgsplit $vg1 $vg2 "$dev6"
+		vgremove -f $vg1
+		vgremove -f $vg2
+done
+fi # END OF INTEGRITY TESTS
