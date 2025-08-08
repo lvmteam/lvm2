@@ -590,6 +590,10 @@ int lvmdevices(struct cmd_context *cmd, int argc, char **argv)
 			return ECMD_FAILED;
 		}
 		if (!devices_file_exists(cmd)) {
+			if (arg_is_set(cmd, deldev_ARG) || arg_is_set(cmd, delpvid_ARG) || arg_is_set(cmd, update_ARG)) {
+				log_error("Devices file does not exist.");
+				return ECMD_FAILED;
+			}
 			if (!devices_file_touch(cmd)) {
 				log_error("Failed to create the devices file.");
 				return ECMD_FAILED;

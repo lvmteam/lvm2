@@ -249,6 +249,13 @@ lvmdevices --update --delnotfound
 not grep PVID=aaa $DF
 not grep PVID=bbb $DF
 
+# test that deldev does not create devices file when it doesn't exist
+rm -f $DF
+test ! -e $DF
+not lvmdevices --deldev "$LOOP1"
+test ! -e $DF
+not lvmdevices --delpvid "$PVID1"
+test ! -e $DF
 
 # TODO: add/rem of partitions of same device
 
