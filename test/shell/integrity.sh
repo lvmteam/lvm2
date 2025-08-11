@@ -135,6 +135,7 @@ lvs -a -o name,segtype,devices,sync_percent $vg
 aux wait_recalc $vg/${lv1}_rimage_0
 aux wait_recalc $vg/${lv1}_rimage_1
 aux wait_recalc $vg/$lv1
+lvchange $vg/$lv1 --writemostly "$dev2"
 _test_fs_with_read_repair "$dev1"
 lvs -o integritymismatches $vg/${lv1}_rimage_0 |tee mismatch
 not grep 0 mismatch
@@ -152,6 +153,8 @@ aux wait_recalc $vg/${lv1}_rimage_0
 aux wait_recalc $vg/${lv1}_rimage_1
 aux wait_recalc $vg/${lv1}_rimage_2
 aux wait_recalc $vg/$lv1
+lvchange $vg/$lv1 --writemostly "$dev2"
+lvchange $vg/$lv1 --writemostly "$dev3"
 _test_fs_with_read_repair "$dev1" "$dev2"
 lvs -o integritymismatches $vg/${lv1}_rimage_0 |tee mismatch
 not grep 0 mismatch
@@ -233,8 +236,10 @@ lvs -o integritymismatches $vg/${lv1}_rimage_0
 lvs -o integritymismatches $vg/${lv1}_rimage_1
 lvs -o integritymismatches $vg/${lv1}_rimage_2
 lvs -o integritymismatches $vg/${lv1}_rimage_3
-lvs -o integritymismatches $vg/$lv1 |tee mismatch
-not grep 0 mismatch
+# raid may read from a non-corrupted image, so we can't
+# be sure that mismatches were detected.
+# lvs -o integritymismatches $vg/$lv1 |tee mismatch
+# not grep 0 mismatch
 lvchange -an $vg/$lv1
 lvconvert --raidintegrity n $vg/$lv1
 lvremove $vg/$lv1
@@ -602,6 +607,7 @@ lvs -a -o name,segtype,devices,sync_percent $vg
 aux wait_recalc $vg/${lv1}_rimage_0
 aux wait_recalc $vg/${lv1}_rimage_1
 aux wait_recalc $vg/$lv1
+lvchange $vg/$lv1 --writemostly "$dev2"
 _test_fs_with_read_repair "$dev1"
 lvs -o integritymismatches $vg/${lv1}_rimage_0 |tee mismatch
 not grep 0 mismatch
