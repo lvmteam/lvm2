@@ -93,7 +93,7 @@ static const size_t THREAD_STACK_SIZE = 300 * 1024;
 static const time_t DMEVENTD_IDLE_EXIT_TIMEOUT = 60 * 60;
 
 /* Default grace period for thread cleanup 10 seconds */
-#define DMEVENTD_DEFAULT_GRACE_PERIOD 10;
+#define DMEVENTD_DEFAULT_GRACE_PERIOD 10
 static time_t _grace_period = DMEVENTD_DEFAULT_GRACE_PERIOD;
 
 static int _systemd_activation = 0;
