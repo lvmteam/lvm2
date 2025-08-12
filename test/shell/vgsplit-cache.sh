@@ -132,3 +132,4 @@ vgsplit $vg $vg1 "$dev1"
 lvremove $vg/$lv1
 
 vgremove -ff $vg
+vgremove -ff $vg1
