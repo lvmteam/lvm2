@@ -450,6 +450,8 @@ static int _move_cache(struct volume_group *vg_from,
 
 		if (lv_is_cache_vol(lv)) {
 			fast = lv;
+		} else if (lv_is_cache_vol(seg->lv)) {
+			fast = seg->lv;
 		} else {
 			data = seg_lv(seg, 0);
 			meta = seg->metadata_lv;
