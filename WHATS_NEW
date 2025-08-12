@@ -1,5 +1,6 @@
 Version 2.03.35 - 
 ==================
+  Fix vgsplit failing to split a VG with RAID+integrity or cache with cachevol.
   Optimize dmeventd when remonitoring active devices.
 
 Version 2.03.34 - 30th July 2025
