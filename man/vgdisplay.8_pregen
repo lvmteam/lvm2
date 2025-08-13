@@ -368,6 +368,10 @@ Display output in columns like vgs.
 ]
 .br
 [
+.O_select
+]
+.br
+[
 .O_sort
 ]
 .br
@@ -377,6 +381,14 @@ Display output in columns like vgs.
 .br
 [
 .O_binary
+]
+.br
+[
+.O_configreport
+]
+.br
+[
+.O_logonly
 ]
 .br
 [
@@ -393,6 +405,10 @@ Display output in columns like vgs.
 .br
 [
 .O_nosuffix
+]
+.br
+[
+.O_reportformat
 ]
 .br
 [
@@ -439,14 +455,6 @@ Generate colon separated output.
 Common options for command:
 .RS
 [
-.O_select
-]
-.br
-[
-.O_configreport
-]
-.br
-[
 .O_foreign
 ]
 .br
@@ -455,15 +463,7 @@ Common options for command:
 ]
 .br
 [
-.O_logonly
-]
-.br
-[
 .O_readonly
-]
-.br
-[
-.O_reportformat
 ]
 .br
 [

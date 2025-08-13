@@ -231,10 +231,6 @@ if information changes between commands.
 .B lvm fullreport
 .RS
 [
-.O_select
-]
-.br
-[
 .O_all
 ]
 .br
@@ -243,11 +239,11 @@ if information changes between commands.
 ]
 .br
 [
-.O_sort
+.O_select
 ]
 .br
 [
-.O_configreport
+.O_sort
 ]
 .br
 [
@@ -259,15 +255,7 @@ if information changes between commands.
 ]
 .br
 [
-.O_logonly
-]
-.br
-[
 .O_readonly
-]
-.br
-[
-.O_reportformat
 ]
 .br
 [
@@ -287,6 +275,14 @@ if information changes between commands.
 ]
 .br
 [
+.O_configreport
+]
+.br
+[
+.O_logonly
+]
+.br
+[
 .O_headings
 ]
 .br
@@ -300,6 +296,10 @@ if information changes between commands.
 .br
 [
 .O_nosuffix
+]
+.br
+[
+.O_reportformat
 ]
 .br
 [

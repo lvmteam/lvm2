@@ -227,10 +227,6 @@ vgs produces formatted output about VGs.
 .B vgs
 .RS
 [
-.O_select
-]
-.br
-[
 .O_all
 ]
 .br
@@ -239,11 +235,11 @@ vgs produces formatted output about VGs.
 ]
 .br
 [
-.O_sort
+.O_select
 ]
 .br
 [
-.O_configreport
+.O_sort
 ]
 .br
 [
@@ -255,15 +251,7 @@ vgs produces formatted output about VGs.
 ]
 .br
 [
-.O_logonly
-]
-.br
-[
 .O_readonly
-]
-.br
-[
-.O_reportformat
 ]
 .br
 [
@@ -283,6 +271,14 @@ vgs produces formatted output about VGs.
 ]
 .br
 [
+.O_configreport
+]
+.br
+[
+.O_logonly
+]
+.br
+[
 .O_headings
 ]
 .br
@@ -296,6 +292,10 @@ vgs produces formatted output about VGs.
 .br
 [
 .O_nosuffix
+]
+.br
+[
+.O_reportformat
 ]
 .br
 [
