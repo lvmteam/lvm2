@@ -151,22 +151,34 @@ done
 invalid lvdisplay -C -m $vg
 invalid lvdisplay -c -m $vg
 invalid lvdisplay --aligned $vg
+invalid lvdisplay --binary $vg
+invalid lvdisplay --headings 1 $vg
+invalid lvdisplay --nameprefixes $vg
 invalid lvdisplay --noheadings $vg
+invalid lvdisplay --nosuffix $vg
 invalid lvdisplay --options lv_name $vg
+invalid lvdisplay --rows $vg
 invalid lvdisplay --separator : $vg
 invalid lvdisplay --sort size $vg
 invalid lvdisplay --unbuffered $vg
+invalid lvdisplay --unquoted $vg
 
 invalid vgdisplay -C -A
 invalid vgdisplay -C -c
 invalid vgdisplay -C -s
 invalid vgdisplay -c -s
 invalid vgdisplay --aligned
+invalid vgdisplay --binary
+invalid vgdisplay --headings 1
+invalid vgdisplay --nameprefixes
 invalid vgdisplay --noheadings
+invalid vgdisplay --nosuffix
 invalid vgdisplay --options
+invalid vgdisplay --rows
 invalid vgdisplay --separator :
 invalid vgdisplay --sort size
 invalid vgdisplay --unbuffered
+invalid vgdisplay --unquoted
 invalid vgdisplay -A $vg1
 
 invalid pvdisplay -C -A
@@ -176,12 +188,18 @@ invalid pvdisplay -C -s
 invalid pvdisplay -c -m
 invalid pvdisplay -c -s
 invalid pvdisplay --aligned
+invalid pvdisplay --binary
+invalid pvdisplay --headings 1
+invalid pvdisplay --nameprefixes
 invalid pvdisplay --all
 invalid pvdisplay --noheadings
+invalid pvdisplay --nosuffix
 invalid pvdisplay --options
+invalid pvdisplay --rows
 invalid pvdisplay --separator :
 invalid pvdisplay --sort size
 invalid pvdisplay --unbuffered
+invalid pvdisplay --unquoted
 invalid pvdisplay -A $vg1
 
 # Check exported VG listing
