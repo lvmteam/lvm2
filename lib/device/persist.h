@@ -54,8 +54,9 @@ int persist_is_started(struct cmd_context *cmd, struct volume_group *vg, int may
 
 int persist_key_update(struct cmd_context *cmd, struct volume_group *vg, uint32_t prev_gen);
 
+void persist_key_file_remove_name(struct cmd_context *cmd, const char *vg_name);
 void persist_key_file_remove(struct cmd_context *cmd, struct volume_group *vg);
-void persist_key_file_rename(const char *old_name, const char *new_name);
+void persist_key_file_rename(struct volume_group *vg, const char *old_name, const char *new_name);
 
 int dev_read_reservation_nvme(struct cmd_context *cmd, struct device *dev, uint64_t *holder_ret, int *prtype_ret);
 

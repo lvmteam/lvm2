@@ -114,7 +114,7 @@ static int _vgrename_single(struct cmd_context *cmd, const char *vg_name,
 	}
 
 	if (vg->pr)
-		persist_key_file_rename(vg_name, vp->vg_name_new);
+		persist_key_file_rename(vg, vg_name, vp->vg_name_new);
 
 	/* Change the volume group name */
 	vg_rename(cmd, vg, vp->vg_name_new);

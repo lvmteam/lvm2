@@ -30,6 +30,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <errno.h>
+#include <dirent.h>
 #include <sys/ioctl.h>
 #include <scsi/sg.h>
 
@@ -124,28 +125,69 @@ static int parse_prkey(const char *ptr, uint64_t *prkey)
 	return 1;
 }
 
+/*
+ * If there was previously a different VG with the same name (and unknown vgid),
+ * remove the key file that it used.
+ */
+void persist_key_file_remove_name(struct cmd_context *cmd, const char *vg_name)
+{
+	DIR *dir;
+	struct dirent *de;
+	char path[PATH_MAX] = { 0 };
+	char name[PATH_MAX] = { 0 };
+	int namelen;
+
+	if (dm_snprintf(name, sizeof(name), "persist_key_%s", vg_name) < 0)
+		return;
+	namelen = strlen(name);
+
+	if (!(dir = opendir("/var/lib/lvm")))
+		return;
+
+	while ((de = readdir(dir))) {
+		if (de->d_name[0] == '.')
+			continue;
+		if (!strncmp(de->d_name, name, namelen)) {
+			if (dm_snprintf(path, sizeof(path), "/var/lib/lvm/%s", de->d_name) < 0)
+				continue;
+			if (unlink(path))
+				log_sys_debug("unlink", path);
+		}
+	}
+
+	(void) closedir(dir);
+}
+
+static void create_persist_key_path(struct volume_group *vg, const char *vg_name, char *path)
+{
+	char vgid[ID_LEN + 1] __attribute__((aligned(8)));
+
+	vgid[ID_LEN] = 0;
+	memcpy(vgid, &vg->id.uuid, ID_LEN);
+
+	(void) dm_snprintf(path, PATH_MAX, "/var/lib/lvm/persist_key_%s_%s", vg_name, vgid);
+}
+
 void persist_key_file_remove(struct cmd_context *cmd, struct volume_group *vg)
 {
 	char path[PATH_MAX] = { 0 };
 
-	if (dm_snprintf(path, PATH_MAX-1, "/var/lib/lvm/persist_key_%s", vg->name) < 0)
-		return;
+	create_persist_key_path(vg, vg->name, path);
 
 	if (unlink(path))
 		log_sys_debug("unlink", path);
 }
 
-void persist_key_file_rename(const char *old_name, const char *new_name)
+void persist_key_file_rename(struct volume_group *vg, const char *old_name, const char *new_name)
 {
 	char old_path[PATH_MAX] = { 0 };
 	char new_path[PATH_MAX] = { 0 };
 	struct stat info;
 
-	if (dm_snprintf(old_path, PATH_MAX-1, "/var/lib/lvm/persist_key_%s", old_name) < 0)
-		return;
+	create_persist_key_path(vg, old_name, old_path);
+	create_persist_key_path(vg, new_name, new_path);
+
 	if (stat(old_path, &info))
-		return;
-	if (dm_snprintf(new_path, PATH_MAX-1, "/var/lib/lvm/persist_key_%s", new_name) < 0)
 		return;
 	if (rename(old_path, new_path) < 0)
 		log_warn("WARNING: Failed to rename %s", old_path);
@@ -156,8 +198,7 @@ static int key_file_exists(struct cmd_context *cmd, struct volume_group *vg)
 	char path[PATH_MAX] = { 0 };
 	struct stat info;
 
-	if (dm_snprintf(path, PATH_MAX-1, "/var/lib/lvm/persist_key_%s", vg->name) < 0)
-		return 0;
+	create_persist_key_path(vg, vg->name, path);
 
 	if (!stat(path, &info))
 		return 1;
@@ -178,8 +219,7 @@ static int read_key_file(struct cmd_context *cmd, struct volume_group *vg,
 	uint32_t found_gen = 0;
 	FILE *fp;
 
-	if (dm_snprintf(path, PATH_MAX-1, "/var/lib/lvm/persist_key_%s", vg->name) < 0)
-		return 0;
+	create_persist_key_path(vg, vg->name, path);
 
 	if (!(fp = fopen(path, "r"))) {
 		log_debug("key_file: cannot open %s", path);
@@ -245,8 +285,7 @@ static int write_key_file(struct cmd_context *cmd, struct volume_group *vg, uint
 	char path[PATH_MAX] = { 0 };
 	FILE *fp;
 
-	if (dm_snprintf(path, PATH_MAX-1, "/var/lib/lvm/persist_key_%s", vg->name) < 0)
-		return 0;
+	create_persist_key_path(vg, vg->name, path);
 
 	if (!(fp = fopen(path, "w"))) {
 		log_debug("Failed to create key file");
