@@ -63,6 +63,10 @@ enum {
 	LD_OP_QUERY_LOCK,
 	LD_OP_REFRESH_LV,
 	LD_OP_VG_STATUS,
+	LD_OP_FENCE,
+	LD_OP_FENCE_RESULT,
+	LD_OP_SETLOCKARGS_BEFORE,
+	LD_OP_SETLOCKARGS_FINAL,
 };
 
 /* resource types */
@@ -119,6 +123,7 @@ struct client {
 #define LD_AF_ADOPT_ONLY           0x00200000 /* adopt orphan or fail */
 #define LD_AF_NODELAY              0x00400000
 #define LD_AF_REPAIR		   0x00800000
+#define LD_AF_NO_TIMEOUT	   0x01000000
 
 /*
  * Number of times to repeat a lock request after
@@ -130,6 +135,32 @@ struct client {
 struct pvs {
 	char **path;
 	int num;
+};
+
+#define RUN_COMMAND_LEN 1024
+#define MAX_AV_COUNT 32
+#define ONE_ARG_LEN 256
+
+/* helper_msg types */
+#define HELPER_COMMAND 0x1
+#define HELPER_COMMAND_RESULT 0x2
+
+struct helper_msg {
+	uint8_t  type;
+	uint8_t  act;
+	uint16_t unused1;
+	uint32_t msg_id;
+	int pid;
+	int result;
+	char ls_name[MAX_NAME+1];
+	uint8_t unused2;
+	uint16_t unused3;
+	char command[RUN_COMMAND_LEN];
+};
+
+struct helper_msg_list {
+	struct helper_msg msg;
+	struct list_head list;
 };
 
 #define OWNER_NAME_SIZE 64
@@ -147,9 +178,13 @@ struct action {
 	struct list_head list;
 	uint32_t client_id;
 	uint32_t flags;			/* LD_AF_ */
+	uint32_t msg_id;
 	uint32_t version;
 	uint32_t host_id;
+	uint64_t ourkey;
+	uint64_t remkey;
 	uint64_t lv_size_bytes;
+	uint64_t ls_generation;
 	int8_t op;			/* operation type LD_OP_ */
 	int8_t rt;			/* resource type LD_RT_ */
 	int8_t mode;			/* lock mode LD_LK_ */
@@ -166,7 +201,7 @@ struct action {
 	char lv_uuid[MAX_NAME+1];
 	char vg_args[MAX_ARGS+1];
 	char lv_args[MAX_ARGS+1];
-	char prev_lv_args[MAX_ARGS+1];
+	char other_args[MAX_ARGS+1];
 	struct owner owner;
 	struct pvs pvs;			/* PV list for idm */
 };
@@ -187,6 +222,7 @@ struct resource {
 	unsigned int use_vb : 1;
 	struct list_head locks;
 	struct list_head actions;
+	struct list_head fence_wait_actions;
 	char lv_args[MAX_ARGS+1];
 	char lm_data[];			/* lock manager specific data */
 };
@@ -209,6 +245,7 @@ struct lockspace {
 	char vg_args[MAX_ARGS+1];	/* lock manager specific args */
 	int8_t lm_type;			/* lock manager: LM_DLM, LM_SANLOCK */
 	void *lm_data;
+	uint32_t lock_args_flags;
 	uint32_t host_id;
 	uint64_t generation;
 	uint64_t free_lock_offset;	/* for sanlock, start search for free lock here */
@@ -225,13 +262,14 @@ struct lockspace {
 	unsigned int thread_done : 1;
 	unsigned int sanlock_gl_enabled: 1;
 	unsigned int sanlock_gl_dup: 1;
-	unsigned int free_vg: 1;
 	unsigned int kill_vg: 1;
-	unsigned int drop_vg: 1;
+	unsigned int fence_pr: 1;
+	unsigned int no_timeout: 1;
 
 	struct list_head actions;	/* new client actions */
 	struct list_head resources;	/* resource/lock state for gl/vg/lv */
 	struct list_head dispose;	/* resources to free */
+	struct list_head fence_history;	/* internally created actions for fencing */
 };
 
 /* val_blk version */
@@ -390,7 +428,9 @@ void log_level(int level, const char *fmt, ...)  __attribute__((format(printf, 2
 struct lockspace *alloc_lockspace(void);
 int lockspaces_empty(void);
 int last_string_from_args(char *args_in, char *last);
-int version_from_args(char *args, unsigned int *major, unsigned int *minor, unsigned int *patch);
+void helper_main(int in_fd, int out_fd, int log_stderr);
+int lockd_lockargs_get_user_flags(const char *str, uint32_t *flags);
+int lockd_lockargs_get_version(char *str, unsigned int *major, unsigned int *minor, unsigned int *patch);
 
 static inline const char *mode_str(int x)
 {
@@ -559,7 +599,7 @@ static inline int lm_refresh_lv_check_dlm(struct action *act)
 
 #ifdef LOCKDSANLOCK_SUPPORT
 
-int lm_init_vg_sanlock(char *ls_name, char *vg_name, uint32_t flags, char *vg_args, int opt_align_mb);
+int lm_init_vg_sanlock(char *ls_name, char *vg_name, uint32_t flags, char *vg_args, int opt_align_mb, char *other_args);
 int lm_init_lv_sanlock(struct lockspace *ls, char *ls_name, char *vg_name, char *lv_name, char *vg_args, char *lv_args, char *prev_args);
 int lm_free_lv_sanlock(struct lockspace *ls, struct resource *r);
 int lm_rename_vg_sanlock(char *ls_name, char *vg_name, uint32_t flags, char *vg_args);
@@ -584,6 +624,9 @@ int lm_data_size_sanlock(void);
 int lm_is_running_sanlock(void);
 int lm_find_free_lock_sanlock(struct lockspace *ls, uint64_t lv_size_bytes);
 int lm_vg_status_sanlock(struct lockspace *ls, struct action *act);
+void lm_set_host_dead_sanlock(struct lockspace *ls, struct owner *owner);
+int lm_setlockargs_supported_sanlock(struct lockspace *ls, struct action *act);
+int lm_setlockargs_vg_sanlock(char *ls_name, char *vg_name, struct action *act);
 
 static inline int lm_support_sanlock(void)
 {
@@ -592,7 +635,7 @@ static inline int lm_support_sanlock(void)
 
 #else
 
-static inline int lm_init_vg_sanlock(char *ls_name, char *vg_name, uint32_t flags, char *vg_args, int opt_align_mb)
+static inline int lm_init_vg_sanlock(char *ls_name, char *vg_name, uint32_t flags, char *vg_args, int opt_align_mb, char *other_args)
 {
 	return -1;
 }
@@ -704,6 +747,20 @@ static inline int lm_vg_status_sanlock(struct lockspace *ls, struct action *act)
 static inline int lm_support_sanlock(void)
 {
 	return 0;
+}
+
+static inline void lm_set_host_dead_sanlock(struct lockspace *ls, struct owner *owner)
+{
+}
+
+static inline int lm_setlockargs_supported_sanlock(struct lockspace *ls, struct action *act)
+{
+	return 0;
+}
+
+static inline int lm_setlockargs_vg_sanlock(char *ls_name, char *vg_name, struct action *act)
+{
+	return -1;
 }
 
 #endif /* sanlock support */

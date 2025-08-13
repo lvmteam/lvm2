@@ -314,7 +314,7 @@ static void format_info_ls_action(char *line)
 	uint32_t pid = 0;
 	char cl_name[MAX_NAME+1] = { 0 };
 
-	/* info=ls_action client_id=%u flags=%s version=%u op=%s rt=%s mode=%s lm_type=%s result=%d lm_rv=%d */
+	/* info=ls_action client_id=%u flags=%s version=%u op=%s rt=%s mode=%s lm_type=%s result=%d lm_rv=%d owner_host_id=%u owner_generation=%u */
 
 	if (szscanf(line, "info=ls_action client_id=%u flags=%s version=%s op=%s",
 		    &client_id,
@@ -326,6 +326,36 @@ static void format_info_ls_action(char *line)
 	find_client_info(client_id, &pid, cl_name);
 
 	printf("OP %s pid %u (%s)\n", op, pid, cl_name);
+}
+
+static void format_info_ls_fence_history(char *line)
+{
+	char op[MAX_NAME+1] = { 0 };
+	int result = 0;
+	uint32_t msg_id = 0;
+	uint32_t owner_host_id = 0;
+	uint32_t owner_generation = 0;
+	char ourkey_str[MAX_NAME+1] = { 0 };
+	char remkey_str[MAX_NAME+1] = { 0 };
+
+	/* info=ls_fence_history op=%s result=%d msg_id=%u owner_host_id=%u owner_generation=%u ourkey=0x%llx remkey=0x%llx */
+
+	if (szscanf(line, "info=ls_fence_history op=%s result=%d msg_id=%u owner_host_id=%u owner_generation=%u ourkey=%s remkey=%s",
+		    sizeof(op), op,
+		    &result,
+		    &msg_id,
+		    &owner_host_id,
+		    &owner_generation,
+		    sizeof(ourkey_str), ourkey_str,
+		    sizeof(remkey_str), remkey_str) < 0)
+		return;
+
+	if (!strcmp(op, "fence_result"))
+		printf("PR host_id %u generation %u key %s %s\n",
+			owner_host_id, owner_generation, remkey_str, result == 0 ? "removed" : "failed");
+	else if (!strcmp(op, "fence"))
+		printf("PR host_id %u generation %u key %s waiting\n",
+			owner_host_id, owner_generation, remkey_str);
 }
 
 static void format_info_r(char *line, char *r_name_out, char *r_type_out)
@@ -423,7 +453,7 @@ static void format_info_r_action(char *line, char *r_name, char *r_type)
 		return;
 	}
 
-	/* info=r_action client_id=%u flags=%s version=%s op=%s rt=%s mode=%s lm_type=%s result=%d lm_rv=%d */
+	/* info=r_action client_id=%u flags=%s version=%s op=%s rt=%s mode=%s lm_type=%s result=%d lm_rv=%d owner_host_id=%u owner_generation=%u */
 
 	if (szscanf(line, "info=r_action client_id=%u flags=%s version=%s op=%s rt=%s mode=%s lm_type=%s result=%d lm_rv=%d",
 		     &client_id,
@@ -455,6 +485,62 @@ static void format_info_r_action(char *line, char *r_name, char *r_type)
 	}
 }
 
+static void format_info_r_fence_wait_action(char *line, char *r_name, char *r_type)
+{
+	uint32_t client_id = 0;
+	char flags[MAX_NAME+1] = { 0 };
+	char version[MAX_NAME+1] = { 0 };
+	char op[MAX_NAME+1] = { 0 };
+	char rt[4] = { 0 };
+	char mode[4] = { 0 };
+	char lm_type[MAX_NAME+1] = { 0 };
+	int result = 0;
+	int lm_rv = 0;
+	uint32_t owner_host_id = 0;
+	uint32_t owner_generation = 0;
+	uint32_t pid = 0;
+	char cl_name[MAX_NAME+1] = { 0 };
+
+	if (!r_name[0] || !r_type[0]) {
+		printf("format_info_r_fence_wait_action error r_name %s r_type %s\n", r_name, r_type);
+		printf("%s\n", line);
+		return;
+	}
+
+	/* info=r_fence_wait_action client_id=%u flags=%s version=%s op=%s rt=%s mode=%s lm_type=%s result=%d lm_rv=%d owner_host_id=%u owner_generation=%u */
+
+	if (szscanf(line, "info=r_fence_wait_action client_id=%u flags=%s version=%s op=%s rt=%s mode=%s lm_type=%s result=%d lm_rv=%d owner_host_id=%u owner_generation=%u",
+		     &client_id,
+		     sizeof(flags), flags,
+		     sizeof(version), version,
+		     sizeof(op), op,
+		     sizeof(rt), rt,
+		     sizeof(mode), mode,
+		     sizeof(lm_type), lm_type,
+		     &result,
+		     &lm_rv,
+		     &owner_host_id,
+		     &owner_generation) < 0)
+		return;
+
+	find_client_info(client_id, &pid, cl_name);
+
+	if (strcmp(op, "lock")) {
+		printf("OP %s pid %u (%s)\n", op, pid, cl_name);
+		return;
+	}
+
+	if (!strcmp(r_type, "gl")) {
+		printf("LW GL %s ver %u pid %u (%s) fence_owner %u.%u\n", mode, 0, pid, cl_name, owner_host_id, owner_generation);
+
+	} else if (!strcmp(r_type, "vg")) {
+		printf("LW VG %s ver %u pid %u (%s) fence_owner %u.%u\n", mode, 0, pid, cl_name, owner_host_id, owner_generation);
+
+	} else if (!strcmp(r_type, "lv")) {
+		printf("LW LV %s %s fence_owner %u.%u\n", mode, r_name, owner_host_id, owner_generation);
+	}
+}
+
 static void format_info_line(char *line, char *r_name, char *r_type)
 {
 	if (!strncmp(line, "info=structs ", sizeof("info=structs ") - 1)) {
@@ -468,6 +554,9 @@ static void format_info_line(char *line, char *r_name, char *r_type)
 
 	} else if (!strncmp(line, "info=ls_action ", sizeof("info=ls_action ") - 1)) {
 		format_info_ls_action(line);
+
+	} else if (!strncmp(line, "info=ls_fence_history ", sizeof("info=ls_fence_history ") - 1)) {
+		format_info_ls_fence_history(line);
 
 	} else if (!strncmp(line, "info=r ", sizeof("info=r ") - 1)) {
 		/*
@@ -486,6 +575,11 @@ static void format_info_line(char *line, char *r_name, char *r_type)
 	} else if (!strncmp(line, "info=r_action ", sizeof("info=r_action ") - 1)) {
 		/* will use info from previous r */
 		format_info_r_action(line, r_name, r_type);
+
+	} else if (!strncmp(line, "info=r_fence_wait_action ", sizeof("info=r_fence_wait_action ") - 1)) {
+		/* will use info from previous r */
+		format_info_r_fence_wait_action(line, r_name, r_type);
+
 	} else {
 		printf("UN %s\n", line);
 	}

@@ -626,7 +626,7 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 			goto_bad;
 		}
 		vp_def.vg_name = vg_name_to;
-		if (!vgcreate_params_set_from_args(cmd, &vp_new, &vp_def)) {
+		if (!vgcreate_params_set_from_args(cmd, &vp_new, &vp_def, NULL)) {
 			r = EINVALID_CMD_LINE;
 			goto_bad;
 		}

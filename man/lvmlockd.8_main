@@ -157,6 +157,15 @@ Create a shared VG from one host (uses the running lock manager):
 .I VG
 .I devices
 .P
+Include vgcreate options to use Persistent Reservations (sanlock only):
+.br
+.B --setpersist y --setlockargs persist,notimeout
+.P
+Start Persistent Reservations for the VG (if they are used):
+.br
+.B $ vgchange --persist start
+.I VG
+.P
 Start the lockspace for the shared VG on all hosts:
 .br
 .B $ vgchange --lockstart
@@ -170,7 +179,7 @@ Regular shutdown steps:
 .br
     $ vgchange -an VG
 .br
-    $ vgchange --lockstop VG
+    $ vgchange --lockstop [--persist stop] VG
 .br
     $ stop lvmlockd and lock manager
 .br
@@ -179,7 +188,7 @@ Regular startup steps:
 .br
     $ start lvmlockd and lock manager
 .br
-    $ vgchange --lockstart VG
+    $ vgchange --lockstart [--persist start] VG
 .P
 .
 .SH SETUP DETAILS
@@ -252,6 +261,25 @@ to begin using locks (i.e. creating and joining a lockspace). Starting the
 VG may take some time, and until the start completes the VG may not be
 modified or activated. When shutting down, the lockspace is stopped with
 vgchange --lockstop VG.
+.P
+.B Persistent Reservations
+.br
+A shared VG with locktype sanlock can take advantage of Persistent
+Reservations (PR) for faster and more reliable recovery. This
+requires all of the devices in the VG to support PR.  Test if PR is
+supported by a device with the command:
+.br
+.B $ lvmpersist devtest --device
+.I device
+.P
+The vgcreate command options when enabling PR-based recovery with sanlock:
+.br
+.B $ vgcreate --shared --setpersist y --setlockargs persist,notimeout
+.P
+When enabled, PR needs to be started for the VG before locking:
+.br
+.B $ vgchange --persist start
+.I VG
 .
 .SH TOPICS
 .
@@ -309,6 +337,53 @@ $ vgs --shared
   VG    #PV #LV #SN Attr   VSize   VFree
   vgfoo   1   0   0 wz--ns 992.00m 736.00m
 .fi
+.
+.SS Persistent Reservations
+.
+To enable PR-based recovery ("fencing") in an existing VG:
+.br
+.B $ vgchange --setpersist y --setlockargs persist,notimeout
+.I VG
+.P
+Changing the lock args requires the VG to be stopped on all other nodes.
+.P
+Once enabled, PR needs to be started before or with lockstart:
+.br
+.B $ vgchange --persist start
+.I VG
+.br
+.B $ vgchange --persist start --lockstart
+.I VG
+.P
+Display the VG attributes configured by setpersist and setlockargs:
+.br
+.B $ vgs -o+persist
+.I VG
+.br
+.B $ vgs -o+lockargs
+.I VG
+.P
+.B setpersist y
+.br
+With this setting, LVM requires that PR be started before
+lockstart, and any VG modifications or activations require
+that PR is started.
+.br
+.B setlockargs persist
+.br
+This lockargs setting causes lvmlockd to remove the PR key of a
+failed host when a lock request fails due to a lock owned by the
+failed host. sanlock is then permitted to grant the lock.
+.br
+.B setlockargs notimeout
+.br
+This lockargs setting causes lvmlockd to configure sanlock leases
+to not time out. Removing the PR of a failed host replaces timeouts
+as a faster mechanism for lock recovery. With timeouts disabled,
+the local watchdog is not used by sanlock for the VG lockspace.
+.P
+For more information, see
+.BR lvmpersist (8).
 .
 .SS System ID
 .br

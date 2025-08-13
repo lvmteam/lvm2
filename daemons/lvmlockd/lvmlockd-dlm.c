@@ -76,7 +76,7 @@ static int check_args_version(char *vg_args)
 	unsigned int major = 0;
 	int rv;
 
-	rv = version_from_args(vg_args, &major, NULL, NULL);
+	rv = lockd_lockargs_get_version(vg_args, &major, NULL, NULL);
 	if (rv < 0) {
 		log_error("check_args_version %s error %d", vg_args, rv);
 		return rv;

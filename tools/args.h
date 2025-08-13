@@ -786,6 +786,20 @@ arg(setautoactivation_ARG, '\0', "setautoactivation", bool_VAL, 0, 0,
     "If autoactivation is enabled on a VG, autoactivation can be disabled\n"
     "for individual LVs.\n")
 
+arg(setlockargs_ARG, '\0', "setlockargs", string_VAL, 0, 0,
+    "Add or remove lock_args settings for a shared VG.\n"
+    "The lock_args determine lock manager behavior for the VG.\n"
+    "These settings are only allowed for lock_type sanlock.\n"
+    "persist: use persistent reservations for lock recovery.\n"
+    "lvmlockd will preempt-abort the persistent reservation of a failed\n"
+    "lock owner so that the lock can be acquired.\n"
+    "notimeout: use locks that do not time out when the owner fails.\n"
+    "In this case, a lock owned by a failed host can only be acquired\n"
+    "using the persist feature.\n"
+    "nopersist: do not use the persist feature.\n"
+    "timeout: do not use the notimeout feature.\n"
+    "The default behavior with no settings configured is: nopersist and timeout.\n")
+
 arg(setpersist_ARG, '\0', "setpersist", string_VAL, 0, 0,
     "#vgcreate\n"
     "Set flags to control persistent reservation behavior.\n"

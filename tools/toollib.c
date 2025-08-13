@@ -518,7 +518,8 @@ int vgcreate_params_set_defaults(struct cmd_context *cmd,
  */
 int vgcreate_params_set_from_args(struct cmd_context *cmd,
 				  struct vgcreate_params *vp_new,
-				  struct vgcreate_params *vp_def)
+				  struct vgcreate_params *vp_def,
+				  struct pvcreate_params *pp)
 {
 	const char *system_id_arg_str;
 	const char *lock_type = NULL;
@@ -733,6 +734,29 @@ int vgcreate_params_set_from_args(struct cmd_context *cmd,
 	vp_new->lock_type = lock_type;
 
 	log_debug("Setting lock_type to %s", vp_new->lock_type);
+
+	if (arg_is_set(cmd, setlockargs_ARG)) {
+		const char *set_args;
+		uint32_t lock_args_flags = 0;
+
+		if (!lock_type || strcmp(lock_type, "sanlock")) {
+			log_error("Using setlockargs requires sanlock lock type for shared VG.");
+			return 0;
+		}
+
+		if (!(set_args = arg_str_value(cmd, setlockargs_ARG, NULL)))
+			return_0;
+		if (!lockd_lockargs_get_user_flags(set_args, &lock_args_flags))
+			return_0;
+		if (!pp)
+			return_0;
+
+		if ((lock_args_flags & LOCKARGS_PERSIST) && !(pp->setpersist_flags & (SETPR_Y | SETPR_REQUIRE))) {
+			log_error("Using --setlockargs persist requires --setpersist y|require.");
+			return 0;
+		}
+	}
+
 	return 1;
 }
 

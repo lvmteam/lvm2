@@ -1635,6 +1635,9 @@ int persist_finish_before(struct cmd_context *cmd, struct volume_group *vg, stru
 	/*
 	 * When removing a shared VG, verify that other hosts
 	 * have stopped PR to avoid leaving dangling reservations.
+	 *
+	 * TODO: upgrade to an exclusive PR to prevent other hosts
+	 * from trying to start the VG while it's being removed.
 	 */
 	if (vg_is_shared(vg)) {
 		struct pv_list *pvl;
@@ -1869,6 +1872,120 @@ static int _persist_extend_shared(struct cmd_context *cmd, struct volume_group *
 	return error ? 0 : 1;
 }
 
+int persist_upgrade_stop(struct cmd_context *cmd, struct volume_group *vg, uint64_t our_key_val)
+{
+	DM_LIST_INIT(devs);
+	char our_key_buf[PR_KEY_BUF_SIZE] = { 0 };
+
+	if (!pv_list_to_dev_list(cmd->mem, &vg->pvs, &devs))
+		return_0;
+
+	if (dm_snprintf(our_key_buf, PR_KEY_BUF_SIZE-1, "0x%llx", (unsigned long long)our_key_val) < 0)
+		return_0;
+
+	if (!_run_stop(cmd, vg, &devs, our_key_buf, 0))
+		return_0;
+
+	return 1;
+}
+
+/*
+ * Host currently holds a normal sh access PR on shared VG,
+ * and wants to switch to an ex access PR on that VG
+ * (to prevent other hosts from using it while it's making
+ * changes.)
+ */
+
+int persist_upgrade_ex(struct cmd_context *cmd, struct volume_group *vg, uint64_t *our_key_held)
+{
+	DM_LIST_INIT(devs);
+	struct device_list *devl;
+	char *local_key = (char *)find_config_tree_str(cmd, local_pr_key_CFG, NULL);
+	int local_host_id = find_config_tree_int(cmd, local_host_id_CFG, NULL);
+	char our_key_buf[PR_KEY_BUF_SIZE] = { 0 };
+	char new_key_buf[PR_KEY_BUF_SIZE] = { 0 };
+	uint64_t our_key_val = 0;
+	uint64_t new_key_val = 0;
+	const char *devname;
+	const char **argv;
+	int pv_count;
+	int args;
+	int status;
+
+	if (vg_is_sanlock(vg))
+		local_key = NULL;
+
+	if (!local_key && !local_host_id)
+		return 1;
+
+	if (!get_our_key(cmd, vg, local_key, local_host_id, our_key_buf, &our_key_val))
+		return_0;
+
+	if (!pv_list_to_dev_list(cmd->mem, &vg->pvs, &devs))
+		return_0;
+
+	log_debug("persist_upgrade_ex stop PR %s", our_key_buf);
+
+	if (!_run_stop(cmd, vg, &devs, our_key_buf, 0))
+		return_0;
+
+	if (local_key) {
+		new_key_val = our_key_val;
+		memcpy(new_key_buf, our_key_buf, PR_KEY_BUF_SIZE);
+	} else if (local_host_id) {
+		if (dm_snprintf(new_key_buf, PR_KEY_BUF_SIZE-1, "0x100000000000%04x", local_host_id) != 18) {
+			log_error("Failed to format key string for host_id %d", local_host_id);
+			return 0;
+		}
+		if (!parse_prkey(new_key_buf, &new_key_val)) {
+			log_error("Failed to parse generated key %s", new_key_buf);
+			return 0;
+		}
+	}
+
+	pv_count = dm_list_size(&devs);
+
+	log_debug("persist_upgrade_ex start PR on %d devs with local key %llx", pv_count, (unsigned long long)new_key_val);
+
+	args = 9 + pv_count*2;
+	if (vg->pr & VG_PR_PTPL)
+		args += 1;
+
+	if (!(argv = dm_pool_alloc(cmd->mem, args * sizeof(char *))))
+		return_0;
+
+	args = 0;
+	argv[0] = LVMPERSIST_PATH;
+	argv[++args] = "start";
+	argv[++args] = "--ourkey";
+	argv[++args] = new_key_buf;
+	argv[++args] = "--access";
+	argv[++args] = "ex";
+	argv[++args] = "--vg";
+	argv[++args] = vg->name;
+	if (vg->pr & VG_PR_PTPL)
+		argv[++args] = "--ptpl";
+
+	dm_list_iterate_items(devl, &devs) {
+		if (!(devname = dm_pool_strdup(cmd->mem, dev_name(devl->dev))))
+			return_0;
+		argv[++args] = "--device";
+		argv[++args] = devname;
+	}
+
+	argv[++args] = NULL;
+
+	if (!exec_cmd(cmd, argv, &status, 1)) {
+		log_error("persistent reservation exclusive start failed: lvmpersist command error.");
+		log_error("(Use vgchange --persist stop to stop PR on other hosts.");
+		return 0;
+	}
+
+	*our_key_held = new_key_val;
+
+	return 1;
+}
+
 /*
  * Start PR on devices that are being used for vgcreate.
  * This is somewhat awkward because it happens early in
@@ -1891,6 +2008,8 @@ int persist_vgcreate_begin(struct cmd_context *cmd, char *vg_name, char *local_k
 	int pv_count;
 	int args;
 	int status;
+
+	persist_key_file_remove_name(cmd, vg_name);
 
 	if (local_key) {
 		if (!parse_prkey(local_key, &our_key_val)) {
@@ -2077,6 +2196,7 @@ int persist_vgcreate_update(struct cmd_context *cmd, struct volume_group *vg, ui
 		return 0;
 	}
 
+	/* key file is an optimization, not an error condition */
 	if (!write_key_file(cmd, vg, our_key_val))
 		stack;
 

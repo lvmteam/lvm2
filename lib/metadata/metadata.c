@@ -2245,16 +2245,6 @@ static int _validate_lock_args_chars(const char *lock_args)
 	return r;
 }
 
-static int _validate_vg_lock_args(struct volume_group *vg)
-{
-	if (!vg->lock_args || !_validate_lock_args_chars(vg->lock_args)) {
-		log_error(INTERNAL_ERROR "VG %s has invalid lock_args chars", vg->name);
-		return 0;
-	}
-
-	return 1;
-}
-
 /*
  * For lock_type sanlock, LV lock_args are <version>:<info>
  * For lock_type dlm, LV lock_args are not used, and lock_args is
@@ -2627,8 +2617,6 @@ int vg_validate(struct volume_group *vg)
 			r = 0;
 		}
 
-		if (!_validate_vg_lock_args(vg))
-			r = 0;
 	} else {
 		if (vg->lock_args) {
 			log_error(INTERNAL_ERROR "VG %s has lock_args %s without lock_type",

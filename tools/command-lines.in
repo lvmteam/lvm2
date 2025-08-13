@@ -1843,6 +1843,11 @@ OO: --select String, --removekey String, --majoritypvs, --force
 ID: vgchange_persist
 DESC: Perform persistent reservation commands on devices.
 
+vgchange --setlockargs String VG|Tag|Select
+OO: --select String
+ID: vgchange_setlockargs
+DESC: Set or clear lock_args flags to control lock manager behavior.
+
 vgchange --lockstart
 OO: --select String, --persist start
 OP: VG|Tag|Select ...
@@ -1856,6 +1861,7 @@ ID: vgchange_lockstop
 DESC: Stop the lockspace of a shared VG in lvmlockd.
 
 vgchange --locktype LockType VG
+OO: --setlockargs String
 ID: vgchange_locktype
 DESC: Change the lock type for a shared VG.
 
@@ -1880,7 +1886,7 @@ OO: --addtag Tag, --alloc Alloc, --autobackup Bool, --clustered Bool, --maxlogic
 --metadatasize SizeMB, --pvmetadatacopies MetadataCopiesPV, --vgmetadatacopies MetadataCopiesVG,
 --reportformat ReportFmt, --dataalignment SizeKB, --dataalignmentoffset SizeKB,
 --shared, --systemid String, --locktype LockType, --setautoactivation Bool,
---setpersist String, --persist start
+--setpersist String, --persist start, --setlockargs String
 ID: vgcreate_general
 
 ---

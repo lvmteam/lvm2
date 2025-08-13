@@ -188,7 +188,8 @@ int vgcreate_params_set_defaults(struct cmd_context *cmd,
 				 struct volume_group *vg);
 int vgcreate_params_set_from_args(struct cmd_context *cmd,
 				  struct vgcreate_params *vp_new,
-				  struct vgcreate_params *vp_def);
+				  struct vgcreate_params *vp_def,
+				  struct pvcreate_params *pp);
 int lv_change_activate(struct cmd_context *cmd, struct logical_volume *lv,
 		       activation_change_t activate);
 int lv_refresh(struct cmd_context *cmd, struct logical_volume *lv);

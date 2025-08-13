@@ -65,8 +65,11 @@ Stop all lockspaces.
 .TP
 .B --info
 This collects and displays lock state from lvmlockd.  The display is
-primitive, incomplete and will change in future version.  To print the raw
-lock state from lvmlockd, combine this option with --dump|-d.
+primitive, incomplete and may change in future versions.  To print the raw
+info lines from lvmlockd, combine this option with --dump|-d.
+Each VG lockspace may include lines with prefixes:
+"VG" for volume group info, "LS" for lockspace info, "PR" for persistent
+reservation fencing info, "LK" for lock info, "LW" for waiting lock info.
 .
 .TP
 .B --dump
