@@ -4754,6 +4754,7 @@ int process_each_pv(struct cmd_context *cmd,
 		    process_single_pv_fn_t process_single_pv)
 {
 	log_report_t saved_log_report_state = log_get_report_state();
+	int handle_supplied = handle != NULL;
 	struct dm_list arg_tags;	/* str_list */
 	struct dm_list arg_pvnames;	/* str_list */
 	struct dm_list arg_devices;	/* device_id_list */
@@ -4798,6 +4799,17 @@ int process_each_pv(struct cmd_context *cmd,
 	 */
 	if ((ret = _get_arg_pvnames(cmd, argc, argv, &arg_pvnames, &arg_tags)) != ECMD_PROCESSED) {
 		ret_max = ret;
+		goto_out;
+	}
+
+	if (!handle && !(handle = init_processing_handle(cmd, NULL))) {
+		ret_max = ECMD_FAILED;
+		goto_out;
+	}
+
+	if (handle->internal_report_for_select && !handle->selection_handle &&
+	    !init_selection_handle(cmd, handle, PVS)) {
+		ret_max = ECMD_FAILED;
 		goto_out;
 	}
 
@@ -4869,6 +4881,9 @@ int process_each_pv(struct cmd_context *cmd,
 	}
 
 out:
+	if (!handle_supplied)
+		destroy_processing_handle(cmd, handle);
+
 	log_restore_report_state(saved_log_report_state);
 	return ret_max;
 }
