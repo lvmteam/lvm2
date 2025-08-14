@@ -382,7 +382,7 @@ static int dev_find_key_scsi(struct cmd_context *cmd, struct device *dev, int ma
 	devname = dev_name(dev);
 
 	if ((fd = open(devname, O_RDONLY)) < 0) {
-		log_error("dev_find_key %s open error %d", devname, errno);
+		log_error("dev_find_key_scsi %s open error %d", devname, errno);
 		return 0;
 	}
 
@@ -412,25 +412,25 @@ static int dev_find_key_scsi(struct cmd_context *cmd, struct device *dev, int ma
 
 	if (ioctl(fd, SG_IO, &io_hdr) < 0) {
 		if (may_fail)
-			log_debug("dev_find_key %s sg_io ioctl error %d", devname, errno);
+			log_debug("dev_find_key_scsi %s sg_io ioctl error %d", devname, errno);
 		else
-			log_error("dev_find_key %s sg_io ioctl error %d", devname, errno);
+			log_error("dev_find_key_scsi %s sg_io ioctl error %d", devname, errno);
 		ret = 0;
 		goto out;
 	}
 
 	ret_bytes = response_len - io_hdr.resid;
 
-	log_debug("dev_find_key %s sg_io ret_bytes %u of %u status driver:%02x host:%02x scsi:%02x",
+	log_debug("dev_find_key_scsi %s sg_io ret_bytes %u of %u status driver:%02x host:%02x scsi:%02x",
 		   devname, ret_bytes, response_len, io_hdr.driver_status, io_hdr.host_status, io_hdr.status);
 
 	io_hdr.status &= 0x7e;
 	if (io_hdr.status) {
 		if (may_fail)
-			log_debug("dev_find_key %s error scsi:0x%02x driver:%02x host:%02x",
+			log_debug("dev_find_key_scsi %s error scsi:0x%02x driver:%02x host:%02x",
 				  devname, io_hdr.status, io_hdr.driver_status, io_hdr.host_status);
 		else
-			log_error("dev_find_key %s error scsi:0x%02x driver:%02x host:%02x",
+			log_error("dev_find_key_scsi %s error scsi:0x%02x driver:%02x host:%02x",
 				  devname, io_hdr.status, io_hdr.driver_status, io_hdr.host_status);
 		ret = 0;
 		goto out;
@@ -444,10 +444,16 @@ static int dev_find_key_scsi(struct cmd_context *cmd, struct device *dev, int ma
 	add_len = be32toh(add_len_be);
 	num_keys = add_len / 8;
 
-	log_debug("dev_find_key %s pr_gen %u num %d", devname, pr_gen, num_keys);
+	log_debug("dev_find_key_scsi %s num %d pr_gen %u", devname, num_keys, pr_gen);
 
-	/* caller wants an array of all keys returned */
+	/* caller wants just a count of all keys */
+	if (find_all && found_count && !found_all) {
+		*found_count = num_keys;
+		ret = 1;
+		goto out;
+	}
 
+	/* caller wants a count and array of all keys */
 	if (find_all && found_count && found_all) {
 		*found_count = num_keys;
 		*found_all = NULL;
@@ -474,7 +480,7 @@ static int dev_find_key_scsi(struct cmd_context *cmd, struct device *dev, int ma
 		memcpy(&key_be, p, 8);
 		key = be64toh(key_be);
 
-		log_debug("dev_find_key %s 0x%llx", devname, (unsigned long long)key);
+		log_debug("dev_find_key_scsi %s 0x%llx", devname, (unsigned long long)key);
 
 		if (find_all && found_count && found_all)
 			all_keys[i] = key;
@@ -529,10 +535,10 @@ static int _compare_uint64(const void *a, const void *b)
  *         *found_all is set to an array of keys found.
  */
 
-static int dev_find_key(struct cmd_context *cmd, struct device *dev, int may_fail,
-		        uint64_t find_key, int *found_key,
-		        int find_host_id, uint64_t *found_host_id_key,
-			int find_all, int *found_count, uint64_t **found_all)
+int dev_find_key(struct cmd_context *cmd, struct device *dev, int may_fail,
+		 uint64_t find_key, int *found_key,
+		 int find_host_id, uint64_t *found_host_id_key,
+		 int find_all, int *found_count, uint64_t **found_all)
 {
 	int ret;
 

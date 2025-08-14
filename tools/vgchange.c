@@ -1773,6 +1773,9 @@ static int _vgchange_setpersist_single(struct cmd_context *cmd, const char *vg_n
 	const char *op = arg_str_value(cmd, persist_ARG, NULL);
 	char *root_dm_uuid = NULL;
 	char *local_key;
+	struct pv_list *pvl;
+	struct device *dev;
+	int key_count;
 	int local_host_id;
 	int start_done = 0;
 	int on;
@@ -1795,6 +1798,18 @@ static int _vgchange_setpersist_single(struct cmd_context *cmd, const char *vg_n
 		if (root_dm_uuid && !memcmp(root_dm_uuid + 4, &vg->id, ID_LEN)) {
 			log_error("PR cannot be automated or required for root VG.");
 			return ECMD_FAILED;
+		}
+
+		/* check if PR can be used on the devs before enabling it */
+		dm_list_iterate_items(pvl, &vg->pvs) {
+			if (!(dev = pvl->pv->dev))
+				continue;
+			if (dm_list_empty(&dev->aliases))
+				continue;
+			if (!dev_find_key(cmd, dev, 1, 0, NULL, 0, NULL, 1, &key_count, NULL)) {
+				log_error("Failed to access persistent reservation on %s.", dev_name(dev));
+				return ECMD_FAILED;
+			}
 		}
 	}
 
