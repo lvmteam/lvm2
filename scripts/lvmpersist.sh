@@ -508,6 +508,23 @@ device_supports_type_str() {
 	fi
 }
 
+check_device_support() {
+	err=0
+
+	for dev in "${DEVICES[@]}"; do
+		set_type "$dev"
+
+		if ! device_supports_type_str "$dev" "$type_str"; then
+			echo "Device $dev: does not support PR"
+			err=1
+		fi
+	done
+
+	test "$err" -eq 1 && exit 1
+
+	exit 0
+}
+
 check_device_types() {
 	err=0
 	FOUND_MPATH=0
@@ -1376,6 +1393,8 @@ elif [[ "$DO_STOP" -eq 1 ]]; then
 elif [[ "$DO_REMOVE" -eq 1 ]]; then
 	do_remove
 elif [[ "$DO_CLEAR" -eq 1 ]]; then
+	check_device_types
+	check_device_support
 	do_clear
 elif [[ "$DO_DEVTEST" -eq 1 ]]; then
 	check_device_types
@@ -1385,12 +1404,15 @@ elif [[ "$DO_CHECKKEY" -eq 1 ]]; then
 	do_checkkey
 elif [[ "$DO_READKEYS" -eq 1 ]]; then
 	check_device_types
+	check_device_support
 	do_readkeys
 elif [[ "$DO_READRESERVATION" -eq 1 ]]; then
 	check_device_types
+	check_device_support
 	do_readreservation
 elif [[ "$DO_READ" -eq 1 ]]; then
 	check_device_types
+	check_device_support
 	do_readkeys
 	do_readreservation
 fi
