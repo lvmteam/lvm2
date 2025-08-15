@@ -19,6 +19,11 @@ errorexit() {
 	exit 1
 }
 
+logerror() {
+	echo "$1" >&2
+	logger "${SCRIPTNAME}: $1"
+}
+
 logmsg() {
 	echo "$1"
 	logger "${SCRIPTNAME}: $1"
@@ -68,6 +73,72 @@ TMP_MOUNT_DONE=0
 # Set to 1 if the fs resize command fails
 RESIZEFS_FAILED=0
 
+# Function to detect XFS mount options
+detect_xfs_mount_options() {
+	local device=$1
+	local qflags_output qflags_hex
+	MOUNT_OPTIONS=""
+
+	# Get quota flags using xfs_db.
+	if ! qflags_output=$(xfs_db -r "$device" -c 'sb 0' -c 'p qflags'); then
+		logerror "xfs_db failed"
+		return 1
+	fi
+
+	# Extract the hex value from output that is in format "qflags = 0x<hex_number>".
+	qflags_hex="${qflags_output#qflags = }"
+
+	# No flags set, no extra mount options needed.
+	if [[ "$qflags_hex" == "0" ]]; then
+		return 0
+	fi
+
+	if [[ ! "$qflags_hex" =~ ^0x[0-9a-fA-F]+$ ]]; then
+		logerror "xfs_db unexpected output"
+		return 1
+	fi
+
+	# Check XFS quota flags and set MOUNT_OPTIONS appropriately
+	# The quota flags as defined in Linux kernel source: fs/xfs/libxfs/xfs_log_format.h:
+	#   XFS_UQUOTA_ACCT = 0x0001
+	#   XFS_UQUOTA_ENFD = 0x0002
+	#   XFS_GQUOTA_ACCT = 0x0040
+	#   XFS_GQUOTA_ENFD = 0x0080
+	#   XFS_PQUOTA_ACCT = 0x0008
+	#   XFS_PQUOTA_ENFD = 0x0200
+
+	if [ $(($qflags_hex & 0x0001)) -ne 0 ]; then
+		if [ $(($qflags_hex & 0x0002)) -ne 0 ]; then
+			MOUNT_OPTIONS="${MOUNT_OPTIONS}uquota,"
+		else
+			MOUNT_OPTIONS="${MOUNT_OPTIONS}uqnoenforce,"
+		fi
+	fi
+
+	if [ $(($qflags_hex & 0x0040)) -ne 0 ]; then
+		if [ $(($qflags_hex & 0x0080)) -ne 0 ]; then
+			MOUNT_OPTIONS="${MOUNT_OPTIONS}gquota,"
+		else
+			MOUNT_OPTIONS="${MOUNT_OPTIONS}gqnoenforce,"
+		fi
+	fi
+
+	if [ $(($qflags_hex & 0x0008)) -ne 0 ]; then
+		if [ $(($qflags_hex & 0x0200)) -ne 0 ]; then
+			MOUNT_OPTIONS="${MOUNT_OPTIONS}pquota,"
+		else
+			MOUNT_OPTIONS="${MOUNT_OPTIONS}pqnoenforce,"
+		fi
+	fi
+
+	# Trim trailing comma
+	MOUNT_OPTIONS="${MOUNT_OPTIONS%,}"
+
+	if [[ -n "$MOUNT_OPTIONS" ]]; then
+		logmsg "mount options for xfs: ${MOUNT_OPTIONS}"
+	fi
+}
+
 fsextend() {
 	if [ "$DO_UNMOUNT" -eq 1 ]; then
 		logmsg "unmount ${MOUNTDIR}"
@@ -98,7 +169,7 @@ fsextend() {
 			fi
 		fi
 	fi
-	
+
 	if [ "$DO_CRYPTRESIZE" -eq 1 ]; then
 		logmsg "cryptsetup resize ${DEVPATH}"
 		if cryptsetup resize "$DEVPATH"; then
@@ -110,8 +181,12 @@ fsextend() {
 	fi
 
 	if [ "$DO_MOUNT" -eq 1 ]; then
+		if [[ "$FSTYPE" == "xfs" ]]; then
+			detect_xfs_mount_options "$DEVPATH" || logmsg "not using XFS mount options"
+		fi
+
 		logmsg "mount ${DEVPATH} ${TMPDIR}"
-		if mount -t "$FSTYPE" "$DEVPATH" "$TMPDIR"; then
+		if mount -t "$FSTYPE" ${MOUNT_OPTIONS:+-o "$MOUNT_OPTIONS"} "$DEVPATH" "$TMPDIR"; then
 			logmsg "mount done"
 			TMP_MOUNT_DONE=1
 		else
@@ -170,8 +245,12 @@ fsextend() {
 	# If the fs was temporarily unmounted, now remount it.
 	# Not considered a command failure if this fails.
 	if [[ $DO_UNMOUNT -eq 1 && $REMOUNT -eq 1 ]]; then
+		if [[ "$FSTYPE" == "xfs" ]]; then
+			detect_xfs_mount_options "$DEVPATH"
+		fi
+
 		logmsg "remount ${DEVPATH} ${MOUNTDIR}"
-		if mount -t "$FSTYPE" "$DEVPATH" "$MOUNTDIR"; then
+		if mount -t "$FSTYPE" ${MOUNT_OPTIONS:+-o "$MOUNT_OPTIONS"} "$DEVPATH" "$MOUNTDIR"; then
 			logmsg "remount done"
 		else
 			logmsg "remount failed"
@@ -383,6 +462,9 @@ DO_FSCK=0
 # --remount: attempt to remount the fs if it was originally
 # mounted and the script unmounted it.
 REMOUNT=0
+
+# Initialize MOUNT_OPTIONS to ensure clean state
+MOUNT_OPTIONS=""
 
 if [ "$UID" != 0 ] && [ "$EUID" != 0 ]; then
 	errorexit "${SCRIPTNAME} must be run as root."
