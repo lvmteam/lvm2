@@ -89,12 +89,24 @@ check lv_field $vg/$lv lv_size "380.00m"
 df --output=size "$mount_dir" |tee df2
 not diff df1 df2
 
+# lvextend, xfs, active, not mounted, quotas defined, --fs resize
 umount "$mount_dir"
+mount -o uquota,gquota,pquota "$DM_DEV_DIR/$vg/$lv" "$mount_dir"
+umount "$mount_dir"
+lvextend -y --fs resize -L+10M $vg/$lv | tee out
+grep "mount options for xfs: uquota,gquota,pquota" out # must preserve the mount options!
+
+# lvextend, xfs, active, not mounted, quotas not defined, --fs resize
+mount "$DM_DEV_DIR/$vg/$lv" "$mount_dir"
+umount "$mount_dir"
+lvextend -y --fs resize -L+10M $vg/$lv | tee out
+not grep "mount options for xfs" out # mount options not needed
+
 lvchange -an $vg/$lv
 
 # lvextend, xfs, inactive, --fs ignore
 lvextend --fs ignore -L+20M $vg/$lv
-check lv_field $vg/$lv lv_size "400.00m"
+check lv_field $vg/$lv lv_size "420.00m"
 
 lvremove -f $vg/$lv
 
