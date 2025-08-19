@@ -4815,7 +4815,8 @@ int process_each_pv(struct cmd_context *cmd,
 
 	if ((cmd->cname->flags & DISALLOW_TAG_ARGS) && !dm_list_empty(&arg_tags)) {
 		log_error("Tags cannot be used with this command.");
-		return ECMD_FAILED;
+		ret_max = ECMD_FAILED;
+		goto_out;
 	}
 
 	process_all_pvs = dm_list_empty(&arg_pvnames) && dm_list_empty(&arg_tags);
