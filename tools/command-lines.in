@@ -209,7 +209,8 @@ OO_ALL: --commandprofile String, --config String, --debug,
 #
 # options for pvdisplay, lvdisplay, vgdisplay
 #
-OO_REPORTING: --foreign, --ignorelockingfailure, --readonly, --shared, --units Units
+OO_REPORTING: --foreign, --ignorelockingfailure, --readonly, --reportformat ReportFmt,
+--shared, --units Units
 
 #
 # options for pvs, lvs, vgs, fullreport
@@ -217,8 +218,8 @@ OO_REPORTING: --foreign, --ignorelockingfailure, --readonly, --shared, --units U
 OO_REPORT: OO_REPORTING, --all, --aligned, --binary,
 --configreport ConfigReport, --logonly, --headings HeadingsType,
 --nameprefixes, --noheadings, --nosuffix, --options String,
---reportformat ReportFmt, --rows, --select String,
---separator String, --sort String, --unbuffered, --unquoted
+--rows, --select String, --separator String, --sort String,
+--unbuffered, --unquoted
 
 #
 # options for config, dumpconfig, lvmconfig

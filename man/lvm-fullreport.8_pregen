@@ -259,6 +259,10 @@ if information changes between commands.
 ]
 .br
 [
+.O_reportformat
+]
+.br
+[
 .O_shared
 ]
 .br
@@ -296,10 +300,6 @@ if information changes between commands.
 .br
 [
 .O_nosuffix
-]
-.br
-[
-.O_reportformat
 ]
 .br
 [

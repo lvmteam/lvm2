@@ -269,6 +269,10 @@ pvs produces formatted output about PVs.
 ]
 .br
 [
+.O_reportformat
+]
+.br
+[
 .O_shared
 ]
 .br
@@ -306,10 +310,6 @@ pvs produces formatted output about PVs.
 .br
 [
 .O_nosuffix
-]
-.br
-[
-.O_reportformat
 ]
 .br
 [

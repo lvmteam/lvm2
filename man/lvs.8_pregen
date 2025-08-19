@@ -269,6 +269,10 @@ lvs produces formatted output about LVs.
 ]
 .br
 [
+.O_reportformat
+]
+.br
+[
 .O_shared
 ]
 .br
@@ -306,10 +310,6 @@ lvs produces formatted output about LVs.
 .br
 [
 .O_nosuffix
-]
-.br
-[
-.O_reportformat
 ]
 .br
 [

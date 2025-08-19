@@ -406,10 +406,6 @@ Display output in columns like lvs.
 ]
 .br
 [
-.O_reportformat
-]
-.br
-[
 .O_rows
 ]
 .br
@@ -466,6 +462,10 @@ Common options for command:
 .br
 [
 .O_readonly
+]
+.br
+[
+.O_reportformat
 ]
 .br
 [

@@ -255,6 +255,10 @@ vgs produces formatted output about VGs.
 ]
 .br
 [
+.O_reportformat
+]
+.br
+[
 .O_shared
 ]
 .br
@@ -292,10 +296,6 @@ vgs produces formatted output about VGs.
 .br
 [
 .O_nosuffix
-]
-.br
-[
-.O_reportformat
 ]
 .br
 [
