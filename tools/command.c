@@ -387,24 +387,60 @@ static uint64_t _lv_to_bits(struct command *cmd, char *name)
 static unsigned _find_lvm_command_enum(const char *name)
 {
 #ifdef MAN_PAGE_GENERATOR
-	/* Validate cmd_names & command_names arrays are properly sorted */
+	/* Validate cmd_names & command_names arrays are properly sorted.
+	 * Also validate args.h options are sorted according to these rules:
+	 *   1. sorted options without 'short_opt'st
+	 *   2. sorted alias options  (option without any description)
+	 *   3. sorted options with and by short opt, long option name is secondary
+	 *      (Capital shorts opts are sorted after lowercase variant)
+	 */
 	static int _names_validated = 0;
 	int i;
+	int shorts_only = 0;
 
-	if (!_names_validated) {
+	if (!_names_validated++) {
 		for (i = 1; i < CMD_COUNT - 1; i++)
 			if (strcmp(cmd_names[i].name, cmd_names[i + 1].name) > 0) {
-				log_error("File cmds.h has unsorted name entry %s.",
-					  cmd_names[i].name);
-				return 0;
+				log_error("File cmds.h has unsorted name entry (%s > %s).",
+					  cmd_names[i].name, cmd_names[i + 1].name);
+				_names_validated = 0;
 			}
 		for (i = 0; i < LVM_COMMAND_COUNT - 1; ++i) /* assume > 1 */
 			if (strcmp(command_names[i].name, command_names[i + 1].name) > 0) {
-				log_error("File commands.h has unsorted name entry %s.",
-					  command_names[i].name);
-				return 0;
+				log_error("File commands.h has unsorted name entry (%s > %s).",
+					  command_names[i].name, command_names[i + 1].name);
+				_names_validated = 0;
 			}
-		_names_validated = 1;
+
+		for (i = 0; i < ARG_COUNT - 1; ++i) /* assume > 1 */
+			if (opt_names[i + 1].short_opt) {
+				shorts_only = 1;
+				if (toupper(opt_names[i].short_opt) > toupper(opt_names[i + 1].short_opt) ||
+				    ((toupper(opt_names[i].short_opt) == toupper(opt_names[i + 1].short_opt)) &&
+				     (opt_names[i].short_opt < opt_names[i + 1].short_opt))) {
+					log_error("File args.h has unsorted short option name entry (%c,%s > %c,%s).",
+						  opt_names[i].short_opt, opt_names[i].long_opt,
+						  opt_names[i + 1].short_opt, opt_names[i + 1].long_opt);
+					_names_validated = 0;
+				} else if (opt_names[i].short_opt == opt_names[i + 1].short_opt)
+					goto comp_long;
+			} else {
+				if (shorts_only) {
+					log_error("File args.h has long option listed within the short option name "
+						  "entry (%s).", opt_names[i + 1].long_opt);
+					_names_validated = 0;
+				}
+			comp_long:
+				if (opt_names[i].desc && opt_names[i + 1].desc &&
+				    strcmp(opt_names[i].long_opt, opt_names[i + 1].long_opt) > 0) {
+					log_error("File args.h has unsorted long option name entry (%s > %s.",
+						  opt_names[i].long_opt, opt_names[i + 1].long_opt);
+					_names_validated = 0;
+				}
+			}
+
+		if (!_names_validated)
+			return 0;
 	}
 #endif
 	if ((name = bsearch(name, command_names[0].name, LVM_COMMAND_COUNT,
@@ -1273,6 +1309,40 @@ static int _copy_line(const char **line, size_t max_line, int *position)
 	return len;
 }
 
+/*
+ * Comparison function for qsort to sort opt_args by opt field.
+ * This ensures options are ordered by their creation order from args.h.
+ */
+static int _compare_opt_args(const void *a, const void *b)
+{
+	const struct opt_arg *opt_a = (const struct opt_arg *)a;
+	const struct opt_arg *opt_b = (const struct opt_arg *)b;
+
+	return opt_a->opt - opt_b->opt;
+}
+
+/*
+ * Sort optional_opt_args and required_opt_arg by opts field for
+ * consistent ordering in man page and help generation.
+ */
+static void _sort_opt_args(void)
+{
+	struct command *cmd;
+	unsigned i;
+
+	for (i = 0; i < COMMAND_COUNT; i++) {
+		cmd = &commands[i];
+
+		if (cmd->oo_count > 1)
+			qsort(cmd->optional_opt_args, cmd->oo_count,
+			      sizeof(struct opt_arg), _compare_opt_args);
+
+		if ((cmd->ro_count + cmd->any_ro_count) > 1)
+			qsort(cmd->required_opt_args, cmd->ro_count + cmd->any_ro_count,
+			      sizeof(struct opt_arg), _compare_opt_args);
+	}
+}
+
 int define_commands(struct cmd_context *cmdtool, const char *run_name)
 {
 	struct command *cmd = NULL;
@@ -1471,6 +1541,8 @@ int define_commands(struct cmd_context *cmdtool, const char *run_name)
 	}
 	memset(&_oo_lines, 0, sizeof(_oo_lines));
 	_oo_line_count = 0;
+
+	_sort_opt_args();
 
 	return 1;
 }
