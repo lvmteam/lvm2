@@ -7,10 +7,10 @@ lvmpersist - manage persistent reservations on a group of block devices
 .SH DESCRIPTION
 .
 Persistent reservations (PRs) provide a mechanism to control access to
-shared storage devices, typically to prevent writes from hosts that should
-not be writing to the shared devices.  This is usually a concern in SAN or
-clustered environments, where multiple hosts have access to the same storage
-devices.
+shared storage devices, typically to protect the devices from being
+modified by hosts that should not be writing to the shared devices.
+This is usually a concern in SAN or clustered environments, where
+multiple hosts have access to the same storage devices.
 .P
 If an LVM Volume Group (VG) contains PR-capable devices, then LVM commands
 can be used to manage PR at the VG level, applying PR to each Physical
