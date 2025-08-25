@@ -175,9 +175,7 @@ is reserved for udev output.)
 .
 Autoactivation commands use a number of temp files in
 .I #DEFAULT_RUN_DIR#
-(with the expectation that
-.I #DEFAULT_PID_DIR#
-is cleared between boots).
+(with the expectation that it is cleared between boots).
 .
 .TP
 .B pvs_online
