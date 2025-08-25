@@ -350,8 +350,6 @@ remkey VG, where "remkey" is the PR key of the currently started host.
 When using a shared VG, all hosts using the VG are started, and a WEAR
 (Write Exclusive - all registrants) reservation is held on the devices.
 .P
-Currently, only the sanlock shared lock_type is compatible with PR.
-.P
 PR should be started before locking is started (vgchange --persist start
 followed by vgchange --lockstart, or a combined vgchange --persist start
 --lockstart.)
@@ -376,12 +374,14 @@ local/host_id
 If no pr_key is set, a key will be created based on the host_id.
 This is a decimal integer between 1 and 2000.
 
-For a local VG, a host_id based key will be in the form:
+For a local VG, or a shared VG with locktype dlm, a host_id based key will be
+in the form:
 
 0x100000000000XXXX where XXXX are the hex digits for the host_id value.
 
-For a shared VG, the host_id based key includes a generation number (taken
-from the sanlock lease) combined with the host_id, and follows the form:
+For a shared VG with locktype sanlock, the host_id based key includes a
+generation number (taken from the sanlock lease) combined with the host_id,
+and follows the form:
 
 0x100000YYYYYYXXXX where XXXX are the hex digits for the host_id value,
 and YYYYYY are the hex digits for the generation number.
