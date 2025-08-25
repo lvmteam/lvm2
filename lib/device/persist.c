@@ -1488,7 +1488,7 @@ int persist_stop(struct cmd_context *cmd, struct volume_group *vg)
 	if (!local_key && !local_host_id)
 		return 1;
 
-	if (lockd_vg_is_started(cmd, vg, &cur_gen)) {
+	if (lockd_vg_is_started(cmd, vg, &cur_gen) && !(cmd->lockopt & LOCKOPT_FORCE)) {
 		log_error("VG %s locking should be stopped before PR (vgchange --lockstop)", vg->name);
 		return 0;
 	}
