@@ -247,6 +247,7 @@ struct thread_status {
 	int used;		/* Count thread reusage (for debugging) */
 	pthread_cond_t grace_cond;   /* Condition variable for grace period wait */
 	pthread_mutex_t grace_mutex; /* Mutex for grace period synchronization */
+	uint64_t inode;         /* Device path inode of monitored volume */
 	time_t next_time;
 	uint32_t timeout;
 	struct dm_list timeout_list;
@@ -677,6 +678,25 @@ static struct dm_task *_get_device_status(struct thread_status *ts)
 	return dmt;
 }
 
+static uint64_t _get_device_inode(struct thread_status *ts)
+{
+	struct stat buf;
+	char path[PATH_MAX];
+
+	if (dm_snprintf(path, sizeof(path), "%sdev/block/%d:%d",
+			dm_sysfs_dir(), ts->device.major, ts->device.minor) < 0)
+		return_0;
+
+	if (stat(path, &buf) < 0) {
+		log_sys_debug("stat", path);
+		return 0;
+	}
+
+	log_debug("Device %s with inode %" PRIu64 ".", path, (uint64_t) buf.st_ino);
+
+	return (uint64_t) buf.st_ino;
+}
+
 /*
  * Find an existing thread for a device.
  *
@@ -700,7 +720,8 @@ static struct thread_status *_lookup_grace_thread_status(struct message_data *da
 	dm_list_iterate_items(thread, &_thread_registry_unused)
 		if ((thread->status == DM_THREAD_GRACE_PERIOD) &&
 		    !strcmp(data->device_uuid, thread->device.uuid) &&
-		    !strcmp(data->dso_name, thread->dso_data->dso_name)) {
+		    !strcmp(data->dso_name, thread->dso_data->dso_name) &&
+		    (thread->inode == _get_device_inode(thread))) {
 			DEBUGLOG("Found reusable thread %x in grace period.",(int)thread->thread);
 			return thread;
 		}
@@ -1196,6 +1217,9 @@ static void *_monitor_thread(void *arg)
 		goto out;
 	}
 
+	/* Now with resolved major:minor store also device inode */
+	thread->inode = _get_device_inode(thread);
+
 	if (!_do_register_device(thread)) {
 		log_error("Failed to register device %s.", thread->device.name);
 		_lock_mutex();
@@ -1219,10 +1243,17 @@ static void *_monitor_thread(void *arg)
 		/* No grace period when set to 0
 		 * or there were left some processing events which is an error state
 		 * or there is on going exit
-                 * or there was fatal error while waiting for some event */
+		 * or there was fatal error while waiting for some event */
 		if (!_grace_period || thread->events || _exit_now || (ret == DM_WAIT_FATAL))
 			break;
 
+		/* Before restarting event loop reset any pending SIGALRM signal */
+		if (!_reset_pending_signal(SIGALRM)) {
+			stack;
+			break; /* Something is wrong... */
+		}
+
+		thread->current_events = 0;
 		thread->status = DM_THREAD_GRACE_PERIOD;	/* No events - enter grace period */
 		_thread_unused(thread);
 		_unlock_mutex();
@@ -1233,14 +1264,12 @@ static void *_monitor_thread(void *arg)
 
 		_monitor_grace_period_wait(thread);
 
+		pthread_mutex_lock(&_timeout_mutex);
+		thread->next_time = time(NULL) + thread->timeout;
+		pthread_mutex_unlock(&_timeout_mutex);
+
 		_lock_mutex();
 		_thread_used(thread);
-
-		/* Before restarting event loop reset any pending SIGALRM signal */
-		if (!_reset_pending_signal(SIGALRM)) {
-			stack;
-			break; /* Something is wrong... */
-		}
 	}
 out:
 	/* ';' fixes gcc compilation problem with older pthread macros
