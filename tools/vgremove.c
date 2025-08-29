@@ -42,6 +42,9 @@ static int _vgremove_single(struct cmd_context *cmd, const char *vg_name,
 	force_t force = (force_t) arg_count(cmd, force_ARG)
 		? : (arg_is_set(cmd, yes_ARG) ? DONT_PROMPT : PROMPT);
 	unsigned lv_count, missing;
+	DM_LIST_INIT(pr_devs);
+	char *pr_key = NULL;
+	int pr_stop = (vg->pr & (VG_PR_REQUIRE|VG_PR_AUTOSTART)) ? 1 : 0;
 	int ret;
 
 	lv_count = vg_visible_lvs(vg);
@@ -79,8 +82,8 @@ static int _vgremove_single(struct cmd_context *cmd, const char *vg_name,
 
 	online_vgremove(vg);
 
-	if (vg->pr & (VG_PR_REQUIRE|VG_PR_AUTOSTART))
-		persist_stop(cmd, vg);
+	if (pr_stop && !persist_stop_prepare(cmd, vg, &pr_devs, &pr_key))
+		return_ECMD_FAILED;
 
 	vg_remove_pvs(vg);
 
@@ -88,6 +91,9 @@ static int _vgremove_single(struct cmd_context *cmd, const char *vg_name,
 		return_ECMD_FAILED;
 
 	lockd_free_vg_final(cmd, vg);
+
+	if (pr_stop && !persist_stop_run(cmd, vg, &pr_devs, pr_key))
+		log_warn("WARNING: persistent reservation not removed from devices.");
 
 	return ECMD_PROCESSED;
 }

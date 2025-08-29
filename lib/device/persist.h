@@ -38,6 +38,8 @@ int persist_start(struct cmd_context *cmd, struct volume_group *vg,
 		  char *local_key, int local_host_id, const char *remkey);
 
 int persist_stop(struct cmd_context *cmd, struct volume_group *vg);
+int persist_stop_prepare(struct cmd_context *cmd, struct volume_group *vg, struct dm_list *devs, char **key);
+int persist_stop_run(struct cmd_context *cmd, struct volume_group *vg, struct dm_list *devs, char *key);
 
 int persist_remove(struct cmd_context *cmd, struct volume_group *vg,
                    char *local_key, int local_host_id, const char *remkey);

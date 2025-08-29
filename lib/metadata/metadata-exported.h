@@ -1495,6 +1495,7 @@ void vg_write_commit_bad_mdas(struct cmd_context *cmd, struct volume_group *vg);
 struct dm_list *create_pv_list(struct dm_pool *mem, struct volume_group *vg, int argc,
 		                                            char **argv, int allocatable_only);
 struct dm_list *clone_pv_list(struct dm_pool *mem, struct dm_list *pvsl);
+int pv_list_to_dev_list(struct dm_pool *mem, struct dm_list *pvs, struct dm_list *devs);
 
 int lv_add_integrity_to_raid(struct logical_volume *lv, struct integrity_settings *settings, struct dm_list *pvh,
 			     struct logical_volume *lv_imeta_0);

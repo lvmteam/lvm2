@@ -21,6 +21,7 @@
 #include "lib/locking/lvmlockd.h"
 #include "lib/misc/lvm-exec.h"
 #include "lib/mm/xlate.h"
+#include "lib/metadata/metadata-exported.h"
 
 #include <unistd.h>
 #include <fcntl.h>
@@ -1425,24 +1426,16 @@ int persist_check(struct cmd_context *cmd, struct volume_group *vg,
 	return 1;
 }
 
-static int _run_stop(struct cmd_context *cmd, struct volume_group *vg, char *our_key_str, int cleanup)
+static int _run_stop(struct cmd_context *cmd, struct volume_group *vg, struct dm_list *devs, char *our_key_str, int cleanup)
 {
-	struct pv_list *pvl;
-	struct device *dev;
+	struct device_list *devl;
 	const char *devname;
 	const char **argv;
 	int args = 0;
-	int pv_count = 0;
+	int pv_count;
 	int status;
 
-	dm_list_iterate_items(pvl, &vg->pvs) {
-		if (!(dev = pvl->pv->dev))
-			continue;
-		if (dm_list_empty(&dev->aliases))
-			continue;
-		pv_count++;
-	}
-	if (!pv_count)
+	if (!(pv_count = dm_list_size(devs)))
 		return_0;
 
 	if (!(argv = dm_pool_alloc(cmd->mem, (7 + pv_count*2) * sizeof(char *))))
@@ -1455,12 +1448,8 @@ static int _run_stop(struct cmd_context *cmd, struct volume_group *vg, char *our
 	argv[++args] = "--vg";
 	argv[++args] = vg->name;
 
-	dm_list_iterate_items(pvl, &vg->pvs) {
-		if (!(dev = pvl->pv->dev))
-			continue;
-		if (dm_list_empty(&dev->aliases))
-			continue;
-		if (!(devname = dm_pool_strdup(cmd->mem, dev_name(dev))))
+	dm_list_iterate_items(devl, devs) {
+		if (!(devname = dm_pool_strdup(cmd->mem, dev_name(devl->dev))))
 			return_0;
 		argv[++args] = "--device";
 		argv[++args] = devname;
@@ -1477,7 +1466,19 @@ static int _run_stop(struct cmd_context *cmd, struct volume_group *vg, char *our
 	return 1;
 }
 
-int persist_stop(struct cmd_context *cmd, struct volume_group *vg)
+/*
+ * Separate persist_stop_prepare() and persist_stop_run() is needed
+ * for vgremove, where prepare is needed before the normal vgremove,
+ * and run should happen after the normal vgremove.
+ * - prepare cannot happen after normal vgremove, because the list
+ * of PVs is no longer available.
+ * - run cannot happen before normal vgremove, because removing the
+ * reservation will prevent writing metadata for normal vgremove if
+ * another host has a PR key registered (which may not happen in the
+ * normal usage pattern, but is still possible.)
+ */
+
+int persist_stop_prepare(struct cmd_context *cmd, struct volume_group *vg, struct dm_list *devs, char **key)
 {
 	char *local_key = (char *)find_config_tree_str(cmd, local_pr_key_CFG, NULL);
 	int local_host_id = find_config_tree_int(cmd, local_host_id_CFG, NULL);
@@ -1496,9 +1497,31 @@ int persist_stop(struct cmd_context *cmd, struct volume_group *vg)
 	if (!get_our_key(cmd, vg, local_key, local_host_id, our_key_buf, &our_key_val))
 		return_0;
 
-	if (!_run_stop(cmd, vg, our_key_buf, 0))
-		return 0;
+	if (!pv_list_to_dev_list(cmd->mem, &vg->pvs, devs))
+		return_0;
 
+	if (!(*key = dm_pool_strdup(cmd->mem, our_key_buf)))
+		return_0;
+
+	return 1;
+}
+
+int persist_stop_run(struct cmd_context *cmd, struct volume_group *vg, struct dm_list *devs, char *key)
+{
+	if (!_run_stop(cmd, vg, devs, key, 0))
+		return 0;
+	return 1;
+}
+
+int persist_stop(struct cmd_context *cmd, struct volume_group *vg)
+{
+	DM_LIST_INIT(devs);
+	char *key = NULL;
+
+	if (!persist_stop_prepare(cmd, vg, &devs, &key))
+		return_0;
+	if (!persist_stop_run(cmd, vg, &devs, key))
+		return_0;
 	return 1;
 }
 
@@ -1794,6 +1817,7 @@ int persist_start_extend(struct cmd_context *cmd, struct volume_group *vg)
 int persist_start(struct cmd_context *cmd, struct volume_group *vg,
 		  char *local_key, int local_host_id, const char *remkey)
 {
+	DM_LIST_INIT(devs);
 	struct pv_list *pvl;
 	struct device *dev;
 	uint64_t our_key_val = 0;
@@ -2018,7 +2042,9 @@ int persist_start(struct cmd_context *cmd, struct volume_group *vg,
 
  out_stop:
 	/* try to clean up any parts of start that were successful */
-	_run_stop(cmd, vg, our_key_buf, 1);
+	if (!pv_list_to_dev_list(cmd->mem, &vg->pvs, &devs))
+		return_0;
+	_run_stop(cmd, vg, &devs, our_key_buf, 1);
 	return 0;
 }
 

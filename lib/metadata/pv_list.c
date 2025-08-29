@@ -296,3 +296,22 @@ struct dm_list *clone_pv_list(struct dm_pool *mem, struct dm_list *pvsl)
 	return r;
 }
 
+int pv_list_to_dev_list(struct dm_pool *mem, struct dm_list *pvs, struct dm_list *devs)
+{
+	struct device *dev;
+	struct pv_list *pvl;
+	struct device_list *devl;
+
+	dm_list_iterate_items(pvl, pvs) {
+		if (!(dev = pvl->pv->dev))
+			continue;
+		if (dm_list_empty(&dev->aliases))
+			continue;
+		if (!(devl = dm_pool_zalloc(mem, sizeof(*devl))))
+			return_0;
+		devl->dev = dev;
+		dm_list_add(devs, &devl->list);
+	}
+	return 1;
+}
+
