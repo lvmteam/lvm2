@@ -194,7 +194,7 @@ static int _pvchange_single(struct cmd_context *cmd, struct volume_group *vg,
 			log_error("Failed to set pvid for devices file.");
 		if (!device_ids_write(cmd))
 			log_warn("Failed to update devices file.");
-		unlock_devices_file(cmd);
+		//unlock_devices_file(cmd);
 	}
 
 	log_print_unless_silent("Physical volume \"%s\" changed", pv_name);
