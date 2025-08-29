@@ -95,7 +95,7 @@ static const time_t DMEVENTD_IDLE_EXIT_TIMEOUT = 60 * 60;
 
 /* Default grace period for thread cleanup 10 seconds */
 #define DMEVENTD_DEFAULT_GRACE_PERIOD 10
-static time_t _grace_period = DMEVENTD_DEFAULT_GRACE_PERIOD;
+static int _grace_period = DMEVENTD_DEFAULT_GRACE_PERIOD;
 
 static int _systemd_activation = 0;
 static int _foreground = 0;
@@ -1211,19 +1211,17 @@ static int _monitor_events(struct thread_status *thread)
 /* Thread awaits condition wake up for a grace period */
 static void _monitor_grace_period_wait(struct thread_status *thread)
 {
-	int ret;
-
 	/* Wait during grace period */
 	struct timespec grace_timeout = { .tv_sec = time(NULL) + _grace_period };
 
-	DEBUGLOG("Thread %x entering grace period for %ld seconds.",
+	DEBUGLOG("Thread %x entering grace period for %d seconds.",
 		 (int)thread->thread, _grace_period);
 
 	pthread_mutex_lock(&thread->grace_mutex);
-	ret = pthread_cond_timedwait(&thread->grace_cond, &thread->grace_mutex, &grace_timeout);
+	(void) pthread_cond_timedwait(&thread->grace_cond, &thread->grace_mutex, &grace_timeout);
 	pthread_mutex_unlock(&thread->grace_mutex);
 
-	DEBUGLOG("Thread %x wakeup grace period  (%d).", (int)thread->thread, ret);
+	DEBUGLOG("Thread %x wakeup grace period.", (int)thread->thread);
 }
 
 /* Device monitoring thread. */
@@ -2492,7 +2490,7 @@ static void _usage(char *prog, FILE *file)
 		"   -?       Show this help information on stderr\n"
 		"   -R       Restart dmeventd\n"
 		"   -V       Show version of dmeventd\n\n", prog,
-		(int)_grace_period);
+		_grace_period);
 }
 
 int main(int argc, char *argv[])
@@ -2534,7 +2532,7 @@ int main(int argc, char *argv[])
 			_exit_on=optarg;
 			break;
 		case 'g':
-			_grace_period = (time_t)atoi(optarg);
+			_grace_period = atoi(optarg);
 			if (_grace_period < 0 || _grace_period > 300) {
 				fprintf(stderr, "dmeventd: grace period must be between 0 and 300 seconds.\n");
 				return EXIT_FAILURE;
