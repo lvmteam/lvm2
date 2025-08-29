@@ -35,6 +35,7 @@
 #include <fcntl.h>		/* for musl libc */
 #include <unistd.h>
 #include <syslog.h>
+#include <sys/utsname.h>
 
 #ifdef __linux__
 /*
@@ -680,19 +681,42 @@ static struct dm_task *_get_device_status(struct thread_status *ts)
 
 static uint64_t _get_device_inode(struct thread_status *ts)
 {
+	static int _kernel_major = -1;
+	struct utsname uts;
 	struct stat buf;
 	char path[PATH_MAX];
 
-	if (dm_snprintf(path, sizeof(path), "%sdev/block/%d:%d",
-			dm_sysfs_dir(), ts->device.major, ts->device.minor) < 0)
-		return_0;
+	/* Get kernel version to determine path format */
+	if (_kernel_major < 0) {
+		_kernel_major = 0;
+		if (uname(&uts))
+			log_sys_debug("uname", "");
+		else if (sscanf(uts.release, "%d", &_kernel_major) != 1)
+			log_debug("Cannot parse kernel version from %s.", uts.release);
+	}
+
+	if (_kernel_major >= 3) {
+		/* Use sysfs path with major:minor format for modern kernels */
+		if (dm_snprintf(path, sizeof(path), "%sdev/block/%d:%d",
+				dm_sysfs_dir(), ts->device.major, ts->device.minor) < 0)
+			return_0;
+	} else {
+		/* Use /dev/mapper/name device path for kernel version <3.
+		 * Older kernels do not change inode numbers for devices!
+		 * Relies on correct files in /dev/mapper directory.
+		 */
+		if (dm_snprintf(path, sizeof(path), "%s/%s",
+				dm_dir(), ts->device.name) < 0)
+			return_0;
+	}
 
 	if (stat(path, &buf) < 0) {
 		log_sys_debug("stat", path);
 		return 0;
 	}
 
-	log_debug("Device %s with inode %" PRIu64 ".", path, (uint64_t) buf.st_ino);
+	log_debug("Device %s with inode %" PRIu64 " (kernel %d).",
+		  path, (uint64_t) buf.st_ino, _kernel_major);
 
 	return (uint64_t) buf.st_ino;
 }
