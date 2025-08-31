@@ -712,7 +712,19 @@ static uint64_t _get_device_inode(struct thread_status *ts)
 
 	if (stat(path, &buf) < 0) {
 		log_sys_debug("stat", path);
-		return 0;
+		if (_kernel_major >= 3)
+			return 0;
+
+		/* Since monitoring is not synchronized with udev
+		 * symlink may not exists, so also try /dev/dm-X */
+		if (dm_snprintf(path, sizeof(path), "%s/../dm-%d",
+				dm_dir(), ts->device.minor) < 0)
+			return_0;
+
+		if (stat(path, &buf) < 0) {
+			log_sys_debug("stat", path);
+			return 0;
+		}
 	}
 
 	log_debug("Device %s with inode %" PRIu64 " (kernel %d).",
