@@ -247,7 +247,6 @@ struct thread_status {
 	int pending;		/* Set when event filter change is pending */
 	int used;		/* Count thread reusage (for debugging) */
 	pthread_cond_t grace_cond;   /* Condition variable for grace period wait */
-	pthread_mutex_t grace_mutex; /* Mutex for grace period synchronization */
 	uint64_t inode;         /* Device path inode of monitored volume */
 	time_t next_time;
 	uint32_t timeout;
@@ -406,9 +405,8 @@ static void _free_thread_status(struct thread_status *thread)
 	if (thread->wait_task)
 		dm_task_destroy(thread->wait_task);
 
-	/* Clean up grace period synchronization */
+	/* Clean up grace period condition variable */
 	pthread_cond_destroy(&thread->grace_cond);
-	pthread_mutex_destroy(&thread->grace_mutex);
 
 	free(thread->device.uuid);
 	free(thread->device.name);
@@ -444,14 +442,9 @@ static struct thread_status *_alloc_thread_status(const struct message_data *dat
 	if (!(thread->device.name = strdup(data->device_uuid)))
 		goto_out;
 
-	/* Initialize grace period synchronization */
+	/* Initialize grace period condition variable */
 	if (pthread_cond_init(&thread->grace_cond, NULL)) {
 		log_error("Failed to initialize grace period condition variable.");
-		goto_out;
-	}
-	if (pthread_mutex_init(&thread->grace_mutex, NULL)) {
-		log_error("Failed to initialize grace period mutex.");
-		pthread_cond_destroy(&thread->grace_cond);
 		goto_out;
 	}
 
@@ -1223,15 +1216,16 @@ static int _monitor_events(struct thread_status *thread)
 /* Thread awaits condition wake up for a grace period */
 static void _monitor_grace_period_wait(struct thread_status *thread)
 {
-	/* Wait during grace period */
 	struct timespec grace_timeout = { .tv_sec = time(NULL) + _grace_period };
 
 	DEBUGLOG("Thread %x entering grace period for %d seconds.",
 		 (int)thread->thread, _grace_period);
 
-	pthread_mutex_lock(&thread->grace_mutex);
-	(void) pthread_cond_timedwait(&thread->grace_cond, &thread->grace_mutex, &grace_timeout);
-	pthread_mutex_unlock(&thread->grace_mutex);
+	/* Wait on per-thread condition variable with global mutex */
+	while (!_exit_now && !thread->events &&
+	       (ETIMEDOUT != pthread_cond_timedwait(&thread->grace_cond,
+						    &_global_mutex, &grace_timeout)))
+		/* Waiting */;
 
 	DEBUGLOG("Thread %x wakeup grace period.", (int)thread->thread);
 }
@@ -1290,13 +1284,13 @@ static void *_monitor_thread(void *arg)
 		thread->current_events = 0;
 		thread->status = DM_THREAD_GRACE_PERIOD;	/* No events - enter grace period */
 		_thread_unused(thread);
-		_unlock_mutex();
 
 		DEBUGLOG("Gracing %s with Thr %x  (events: %x, used: %d).",
 			 thread->device.name, (int)thread->thread,
 			 thread->events, thread->used);
 
 		_monitor_grace_period_wait(thread);
+		_unlock_mutex();
 
 		pthread_mutex_lock(&_timeout_mutex);
 		thread->next_time = time(NULL) + thread->timeout;
@@ -1335,13 +1329,10 @@ static int _update_events(struct thread_status *thread, int events)
 
 	/* If needed, wake up thread waiting in grace period */
 	if ((events || _exit_now) && (thread->status == DM_THREAD_GRACE_PERIOD)) {
-		_unlock_mutex();
 		DEBUGLOG("Waking up thread %x waiting in grace period (events=%x).",
 			 (int)thread->thread, events);
-		pthread_mutex_lock(&thread->grace_mutex);
+		/* Signal per-thread condition variable while holding global mutex */
 		pthread_cond_signal(&thread->grace_cond);
-		pthread_mutex_unlock(&thread->grace_mutex);
-		_lock_mutex();
 		return 0;
 	}
 
