@@ -998,7 +998,7 @@ static int _stats_parse_list_region(struct dm_stats *dms,
 {
 	char string_data[STATS_ROW_BUF_LEN] = { 0 };
 	char *p, *program_id, *aux_data, *stats_args;
-	int r;
+	int r, consumed;
 
 	/*
 	 * Parse fixed fields, line format:
@@ -1007,13 +1007,17 @@ static int _stats_parse_list_region(struct dm_stats *dms,
 	 *
 	 * Maximum string data size is 4096 - 1 bytes.
 	 */
-	r = sscanf(line, FMTu64 ": " FMTu64 "+" FMTu64 " " FMTu64 " %4095c",
+	r = sscanf(line, FMTu64 ": " FMTu64 "+" FMTu64 " " FMTu64 " %n",
 		   &region->region_id, &region->start, &region->len,
-		   &region->step, string_data);
+		   &region->step, &consumed);
 
-	if (r != 5) {
+	if (r != 4) {
 		return 0;
 	}
+
+	/* Copy string data after the parsed numeric fields */
+	if (!dm_strncpy(string_data, line + consumed, sizeof(string_data)))
+		return_0;
 
 	if (!_stats_parse_string_data(string_data, &program_id, &aux_data, &stats_args)) {
 		return_0;
