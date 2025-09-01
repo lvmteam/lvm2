@@ -909,8 +909,8 @@ static void *_timeout_thread(void *unused __attribute__((unused)))
 				timeout.tv_sec = thread->next_time;
 		}
 
-		pthread_cond_timedwait(&_timeout_cond, &_timeout_mutex,
-				       &timeout);
+		(void) pthread_cond_timedwait(&_timeout_cond, &_timeout_mutex,
+					      &timeout);
 	}
 
 	DEBUGLOG("Timeout thread finished.");
