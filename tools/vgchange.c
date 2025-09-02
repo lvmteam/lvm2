@@ -1099,6 +1099,11 @@ int vgchange(struct cmd_context *cmd, int argc, char **argv)
 	if (noupdate)
 		cmd->ignore_device_name_mismatch = 1;
 
+	/* Allow LVs to be deactivated without PR started. */
+	if (arg_is_set(cmd, activate_ARG) &&
+	    !is_change_activating((activation_change_t)arg_uint_value(cmd, activate_ARG, CHANGE_AY)))
+		cmd->disable_pr_required = 1;
+
 	/*
 	 * If the devices file includes PVs stacked on LVs, then
 	 * vgchange --uuid may need to update the devices file.

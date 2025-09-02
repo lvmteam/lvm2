@@ -1718,6 +1718,10 @@ int lvchange_activate_cmd(struct cmd_context *cmd, int argc, char **argv)
 	if (do_activate)
 		cmd->lockd_vg_enforce_sh = 1;
 
+	/* Allow deactivating without PR started. */
+	if (!do_activate)
+		cmd->disable_pr_required = 1;
+
 	/* When activating, check if given LV is a component LV */
 	if (do_activate) {
 		if ((argc == 1) && is_component_lvname(argv[0])) {
