@@ -155,7 +155,13 @@ get_key_list_scsi() {
 	dev=$1
 	set_cmd "$dev"
 
-	if $cmd $cmdopts --in --read-keys "$dev" 2>/dev/null | grep -q "there are NO registered reservation keys"; then
+	if [[ "$cmd" == "mpathpersist" ]]; then
+		no_keys_msg="0 registered reservation key"
+	else
+		no_keys_msg="there are NO registered reservation keys"
+	fi
+
+	if $cmd $cmdopts --in --read-keys "$dev" 2>/dev/null | grep -q $no_keys_msg; then
 		KEYS=""
 		return
 	fi
