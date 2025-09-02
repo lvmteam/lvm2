@@ -1887,6 +1887,7 @@ int persist_start(struct cmd_context *cmd, struct volume_group *vg,
 		uint64_t found_key_val;
 		int found_our_key;
 		int found_key_count;
+		uint64_t found_key_print = 0;
 		uint64_t *found_keys;
 
 		dm_list_iterate_items(pvl, &vg->pvs) {
@@ -1912,15 +1913,18 @@ int persist_start(struct cmd_context *cmd, struct volume_group *vg,
 				}
 			}
 
-			if (found_keys)
+			if (found_keys) {
 				dm_pool_free(cmd->mem, found_keys);
+				found_key_print = found_keys[0];
+			}
 
 			/* If our key is already found, then allow start even if others exist. */
 			if (found_our_key)
 				break;
 
 			if (found_key_count) {
-				log_error("persistent reservation is started by another host");
+				log_error("persistent reservation is started by another key (0x%llx)",
+					  (unsigned long long)found_key_print);
 				return 0;
 			}
 		}
