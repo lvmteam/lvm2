@@ -92,8 +92,11 @@ static int _vgremove_single(struct cmd_context *cmd, const char *vg_name,
 
 	lockd_free_vg_final(cmd, vg);
 
-	if (pr_stop && !persist_stop_run(cmd, vg, &pr_devs, pr_key))
-		log_warn("WARNING: persistent reservation not removed from devices.");
+	if (pr_stop) {
+		if (!persist_stop_run(cmd, vg, &pr_devs, pr_key))
+			log_warn("WARNING: persistent reservation not removed from devices.");
+		persist_key_file_remove(cmd, vg);
+	}
 
 	return ECMD_PROCESSED;
 }

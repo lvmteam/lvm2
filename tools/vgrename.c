@@ -14,6 +14,7 @@
  */
 
 #include "tools.h"
+#include "lib/device/persist.h"
 
 struct vgrename_params {
 	const char *vg_name_old;
@@ -111,6 +112,9 @@ static int _vgrename_single(struct cmd_context *cmd, const char *vg_name,
 		stack;
 		goto error;
 	}
+
+	if (vg->pr)
+		persist_key_file_rename(vg_name, vp->vg_name_new);
 
 	/* Change the volume group name */
 	vg_rename(cmd, vg, vp->vg_name_new);

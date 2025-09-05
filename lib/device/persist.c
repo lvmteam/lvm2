@@ -135,6 +135,22 @@ void persist_key_file_remove(struct cmd_context *cmd, struct volume_group *vg)
 		log_sys_debug("unlink", path);
 }
 
+void persist_key_file_rename(const char *old_name, const char *new_name)
+{
+	char old_path[PATH_MAX] = { 0 };
+	char new_path[PATH_MAX] = { 0 };
+	struct stat info;
+
+	if (dm_snprintf(old_path, PATH_MAX-1, "/var/lib/lvm/persist_key_%s", old_name) < 0)
+		return;
+	if (stat(old_path, &info))
+		return;
+	if (dm_snprintf(new_path, PATH_MAX-1, "/var/lib/lvm/persist_key_%s", new_name) < 0)
+		return;
+	if (rename(old_path, new_path) < 0)
+		log_warn("WARNING: Failed to rename %s", old_path);
+}
+
 static int key_file_exists(struct cmd_context *cmd, struct volume_group *vg)
 {
 	char path[PATH_MAX] = { 0 };
