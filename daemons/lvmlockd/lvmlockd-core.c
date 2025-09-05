@@ -3555,6 +3555,7 @@ static int count_lockspace_starting(uint32_t client_id)
 static int for_each_lockspace(int do_stop, int do_free, int do_force)
 {
 	struct lockspace *ls, *safe;
+	struct action *act, *act2;
 	int need_stop = 0;
 	int need_free = 0;
 	int stop_count = 0;
@@ -3607,19 +3608,16 @@ static int for_each_lockspace(int do_stop, int do_free, int do_force)
 				if ((perrno = pthread_join(ls->thread, NULL)))
 					log_error("pthread_join error %d", perrno);
 
+				log_debug("free ls struct %s", ls->name);
 				list_del(&ls->list);
-
-				/* FIXME: will free_vg ever not be set? */
-
-				log_debug("free ls %s", ls->name);
-
-				if (ls->free_vg) {
-					/* In future we may need to free ls->actions here */
-					free_ls_resources(ls);
-					free_pvs_path(&ls->pvs);
-					free(ls);
-					free_count++;
+				list_for_each_entry_safe(act, act2, &ls->actions, list) {
+					list_del(&act->list);
+					free_action(act);
 				}
+				free_ls_resources(ls);
+				free_pvs_path(&ls->pvs);
+				free(ls);
+				free_count++;
 			} else {
 				need_free++;
 			}
