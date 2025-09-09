@@ -1,0 +1,53 @@
+<!-- Page title -->
+[[!meta title="Version 2.03.35 - Feature and Bug Fix Release"]]
+
+Version 2.03.35
+===============
+
+* Optimize dmeventd when remonitoring active devices.
+* Allow report options for `(pv|vg|lv)display` only if used with `-C|--columns`.
+* And [[!toggle text="more"]]
+
+[[!toggleable text="""
+Features
+-----------------------
+
+### Optimize dmeventd when remonitoring active devices.
+
+Add grace period (controlled by `-g SECONDS` option) to [dmeventd(8)](https://man7.org/linux/man-pages/man8/dmeventd.8.html) to reuse threads.
+
+This change help to reduce overhead and unnecessary `lvextend` calls.
+
+
+<!--
+TODO: It would be nice if we could use a real session output, so we could test the examples
+- During tests, save some outputs
+-->
+
+Changes in command line
+-----------------------
+
+* Report options (`--select STRING`, `--configreport CONFIG_REPORT`, `--logonly`)
+  are allowed only with `(pv|vg|lv)display -C|--columns`.
+  These **no longer work** without `-C|--columns` and were removed as they were not working properly anyway.
+
+Other Changes
+-------------
+
+* Fix unlocking devices file only after all PVs are processed.
+* Avoid creating system.devices when deleting entries.
+* Fix existing issues with persistent reservations.
+* Fix possible report output format inconsistencies while processing PVs.
+* Allow report options for pv/vg/lvdisplay only if used with -C|--columns.
+* Fix vgsplit failing to split a VG with RAID+integrity or cache with cachevol.
+* Fix --lockopt handling in lvmlockd when --nolocking is used.
+* Optimize dmeventd when remonitoring active devices.
+
+"""]]
+
+<!-- remove the pending tag on release, remove draft tag once editing is complete -->
+[[!tag draft pending]]
+<!--
+For old releases add Release Timestamp like this, date from git show $COMMIT is fine.
+\[[!meta date="Tue Nov 21 14:26:07 2023 +0100"]]
+-->

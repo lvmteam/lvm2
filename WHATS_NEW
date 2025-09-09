@@ -1,8 +1,12 @@
 Version 2.03.35 - 
 ==================
+  Fix unlocking devices file only after all PVs are processed.
+  Avoid creating system.devices when deleting entries.
+  Fix existing issues with persistent reservations.
   Fix possible report output format inconsistencies while processing PVs.
   Allow report options for pv/vg/lvdisplay only if used with -C|--columns.
   Fix vgsplit failing to split a VG with RAID+integrity or cache with cachevol.
+  Fix --lockopt handling in lvmlockd when --nolocking is used.
   Optimize dmeventd when remonitoring active devices.
 
 Version 2.03.34 - 30th July 2025
