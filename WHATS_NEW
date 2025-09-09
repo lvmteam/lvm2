@@ -1,5 +1,5 @@
-Version 2.03.35 - 
-==================
+Version 2.03.35 - 09th September 2025
+=====================================
   Fix unlocking devices file only after all PVs are processed.
   Avoid creating system.devices when deleting entries.
   Fix existing issues with persistent reservations.
