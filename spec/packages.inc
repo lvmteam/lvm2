@@ -204,6 +204,7 @@ fi
   %{_sysconfdir}/rc.d/init.d/lvm2-lvmpolld
  %endif
 %endif
+%dir %{_sharedstatedir}/lvm
 
 ##############################################################################
 # Library and Development subpackages

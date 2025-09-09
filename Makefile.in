@@ -134,6 +134,7 @@ install_system_dirs:
 	$(INSTALL_ROOT_DIR) $(DESTDIR)$(DEFAULT_LOCK_DIR)
 	$(INSTALL_ROOT_DIR) $(DESTDIR)$(DEFAULT_RUN_DIR)
 	$(INSTALL_ROOT_DATA) /dev/null $(DESTDIR)$(DEFAULT_CACHE_DIR)/.cache
+	$(INSTALL_ROOT_DIR) $(DESTDIR)/var/lib/lvm
 
 install_initscripts:
 	$(MAKE) -C scripts install_initscripts
