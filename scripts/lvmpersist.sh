@@ -866,6 +866,7 @@ do_remove() {
 	for dev in "${DEVICES[@]}"; do
 		if ! key_is_on_device "$dev" "$OURKEY" ; then
 			logmsg "cannot remove $REMKEY from $dev without ourkey $OURKEY being registered"
+			err=1
 			continue
 		fi
 
