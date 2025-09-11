@@ -258,7 +258,7 @@ Display the settings.
 .P
 .SS VG PR commands
 .P
-vgchange --persist is used to perfom PR operations on the VG's devices.
+vgchange --persist is used to perform PR operations on the VG's devices.
 .P
 .B vgchange --persist start
 .I VG

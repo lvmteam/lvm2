@@ -39,7 +39,7 @@ local {
 	# system_id = ""
 
 	# Configuration option local/pr_key.
-	# The local persistent reservation key in hexidecimal.
+	# The local persistent reservation key in hexadecimal.
 	# The value must be unique among all hosts using the same VG.
 	# The max length is 16 hex characters (8 bytes), plus an optional
 	# 0x prefix. If pr_key is not set, host_id will be used to create a key.

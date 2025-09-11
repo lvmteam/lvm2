@@ -2280,7 +2280,7 @@ cfg(local_system_id_CFG, "system_id", local_CFG_SECTION, CFG_ALLOW_EMPTY | CFG_D
 	"#\n")
 
 cfg(local_pr_key_CFG, "pr_key", local_CFG_SECTION, CFG_DEFAULT_COMMENTED, CFG_TYPE_STRING, 0, vsn(2, 3, 32), NULL, 0, NULL,
-	"The local persistent reservation key in hexidecimal.\n"
+	"The local persistent reservation key in hexadecimal.\n"
 	"The value must be unique among all hosts using the same VG.\n"
 	"The max length is 16 hex characters (8 bytes), plus an optional\n"
 	"0x prefix. If pr_key is not set, host_id will be used to create a key.\n")

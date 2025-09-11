@@ -964,7 +964,7 @@ static int get_our_key_sanlock_start(struct cmd_context *cmd, struct volume_grou
 /*
  * Called after sanlock lockstart to check if a registered PR key contains the
  * latest generation number (from sanlock) for the host, and if not to update
- * the PR key.  The sanlock lockstart atually returns the previous generation
+ * the PR key.  The sanlock lockstart actually returns the previous generation
  * number that was used for this host_id in the lockspace, and we expect that
  * the next generation number just will be +1.
  *
