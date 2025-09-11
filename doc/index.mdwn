@@ -72,6 +72,7 @@ incorrectly!
 
   Make one by running `pvcreate /dev/sdX`.
   See [pvcreate(8)](https://man7.org/linux/man-pages/man8/pvcreate.8.html). This step is optional.
+
 * Volume Group (VG) consisting of one or more PVs is used as a pool from which LVs are allocated.
   List VGs using [vgs(8)](https://man7.org/linux/man-pages/man8/vgs.8.html) or
   [vgdisplay(8)](https://man7.org/linux/man-pages/man8/vgdisplay.8.html).
@@ -80,27 +81,34 @@ incorrectly!
   To use LVM at least one Volume Group must be present on the system.
   See [vgcreate(8)](https://man7.org/linux/man-pages/man8/vgcreate.8.html), and
   [vgextend(8)](https://man7.org/linux/man-pages/man8/vgextend.8.html).
+
 * Logical Volume (LV) is the block device usually visible to user to be used for file system.
-  List PVs using [lvs(8)](https://man7.org/linux/man-pages/man8/lvs.8.html) or
+  List LVs using [lvs(8)](https://man7.org/linux/man-pages/man8/lvs.8.html) or
   [lvdisplay(8)](https://man7.org/linux/man-pages/man8/lvdisplay.8.html).
 
   Make one by running `lvcreate [-n LVNAME] -L SIZE VGNAME`, and you are done!
-  See [vgcreate(8)](https://man7.org/linux/man-pages/man8/vgcreate.8.html).
+  See [lvcreate(8)](https://man7.org/linux/man-pages/man8/lvcreate.8.html).
+
+  To change size of LV it is recommended to use [lvresize(8)](https://man7.org/linux/man-pages/man8/lvresize.8.html) with `--resizefs` option.
+
+  To change properties of LV (e.g. to acivate/deactivate a volume, or change it to read only) use [lvchange(8)](https://man7.org/linux/man-pages/man8/lvchange.8.html).
+
+  To change the type of LV (e.g. change a linear volume to a RAID) use [lvconvert(8)](https://man7.org/linux/man-pages/man8/lvconvert.8.html).
 
 ## Avoiding Problems
 
-Good start is to avoid using `{--force|-f}` and `{--yes|-y}` options which are
+Good start is to **avoid using `{--force|-f}` and `{--yes|-y}` options** which are
 often seen on internet discussions.
 there is a possibility of data loss, LVM tools usually ask, so read the prompts
 carefully!  Using `--yes` removes these safety.
 Also in some cases where it is too dangerous to proceed, e.g. device is used,
 LVM refuses to do so, which can be overridden by `--force`.
 
-Second, when resizing and especially when shrinking LVs it is always a good
-idea to use `--resizefs` option which ensures the devices are resized in
+Second, when **resizing** and especially when shrinking LVs it is always a good
+idea to **use `--resizefs` option** which ensures the devices are resized in
 correct order.
 
-Third, if you still make a mess, never ever run fsck on damaged LV/FS, this is
+Third, if you still make a mess, **never ever run fsck on damaged LV/FS**, this is
 usually the final blow to your data. It is always better to ask first!
 
 
