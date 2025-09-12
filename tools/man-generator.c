@@ -691,7 +691,22 @@ static void _print_man_usage(char *lvmname, struct command *cmd)
 				if (_is_lvm_all_opt(opt_enum))
 					continue;
 
-				_print_bracket_ds_opt_name(opt_enum);
+				switch (opt_enum) {
+				case persist_ARG:
+					/* --persist may require specific argument (printed in bold) */
+					printf("[\n");
+
+					_print_man_option(cmd->name, opt_enum);
+
+					if (cmd->optional_opt_args[oo].def.val_bits) {
+						printf(" ");
+						_print_def_man(cname, opt_enum, &cmd->optional_opt_args[oo].def, 1, NULL);
+					}
+					printf("\n]\n");
+                                        break;
+				default:
+					_print_bracket_ds_opt_name(opt_enum);
+				}
 				printf(".br\n");
 			}
 
