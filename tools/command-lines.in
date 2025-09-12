@@ -1815,7 +1815,7 @@ DESC: Start or stop processing LV conversions.
 vgchange --activate Active
 OO: --activationmode ActivationMode, --ignoreactivationskip, --partial, --sysinit,
 --readonly, --ignorelockingfailure, --monitor Bool, --poll Bool,
---autoactivation String, --persist start, OO_VGCHANGE
+--autoactivation String, --persist String, OO_VGCHANGE
 OP: VG|Tag|Select ...
 IO: --ignoreskippedcluster
 ID: vgchange_activate

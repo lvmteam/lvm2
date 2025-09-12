@@ -205,6 +205,7 @@ int vgchange_activate(struct cmd_context *cmd, struct volume_group *vg,
 	const struct lv_list *lvl;
 	struct pv_list *pvl;
 	int do_activate = is_change_activating(activate);
+	const char *pr_op = NULL;
 
 	/*
 	 * We can get here in the odd case where an LV is already active in
@@ -233,8 +234,23 @@ int vgchange_activate(struct cmd_context *cmd, struct volume_group *vg,
 		}
 	}
 
-	if (do_activate && !persist_start_include(cmd, vg, (activate == CHANGE_AAY), 0, NULL))
-		return 0;
+	if (arg_is_set(cmd, persist_ARG))
+		pr_op = arg_str_value(cmd, persist_ARG, NULL); 
+
+	/*
+	 * vgchange -ay --persist start
+	 * This command bypasses the persist_is_started check in vg_read (disable_pr_required.)
+	 * It is not permitted for shared VGs, where PR start happens before lockstart.
+	 * For non-shared VGs, require a successful persist_start() here before activating.
+	 */
+	if (do_activate && pr_op && !strcmp(pr_op, "start") && cmd->disable_pr_required) {
+		if (vg_is_shared(vg)) {
+			log_error("Activation with persist start not permitted for shared VG %s.", vg->name);
+			return 0;;
+		}
+		if (!persist_start_include(cmd, vg, (activate == CHANGE_AAY), 0, NULL))
+			return_0;
+	}
  
 	/*
 	 * Safe, since we never write out new metadata here. Required for
@@ -282,6 +298,18 @@ int vgchange_activate(struct cmd_context *cmd, struct volume_group *vg,
 	if (!_activate_lvs_in_vg(cmd, vg, activate)) {
 		stack;
 		r = 0;
+	}
+
+	if (!do_activate && pr_op && !strcmp(pr_op, "stop")) {
+		/* For a shared VG, PR stop happens after lockstop. */
+		if (vg_is_shared(vg))
+			log_warn("WARNING: skipping persist stop for shared VG.");
+		else if (lvs_in_vg_activated(vg))
+			log_warn("WARNING: skipping persist stop for incomplete deactivation.");
+		else if (!persist_stop(cmd, vg)) {
+			log_error("Failed to stop persistent reservation.");
+			r = 0;
+		}
 	}
 
 	/*
@@ -1099,10 +1127,37 @@ int vgchange(struct cmd_context *cmd, int argc, char **argv)
 	if (noupdate)
 		cmd->ignore_device_name_mismatch = 1;
 
-	/* Allow LVs to be deactivated without PR started. */
-	if (arg_is_set(cmd, activate_ARG) &&
-	    !is_change_activating((activation_change_t)arg_uint_value(cmd, activate_ARG, CHANGE_AY)))
-		cmd->disable_pr_required = 1;
+	/*
+	 * PR usage with activation/deactivation.
+	 */
+	if (arg_is_set(cmd, activate_ARG)) {
+		int is_activating = is_change_activating((activation_change_t)arg_uint_value(cmd, activate_ARG, CHANGE_AY));
+
+		/* Always allow deactivation without PR being started. */
+		if (!is_activating)
+			cmd->disable_pr_required = 1;
+
+		/* Either "-ay --persist start", or "-an --persist stop". */
+		if (arg_is_set(cmd, persist_ARG)) {
+			const char *pr_op = arg_str_value(cmd, persist_ARG, NULL);
+			if (strcmp(pr_op, "start") && strcmp(pr_op, "stop")) {
+				log_error("Invalid --persist usage.");
+				return ECMD_FAILED;
+			}
+			if ((!strcmp(pr_op, "start") && !is_activating) ||
+			    (!strcmp(pr_op, "stop") && is_activating)) {
+				log_error("Invalid --persist usage.");
+				return ECMD_FAILED;
+			}
+		       	/*
+			 * Setting disable_pr_required to bypass the
+			 * persist_is_started check in vg_read requires
+			 * persist_start in vgchange_activate.
+			 */
+			if (!strcmp(pr_op, "start") && is_activating)
+				cmd->disable_pr_required = 1;
+		}
+	}
 
 	/*
 	 * If the devices file includes PVs stacked on LVs, then
