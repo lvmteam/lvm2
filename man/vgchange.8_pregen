@@ -609,7 +609,7 @@ Activate or deactivate LVs.
 ]
 .br
 [
-.O_persist
+\fB--persist\fP \fBstart\fP
 ]
 .br
 [
@@ -698,7 +698,7 @@ Change the system ID of a VG.
 ]
 .br
 [
-.O_persist
+\fB--persist\fP \fIString\fP
 ]
 .br
 [
@@ -723,7 +723,7 @@ Set or clear flags to control persistent reservation behavior.
 ]
 .br
 [
-.O_persist
+\fB--persist\fP \fBstart\fP
 ]
 .br
 [ COMMON_OPTIONS ]
@@ -772,7 +772,7 @@ Start the lockspace of a shared VG in lvmlockd.
 ]
 .br
 [
-.O_persist
+\fB--persist\fP \fBstart\fP
 ]
 .br
 [ COMMON_OPTIONS ]
@@ -794,7 +794,7 @@ Stop the lockspace of a shared VG in lvmlockd.
 ]
 .br
 [
-.O_persist
+\fB--persist\fP \fBstop\fP
 ]
 .br
 [ COMMON_OPTIONS ]

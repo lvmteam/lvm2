@@ -162,7 +162,7 @@ Export specified VGs.
 ]
 .br
 [
-.O_persist
+\fB--persist\fP \fBstop\fP
 ]
 .br
 [ COMMON_OPTIONS ]

@@ -152,7 +152,7 @@ Import specified VGs.
 ]
 .br
 [
-.O_persist
+\fB--persist\fP \fBstart\fP
 ]
 .br
 [ COMMON_OPTIONS ]
