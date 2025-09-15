@@ -3339,6 +3339,7 @@ int lv_raid_split(struct logical_volume *lv, int yes, const char *split_name,
 	struct cmd_context *cmd = lv->vg->cmd;
 	uint32_t old_count = lv_raid_image_count(lv);
 	struct logical_volume *tracking;
+	struct logical_volume *split_lv;
 	struct dm_list tracking_pvs;
 	int historical;
 
@@ -3428,6 +3429,7 @@ int lv_raid_split(struct logical_volume *lv, int yes, const char *split_name,
 
 	/* Get first item */
 	lvl = (struct lv_list *) dm_list_first(&data_list);
+	split_lv = lvl->lv;
 
 	if (!lv_set_name(lvl->lv, split_name))
 		return_0;
@@ -3493,6 +3495,25 @@ int lv_raid_split(struct logical_volume *lv, int yes, const char *split_name,
                 return_0;
 
 	if (!vg_write(lv->vg) || !vg_commit(lv->vg))
+		return_0;
+
+	/* After successful LV split it is now public LV, but still with -real suffix.
+	 * Active DM device can't change UUID.
+	 * Dactivate and activate such LV again to get proper public UUID.
+	 */
+	if (!deactivate_lv(cmd, split_lv)) {
+		log_error("Cannot deactivate split LV %s with private suffix.",
+			  display_lvname(split_lv));
+		return 0;
+	}
+
+	if (!sync_local_dev_names(cmd))
+		stack;
+
+	if (vg_is_shared(split_lv->vg)) {
+		if (!lv_active_change(cmd, split_lv, CHANGE_AEY))
+			return_0;
+	} else if (!activate_lv(cmd, split_lv))
 		return_0;
 
 	return 1;
@@ -3579,6 +3600,15 @@ int lv_raid_split_and_track(struct logical_volume *lv,
 
 	/* Activate the split (and tracking) LV */
 	/* Preserving exclusive local activation also for tracked LV */
+	if (!activate_lv(lv->vg->cmd, seg_lv(seg, s)))
+		return_0;
+
+	if (!deactivate_lv(lv->vg->cmd, seg_lv(seg, s)))
+		return_0;
+
+	if (!sync_local_dev_names(lv->vg->cmd))
+		stack;
+
 	if (!activate_lv(lv->vg->cmd, seg_lv(seg, s)))
 		return_0;
 
