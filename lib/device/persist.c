@@ -1483,19 +1483,74 @@ static int _run_stop(struct cmd_context *cmd, struct volume_group *vg, struct dm
 }
 
 /*
- * Separate persist_stop_prepare() and persist_stop_run() is needed
- * for vgremove, where prepare is needed before the normal vgremove,
- * and run should happen after the normal vgremove.
- * - prepare cannot happen after normal vgremove, because the list
+ * For vgremove, separate persist_stop into before and after parts:
+ * - before cannot happen after normal vgremove, because the list
  * of PVs is no longer available.
- * - run cannot happen before normal vgremove, because removing the
+ * - after cannot happen before normal vgremove, because removing the
  * reservation will prevent writing metadata for normal vgremove if
  * another host has a PR key registered (which may not happen in the
  * normal usage pattern, but is still possible.)
  */
 
-int persist_stop_prepare(struct cmd_context *cmd, struct volume_group *vg, struct dm_list *devs, char **key)
+int persist_vgremove_before(struct cmd_context *cmd, struct volume_group *vg, struct dm_list *devs, char **key)
 {
+	char *local_key = (char *)find_config_tree_str(cmd, local_pr_key_CFG, NULL);
+	int local_host_id = find_config_tree_int(cmd, local_host_id_CFG, NULL);
+	char our_key_buf[PR_KEY_BUF_SIZE] = { 0 };
+	uint64_t our_key_val = 0;
+
+	if (!local_key && !local_host_id)
+		return 1;
+
+	if (!get_our_key(cmd, vg, local_key, local_host_id, our_key_buf, &our_key_val))
+		return_0;
+
+	/*
+	 * When removing a shared VG, verify that other hosts
+	 * have stopped PR to avoid leaving dangling reservations.
+	 */
+	if (vg_is_shared(vg)) {
+		struct pv_list *pvl;
+		struct device *dev;
+		int found_key_count;
+
+		dm_list_iterate_items(pvl, &vg->pvs) {
+			if (!(dev = pvl->pv->dev))
+				continue;
+
+			found_key_count = 0;
+
+			if (!dev_find_key(cmd, dev, 0, 0, NULL, 0, NULL, 1, &found_key_count, NULL)) {
+				/* shouldn't happen */
+				log_error("Failed to get PR keys from %s", dev_name(dev));
+				return 0;
+			}
+			if (found_key_count > 1) {
+				log_error("Found %d PR keys on %s", found_key_count, dev_name(dev));
+				log_error("Stop PR for VG %s on other hosts (vgchange --persist stop)", vg->name);
+				return 0;
+			}
+		}
+	}
+
+	if (!pv_list_to_dev_list(cmd->mem, &vg->pvs, devs))
+		return_0;
+
+	if (!(*key = dm_pool_strdup(cmd->mem, our_key_buf)))
+		return_0;
+
+	return 1;
+}
+
+void persist_vgremove_after(struct cmd_context *cmd, struct volume_group *vg, struct dm_list *devs, char *key)
+{
+	_run_stop(cmd, vg, devs, key, 0);
+	persist_key_file_remove(cmd, vg);
+}
+
+int persist_stop(struct cmd_context *cmd, struct volume_group *vg)
+{
+	DM_LIST_INIT(devs);
 	char *local_key = (char *)find_config_tree_str(cmd, local_pr_key_CFG, NULL);
 	int local_host_id = find_config_tree_int(cmd, local_host_id_CFG, NULL);
 	char our_key_buf[PR_KEY_BUF_SIZE] = { 0 };
@@ -1513,31 +1568,12 @@ int persist_stop_prepare(struct cmd_context *cmd, struct volume_group *vg, struc
 	if (!get_our_key(cmd, vg, local_key, local_host_id, our_key_buf, &our_key_val))
 		return_0;
 
-	if (!pv_list_to_dev_list(cmd->mem, &vg->pvs, devs))
+	if (!pv_list_to_dev_list(cmd->mem, &vg->pvs, &devs))
 		return_0;
 
-	if (!(*key = dm_pool_strdup(cmd->mem, our_key_buf)))
+	if (!_run_stop(cmd, vg, &devs, our_key_buf, 0))
 		return_0;
 
-	return 1;
-}
-
-int persist_stop_run(struct cmd_context *cmd, struct volume_group *vg, struct dm_list *devs, char *key)
-{
-	if (!_run_stop(cmd, vg, devs, key, 0))
-		return 0;
-	return 1;
-}
-
-int persist_stop(struct cmd_context *cmd, struct volume_group *vg)
-{
-	DM_LIST_INIT(devs);
-	char *key = NULL;
-
-	if (!persist_stop_prepare(cmd, vg, &devs, &key))
-		return_0;
-	if (!persist_stop_run(cmd, vg, &devs, key))
-		return_0;
 	return 1;
 }
 
