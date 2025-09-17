@@ -15,6 +15,7 @@
 #include "lib/misc/lib.h"
 #include "dmeventd_lvm.h"
 #include "daemons/dmeventd/libdevmapper-event.h"
+#include "lib/metadata/metadata-exported.h" /* MIRROR_SYNC_LAYER */
 #include "tools/lvm2cmd.h"
 
 #include <pthread.h>
@@ -143,7 +144,7 @@ int dmeventd_lvm2_command(struct dm_pool *mem, char *buffer, size_t size,
 	}
 
 	/* strip off the mirror component designations */
-	if ((layer = strstr(lv, "_mimagetmp")) ||
+	if ((layer = strstr(lv, MIRROR_SYNC_LAYER)) ||
 	    (layer = strstr(lv, "_mlog")))
 		*layer = '\0';
 
