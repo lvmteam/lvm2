@@ -246,7 +246,7 @@ fsextend() {
 	# Not considered a command failure if this fails.
 	if [[ $DO_UNMOUNT -eq 1 && $REMOUNT -eq 1 ]]; then
 		if [[ "$FSTYPE" == "xfs" ]]; then
-			detect_xfs_mount_options "$DEVPATH"
+			detect_xfs_mount_options "$DEVPATH" || logmsg "not using XFS mount options"
 		fi
 
 		logmsg "remount ${DEVPATH} ${MOUNTDIR}"
