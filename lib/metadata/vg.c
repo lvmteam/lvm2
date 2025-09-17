@@ -19,6 +19,7 @@
 #include "lib/activate/activate.h"
 #include "lib/commands/toolcontext.h"
 #include "lib/format_text/archiver.h"
+#include "lib/device/persist.h"
 #include "base/data-struct/radix-tree.h"
 
 struct volume_group *alloc_vg(const char *pool_name, struct cmd_context *cmd,
@@ -647,6 +648,27 @@ int vg_set_lock_type(struct volume_group *vg, const char *lock_type)
 		return 0;
 	}
 
+	return 1;
+}
+
+int vg_set_persist(struct volume_group *vg, uint32_t set_flags)
+{
+	if (set_flags & SETPR_Y)
+		vg->pr = VG_PR_AUTOSTART | VG_PR_REQUIRE;
+	else if (set_flags & SETPR_N)
+		vg->pr = 0;
+	else if (set_flags & SETPR_REQUIRE)
+		vg->pr |= VG_PR_REQUIRE;
+	else if (set_flags & SETPR_NOREQUIRE)
+		vg->pr &= ~VG_PR_REQUIRE;
+	else if (set_flags & SETPR_AUTOSTART)
+		vg->pr |= VG_PR_AUTOSTART;
+	else if (set_flags & SETPR_NOAUTOSTART)
+		vg->pr &= ~VG_PR_AUTOSTART;
+	else if (set_flags & SETPR_PTPL)
+		vg->pr |= VG_PR_PTPL;
+	else if (set_flags & SETPR_NOPTPL)
+		vg->pr &= ~VG_PR_PTPL;
 	return 1;
 }
 

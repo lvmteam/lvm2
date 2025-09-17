@@ -1879,7 +1879,8 @@ OO: --addtag Tag, --alloc Alloc, --autobackup Bool, --clustered Bool, --maxlogic
 --physicalextentsize SizeMB, --force, --zero Bool, --labelsector Number,
 --metadatasize SizeMB, --pvmetadatacopies MetadataCopiesPV, --vgmetadatacopies MetadataCopiesVG,
 --reportformat ReportFmt, --dataalignment SizeKB, --dataalignmentoffset SizeKB,
---shared, --systemid String, --locktype LockType, --setautoactivation Bool
+--shared, --systemid String, --locktype LockType, --setautoactivation Bool,
+--setpersist String, --persist start
 ID: vgcreate_general
 
 ---

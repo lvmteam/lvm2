@@ -323,3 +323,21 @@ int drop_lvname_suffix(char *new_name, const char *name, const char *suffix)
 
 	return 1;
 }
+
+void split_line(char *buf, int *argc, char **argv, int max_args, char sep)
+{
+	char *p = buf;
+	int i;
+
+	argv[0] = p;
+
+	for (i = 1; i < max_args; i++) {
+		p = strchr(p, sep);
+		if (!p)
+			break;
+		*p++ = '\0';
+
+		argv[i] = p;
+	}
+	*argc = i;
+}

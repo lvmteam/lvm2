@@ -5044,6 +5044,35 @@ int pvcreate_params_from_args(struct cmd_context *cmd, struct pvcreate_params *p
 
 	pp->pva.ba_size = arg_uint64_value(cmd, bootloaderareasize_ARG, pp->pva.ba_size);
 
+	if (!strcmp(cmd->name, "vgcreate")) {
+		int shared_vg = arg_is_set(cmd, shared_ARG);
+		int setpersist_on;
+
+		if (arg_is_set(cmd, setpersist_ARG) &&
+		    !setpersist_arg_flags(arg_str_value(cmd, setpersist_ARG, NULL), &pp->setpersist_flags))
+			return_0;
+
+		setpersist_on = (pp->setpersist_flags & (SETPR_Y | SETPR_REQUIRE | SETPR_AUTOSTART)) ? 1 : 0;
+
+		pp->start_pr = arg_is_set(cmd, persist_ARG); /* --persist start is the only permitted option */
+
+		if (!shared_vg && arg_is_set(cmd, locktype_ARG)) {
+			int lock_type_num = get_lock_type_from_string(arg_str_value(cmd, locktype_ARG, NULL));
+			if (lock_type_num == LOCK_TYPE_SANLOCK || lock_type_num == LOCK_TYPE_DLM)
+				shared_vg = 1;
+		}
+
+		if (!setpersist_on && shared_vg && pp->start_pr) {
+			log_error("A shared VG should include --setpersist y|require to use PR.");
+			return 0;
+		}
+
+		/* Automatic PR start for shared VGs because lockstart is automatic in vgcreate,
+		   and PR start happens before lockstart. */
+		if (setpersist_on && shared_vg)
+			pp->start_pr = 1;
+	}
+
 	return 1;
 }
 
@@ -5599,6 +5628,7 @@ int pvcreate_each_device(struct cmd_context *cmd,
 	unsigned int prev_pbs = 0, prev_lbs = 0;
 	int must_use_all = (cmd->cname->flags & MUST_USE_ALL_ARGS);
 	int unlocked_for_prompts = 0;
+	int setpersist_on;
 	int found;
 	unsigned i;
 
@@ -5973,6 +6003,87 @@ do_command:
 		dm_list_splice(&pp->arg_remove, &pp->arg_process);
 	else
 		dm_list_splice(&pp->arg_create, &pp->arg_process);
+
+	/*
+	 * It would be nice to not do PR stuff in this function, but
+	 * - it's not nice to do it before this function, because the
+	 *   needed list of devs is not available until this function.
+	 * - it's not nice to do it after this function, because if
+	 *   PR is unsupported, it's better to fail the command before
+	 *   writing the new PVs here.  Also, if we're going to use PR,
+	 *   it's nicer to get the reservation before writing anything.
+	 *
+	 * Usually, setpersist (writing PR settings in VG metadata)
+	 * is separate from persist start (starting PR on devices).
+	 * Both steps can be optionally combined in one command with:
+	 * --setpersist y --persist start.  So,
+	 *
+	 * . vgcreate --setpersist y                   does not start PR
+	 * . vgcreate --persist start                  does start PR
+	 * . vgcreate --setpersist y --persist start   does start PR
+	 *
+	 * A special case which does not follow this pattern is creating
+	 * a shared VG, where PR is started even without --persist start
+	 * when setpersist is enabled:
+	 *
+	 * . vgcreate --shared --setpersist y          does start PR
+	 *
+	 * This case is different because creating a shared VG includes
+	 * automatically starting the VG lockspace.  The proper sequence
+	 * of using a shared VG is first starting PR, then starting the
+	 * lockspace.  So, to maintain this proper sequence, the vgcreate
+	 * needs to include an automatic PR start prior to the automatic
+	 * lock start.
+	 *
+	 * Creating a shared VG without setpersist, but PR start is
+	 * currently disallowed, because it's not clear if this
+	 * combination would ever be useful.
+	 *
+	 * . vgcreate --shared --persist start         disallowed
+	 */
+
+	setpersist_on = (pp->setpersist_flags & (SETPR_Y | SETPR_REQUIRE | SETPR_AUTOSTART)) ? 1 : 0;
+
+	if (pp->start_pr || setpersist_on) {
+		DM_LIST_INIT(devs);
+		char *local_key = (char *)find_config_tree_str(cmd, local_pr_key_CFG, NULL);
+		int local_host_id = find_config_tree_int(cmd, local_host_id_CFG, NULL);
+		int key_count;
+
+		if (!local_key && !local_host_id) {
+			log_error("A local pr_key or host_id is required to use PR (see lvmlocal.conf).");
+			return 0;
+		}
+
+		dm_list_iterate_items(pd, &pp->arg_create) {
+			if (!dev_allow_pr(cmd, pd->dev)) {
+				log_error("persistent reservation not supported for device type %s", dev_name(pd->dev));
+				return 0;
+			}
+		}
+
+		dm_list_iterate_items(pd, &pp->arg_create) {
+			/* find_key is just being used here to test if the dev supports PR commands. */
+			if (!dev_find_key(cmd, pd->dev, 1, 0, NULL, 0, NULL, 1, &key_count, NULL)) {
+				log_error("Failed to access persistent reservation on %s.", dev_name(pd->dev));
+				return 0;
+			}
+		}
+
+		if (pp->start_pr) {
+			dm_list_iterate_items(pd, &pp->arg_create) {
+				if (!(devl = dm_pool_alloc(cmd->mem, sizeof(*devl))))
+					return_0;
+				devl->dev = pd->dev;
+				dm_list_add(&devs, &devl->list);
+			}
+
+			if (!persist_vgcreate_begin(cmd, pp->vg_name, local_key, local_host_id, pp->setpersist_flags, &devs)) {
+				log_error("Failed to start persistent reservation.");
+				return 0;
+			}
+		}
+	}
 
 	/*
 	 * Wipe signatures on devices being created.

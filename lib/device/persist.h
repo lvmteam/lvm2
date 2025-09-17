@@ -29,6 +29,16 @@
 #define PR_TYPE_WEAR 5
 #define PR_TYPE_EAAR 6
 
+#define SETPR_Y			0x00000001
+#define SETPR_N			0x00000002
+#define SETPR_REQUIRE		0x00000004
+#define SETPR_NOREQUIRE		0x00000008
+#define SETPR_AUTOSTART		0x00000010
+#define SETPR_NOAUTOSTART	0x00000020
+#define SETPR_PTPL		0x00000040
+#define SETPR_NOPTPL		0x00000080
+#define MAX_SETPR_ARGS		8
+
 int persist_check(struct cmd_context *cmd, struct volume_group *vg,
                   char *local_key, int local_host_id);
 
@@ -49,6 +59,10 @@ int persist_clear(struct cmd_context *cmd, struct volume_group *vg,
                   char *local_key, int local_host_id);
 
 int persist_start_extend(struct cmd_context *cmd, struct volume_group *vg);
+
+int persist_vgcreate_begin(struct cmd_context *cmd, char *vg_name, char *local_key, int local_host_id,
+			   uint32_t set_flags, struct dm_list *devs);
+int persist_vgcreate_update(struct cmd_context *cmd, struct volume_group *vg, uint32_t set_flags);
 
 int persist_is_started(struct cmd_context *cmd, struct volume_group *vg, int may_fail);
 
@@ -71,5 +85,9 @@ int dev_find_key_nvme(struct cmd_context *cmd, struct device *dev, int may_fail,
                       int find_all, int *found_count, uint64_t **found_all);
 
 int vg_is_registered(struct cmd_context *cmd, struct volume_group *vg, uint64_t *our_key_ret, int *partial_ret);
+
+int setpersist_arg_flags(const char *str, uint32_t *flags);
+
+int dev_allow_pr(struct cmd_context *cmd, struct device *dev);
 
 #endif

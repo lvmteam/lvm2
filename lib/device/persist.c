@@ -49,7 +49,57 @@ static int get_our_key(struct cmd_context *cmd, struct volume_group *vg,
 		       char *local_key, int local_host_id,
 		       char *ret_key_buf, uint64_t *ret_key_val);
 
-static int dev_allow_pr(struct cmd_context *cmd, struct device *dev)
+int setpersist_arg_flags(const char *str, uint32_t *flags)
+{
+	char buf[PATH_MAX];
+	char *argv[MAX_SETPR_ARGS];
+	int argc;
+	int i;
+
+	*flags = 0;
+
+	if (!str)
+		return 0;
+
+	dm_strncpy(buf, str, sizeof(buf));
+
+	split_line(buf, &argc, argv, MAX_SETPR_ARGS, ',');
+
+	for (i = 0; i < argc; i++) {
+		if (!strcmp(argv[i], "y"))
+			*flags |= SETPR_Y;
+		else if (!strcmp(argv[i], "n"))
+			*flags |= SETPR_N;
+		else if (!strcmp(argv[i], "require"))
+			*flags |= SETPR_REQUIRE;
+		else if (!strcmp(argv[i], "norequire"))
+			*flags |= SETPR_NOREQUIRE;
+		else if (!strcmp(argv[i], "autostart"))
+			*flags |= SETPR_AUTOSTART;
+		else if (!strcmp(argv[i], "noautostart"))
+			*flags |= SETPR_NOAUTOSTART;
+		else if (!strcmp(argv[i], "ptpl"))
+			*flags |= SETPR_PTPL;
+		else if (!strcmp(argv[i], "noptpl"))
+			*flags |= SETPR_NOPTPL;
+		else {
+			log_error("Unknown setpersist option value: %s", argv[i]);
+			return 0;
+		}
+	}
+
+	if (((*flags & SETPR_Y) && (*flags & SETPR_N)) ||
+	    ((*flags & SETPR_REQUIRE) && (*flags & SETPR_NOREQUIRE)) ||
+	    ((*flags & SETPR_AUTOSTART) && (*flags & SETPR_NOAUTOSTART)) ||
+	    ((*flags & SETPR_PTPL) && (*flags & SETPR_NOPTPL))) {
+		log_error("Invalid setpersist option combination: %s", str);
+		return 0;
+	}
+
+	return 1;
+}
+
+int dev_allow_pr(struct cmd_context *cmd, struct device *dev)
 {
 	if (dm_list_empty(&dev->aliases))
 		return 0;
@@ -1048,6 +1098,10 @@ int persist_key_update(struct cmd_context *cmd, struct volume_group *vg, uint32_
 	if (local_key)
 		return 1;
 
+	/* persist_vgcreate_done updates the key */
+	if (!strcmp(cmd->name, "vgcreate"))
+		return 1;
+
 	/*
 	 * Check if we are using PR on this VG.  We don't
 	 * want to update our PR key if we are not already
@@ -1067,15 +1121,6 @@ int persist_key_update(struct cmd_context *cmd, struct volume_group *vg, uint32_
 
 	if (!key_file_exists(cmd, vg)) {
 		/* not using PR, nothing to update */
-		return 1;
-	}
-
-	/*
-	 * In case a previous VG with the same name left
-	 * a key file behind.
-	 */
-	if (!strcmp(cmd->name, "vgcreate")) {
-		persist_key_file_remove(cmd, vg);
 		return 1;
 	}
 
@@ -1747,6 +1792,205 @@ static int _persist_extend_shared(struct cmd_context *cmd, struct volume_group *
 	dm_pool_free(cmd->mem, old_vals);
 
 	return error ? 0 : 1;
+}
+
+/*
+ * Start PR on devices that are being used for vgcreate.
+ * This is somewhat awkward because it happens early in
+ * the vgcreate command, before PVs are initialized, and
+ * before a 'vg' struct exists.
+ *
+ * For shared VGs, we use an ex access PR (like local VGs),
+ * then at the end of vgcreate, in persist_vgcreate_update,
+ * change the PR sh access (standard for shared VGs.)
+ */
+
+int persist_vgcreate_begin(struct cmd_context *cmd, char *vg_name, char *local_key, int local_host_id,
+			   uint32_t set_flags, struct dm_list *devs)
+{
+	struct device_list *devl;
+	uint64_t our_key_val = 0;
+	char our_key_buf[PR_KEY_BUF_SIZE] = { 0 };
+	const char *devname;
+	const char **argv;
+	int pv_count;
+	int args;
+	int status;
+
+	if (local_key) {
+		if (!parse_prkey(local_key, &our_key_val)) {
+			log_error("Failed to parse local key %s", local_key);
+			return 0;
+		}
+		if (dm_snprintf(our_key_buf, PR_KEY_BUF_SIZE-1, "0x%llx", (unsigned long long)our_key_val) < 0)
+			return_0;
+	} else if (local_host_id) {
+		if (dm_snprintf(our_key_buf, PR_KEY_BUF_SIZE-1, "0x100000000000%04x", local_host_id) != 18) {
+			log_error("Failed to format key string for host_id %d", local_host_id);
+			return 0;
+		}
+		if (!parse_prkey(our_key_buf, &our_key_val)) {
+			log_error("Failed to parse generated key %s", our_key_buf);
+			return 0;
+		}
+	}
+
+	pv_count = dm_list_size(devs);
+
+	log_debug("start PR on %d devs with local key %llx", pv_count, (unsigned long long)our_key_val);
+
+	args = 9 + pv_count*2;
+	if (set_flags & SETPR_PTPL)
+		args += 1;
+
+	if (!(argv = dm_pool_alloc(cmd->mem, args * sizeof(char *))))
+		return_0;
+
+	args = 0;
+	argv[0] = LVMPERSIST_PATH;
+	argv[++args] = "start";
+	argv[++args] = "--ourkey";
+	argv[++args] = our_key_buf;
+	argv[++args] = "--access";
+	argv[++args] = "ex";
+	argv[++args] = "--vg";
+	argv[++args] = vg_name; /* vg doesn't exist yet, just used for log messages */
+	if (set_flags & SETPR_PTPL)
+		argv[++args] = "--ptpl";
+
+	dm_list_iterate_items(devl, devs) {
+		if (!(devname = dm_pool_strdup(cmd->mem, dev_name(devl->dev))))
+			return_0;
+		argv[++args] = "--device";
+		argv[++args] = devname;
+	}
+
+	argv[++args] = NULL;
+
+	if (!exec_cmd(cmd, argv, &status, 1)) {
+		log_error("persistent reservation start failed: lvmpersist command error.");
+		return 0;
+	}
+
+	return 1;
+}
+
+/*
+ * At the start of creating a shared VG, before writing anything,
+ * persist_vgcreate_begin() takes an ex access PR on the devices.
+ * At the end of creating the shared VG (after initializing PVs and
+ * writing VG metadata), persist_vgcreate_update() removes the ex
+ * access PR (typically WE), and starts PR with the normal sh access
+ * PR (typically WEAR), allowing other hosts to also use the new VG.
+ */
+int persist_vgcreate_update(struct cmd_context *cmd, struct volume_group *vg, uint32_t set_flags)
+{
+	DM_LIST_INIT(devs);
+	struct device_list *devl;
+	char *local_key = (char *)find_config_tree_str(cmd, local_pr_key_CFG, NULL);
+	int local_host_id = find_config_tree_int(cmd, local_host_id_CFG, NULL);
+	char our_key_buf[PR_KEY_BUF_SIZE] = { 0 };
+	char our_key_buf_stop[PR_KEY_BUF_SIZE] = { 0 };
+	uint64_t our_key_val = 0;
+	const char *access = vg_is_shared(vg) ? "sh" : "ex";
+	const char *devname;
+	const char **argv;
+	int args = 0;
+	int pv_count;
+	int status;
+	int setpersist_on;
+
+	setpersist_on = (set_flags & (SETPR_Y | SETPR_REQUIRE | SETPR_AUTOSTART)) ? 1 : 0;
+
+	if (!setpersist_on)
+		return 1;
+
+	if (!local_key && local_host_id && vg->lock_type && !strcmp(vg->lock_type, "sanlock")) {
+		if (dm_snprintf(our_key_buf, PR_KEY_BUF_SIZE-1, "0x100000%06x%04x", 1, local_host_id) != 18) {
+			log_error("Failed to format key string for host_id %d", local_host_id);
+			return 0;
+		}
+		if (!parse_prkey(our_key_buf, &our_key_val)) {
+			log_error("Failed to parse generated key %s", our_key_buf);
+			return 0;
+		}
+	} else if (local_key) {
+		if (!parse_prkey(local_key, &our_key_val)) {
+			log_error("Failed to parse local key %s", local_key);
+			return 0;
+		}
+		if (dm_snprintf(our_key_buf, PR_KEY_BUF_SIZE-1, "0x%llx", (unsigned long long)our_key_val) < 0)
+			return_0;
+	} else if (local_host_id) {
+		if (dm_snprintf(our_key_buf, PR_KEY_BUF_SIZE-1, "0x100000000000%04x", local_host_id) != 18) {
+			log_error("Failed to format key string for host_id %d", local_host_id);
+			return 0;
+		}
+		if (!parse_prkey(our_key_buf, &our_key_val)) {
+			log_error("Failed to parse generated key %s", our_key_buf);
+			return 0;
+		}
+	}
+
+	if (local_key)
+		memcpy(our_key_buf_stop, our_key_buf, sizeof(our_key_buf));
+	else if (local_host_id) {
+		/* The key used in persist_vgcreate_begin did not include gen 1. */
+		if (dm_snprintf(our_key_buf_stop, PR_KEY_BUF_SIZE-1, "0x100000000000%04x", local_host_id) != 18) {
+			log_error("Failed to format key string for host_id %d", local_host_id);
+			return 0;
+		}
+	}
+
+	if (!pv_list_to_dev_list(cmd->mem, &vg->pvs, &devs))
+		return_0;
+
+	pv_count = dm_list_size(&devs);
+
+	log_debug("stop PR on %d devs with local key %s", pv_count, our_key_buf_stop);
+
+	if (!_run_stop(cmd, vg, &devs, our_key_buf_stop, 0))
+		log_warn("WARNING: failed to stop PR with key %s", our_key_buf_stop);
+
+	log_debug("start PR on %d devs with local key %llx", pv_count, (unsigned long long)our_key_val);
+
+	args = 9 + pv_count*2;
+	if (set_flags & SETPR_PTPL)
+		args += 1;
+
+	if (!(argv = dm_pool_alloc(cmd->mem, args * sizeof(char *))))
+		return_0;
+
+	args = 0;
+	argv[0] = LVMPERSIST_PATH;
+	argv[++args] = "start";
+	argv[++args] = "--ourkey";
+	argv[++args] = our_key_buf;
+	argv[++args] = "--access";
+	argv[++args] = access;
+	argv[++args] = "--vg";
+	argv[++args] = vg->name;
+	if (set_flags & SETPR_PTPL)
+		argv[++args] = "--ptpl";
+
+	dm_list_iterate_items(devl, &devs) {
+		if (!(devname = dm_pool_strdup(cmd->mem, dev_name(devl->dev))))
+			return_0;
+		argv[++args] = "--device";
+		argv[++args] = devname;
+	}
+
+	argv[++args] = NULL;
+
+	if (!exec_cmd(cmd, argv, &status, 1)) {
+		log_error("persistent reservation start failed: lvmpersist command error.");
+		return 0;
+	}
+
+	if (!write_key_file(cmd, vg, our_key_val))
+		stack;
+
+	return 1;
 }
 
 /*

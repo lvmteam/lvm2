@@ -628,6 +628,8 @@ struct pvcreate_params {
 	int zero;
 	force_t force;
 	unsigned yes;
+	uint32_t setpersist_flags;
+	char *vg_name;
 
 	/*
 	 * From recovery-specific command line args.
@@ -656,6 +658,7 @@ struct pvcreate_params {
 	unsigned preserve_existing : 1;
 	unsigned check_failed : 1;
 	unsigned check_consistent_block_size : 1;
+	unsigned start_pr : 1;
 };
 
 struct lvresize_params {

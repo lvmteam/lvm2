@@ -1829,21 +1829,21 @@ static int _vgchange_setpersist_single(struct cmd_context *cmd, const char *vg_n
 			             struct volume_group *vg,
 			             struct processing_handle *handle)
 {
-	const char *set = arg_str_value(cmd, setpersist_ARG, NULL);
 	const char *op = arg_str_value(cmd, persist_ARG, NULL);
 	char *root_dm_uuid = NULL;
 	char *local_key;
 	struct pv_list *pvl;
 	struct device *dev;
+	uint32_t set_flags;
 	int key_count;
 	int local_host_id;
 	int start_done = 0;
 	int on;
 
-	if (!set)
+	if (!setpersist_arg_flags(arg_str_value(cmd, setpersist_ARG, NULL), &set_flags))
 		return_ECMD_FAILED;
 
-	on = !strcmp(set, "y") || !strcmp(set, "require") || !strcmp(set, "autostart");
+	on = (set_flags & (SETPR_Y | SETPR_REQUIRE | SETPR_AUTOSTART)) ? 1 : 0;
 
 	if (on) {
 		local_key = (char *)find_config_tree_str(cmd, local_pr_key_CFG, NULL);
@@ -1897,26 +1897,22 @@ static int _vgchange_setpersist_single(struct cmd_context *cmd, const char *vg_n
 		start_done = 1;
 	}
 
-	if (!strcmp(set, "y"))
+	if (set_flags & SETPR_Y)
 		vg->pr = VG_PR_AUTOSTART | VG_PR_REQUIRE;
-	else if (!strcmp(set, "n"))
+	else if (set_flags & SETPR_N)
 		vg->pr = 0;
-	else if (!strcmp(set, "require"))
+	else if (set_flags & SETPR_REQUIRE)
 		vg->pr |= VG_PR_REQUIRE;
-	else if (!strcmp(set, "norequire"))
+	else if (set_flags & SETPR_NOREQUIRE)
 		vg->pr &= ~VG_PR_REQUIRE;
-	else if (!strcmp(set, "autostart"))
+	else if (set_flags & SETPR_AUTOSTART)
 		vg->pr |= VG_PR_AUTOSTART;
-	else if (!strcmp(set, "noautostart"))
+	else if (set_flags & SETPR_NOAUTOSTART)
 		vg->pr &= ~VG_PR_AUTOSTART;
-	else if (!strcmp(set, "ptpl"))
+	else if (set_flags & SETPR_PTPL)
 		vg->pr |= VG_PR_PTPL;
-	else if (!strcmp(set, "noptpl"))
+	else if (set_flags & SETPR_NOPTPL)
 		vg->pr &= ~VG_PR_PTPL;
-	else {
-		log_error("Invalid setpersist value.");
-		return_ECMD_FAILED;
-	}
 
 	if (!vg_write(vg) || !vg_commit(vg)) {
 		if (start_done) {

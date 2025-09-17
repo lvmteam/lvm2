@@ -393,6 +393,26 @@ generation number, in which case the lockstart command will update the key
 with the correct value (the generation number is officially determined
 during lockstart.)
 .P
+.SS vgcreate
+.P
+PR features can be enabled when creating a new VG:
+.P
+.B vgcreate --setpersist y
+.I VG ""
+.I PVs
+.P
+For local VGs,
+.B --persist start
+can be included to also start PR on the new VG.
+.P
+Creating new shared VGs with --setpersist works differently.
+PR is always started for a new shared VG, even without --persist start.
+First, an exclusive PR (typically WE mode) is acquired for the new VG
+devices.  The devices are then initialized, and the new VG metadata is
+written.  The exclusive PR is then removed, and a shared PR (typically
+WEAR mode) is acquired for normal sharing of the VG.  Finally, the VG
+lockspace is started.
+.P
 .SS vgextend
 .P
 For local VGs, vgextend starts PR on the new devices before adding them to

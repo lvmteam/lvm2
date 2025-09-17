@@ -4428,24 +4428,6 @@ int lockd_lv_refresh(struct cmd_context *cmd, struct lvresize_params *lp)
 	return 1;
 }
 
-static void _split_line(char *buf, int *argc, char **argv, int max_args, char sep)
-{
-	char *p = buf;
-	int i;
-
-	argv[0] = p;
-
-	for (i = 1; i < max_args; i++) {
-		p = strchr(p, sep);
-		if (!p)
-			break;
-		*p++ = '\0';
-
-		argv[i] = p;
-	}
-	*argc = i;
-}
-
 #define MAX_LOCKOPT 16
 
 void lockd_lockopt_get_flags(const char *str, uint32_t *flags)
@@ -4460,7 +4442,7 @@ void lockd_lockopt_get_flags(const char *str, uint32_t *flags)
 
 	dm_strncpy(buf, str, sizeof(buf));
 
-	_split_line(buf, &argc, argv, MAX_LOCKOPT, ',');
+	split_line(buf, &argc, argv, MAX_LOCKOPT, ',');
 
 	for (i = 0; i < argc; i++) {
 		if (!strcmp(argv[i], "force"))
