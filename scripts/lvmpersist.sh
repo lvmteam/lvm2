@@ -1222,7 +1222,7 @@ fi
 # subsequent string matching of keys fails.
 
 DECDIGITS='^[0-9]+$'
-HEXDIGITS='^[0-9a-zA-Z]+$'
+HEXDIGITS='^[0-9a-fA-F]+$'
 
 if [[ -n "$OURKEY" && "$OURKEY" == "0x0"* ]]; then
 	echo "Leading 0s are not permitted in keys."
@@ -1251,7 +1251,7 @@ if [[ -n "$OURKEY" && "$OURKEY" != "0x"* ]]; then
 fi
 
 if [[ -n "$OURKEY" && "$OURKEY" == "0x"* ]]; then
-	if [[ ! "$OURKEY" =~ $HEXDIGITS ]]; then
+	if [[ ! "${OURKEY:2}" =~ $HEXDIGITS ]]; then
 		echo "Invalid hex digits in key: $OURKEY"
 		exit 1
 	fi
@@ -1270,7 +1270,7 @@ if [[ -n "$REMKEY" && "$REMKEY" != "0x"* ]]; then
 fi
 
 if [[ -n "$REMKEY" && "$REMKEY" == "0x"* ]]; then
-	if [[ ! "$REMKEY" =~ $HEXDIGITS ]]; then
+	if [[ ! "${REMKEY:2}" =~ $HEXDIGITS ]]; then
 		echo "Invalid hex digits in key: $REMKEY"
 		exit 1
 	fi
