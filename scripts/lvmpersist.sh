@@ -514,7 +514,7 @@ device_supports_type_str() {
 	fi
 }
 
-check_device_types() {
+check_devices() {
 	err=0
 	FOUND_MPATH=0
 	FOUND_SCSI=0
@@ -559,11 +559,31 @@ check_device_types() {
 
 	if [[ $FOUND_SCSI -eq 1 ]]; then
 		which sg_persist > /dev/null || errorexit "sg_persist command not found."
+		which sg_turs > /dev/null || errorexit "sg_turs command not found."
 	fi
 
 	if [[ $FOUND_NVME -eq 1 ]]; then
 		which nvme > /dev/null || errorexit "nvme command not found."
 	fi
+
+	# Sometimes a device will return a Unit Attention error
+	# for an sg_persist/mpathpersist command, e.g. after the
+	# host's key was cleared.  A single tur command clears
+	# the error.  Alternatively, each command in the script
+	# could be retried if it fails due to a UA error.
+
+	for dev in "${DEVICES[@]}"; do
+		case "$dev" in
+	  	/dev/sd*)
+			;&
+		/dev/dm-*)
+			;&
+		/dev/mapper*)
+			sg_turs "$dev" >/dev/null 2>&1
+			ec=$?
+			test $ec -eq 0 || logmsg "test unit ready error $ec from $dev"
+		esac
+	done
 }
 
 undo_register() {
@@ -1382,38 +1402,31 @@ else
 	fi
 fi
 
-
 #
 # Main program function
 #
 
+check_devices
+
 if [[ "$DO_START" -eq 1 && -n "$REMKEY" ]]; then
-	check_device_types
 	do_takeover
 elif [[ "$DO_START" -eq 1 ]]; then
-	check_device_types
 	do_start
 elif [[ "$DO_STOP" -eq 1 ]]; then
 	do_stop
 elif [[ "$DO_REMOVE" -eq 1 ]]; then
 	do_remove
 elif [[ "$DO_CLEAR" -eq 1 ]]; then
-	check_device_types
 	do_clear
 elif [[ "$DO_DEVTEST" -eq 1 ]]; then
-	check_device_types
 	do_devtest
 elif [[ "$DO_CHECKKEY" -eq 1 ]]; then
-	check_device_types
 	do_checkkey
 elif [[ "$DO_READKEYS" -eq 1 ]]; then
-	check_device_types
 	do_readkeys
 elif [[ "$DO_READRESERVATION" -eq 1 ]]; then
-	check_device_types
 	do_readreservation
 elif [[ "$DO_READ" -eq 1 ]]; then
-	check_device_types
 	do_readkeys
 	do_readreservation
 fi
