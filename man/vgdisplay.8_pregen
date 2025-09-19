@@ -338,11 +338,11 @@ and more, using a more compact and configurable output format.
 .B vgdisplay
 .RS
 [
-.O_short
+.O_activevolumegroups
 ]
 .br
 [
-.O_activevolumegroups
+.O_short
 ]
 .br
 [ COMMON_OPTIONS ]
@@ -368,11 +368,11 @@ Display output in columns like vgs.
 ]
 .br
 [
-.O_select
+.O_sort
 ]
 .br
 [
-.O_sort
+.O_select
 ]
 .br
 [
@@ -388,11 +388,11 @@ Display output in columns like vgs.
 ]
 .br
 [
-.O_logonly
+.O_headings
 ]
 .br
 [
-.O_headings
+.O_logonly
 ]
 .br
 [

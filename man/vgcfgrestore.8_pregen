@@ -238,8 +238,8 @@ List all VG metadata backups.
 List one VG metadata backup file.
 .P
 .B vgcfgrestore
-.O_list
 .O_file
+.O_list
 .RS
 [ COMMON_OPTIONS ]
 .br

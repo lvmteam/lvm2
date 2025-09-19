@@ -134,6 +134,10 @@
 .de O_nolocking
 .OPS nolocking
 ..
+.de O_persist
+.OPA persist
+\fIString\fP
+..
 .de O_physicalextentsize
 .OPA s physicalextentsize
 \fISize\fP[m|\:UNIT]
@@ -159,6 +163,10 @@
 .de O_setautoactivation
 .OPA setautoactivation
 \fBy\fP|\fBn\fP
+..
+.de O_setpersist
+.OPA setpersist
+\fIString\fP
 ..
 .de O_shared
 .OPS shared
@@ -235,11 +243,11 @@ device.
 ]
 .br
 [
-.O_maxlogicalvolumes
+.O_force
 ]
 .br
 [
-.O_maxphysicalvolumes
+.O_maxlogicalvolumes
 ]
 .br
 [
@@ -247,11 +255,11 @@ device.
 ]
 .br
 [
-.O_physicalextentsize
+.O_maxphysicalvolumes
 ]
 .br
 [
-.O_force
+.O_physicalextentsize
 ]
 .br
 [
@@ -267,7 +275,11 @@ device.
 ]
 .br
 [
-.O_metadataprofile
+.O_dataalignment
+]
+.br
+[
+.O_dataalignmentoffset
 ]
 .br
 [
@@ -275,7 +287,19 @@ device.
 ]
 .br
 [
+.O_locktype
+]
+.br
+[
+.O_metadataprofile
+]
+.br
+[
 .O_metadatasize
+]
+.br
+[
+\fB--persist\fP \fBstart\fP
 ]
 .br
 [
@@ -283,19 +307,15 @@ device.
 ]
 .br
 [
-.O_vgmetadatacopies
-]
-.br
-[
 .O_reportformat
 ]
 .br
 [
-.O_dataalignment
+.O_setautoactivation
 ]
 .br
 [
-.O_dataalignmentoffset
+.O_setpersist
 ]
 .br
 [
@@ -307,11 +327,7 @@ device.
 ]
 .br
 [
-.O_locktype
-]
-.br
-[
-.O_setautoactivation
+.O_vgmetadatacopies
 ]
 .br
 [ COMMON_OPTIONS ]
@@ -560,6 +576,20 @@ Disable locking. Use with caution, concurrent commands may produce
 incorrect results.
 .
 .TP
+.O_persist
+Persistent Reservation operation.
+start: register local key and acquire reservation.
+stop: unregister local key, releasing reservation.
+remove: preempt and abort another key.
+clear: remove reservation and keys.
+check: check if started.
+autostart: start if the VG autostart flag is set.
+lvmlocal.conf pr_key or host_id must be configured to use PR.
+For local VGs, Write Exclusive (WE) is used, and for shared VGs
+Write Exclusive, all registrants (WEAR) is used.
+Use --setpersist to automate and/or require PR.
+.
+.TP
 .O_physicalextentsize
 Sets the physical extent size of PVs in the VG.
 The value must be either a power of 2 of at least 1 sector
@@ -610,6 +640,18 @@ If autoactivation is disabled on a VG, no LVs will be autoactivated
 in that VG, and the LV autoactivation property has no effect.
 If autoactivation is enabled on a VG, autoactivation can be disabled
 for individual LVs.
+.
+.TP
+.O_setpersist
+Set flags to control persistent reservation behavior.
+y: set require and autostart flags.
+require: PR will be required to write or activate VG.
+autostart: PR will be automatically started.
+ptpl: use persist through power loss on devices.
+When autostart is enabled, autoactivation and auto-lockstart
+commands will first start PR.
+lvmlocal.conf pr_key or host_id must be configured to use PR.
+For local VGs, enabling system_id is also recommended.
 .
 .TP
 .O_shared

@@ -403,27 +403,27 @@ required, after which the others are optional.
 .in +2n
 .O_maxphysicalvolumes
 .br
-.O_uuid
-.br
 .O_physicalextentsize
+.br
+.O_uuid
 .br
 .O_resizeable
 .br
 .O_addtag
 .br
-.O_deltag
-.br
 .O_alloc
 .br
-.O_pvmetadatacopies
-.br
-.O_vgmetadatacopies
+.O_deltag
 .br
 .O_detachprofile
 .br
 .O_metadataprofile
 .br
+.O_pvmetadatacopies
+.br
 .O_setautoactivation
+.br
+.O_vgmetadatacopies
 )
 .in
 [
@@ -431,15 +431,11 @@ required, after which the others are optional.
 ]
 .br
 [
-.O_select
-]
-.br
-[
 .O_force
 ]
 .br
 [
-.O_poll
+.O_select
 ]
 .br
 [
@@ -448,6 +444,10 @@ required, after which the others are optional.
 .br
 [
 .O_noudevsync
+]
+.br
+[
+.O_poll
 ]
 .br
 [
@@ -473,23 +473,15 @@ Start or stop monitoring LVs from dmeventd.
 ]
 .br
 [
-.O_select
-]
-.br
-[
 .O_force
 ]
 .br
 [
-.O_sysinit
+.O_select
 ]
 .br
 [
 .O_ignorelockingfailure
-]
-.br
-[
-.O_poll
 ]
 .br
 [
@@ -501,7 +493,15 @@ Start or stop monitoring LVs from dmeventd.
 ]
 .br
 [
+.O_poll
+]
+.br
+[
 .O_reportformat
+]
+.br
+[
+.O_sysinit
 ]
 .br
 [ COMMON_OPTIONS ]
@@ -523,11 +523,11 @@ Start or stop processing LV conversions.
 ]
 .br
 [
-.O_select
+.O_force
 ]
 .br
 [
-.O_force
+.O_select
 ]
 .br
 [
@@ -561,6 +561,14 @@ Activate or deactivate LVs.
 .O_activate
 .RS
 [
+.O_autobackup
+]
+.br
+[
+.O_force
+]
+.br
+[
 .O_ignoreactivationskip
 ]
 .br
@@ -569,15 +577,7 @@ Activate or deactivate LVs.
 ]
 .br
 [
-.O_autobackup
-]
-.br
-[
 .O_select
-]
-.br
-[
-.O_force
 ]
 .br
 [
@@ -585,11 +585,7 @@ Activate or deactivate LVs.
 ]
 .br
 [
-.O_sysinit
-]
-.br
-[
-.O_readonly
+.O_autoactivation
 ]
 .br
 [
@@ -597,23 +593,11 @@ Activate or deactivate LVs.
 ]
 .br
 [
-.O_monitor
-]
-.br
-[
-.O_poll
-]
-.br
-[
-.O_autoactivation
-]
-.br
-[
-\fB--persist\fP \fBstart\fP
-]
-.br
-[
 .O_ignoremonitoring
+]
+.br
+[
+.O_monitor
 ]
 .br
 [
@@ -621,7 +605,23 @@ Activate or deactivate LVs.
 ]
 .br
 [
+\fB--persist\fP \fIString\fP
+]
+.br
+[
+.O_poll
+]
+.br
+[
+.O_readonly
+]
+.br
+[
 .O_reportformat
+]
+.br
+[
+.O_sysinit
 ]
 .br
 [ COMMON_OPTIONS ]
@@ -643,23 +643,15 @@ Reactivate LVs using the latest metadata.
 ]
 .br
 [
-.O_select
-]
-.br
-[
 .O_force
 ]
 .br
 [
-.O_sysinit
+.O_select
 ]
 .br
 [
 .O_ignorelockingfailure
-]
-.br
-[
-.O_poll
 ]
 .br
 [
@@ -671,7 +663,15 @@ Reactivate LVs using the latest metadata.
 ]
 .br
 [
+.O_poll
+]
+.br
+[
 .O_reportformat
+]
+.br
+[
+.O_sysinit
 ]
 .br
 [ COMMON_OPTIONS ]
@@ -740,19 +740,19 @@ Perform persistent reservation commands on devices.
 \fIVG\fP|\fITag\fP|\fISelect\fP
 .RS
 [
-.O_select
-]
-.br
-[
 .O_force
 ]
 .br
 [
-.O_removekey
+.O_select
 ]
 .br
 [
 .O_majoritypvs
+]
+.br
+[
+.O_removekey
 ]
 .br
 [ COMMON_OPTIONS ]
@@ -1254,12 +1254,14 @@ for individual LVs.
 .TP
 .O_setpersist
 Set or clear flags to control persistent reservation behavior.
-autostart: set flag, PR will be automatically started.
-noautostart: clear autostart flag.
+y: set require and autostart flags.
+n: clear require and autostart flags.
 require: set flag, PR will be required to write or activate VG.
 norequire: clear require flag.
-y: set autostart and require flags.
-n: clear autostart and require flags.
+autostart: set flag, PR will be automatically started.
+noautostart: clear autostart flag.
+ptpl: set flag, use persist through power loss on devices.
+noptpl: clear ptpl flag.
 When autostart is enabled, autoactivation and auto-lockstart
 commands will first start PR.
 lvmlocal.conf pr_key or host_id must be configured to use PR.

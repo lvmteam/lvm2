@@ -293,15 +293,15 @@ Resize an LV by a specified size.
 ]
 .br
 [
-.O_poolmetadatasize
-]
-.br
-[
 .O_fs
 ]
 .br
 [
 .O_fsmode
+]
+.br
+[
+.O_poolmetadatasize
 ]
 .br
 [ COMMON_OPTIONS ]

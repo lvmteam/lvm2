@@ -140,11 +140,11 @@ LVs allocated on it.
 ]
 .br
 [
-.O_setphysicalvolumesize
+.O_reportformat
 ]
 .br
 [
-.O_reportformat
+.O_setphysicalvolumesize
 ]
 .br
 [ COMMON_OPTIONS ]

@@ -306,10 +306,6 @@ Extend an LV by a specified size.
 ]
 .br
 [
-.O_resizefs
-]
-.br
-[
 .O_stripes
 ]
 .br
@@ -318,7 +314,7 @@ Extend an LV by a specified size.
 ]
 .br
 [
-.O_poolmetadatasize
+.O_resizefs
 ]
 .br
 [
@@ -327,6 +323,10 @@ Extend an LV by a specified size.
 .br
 [
 .O_fsmode
+]
+.br
+[
+.O_poolmetadatasize
 ]
 .br
 [ COMMON_OPTIONS ]
@@ -344,15 +344,15 @@ Extend an LV by specified PV extents.
 \fILV\fP \fIPV\fP\ .\|.\|.\&
 .RS
 [
-.O_resizefs
-]
-.br
-[
 .O_stripes
 ]
 .br
 [
 .O_stripesize
+]
+.br
+[
+.O_resizefs
 ]
 .br
 [

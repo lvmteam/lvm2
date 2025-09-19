@@ -198,19 +198,19 @@ the options section.
 ]
 .br
 [
-.O_noudevsync
-]
-.br
-[
-.O_reportformat
-]
-.br
-[
 .O_fs
 ]
 .br
 [
 .O_fsmode
+]
+.br
+[
+.O_noudevsync
+]
+.br
+[
+.O_reportformat
 ]
 .br
 [ COMMON_OPTIONS ]

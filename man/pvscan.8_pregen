@@ -315,6 +315,10 @@ Display PV information.
 .B pvscan
 .RS
 [
+.O_allpvs
+]
+.br
+[
 .O_exported
 ]
 .br
@@ -328,10 +332,6 @@ Display PV information.
 .br
 [
 .O_uuid
-]
-.br
-[
-.O_allpvs
 ]
 .br
 [
@@ -363,15 +363,15 @@ Record that a PV is online or offline.
 ]
 .br
 [
-.O_reportformat
-]
-.br
-[
 .O_minor
 ]
 .br
 [
 .O_noudevsync
+]
+.br
+[
+.O_reportformat
 ]
 .br
 [ COMMON_OPTIONS ]
@@ -394,11 +394,11 @@ Record that a PV is online and autoactivate the VG if complete.
 ]
 .br
 [
-.O_ignorelockingfailure
+.O_autoactivation
 ]
 .br
 [
-.O_reportformat
+.O_ignorelockingfailure
 ]
 .br
 [
@@ -410,7 +410,7 @@ Record that a PV is online and autoactivate the VG if complete.
 ]
 .br
 [
-.O_autoactivation
+.O_reportformat
 ]
 .br
 [ COMMON_OPTIONS ]
@@ -430,7 +430,7 @@ Record that a PV is online and list the VG using the PV.
 \fIPV\fP
 .RS
 [
-.O_ignorelockingfailure
+.O_autoactivation
 ]
 .br
 [
@@ -438,7 +438,7 @@ Record that a PV is online and list the VG using the PV.
 ]
 .br
 [
-.O_vgonline
+.O_ignorelockingfailure
 ]
 .br
 [
@@ -446,7 +446,7 @@ Record that a PV is online and list the VG using the PV.
 ]
 .br
 [
-.O_autoactivation
+.O_vgonline
 ]
 .br
 [ COMMON_OPTIONS ]
@@ -464,11 +464,11 @@ Record that a PV is online and list LVs using the PV.
 \fIPV\fP
 .RS
 [
-.O_ignorelockingfailure
+.O_checkcomplete
 ]
 .br
 [
-.O_checkcomplete
+.O_ignorelockingfailure
 ]
 .br
 [

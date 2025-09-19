@@ -366,11 +366,11 @@ Check and print LVM headers and metadata on a device
 ]
 .br
 [
-.O_settings
+.O_pvmetadatacopies
 ]
 .br
 [
-.O_pvmetadatacopies
+.O_settings
 ]
 .br
 [ COMMON_OPTIONS ]

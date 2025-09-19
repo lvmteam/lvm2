@@ -620,15 +620,15 @@ Convert LV to striped.
 \fILV\fP
 .RS
 [
+.O_interval
+]
+.br
+[
 .O_stripesize
 ]
 .br
 [
 .O_regionsize
-]
-.br
-[
-.O_interval
 ]
 .br
 [
@@ -651,7 +651,7 @@ Convert LV to type mirror (also see type raid1),
 \fILV\fP
 .RS
 [
-.O_mirrors
+.O_interval
 ]
 .br
 [
@@ -659,19 +659,19 @@ Convert LV to type mirror (also see type raid1),
 ]
 .br
 [
+.O_mirrors
+]
+.br
+[
 .O_regionsize
 ]
 .br
 [
-.O_interval
+.O_mirrorlog
 ]
 .br
 [
 .O_stripes
-]
-.br
-[
-.O_mirrorlog
 ]
 .br
 [ COMMON_OPTIONS ]
@@ -691,7 +691,7 @@ Convert LV to raid or change raid layout
 \fILV\fP
 .RS
 [
-.O_mirrors
+.O_interval
 ]
 .br
 [
@@ -699,11 +699,11 @@ Convert LV to raid or change raid layout
 ]
 .br
 [
-.O_regionsize
+.O_mirrors
 ]
 .br
 [
-.O_interval
+.O_regionsize
 ]
 .br
 [
@@ -726,11 +726,11 @@ Convert LV to raid1 or mirror, or change number of mirror images.
 \fILV\fP
 .RS
 [
-.O_regionsize
+.O_interval
 ]
 .br
 [
-.O_interval
+.O_regionsize
 ]
 .br
 [
@@ -757,11 +757,11 @@ Convert raid LV to change number of stripe images.
 ]
 .br
 [
-.O_regionsize
+.O_stripesize
 ]
 .br
 [
-.O_stripesize
+.O_regionsize
 ]
 .br
 [ COMMON_OPTIONS ]
@@ -861,14 +861,10 @@ raid
 Convert LV to a thin LV, using the original LV as an external origin.
 .P
 .B lvconvert
-\fB--type\fP \fBthin\fP
 \fB--thinpool\fP \fILV\fP
+\fB--type\fP \fBthin\fP
 \fILV1\fP
 .RS
-[
-.O_thin
-]
-.br
 [
 .O_chunksize
 ]
@@ -878,11 +874,19 @@ Convert LV to a thin LV, using the original LV as an external origin.
 ]
 .br
 [
+.O_thin
+]
+.br
+[
 .O_wipesignatures
 ]
 .br
 [
 .O_zero
+]
+.br
+[
+.O_metadataprofile
 ]
 .br
 [
@@ -899,10 +903,6 @@ Convert LV to a thin LV, using the original LV as an external origin.
 .br
 [
 .O_poolmetadataspare
-]
-.br
-[
-.O_metadataprofile
 ]
 .br
 [ COMMON_OPTIONS ]
@@ -930,10 +930,6 @@ Convert LV to a thin LV, using LV as thin-pool data volume.
 \fILV1\fP
 .RS
 [
-.O_thin
-]
-.br
-[
 .O_chunksize
 ]
 .br
@@ -942,11 +938,19 @@ Convert LV to a thin LV, using LV as thin-pool data volume.
 ]
 .br
 [
+.O_thin
+]
+.br
+[
 .O_wipesignatures
 ]
 .br
 [
 .O_zero
+]
+.br
+[
+.O_metadataprofile
 ]
 .br
 [
@@ -959,10 +963,6 @@ Convert LV to a thin LV, using LV as thin-pool data volume.
 .br
 [
 .O_poolmetadataspare
-]
-.br
-[
-.O_metadataprofile
 ]
 .br
 [ COMMON_OPTIONS ]
@@ -987,20 +987,16 @@ error
 Attach a cache pool to an LV, converts the LV to type cache.
 .P
 .B lvconvert
-\fB--type\fP \fBcache\fP
 \fB--cachepool\fP \fILV\fP
+\fB--type\fP \fBcache\fP
 \fILV1\fP
 .RS
 [
-.O_cache
-]
-.br
-[
-.O_zero
-]
-.br
-[
 .O_chunksize
+]
+.br
+[
+.O_cache
 ]
 .br
 [
@@ -1009,6 +1005,10 @@ Attach a cache pool to an LV, converts the LV to type cache.
 .br
 [
 .O_wipesignatures
+]
+.br
+[
+.O_zero
 ]
 .br
 [
@@ -1028,6 +1028,10 @@ Attach a cache pool to an LV, converts the LV to type cache.
 ]
 .br
 [
+.O_metadataprofile
+]
+.br
+[
 .O_poolmetadata
 ]
 .br
@@ -1037,10 +1041,6 @@ Attach a cache pool to an LV, converts the LV to type cache.
 .br
 [
 .O_poolmetadataspare
-]
-.br
-[
-.O_metadataprofile
 ]
 .br
 [ COMMON_OPTIONS ]
@@ -1068,8 +1068,8 @@ error
 Attach a writecache to an LV, converts the LV to type writecache.
 .P
 .B lvconvert
-\fB--type\fP \fBwritecache\fP
 .O_cachevol
+\fB--type\fP \fBwritecache\fP
 \fILV1\fP
 .RS
 [
@@ -1092,20 +1092,20 @@ thinpool
 Attach a cache to an LV, converts the LV to type cache.
 .P
 .B lvconvert
-\fB--type\fP \fBcache\fP
 .O_cachevol
+\fB--type\fP \fBcache\fP
 \fILV1\fP
 .RS
+[
+.O_chunksize
+]
+.br
 [
 .O_cache
 ]
 .br
 [
 .O_zero
-]
-.br
-[
-.O_chunksize
 ]
 .br
 [
@@ -1144,16 +1144,16 @@ thinpool
 Add a writecache to an LV, using a specified cache device.
 .P
 .B lvconvert
-\fB--type\fP \fBwritecache\fP
 .O_cachedevice
+\fB--type\fP \fBwritecache\fP
 \fILV1\fP
 .RS
 [
-.O_cachesize
+.O_cachesettings
 ]
 .br
 [
-.O_cachesettings
+.O_cachesize
 ]
 .br
 [ COMMON_OPTIONS ]
@@ -1172,8 +1172,8 @@ thinpool
 Add a cache to an LV, using a specified cache device.
 .P
 .B lvconvert
-\fB--type\fP \fBcache\fP
 .O_cachedevice
+\fB--type\fP \fBcache\fP
 \fILV1\fP
 .RS
 [
@@ -1181,11 +1181,11 @@ Add a cache to an LV, using a specified cache device.
 ]
 .br
 [
-.O_cachesize
+.O_cachesettings
 ]
 .br
 [
-.O_cachesettings
+.O_cachesize
 ]
 .br
 [ COMMON_OPTIONS ]
@@ -1208,11 +1208,11 @@ Convert LV to type thin-pool (existing data on LV will be erased).
 \fILV1\fP
 .RS
 [
-.O_stripesize
+.O_chunksize
 ]
 .br
 [
-.O_chunksize
+.O_stripesize
 ]
 .br
 [
@@ -1228,7 +1228,11 @@ Convert LV to type thin-pool (existing data on LV will be erased).
 ]
 .br
 [
-.O_stripes
+.O_compression
+]
+.br
+[
+.O_deduplication
 ]
 .br
 [
@@ -1240,19 +1244,11 @@ Convert LV to type thin-pool (existing data on LV will be erased).
 ]
 .br
 [
+.O_metadataprofile
+]
+.br
+[
 .O_pooldatavdo
-]
-.br
-[
-.O_compression
-]
-.br
-[
-.O_deduplication
-]
-.br
-[
-.O_vdosettings
 ]
 .br
 [
@@ -1268,7 +1264,11 @@ Convert LV to type thin-pool (existing data on LV will be erased).
 ]
 .br
 [
-.O_metadataprofile
+.O_stripes
+]
+.br
+[
+.O_vdosettings
 ]
 .br
 [ COMMON_OPTIONS ]
@@ -1297,10 +1297,6 @@ Convert LV to type cache-pool (existing data on LV will be erased).
 \fILV1\fP
 .RS
 [
-.O_zero
-]
-.br
-[
 .O_chunksize
 ]
 .br
@@ -1310,6 +1306,10 @@ Convert LV to type cache-pool (existing data on LV will be erased).
 .br
 [
 .O_wipesignatures
+]
+.br
+[
+.O_zero
 ]
 .br
 [
@@ -1329,6 +1329,10 @@ Convert LV to type cache-pool (existing data on LV will be erased).
 ]
 .br
 [
+.O_metadataprofile
+]
+.br
+[
 .O_poolmetadata
 ]
 .br
@@ -1338,10 +1342,6 @@ Convert LV to type cache-pool (existing data on LV will be erased).
 .br
 [
 .O_poolmetadataspare
-]
-.br
-[
-.O_metadataprofile
 ]
 .br
 [ COMMON_OPTIONS ]
@@ -1371,11 +1371,11 @@ Convert LV to type vdopool (existing data on LV will be erased).
 ]
 .br
 [
-.O_virtualsize
+.O_readahead
 ]
 .br
 [
-.O_readahead
+.O_virtualsize
 ]
 .br
 [
@@ -1395,11 +1395,11 @@ Convert LV to type vdopool (existing data on LV will be erased).
 ]
 .br
 [
-.O_vdosettings
+.O_metadataprofile
 ]
 .br
 [
-.O_metadataprofile
+.O_vdosettings
 ]
 .br
 [ COMMON_OPTIONS ]
@@ -1483,11 +1483,11 @@ origin LV (first arg) to reverse a splitsnapshot command.
 \fILV\fP \fILV1\fP
 .RS
 [
-.O_snapshot
+.O_chunksize
 ]
 .br
 [
-.O_chunksize
+.O_snapshot
 ]
 .br
 [
@@ -1522,11 +1522,11 @@ Repair a cache pool.
 ]
 .br
 [
-.O_usepolicies
+.O_poolmetadataspare
 ]
 .br
 [
-.O_poolmetadataspare
+.O_usepolicies
 ]
 .br
 [ COMMON_OPTIONS ]
@@ -1587,7 +1587,7 @@ Add or remove data integrity checksums to raid images.
 \fILV1\fP
 .RS
 [
-.O_raidintegritymode
+.O_integritysettings
 ]
 .br
 [
@@ -1595,7 +1595,7 @@ Add or remove data integrity checksums to raid images.
 ]
 .br
 [
-.O_integritysettings
+.O_raidintegritymode
 ]
 .br
 [ COMMON_OPTIONS ]
@@ -2374,8 +2374,8 @@ mirror
 Convert LV to a thin LV, using the original LV as an external origin.
 .P
 .B lvconvert
-.O_thin
 \fB--thinpool\fP \fILV\fP
+.O_thin
 \fILV1\fP
 .RS
 [ \fB--type thin\fP ] (implied)
@@ -2397,6 +2397,10 @@ Convert LV to a thin LV, using the original LV as an external origin.
 ]
 .br
 [
+.O_metadataprofile
+]
+.br
+[
 .O_originname
 ]
 .br
@@ -2410,10 +2414,6 @@ Convert LV to a thin LV, using the original LV as an external origin.
 .br
 [
 .O_poolmetadataspare
-]
-.br
-[
-.O_metadataprofile
 ]
 .br
 [ COMMON_OPTIONS ]
@@ -2459,6 +2459,10 @@ Convert LV to a thin LV, using LV as thin-pool data volume.
 ]
 .br
 [
+.O_metadataprofile
+]
+.br
+[
 .O_poolmetadata
 ]
 .br
@@ -2468,10 +2472,6 @@ Convert LV to a thin LV, using LV as thin-pool data volume.
 .br
 [
 .O_poolmetadataspare
-]
-.br
-[
-.O_metadataprofile
 ]
 .br
 [ COMMON_OPTIONS ]
@@ -2496,15 +2496,11 @@ error
 Attach a cache pool to an LV.
 .P
 .B lvconvert
-.O_cache
 \fB--cachepool\fP \fILV\fP
+.O_cache
 \fILV1\fP
 .RS
 [ \fB--type cache\fP ] (implied)
-.br
-[
-.O_zero
-]
 .br
 [
 .O_chunksize
@@ -2516,6 +2512,10 @@ Attach a cache pool to an LV.
 .br
 [
 .O_wipesignatures
+]
+.br
+[
+.O_zero
 ]
 .br
 [
@@ -2535,6 +2535,10 @@ Attach a cache pool to an LV.
 ]
 .br
 [
+.O_metadataprofile
+]
+.br
+[
 .O_poolmetadata
 ]
 .br
@@ -2544,10 +2548,6 @@ Attach a cache pool to an LV.
 .br
 [
 .O_poolmetadataspare
-]
-.br
-[
-.O_metadataprofile
 ]
 .br
 [ COMMON_OPTIONS ]
@@ -2574,16 +2574,16 @@ error
 Attach a cache to an LV, converts the LV to type cache.
 .P
 .B lvconvert
-.O_cache
 .O_cachevol
+.O_cache
 \fILV1\fP
 .RS
 [
-.O_zero
+.O_chunksize
 ]
 .br
 [
-.O_chunksize
+.O_zero
 ]
 .br
 [
@@ -2632,11 +2632,11 @@ existing data on LV will be erased).
 ]
 .br
 [
-.O_virtualsize
+.O_readahead
 ]
 .br
 [
-.O_readahead
+.O_virtualsize
 ]
 .br
 [
@@ -2656,11 +2656,11 @@ existing data on LV will be erased).
 ]
 .br
 [
-.O_vdosettings
+.O_metadataprofile
 ]
 .br
 [
-.O_metadataprofile
+.O_vdosettings
 ]
 .br
 [ COMMON_OPTIONS ]
@@ -2702,8 +2702,8 @@ writecache
 Swap metadata LV in a thin pool or cache pool (for repair only).
 .P
 .B lvconvert
-.O_swapmetadata
 .O_poolmetadata
+.O_swapmetadata
 \fILV1\fP
 .RS
 [

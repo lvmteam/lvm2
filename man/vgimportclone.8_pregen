@@ -136,11 +136,11 @@ changes the associated VG and PV UUIDs.
 \fIPV\fP\ .\|.\|.\&
 .RS
 [
-.O_basevgname
+.O_import
 ]
 .br
 [
-.O_import
+.O_basevgname
 ]
 .br
 [

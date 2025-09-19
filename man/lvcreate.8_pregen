@@ -636,8 +636,8 @@ Create a raid1 or mirror LV.
 Implicit type is defined by lvm.conf global/mirror_segtype_default.
 .P
 .B lvcreate
-.O_mirrors
 .O_size
+.O_mirrors
 \fIVG\fP
 .RS
 [ \fB--type raid1\fP|\fBmirror\fP ] (implied)
@@ -655,11 +655,7 @@ Implicit type is defined by lvm.conf global/mirror_segtype_default.
 ]
 .br
 [
-.O_mirrorlog
-]
-.br
-[
-.O_minrecoveryrate
+.O_integritysettings
 ]
 .br
 [
@@ -667,11 +663,15 @@ Implicit type is defined by lvm.conf global/mirror_segtype_default.
 ]
 .br
 [
-.O_raidintegrity
+.O_minrecoveryrate
 ]
 .br
 [
-.O_raidintegritymode
+.O_mirrorlog
+]
+.br
+[
+.O_raidintegrity
 ]
 .br
 [
@@ -679,7 +679,7 @@ Implicit type is defined by lvm.conf global/mirror_segtype_default.
 ]
 .br
 [
-.O_integritysettings
+.O_raidintegritymode
 ]
 .br
 [ COMMON_OPTIONS ]
@@ -703,10 +703,6 @@ Create a raid LV (a specific raid level must be used, e.g. raid1).
 ]
 .br
 [
-.O_mirrors
-]
-.br
-[
 .O_stripes
 ]
 .br
@@ -715,11 +711,15 @@ Create a raid LV (a specific raid level must be used, e.g. raid1).
 ]
 .br
 [
+.O_mirrors
+]
+.br
+[
 .O_regionsize
 ]
 .br
 [
-.O_minrecoveryrate
+.O_integritysettings
 ]
 .br
 [
@@ -727,11 +727,11 @@ Create a raid LV (a specific raid level must be used, e.g. raid1).
 ]
 .br
 [
-.O_raidintegrity
+.O_minrecoveryrate
 ]
 .br
 [
-.O_raidintegritymode
+.O_raidintegrity
 ]
 .br
 [
@@ -739,7 +739,7 @@ Create a raid LV (a specific raid level must be used, e.g. raid1).
 ]
 .br
 [
-.O_integritysettings
+.O_raidintegritymode
 ]
 .br
 [ COMMON_OPTIONS ]
@@ -754,11 +754,11 @@ Create a raid LV (a specific raid level must be used, e.g. raid1).
 Create a raid10 LV.
 .P
 .B lvcreate
-.O_mirrors
 .O_stripes
+.O_size
 .RS
 \ \&
-.O_size
+.O_mirrors
 \fIVG\fP
 .br
 [ \fB--type raid10\fP ] (implied)
@@ -776,7 +776,7 @@ Create a raid10 LV.
 ]
 .br
 [
-.O_minrecoveryrate
+.O_integritysettings
 ]
 .br
 [
@@ -784,11 +784,11 @@ Create a raid10 LV.
 ]
 .br
 [
-.O_raidintegrity
+.O_minrecoveryrate
 ]
 .br
 [
-.O_raidintegritymode
+.O_raidintegrity
 ]
 .br
 [
@@ -796,7 +796,7 @@ Create a raid10 LV.
 ]
 .br
 [
-.O_integritysettings
+.O_raidintegritymode
 ]
 .br
 [ COMMON_OPTIONS ]
@@ -811,8 +811,8 @@ Create a raid10 LV.
 Create a COW snapshot LV of an origin LV.
 .P
 .B lvcreate
-.O_snapshot
 .O_size
+.O_snapshot
 \fILV\fP
 .RS
 [ \fB--type snapshot\fP ] (implied)
@@ -822,15 +822,15 @@ Create a COW snapshot LV of an origin LV.
 ]
 .br
 [
+.O_chunksize
+]
+.br
+[
 .O_stripes
 ]
 .br
 [
 .O_stripesize
-]
-.br
-[
-.O_chunksize
 ]
 .br
 [ COMMON_OPTIONS ]
@@ -854,6 +854,10 @@ Create a thin pool.
 ]
 .br
 [
+.O_chunksize
+]
+.br
+[
 .O_stripes
 ]
 .br
@@ -866,11 +870,11 @@ Create a thin pool.
 ]
 .br
 [
-.O_chunksize
+.O_compression
 ]
 .br
 [
-.O_thinpool
+.O_deduplication
 ]
 .br
 [
@@ -886,23 +890,19 @@ Create a thin pool.
 ]
 .br
 [
-.O_compression
-]
-.br
-[
-.O_deduplication
-]
-.br
-[
-.O_vdosettings
-]
-.br
-[
 .O_poolmetadatasize
 ]
 .br
 [
 .O_poolmetadataspare
+]
+.br
+[
+.O_thinpool
+]
+.br
+[
+.O_vdosettings
 ]
 .br
 [ COMMON_OPTIONS ]
@@ -926,6 +926,14 @@ Create a cache pool.
 ]
 .br
 [
+.O_chunksize
+]
+.br
+[
+.O_cache
+]
+.br
+[
 .O_stripes
 ]
 .br
@@ -934,11 +942,7 @@ Create a cache pool.
 ]
 .br
 [
-.O_cache
-]
-.br
-[
-.O_chunksize
+.O_cachemetadataformat
 ]
 .br
 [
@@ -951,10 +955,6 @@ Create a cache pool.
 .br
 [
 .O_cachesettings
-]
-.br
-[
-.O_cachemetadataformat
 ]
 .br
 [
@@ -977,8 +977,8 @@ Create a cache pool.
 Create a thin LV in a thin pool.
 .P
 .B lvcreate
-.O_virtualsize
 \fB--thinpool\fP \fILV1\fP
+.O_virtualsize
 \fIVG\fP
 .RS
 [ \fB--type thin\fP ] (implied)
@@ -1018,8 +1018,8 @@ thin
 Create a thin LV that is a snapshot of an external origin LV.
 .P
 .B lvcreate
-\fB--type\fP \fBthin\fP
 \fB--thinpool\fP \fILV1\fP
+\fB--type\fP \fBthin\fP
 \fILV\fP
 .RS
 [
@@ -1060,19 +1060,19 @@ Create a LV that returns VDO when used.
 ]
 .br
 [
-.O_vdo
-]
-.br
-[
-.O_vdopool
-]
-.br
-[
 .O_compression
 ]
 .br
 [
 .O_deduplication
+]
+.br
+[
+.O_vdo
+]
+.br
+[
+.O_vdopool
 ]
 .br
 [
@@ -1092,15 +1092,23 @@ Create a new LV, then attach the specified cachepool
 which converts the new LV to type cache.
 .P
 .B lvcreate
+\fB--cachepool\fP \fILV1\fP
 \fB--type\fP \fBcache\fP
-.O_size
 .RS
 \ \&
-\fB--cachepool\fP \fILV1\fP
+.O_size
 \fIVG\fP
 .br
 [
 .O_extents
+]
+.br
+[
+.O_chunksize
+]
+.br
+[
+.O_cache
 ]
 .br
 [
@@ -1112,11 +1120,7 @@ which converts the new LV to type cache.
 ]
 .br
 [
-.O_cache
-]
-.br
-[
-.O_chunksize
+.O_cachemetadataformat
 ]
 .br
 [
@@ -1129,10 +1133,6 @@ which converts the new LV to type cache.
 .br
 [
 .O_cachesettings
-]
-.br
-[
-.O_cachemetadataformat
 ]
 .br
 [
@@ -1159,15 +1159,19 @@ Create a new LV, then attach the specified cachevol
 which converts the new LV to type cache.
 .P
 .B lvcreate
+.O_cachevol
 \fB--type\fP \fBcache\fP
-.O_size
 .RS
 \ \&
-.O_cachevol
+.O_size
 \fIVG\fP
 .br
 [
 .O_extents
+]
+.br
+[
+.O_chunksize
 ]
 .br
 [
@@ -1179,7 +1183,7 @@ which converts the new LV to type cache.
 ]
 .br
 [
-.O_chunksize
+.O_cachemetadataformat
 ]
 .br
 [
@@ -1192,10 +1196,6 @@ which converts the new LV to type cache.
 .br
 [
 .O_cachesettings
-]
-.br
-[
-.O_cachemetadataformat
 ]
 .br
 [ COMMON_OPTIONS ]
@@ -1212,15 +1212,19 @@ the specified cache device, which converts the
 new LV to type cache.
 .P
 .B lvcreate
+.O_cachedevice
 \fB--type\fP \fBcache\fP
-.O_size
 .RS
 \ \&
-.O_cachedevice
+.O_size
 \fIVG\fP
 .br
 [
 .O_extents
+]
+.br
+[
+.O_chunksize
 ]
 .br
 [
@@ -1232,11 +1236,7 @@ new LV to type cache.
 ]
 .br
 [
-.O_chunksize
-]
-.br
-[
-.O_cachesize
+.O_cachemetadataformat
 ]
 .br
 [
@@ -1252,7 +1252,7 @@ new LV to type cache.
 ]
 .br
 [
-.O_cachemetadataformat
+.O_cachesize
 ]
 .br
 [ COMMON_OPTIONS ]
@@ -1268,11 +1268,11 @@ Create a new LV, then attach the specified cachevol
 which converts the new LV to type writecache.
 .P
 .B lvcreate
+.O_cachevol
 \fB--type\fP \fBwritecache\fP
-.O_size
 .RS
 \ \&
-.O_cachevol
+.O_size
 \fIVG\fP
 .br
 [
@@ -1305,11 +1305,11 @@ the specified cache device, which converts the
 new LV to type writecache.
 .P
 .B lvcreate
+.O_cachedevice
 \fB--type\fP \fBwritecache\fP
-.O_size
 .RS
 \ \&
-.O_cachedevice
+.O_size
 \fIVG\fP
 .br
 [
@@ -1325,11 +1325,11 @@ new LV to type writecache.
 ]
 .br
 [
-.O_cachesize
+.O_cachesettings
 ]
 .br
 [
-.O_cachesettings
+.O_cachesize
 ]
 .br
 [ COMMON_OPTIONS ]
@@ -2333,7 +2333,7 @@ Create a COW snapshot LV of an origin LV
 ]
 .br
 [
-.O_snapshot
+.O_chunksize
 ]
 .br
 [
@@ -2345,7 +2345,7 @@ Create a COW snapshot LV of an origin LV
 ]
 .br
 [
-.O_chunksize
+.O_snapshot
 ]
 .br
 [ COMMON_OPTIONS ]
@@ -2373,11 +2373,11 @@ Create a sparse COW snapshot LV of a virtual origin LV
 ]
 .br
 [
-.O_snapshot
+.O_chunksize
 ]
 .br
 [
-.O_chunksize
+.O_snapshot
 ]
 .br
 [ COMMON_OPTIONS ]
@@ -2392,14 +2392,18 @@ Create a sparse COW snapshot LV of a virtual origin LV
 Create a thin pool.
 .P
 .B lvcreate
-.O_thin
 .O_size
+.O_thin
 \fIVG\fP
 .RS
 [ \fB--type thin-pool\fP ] (implied)
 .br
 [
 .O_extents
+]
+.br
+[
+.O_chunksize
 ]
 .br
 [
@@ -2411,7 +2415,11 @@ Create a thin pool.
 ]
 .br
 [
-.O_chunksize
+.O_compression
+]
+.br
+[
+.O_deduplication
 ]
 .br
 [
@@ -2427,23 +2435,15 @@ Create a thin pool.
 ]
 .br
 [
-.O_compression
-]
-.br
-[
-.O_deduplication
-]
-.br
-[
-.O_vdosettings
-]
-.br
-[
 .O_poolmetadatasize
 ]
 .br
 [
 .O_poolmetadataspare
+]
+.br
+[
+.O_vdosettings
 ]
 .br
 [ COMMON_OPTIONS ]
@@ -2458,14 +2458,18 @@ Create a thin pool.
 Create a thin pool named in --thinpool.
 .P
 .B lvcreate
-.O_size
 \fB--thinpool\fP \fILV\fP\fI_new\fP
+.O_size
 \fIVG\fP
 .RS
 [ \fB--type thin-pool\fP ] (implied)
 .br
 [
 .O_extents
+]
+.br
+[
+.O_chunksize
 ]
 .br
 [
@@ -2481,7 +2485,11 @@ Create a thin pool named in --thinpool.
 ]
 .br
 [
-.O_chunksize
+.O_compression
+]
+.br
+[
+.O_deduplication
 ]
 .br
 [
@@ -2497,23 +2505,15 @@ Create a thin pool named in --thinpool.
 ]
 .br
 [
-.O_compression
-]
-.br
-[
-.O_deduplication
-]
-.br
-[
-.O_vdosettings
-]
-.br
-[
 .O_poolmetadatasize
 ]
 .br
 [
 .O_poolmetadataspare
+]
+.br
+[
+.O_vdosettings
 ]
 .br
 [ COMMON_OPTIONS ]
@@ -2529,15 +2529,23 @@ Create a cache pool named by the --cachepool arg
 (variant, uses --cachepool in place of --name).
 .P
 .B lvcreate
+\fB--cachepool\fP \fILV\fP\fI_new\fP
 \fB--type\fP \fBcache-pool\fP
-.O_size
 .RS
 \ \&
-\fB--cachepool\fP \fILV\fP\fI_new\fP
+.O_size
 \fIVG\fP
 .br
 [
 .O_extents
+]
+.br
+[
+.O_chunksize
+]
+.br
+[
+.O_cache
 ]
 .br
 [
@@ -2549,11 +2557,7 @@ Create a cache pool named by the --cachepool arg
 ]
 .br
 [
-.O_cache
-]
-.br
-[
-.O_chunksize
+.O_cachemetadataformat
 ]
 .br
 [
@@ -2566,10 +2570,6 @@ Create a cache pool named by the --cachepool arg
 .br
 [
 .O_cachesettings
-]
-.br
-[
-.O_cachemetadataformat
 ]
 .br
 [
@@ -2592,11 +2592,11 @@ Create a cache pool named by the --cachepool arg
 Create a thin LV in a thin pool.
 .P
 .B lvcreate
+\fB--thinpool\fP \fILV1\fP
 \fB--type\fP \fBthin\fP
-.O_virtualsize
 .RS
 \ \&
-\fB--thinpool\fP \fILV1\fP
+.O_virtualsize
 \fIVG\fP
 .br
 [
@@ -2665,11 +2665,11 @@ Create a thin LV that is a snapshot of an existing thin LV.
 \fILV1\fP
 .RS
 [
-.O_thin
+.O_snapshot
 ]
 .br
 [
-.O_snapshot
+.O_thin
 ]
 .br
 [ COMMON_OPTIONS ]
@@ -2707,8 +2707,8 @@ thin
 Create a thin LV that is a snapshot of an external origin LV.
 .P
 .B lvcreate
-.O_snapshot
 \fB--thinpool\fP \fILV1\fP
+.O_snapshot
 \fILV\fP
 .RS
 [ \fB--type thin\fP ] (implied)
@@ -2749,15 +2749,15 @@ Create a VDO LV with VDO pool.
 ]
 .br
 [
-.O_vdopool
-]
-.br
-[
 .O_compression
 ]
 .br
 [
 .O_deduplication
+]
+.br
+[
+.O_vdopool
 ]
 .br
 [
@@ -2823,16 +2823,20 @@ Create a thin LV, first creating a thin pool for it,
 where the new thin pool is named by the --thinpool arg.
 .P
 .B lvcreate
+\fB--thinpool\fP \fILV\fP\fI_new\fP
 \fB--type\fP \fBthin\fP
-.O_virtualsize
 .RS
 \ \&
 .O_size
-\fB--thinpool\fP \fILV\fP\fI_new\fP
+.O_virtualsize
 \fIVG\fP
 .br
 [
 .O_extents
+]
+.br
+[
+.O_chunksize
 ]
 .br
 [
@@ -2848,7 +2852,11 @@ where the new thin pool is named by the --thinpool arg.
 ]
 .br
 [
-.O_chunksize
+.O_compression
+]
+.br
+[
+.O_deduplication
 ]
 .br
 [
@@ -2864,23 +2872,15 @@ where the new thin pool is named by the --thinpool arg.
 ]
 .br
 [
-.O_compression
-]
-.br
-[
-.O_deduplication
-]
-.br
-[
-.O_vdosettings
-]
-.br
-[
 .O_poolmetadatasize
 ]
 .br
 [
 .O_poolmetadataspare
+]
+.br
+[
+.O_vdosettings
 ]
 .br
 [ COMMON_OPTIONS ]
@@ -2896,17 +2896,21 @@ Create a thin LV, first creating a thin pool for it,
 where the new thin pool is named by --thinpool.
 .P
 .B lvcreate
-.O_virtualsize
+\fB--thinpool\fP \fILV\fP\fI_new\fP
 .O_size
 .RS
 \ \&
-\fB--thinpool\fP \fILV\fP\fI_new\fP
+.O_virtualsize
 \fIVG\fP
 .br
 [ \fB--type thin\fP ] (implied)
 .br
 [
 .O_extents
+]
+.br
+[
+.O_chunksize
 ]
 .br
 [
@@ -2922,7 +2926,11 @@ where the new thin pool is named by --thinpool.
 ]
 .br
 [
-.O_chunksize
+.O_compression
+]
+.br
+[
+.O_deduplication
 ]
 .br
 [
@@ -2938,23 +2946,15 @@ where the new thin pool is named by --thinpool.
 ]
 .br
 [
-.O_compression
-]
-.br
-[
-.O_deduplication
-]
-.br
-[
-.O_vdosettings
-]
-.br
-[
 .O_poolmetadatasize
 ]
 .br
 [
 .O_poolmetadataspare
+]
+.br
+[
+.O_vdosettings
 ]
 .br
 [ COMMON_OPTIONS ]
@@ -2973,14 +2973,18 @@ arg is a VG name.
 .P
 .B lvcreate
 \fB--type\fP \fBthin\fP
-.O_virtualsize
+.O_size
 .RS
 \ \&
-.O_size
+.O_virtualsize
 \fIVG\fP|\fILV\fP\fI_new\fP
 .br
 [
 .O_extents
+]
+.br
+[
+.O_chunksize
 ]
 .br
 [
@@ -2996,7 +3000,11 @@ arg is a VG name.
 ]
 .br
 [
-.O_chunksize
+.O_compression
+]
+.br
+[
+.O_deduplication
 ]
 .br
 [
@@ -3012,23 +3020,15 @@ arg is a VG name.
 ]
 .br
 [
-.O_compression
-]
-.br
-[
-.O_deduplication
-]
-.br
-[
-.O_vdosettings
-]
-.br
-[
 .O_poolmetadatasize
 ]
 .br
 [
 .O_poolmetadataspare
+]
+.br
+[
+.O_vdosettings
 ]
 .br
 [ COMMON_OPTIONS ]
@@ -3046,17 +3046,21 @@ or the new thin pool name is generated when the first
 arg is a VG name.
 .P
 .B lvcreate
+.O_size
 .O_thin
-.O_virtualsize
 .RS
 \ \&
-.O_size
+.O_virtualsize
 \fIVG\fP|\fILV\fP\fI_new\fP
 .br
 [ \fB--type thin\fP ] (implied)
 .br
 [
 .O_extents
+]
+.br
+[
+.O_chunksize
 ]
 .br
 [
@@ -3068,7 +3072,11 @@ arg is a VG name.
 ]
 .br
 [
-.O_chunksize
+.O_compression
+]
+.br
+[
+.O_deduplication
 ]
 .br
 [
@@ -3084,23 +3092,15 @@ arg is a VG name.
 ]
 .br
 [
-.O_compression
-]
-.br
-[
-.O_deduplication
-]
-.br
-[
-.O_vdosettings
-]
-.br
-[
 .O_poolmetadatasize
 ]
 .br
 [
 .O_poolmetadataspare
+]
+.br
+[
+.O_vdosettings
 ]
 .br
 [ COMMON_OPTIONS ]
@@ -3129,6 +3129,10 @@ config setting sparse_segtype_default.
 ]
 .br
 [
+.O_chunksize
+]
+.br
+[
 .O_stripes
 ]
 .br
@@ -3145,7 +3149,11 @@ config setting sparse_segtype_default.
 ]
 .br
 [
-.O_chunksize
+.O_compression
+]
+.br
+[
+.O_deduplication
 ]
 .br
 [
@@ -3161,23 +3169,15 @@ config setting sparse_segtype_default.
 ]
 .br
 [
-.O_compression
-]
-.br
-[
-.O_deduplication
-]
-.br
-[
-.O_vdosettings
-]
-.br
-[
 .O_poolmetadatasize
 ]
 .br
 [
 .O_poolmetadataspare
+]
+.br
+[
+.O_vdosettings
 ]
 .br
 [ COMMON_OPTIONS ]
@@ -3193,14 +3193,22 @@ Create a new LV, then attach the specified cachepool
 which converts the new LV to type cache.
 .P
 .B lvcreate
-.O_size
 \fB--cachepool\fP \fILV1\fP
+.O_size
 \fIVG\fP
 .RS
 [ \fB--type cache\fP ] (implied)
 .br
 [
 .O_extents
+]
+.br
+[
+.O_chunksize
+]
+.br
+[
+.O_cache
 ]
 .br
 [
@@ -3212,11 +3220,7 @@ which converts the new LV to type cache.
 ]
 .br
 [
-.O_cache
-]
-.br
-[
-.O_chunksize
+.O_cachemetadataformat
 ]
 .br
 [
@@ -3229,10 +3233,6 @@ which converts the new LV to type cache.
 .br
 [
 .O_cachesettings
-]
-.br
-[
-.O_cachemetadataformat
 ]
 .br
 [ COMMON_OPTIONS ]
@@ -3261,6 +3261,14 @@ which converts the new LV to type cache.
 ]
 .br
 [
+.O_chunksize
+]
+.br
+[
+.O_cache
+]
+.br
+[
 .O_stripes
 ]
 .br
@@ -3269,11 +3277,7 @@ which converts the new LV to type cache.
 ]
 .br
 [
-.O_cache
-]
-.br
-[
-.O_chunksize
+.O_cachemetadataformat
 ]
 .br
 [
@@ -3286,10 +3290,6 @@ which converts the new LV to type cache.
 .br
 [
 .O_cachesettings
-]
-.br
-[
-.O_cachemetadataformat
 ]
 .br
 [
@@ -3342,6 +3342,10 @@ and attach it to the LV arg (alternative, use lvconvert.)
 ]
 .br
 [
+.O_cachemetadataformat
+]
+.br
+[
 .O_cachemode
 ]
 .br
@@ -3351,10 +3355,6 @@ and attach it to the LV arg (alternative, use lvconvert.)
 .br
 [
 .O_cachesettings
-]
-.br
-[
-.O_cachemetadataformat
 ]
 .br
 [

@@ -366,11 +366,11 @@ Display output in columns like lvs.
 ]
 .br
 [
-.O_select
+.O_sort
 ]
 .br
 [
-.O_sort
+.O_select
 ]
 .br
 [
@@ -386,11 +386,11 @@ Display output in columns like lvs.
 ]
 .br
 [
-.O_logonly
+.O_headings
 ]
 .br
 [
-.O_headings
+.O_logonly
 ]
 .br
 [
