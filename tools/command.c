@@ -1337,8 +1337,12 @@ static void _sort_opt_args(void)
 			qsort(cmd->optional_opt_args, cmd->oo_count,
 			      sizeof(struct opt_arg), _compare_opt_args);
 
-		if ((cmd->ro_count + cmd->any_ro_count) > 1)
-			qsort(cmd->required_opt_args, cmd->ro_count + cmd->any_ro_count,
+		if (cmd->ro_count > 1)
+			qsort(cmd->required_opt_args, cmd->ro_count,
+			      sizeof(struct opt_arg), _compare_opt_args);
+
+		if (cmd->any_ro_count > 1)
+			qsort(&cmd->required_opt_args[cmd->ro_count], cmd->any_ro_count,
 			      sizeof(struct opt_arg), _compare_opt_args);
 	}
 }
