@@ -163,14 +163,14 @@ others are optional.
 Change properties of all PVs.
 .P
 .B pvchange
-.O_addtag
+.O_all
 .RS
 (
-.O_all
-.in +2n
 .O_uuid
-.br
+.in +2n
 .O_allocatable
+.br
+.O_addtag
 .br
 .O_deltag
 .br
