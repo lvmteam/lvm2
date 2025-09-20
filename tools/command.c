@@ -1280,8 +1280,15 @@ static int _long_name_compare(const void *on1, const void *on2)
 {
 	const struct opt_name * const *optname1 = on1;
 	const struct opt_name * const *optname2 = on2;
+	int result;
 
-	return strcmp((*optname1)->long_opt + 2, (*optname2)->long_opt + 2);
+	result = strcmp((*optname1)->long_opt + 2, (*optname2)->long_opt + 2);
+
+	/* Use opt_enum as tiebreaker for stable sorting when long option names are identical */
+	if (result == 0)
+		result = (*optname1)->opt_enum - (*optname2)->opt_enum;
+
+	return result;
 }
 
 /* Create list of option names for printing alphabetically. */
