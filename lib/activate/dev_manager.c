@@ -3021,6 +3021,11 @@ static int _add_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 	return 1;
 }
 
+static void _set_optional_uuid_suffixes(struct dm_tree *dtree)
+{
+	dm_tree_set_optional_uuid_suffixes(dtree, (const char**)_uuid_suffix_list);
+}
+
 static struct dm_tree *_create_partial_dtree(struct dev_manager *dm, const struct logical_volume *lv, int origin_only)
 {
 	struct dm_tree *dtree;
@@ -3031,7 +3036,7 @@ static struct dm_tree *_create_partial_dtree(struct dev_manager *dm, const struc
 		return NULL;
 	}
 
-	dm_tree_set_optional_uuid_suffixes(dtree, (const char**)_uuid_suffix_list);
+	_set_optional_uuid_suffixes(dtree);
 
 	if (!_add_lv_to_dtree(dm, dtree, lv, (lv_is_origin(lv) || lv_is_thin_volume(lv) || lv_is_thin_pool(lv)) ? origin_only : 0))
 		goto_bad;
@@ -4169,7 +4174,7 @@ int dev_manager_device_uses_vg(struct device *dev,
 		return r;
 	}
 
-	dm_tree_set_optional_uuid_suffixes(dtree, (const char**)_uuid_suffix_list);
+	_set_optional_uuid_suffixes(dtree);
 
 	if (!dm_tree_add_dev(dtree, MAJOR(dev->dev), MINOR(dev->dev))) {
 		log_error("Failed to add device %s (%u:%u) to dtree.",
