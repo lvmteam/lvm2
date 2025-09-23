@@ -20,32 +20,43 @@ lvmlockd \(em LVM locking daemon
 .
 .SH DESCRIPTION
 .
-LVM commands use lvmlockd to coordinate access to shared storage.
+
+A shared Volume Group is a VG placed on shared storage devices, e.g. from a
+SAN, that can be used by all the hosts that can access the devices.  A
+shared VG requires the use of lvmlockd, and an external lock manager.
+.
 .P
-When LVM is used on devices shared by multiple hosts, locks will:
+Different hosts may activate and use LVs in the same shared VG, and
+different hosts can create, extend, or remove LVs in the VG.  Locking,
+through lvmlockd, ensures this is all done safely and consistently.
+LVM commands request locks from lvmlockd, which passes the lock requests
+to an external lock manager.  Each shared VG has a
+.B locktype
+attribute, specifying the external lock manager to use for the VG.
+.
+.P
+The lock manager options are:
+.B sanlock
+which places locks on storage space reserved within the VG, and
+.B dlm
+which uses a network locking protocol, and has additional clustering
+requirements.
+.
+.P
+There are three types of locking performed through lvmlockd:
 .PD 0
 .IP \[bu] 2
-coordinate reading and writing of LVM metadata
+per-VG locks protect changes to the VG metadata.
 .IP \[bu]
-validate caching of LVM metadata
+LV locks limit LV activation to one host at a time.
 .IP \[bu]
-prevent conflicting activation of logical volumes
-.PD
-.P
-lvmlockd uses an external lock manager to perform basic locking.
-.P
-Lock manager (lock type) options are:
-.
-.TP 8
-.B sanlock
-\(en places locks on disk within LVM storage.
-.
-.TP
-.B dlm
-\(en uses network communication and a cluster manager.
+A Global lock protects unused PVs and the VG namespace.
 .PD
 .
 .SH OPTIONS
+.
+lvmlockd daemon command line options:
+.P
 .
 .TP
 .BR -h | --help
@@ -108,193 +119,212 @@ Override the default sanlock I/O timeout.
 .BR -A | --adopt " " 0 | 1
 Enable (1) or disable (0) lock adoption.
 .
-.SH USAGE
+.SH SETUP
 .
-.SS Initial set up
-.
-Setting up LVM to use lvmlockd and a shared VG for the first time includes
-some one time set up steps:
-.
-.SS 1. choose a lock manager
-.
-.TP 8
-.B sanlock
-Choose sanlock if dlm/corosync are not otherwise required.
-sanlock does not depend on any clustering software or configuration.
-.
-.TP
-.B dlm
-If dlm (or corosync) are already being used by other cluster
-software, then select dlm.  dlm uses corosync which requires additional
-configuration beyond the scope of this document.  See corosync and dlm
-documentation for instructions on configuration, set up and usage.
-.
-.SS 2. configure hosts to use lvmlockd
-.
-On all hosts running lvmlockd, configure
-.BR lvm.conf (5):
+The following steps provide a quick overview of how to use shared VGs.
+More details can be found under SETUP DETAILS.
 .P
-.EX
-use_lvmlockd = 1
-.EE
-.
-.TP 8
-.B sanlock
-Assign each host a unique host_id in the range 1-2000 by setting
+.I Devices
+.P
+Identify the shared device(s) that will be used in the shared VG,
+and add them to each host's devices file (local device names often
+differ, unless a WWN-based name from /dev/disk/by-id is used.)
 .br
-.I #DEFAULT_SYS_DIR#/lvmlocal.conf
-local/host_id
-.
-.SS 3. start lvmlockd
-.
-Start the lvmlockd daemon.
+.B $ lvmdevices --adddev
+.I device
+.P
+.I Configuration
+.P
+Edit lvm.conf, setting
+.B use_lvmlockd=1
+on each host using a shared VG.
+.P
+Edit lvmlocal.conf, setting
+.B host_id
+on each host (only required when using sanlock.)
+The host_id is a unique integer for each host between 1 and 2000.
+.P
+.I Locking
+.P
+Start lvmlockd and the external lock manager (sanlock or dlm) on
+each host.
+.P
+.I VG
+.P
+Create a shared VG from one host (uses the running lock manager):
 .br
-Use systemctl, a cluster resource agent, or run directly, e.g.
+.B $ vgcreate --shared
+.I VG
+.I devices
 .P
-.EX
-systemctl start lvmlockd
-.EE
-.
-.SS 4. start lock manager
-.
-.TP 8
-.B sanlock
-Start the sanlock and wdmd daemons.
+Start the lockspace for the shared VG on all hosts:
 .br
-Use systemctl or run directly, e.g.
-.sp
-.EX
-systemctl start wdmd sanlock
-.EE
-.
-.TP
-.B dlm
-Start the dlm and corosync daemons.
+.B $ vgchange --lockstart
+.I VG
+.P
+.I Usage
+.P
+Begin using the VG, e.g. creating LVs.
+.P
+Regular shutdown steps:
 .br
-Use systemctl, a cluster resource agent, or run directly, e.g.
-.sp
-.EX
-systemctl start corosync dlm
-.EE
-.
-.SS 5. create VG on shared devices
-.
-vgcreate --shared <vgname> <devices>
+    $ vgchange -an VG
+.br
+    $ vgchange --lockstop VG
+.br
+    $ stop lvmlockd and lock manager
+.br
 .P
-The shared option sets the VG lock type to sanlock or dlm depending on
-which lock manager is running.  LVM commands acquire locks from lvmlockd,
-and lvmlockd uses the chosen lock manager.
-.
-.SS 6. start VG on all hosts
-.
-.EX
-vgchange --lockstart
-.EE
+Regular startup steps:
+.br
+    $ start lvmlockd and lock manager
+.br
+    $ vgchange --lockstart VG
 .P
-Shared VGs must be started before they are used.  Starting the VG performs
-lock manager initialization that is necessary to begin using locks (i.e.
-creating and joining a lockspace).  Starting the VG may take some time,
-and until the start completes the VG may not be modified or activated.
 .
-.SS 7. create and activate LVs
-.
-Standard lvcreate and lvchange commands are used to create and activate
-LVs in a shared VG.
+.SH SETUP DETAILS
 .P
-An LV activated exclusively on one host cannot be activated on another.
-When multiple hosts need to use the same LV concurrently, the LV can be
-activated with a shared lock (see lvchange options -aey vs -asy.)
-(Shared locks are disallowed for certain LV types that cannot be used from
-multiple hosts.)
-.
-.SS Normal start up and shut down
-.
-After initial set up, start up and shut down include the following steps.
-They can be performed directly or may be automated using systemd or a
-cluster resource manager/agents.  When using lvmlockd.service, daemon
-options can be set in
-.I /etc/sysconfig/lvmlockd
-as OPTIONS='-x1 -y2'.
-.
-.IP \[bu] 2
-start lvmlockd
-.
-.IP \[bu]
-start lock manager
-.
-.IP \[bu]
-vgchange --lockstart
-.
-.IP \[bu]
-activate LVs in shared VGs
+.B Identifying devices
+.br
+Devices often have different local names on each host, e.g. /dev/sda
+on one host is named /dev/sdb on another. One method to identify the
+same device on each host is to run the command lsblk -o+WWN on each
+host, looking for the same WWN, and its corresponding local device name.
+Or, the WWN-based device symlinks under /dev/disk/by-id/ can be a
+useful way to consistently identify a device across multiple hosts.
 .P
-The shut down sequence is the reverse:
-.IP \[bu] 2
-deactivate LVs in shared VGs
-.IP \[bu]
-vgchange --lockstop
-.IP \[bu]
-stop lock manager
-.IP \[bu]
-stop lvmlockd
+.B Device access
+.br
+On each host, LVM needs to be given access to the shared devices by
+adding them to the local system.devices file (unless the devices file
+feature has been disabled.) Use the local device name identified
+in the previous step, or a WWN-based device symlink, and run the
+command lvmdevices --adddev device_path to add each of the shared
+devices to the local system.devices file.
+Alternatively, after the shared VG has been created from one host,
+other hosts can run the command vgimportdevices VG to add devices
+from VG to system.devices.
+See
+.BR lvmdevices (8)
+for more information.
+.P
+.B Config files
+.br
+After #DEFAULT_SYS_DIR#/lvm.conf use_lvmlockd has been set to 1,
+lvm commands will begin attempting to acquire locks from lvmlockd.
+Failures to acquire the global lock from lvmlockd may appear until
+the first shared VG is operational. These warnings won't interfere
+with lvm commands doing read operations, but lvm commands attempting
+to write may fail with a global lock error.
+.P
+The #DEFAULT_SYS_DIR#/lvmlocal.conf host_id setting is only required
+when using VGs with lock type sanlock. Each host using sanlock VGs
+must be configured with a unique host_id value. Valid host_ids are
+integers in the range 1-2000. (The lvmlocal.conf descriptions of
+host_id and sanlock_align_size mention special cases with 4K disks
+in which the valid host_id range can be smaller, e.g. 1-250.)
+.P
+.B Lock managers
+.br
+A specific build of LVM may exclude support for sanlock or dlm
+lock managers. To check this, run the command "lvm version" and
+look for "--enable-lvmlockd-sanlock" or "--enable-lvmlockd-dlm".
+.P
+With the --shared option, vgcreate searches for a running lock manager
+(dlm or sanlock), and uses the result for the VG lock type.
+In place of --shared, vgcreate --locktype sanlock|dlm can be specified
+directly.
+.P
+When using lvmlockd in a cluster which already uses corosync and
+dlm, then the dlm lock type should be used for shared VGs.  Otherwise,
+using sanlock is usually more straight forward.
+.P
+Details on starting or setting up each lock manager are outside the
+scope of LVM. sanlock can usually be started with a simple
+"systemctl start wdmd sanlock". Steps for setting up and starting
+corosync and dlm can be more complicated.
+.P
+.B Lock start
+.br
+Shared VGs must be started before they are used via vgchange --lockstart
+VG. Starting the VG performs lock manager initialization that is necessary
+to begin using locks (i.e. creating and joining a lockspace). Starting the
+VG may take some time, and until the start completes the VG may not be
+modified or activated. When shutting down, the lockspace is stopped with
+vgchange --lockstop VG.
 .
 .SH TOPICS
 .
-.SS Protecting VGs on shared devices
-.
-The following terms are used to describe the different ways of accessing
-VGs on shared devices.
-.
-.TP
-.I shared VG
-A shared VG exists on shared storage that is visible to multiple hosts.
-LVM acquires locks through lvmlockd to coordinate access to shared VGs.
-A shared VG has lock_type "dlm" or "sanlock", which specifies the lock
-manager lvmlockd will use.
-.sp
-When the lock manager for the lock type is not available (e.g. not started
-or failed), lvmlockd is unable to acquire locks for LVM commands.  In this
-situation, LVM commands are only allowed to read and display the VG;
-changes and activation will fail.
-.
-.TP
-.I local VG
-A local VG is meant to be used by a single host.  It has no lock type or
-lock type "none".  A local VG typically exists on local (non-shared)
-devices and cannot be used concurrently from different hosts.
-.sp
-If a local VG does exist on shared devices, it should be owned by a single
-host by having the system ID set, see
-.BR lvmsystemid (7).
-The host with a matching system ID can use the local VG and other hosts
-will ignore it.  A VG with no lock type and no system ID should be
-excluded from all but one host using
-.BR lvm.conf (5)
-filters.
-Without any of these protections, a local VG on shared devices
-can be easily damaged or destroyed.
-.
-.TP
-.I clvm VG
-A clvm VG (or clustered VG) is a VG on shared storage (like a shared VG)
-that requires clvmd for clustering and locking.  See below for converting
-a clvm/clustered VG to a shared VG.
-.
-.SS Shared VGs from hosts not using lvmlockd
-.
-Hosts that do not use shared VGs will not be running lvmlockd.  In this
-case, shared VGs that are still visible to the host will be ignored
-(like foreign VGs, see
-.BR lvmsystemid (7)).
+.SS Displaying shared VGs
 .P
-The --shared option for reporting and display commands causes shared VGs
-to be displayed on a host not using lvmlockd, like the --foreign option
-does for foreign VGs.
+The
+.B vgs
+command shows the letter
+.B s
+in the last (sixth) attr position for a shared VG:
+.
+.nf
+.
+.P
+$ vgs
+  VG    #PV #LV #SN Attr   VSize   VFree  
+  vgfoo   1   0   0 wz--ns 992.00m 736.00m
+.fi
+.
+.P
+.
+Or, the shared attribute can be displayed as a
+.B vgs
+reporting field:
+.P
+.nf
+$ vgs -o+shared
+  VG    #PV #LV #SN Attr   VSize   VFree   Shared 
+  vgfoo   1   0   0 wz--ns 992.00m 736.00m  shared
+.fi
+.P
+.
+The
+.B vgs
+command can also display the lock type:
+.
+.P
+.nf
+$ vgs -o+locktype
+  VG    #PV #LV #SN Attr   VSize   VFree   LockType
+  vgfoo   1   0   0 wz--ns 992.00m 736.00m sanlock 
+.fi
+.P
+.
+On hosts that are attached to the shared devices, but do not have
+lvmlockd enabled, the
+.B vgs
+command will not display shared VGs unless the
+.B --shared
+option is added:
+.
+.P
+.nf
+$ vgs --shared
+  VG    #PV #LV #SN Attr   VSize   VFree  
+  vgfoo   1   0   0 wz--ns 992.00m 736.00m
+.fi
+.
+.SS System ID
+.br
+In contrast to a shared VG, a local VG can only be used by one host
+at a time, and does not use lvmlockd or a lock manager.  If a local VG
+is located on shared devices, then the LVM system ID feature should be
+used to assign one host ownership of the VG. See
+.BR lvmsystemid (7).
+.P
+For additional protection, the shared devices in a local VG can be
+excluded from the devices file (system.devices) on all hosts except
+for the host that owns the VG.
 .
 .SS Creating the first sanlock VG
 .
-When use_lvmlockd is first enabled in
-.BR lvm.conf (5),
+When use_lvmlockd is first enabled in lvm.conf,
 and before the first sanlock VG is created, no global lock will exist.
 In this initial state, LVM commands try
 and fail to acquire the global lock, producing a warning,
@@ -327,27 +357,12 @@ from concurrent use by another vgcreate on another host.
 .P
 See below for more information about managing the sanlock global lock.
 .
-.SS Using shared VGs
+.SS Removing a shared VG
 .
-In the
-.BR vgs (8)
-command, shared VGs are indicated by "s" (for shared)
-in the sixth attr field,
-and by "shared" in the "--options shared" report field.
-The specific lock type and lock args for a shared VG can be
-displayed with:
-.P
-.EX
-# vgs -o+locktype,lockargs
-.EE
-.P
-Shared VGs need to be "started" and "stopped", unlike other types of VGs.
-See the following section for a full description of starting and stopping.
-.P
-Removing a shared VG will fail if other hosts have the VG started.  Run
-vgchange --lockstop <vgname> on all other hosts before vgremove.  (It may
-take several seconds before vgremove recognizes that all hosts have
-stopped a sanlock VG.)
+Removing a shared VG will fail if other hosts have the VG started (it must
+be started on the host running vgremove.)  Run vgchange --lockstop <vgname>
+on all other hosts before vgremove.  (It may take several seconds before
+vgremove recognizes that all hosts have stopped a sanlock VG.)
 .
 .SS Starting and stopping VGs
 .
@@ -366,32 +381,6 @@ When using the lock type sanlock, starting a VG can take a long time
 (potentially minutes if the host was previously shut down without cleanly
 stopping the VG.)
 .P
-A shared VG can be started after all the following are true:
-.P
-\[bu]
-lvmlockd is running
-.br
-\[bu]
-the lock manager is running
-.br
-\[bu]
-the VG's devices are visible on the system
-.P
-A shared VG can be stopped if all LVs are deactivated.
-.P
-All shared VGs can be started/stopped using:
-.P
-.EX
-# vgchange --lockstart
-# vgchange --lockstop
-.EE
-.P
-Individual VGs can be started/stopped using:
-.br
-vgchange --lockstart <vgname> \&.\|.\|.
-.br
-vgchange --lockstop <vgname> \&.\|.\|.
-.P
 To make vgchange not wait for start to complete:
 .br
 vgchange --lockstart --lockopt nowait \&.\|.\|.
@@ -400,21 +389,6 @@ lvmlockd can be asked directly to stop all lockspaces:
 .br
 lvmlockctl -S|--stop-lockspaces
 .P
-To start only selected shared VGs, use the
-.BR lvm.conf (5)
-\fBactivation/lock_start_list\fP.
-When defined, only VG names in this list are
-started by vgchange.  If the list is not defined (the default), all
-visible shared VGs are started.  To start only "vg1", use the following
-.BR lvm.conf (5)
-configuration:
-.P
-.EX
-activation {
-\    lock_start_list = [ "vg1" ]
-\    \&...
-}
-.EE
 .
 .SS Internal command locking
 .
@@ -664,7 +638,7 @@ dmsetup wipe_table -S "uuid=~LVM && vgname=$VG && lv_layer=\\"\\""
 # check that the error target is in place
 dmsetup table -c -S "uuid=~LVM && vgname=$VG && lv_layer=\\"\\"" |grep -vw error
 if [[ $? -ne 0 ]] ; then
-\  exit 0
+exit 0
 fi
 exit 1
 .EE
@@ -868,14 +842,11 @@ vgmerge
 .
 .SS lvmlockd changes from clvmd
 .
-(See above for converting an existing clvm VG to a shared VG.)
 .P
-While lvmlockd and clvmd are entirely different systems, LVM command usage
-remains similar.  Differences are more notable when using lvmlockd's
-sanlock option.
-.P
-Visible usage differences between shared VGs (using lvmlockd) and
-clvm/clustered VGs (using clvmd):
+Prior to the introduction of lvmlockd, clvmd (CLVM) existed with similar
+capabilities, but a very different design.
+Some of the visible usage differences between shared VGs (using lvmlockd)
+and cluster VGs (using clvmd):
 .
 .IP \[bu] 2
 .BR lvm.conf (5)
@@ -945,9 +916,6 @@ unable to passively check the remote active or lock state of an LV.
 .
 .nh
 .na
-.BR lvm (8),
 .BR lvmlockctl (8),
-.BR lvchange (8),
-.BR lvgs (8),
-.BR vgs (8),
-.BR lvm.conf (5)
+.BR sanlock (8),
+.BR dlm_controld (8)
