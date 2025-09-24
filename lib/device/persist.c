@@ -1253,6 +1253,7 @@ int persist_check(struct cmd_context *cmd, struct volume_group *vg,
 	uint64_t other_holder = 0;
 	uint64_t found_key_val;
 	uint32_t found_key_gen;
+	uint32_t our_key_gen = 0;
 	uint32_t current_sanlock_gen = 0;
 	uint64_t *found_keys;
 	uint64_t *saved_keys = NULL;
@@ -1332,11 +1333,13 @@ int persist_check(struct cmd_context *cmd, struct volume_group *vg,
 						 (unsigned long long)found_key_val, (unsigned long long)our_key_val, dev_name(dev));
 
 				found_key_gen = (found_key_val & 0xFFFFFF0000) >> 16;
-				if (current_sanlock_gen && (found_key_gen != current_sanlock_gen))
+				if (!our_key_gen)
+					our_key_gen = found_key_gen;
+				else if (found_key_gen != our_key_gen)
 					log_warn("WARNING: Local key 0x%llx generation %u (expect %u) on %s.",
-						 (unsigned long long)found_key_val, found_key_gen, current_sanlock_gen, dev_name(dev));
+						 (unsigned long long)found_key_val, found_key_gen, our_key_gen, dev_name(dev));
 
-				if (current_sanlock_gen && (found_key_gen == current_sanlock_gen))
+				if (our_key_gen && (found_key_gen == our_key_gen))
 					our_key_val = found_key_val;
 			}
 		}
@@ -1428,6 +1431,10 @@ int persist_check(struct cmd_context *cmd, struct volume_group *vg,
 	    vg->lock_type && !strcmp(vg->lock_type, "sanlock") &&
 	    !lockd_vg_is_started(cmd, vg, &current_sanlock_gen))
 		log_warn("WARNING: Skipped key generation check (VG not started.)");
+
+	if (our_key_gen != current_sanlock_gen)
+		log_warn("WARNING: Unexpected mismatch between local key generation %u and sanlock generation %u.",
+			 our_key_gen, current_sanlock_gen);
 
 	/* Summarize results for all devices */
 
