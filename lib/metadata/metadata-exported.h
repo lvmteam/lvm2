@@ -302,8 +302,8 @@
 int lv_layout_and_role(struct dm_pool *mem, const struct logical_volume *lv,
 		       struct dm_list **layout, struct dm_list **role);
 
-int lv_is_linear(struct logical_volume *lv);
-int lv_is_striped(struct logical_volume *lv);
+int lv_is_linear(const struct logical_volume *lv);
+int lv_is_striped(const struct logical_volume *lv);
 
 /* Ordered list - see lv_manip.c */
 typedef enum {
