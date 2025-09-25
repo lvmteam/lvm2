@@ -1,5 +1,6 @@
 Version 2.03.36 - 
 ==================
+  Use -real private suffix for mirror and raid legs.
   Detect and use existing XFS quota mount options for lvresize --fs resize.
 
 Version 2.03.35 - 09th September 2025
