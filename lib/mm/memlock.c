@@ -90,6 +90,7 @@ static int _default_priority;
 
 /* list of maps, that are unconditionally ignored */
 static const char _ignore_maps[][16] = {
+	"[aio]",
 	"[vdso]",
 	"[vsyscall]",
 	"[vectors]",
