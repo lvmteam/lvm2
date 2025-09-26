@@ -176,7 +176,7 @@ int vgreduce(struct cmd_context *cmd, int argc, char **argv)
 {
 	struct processing_handle *handle;
 	struct vgreduce_params vp = { 0 };
-	const char *vg_name;
+	const char *vg_name = NULL;
 	int repairing = arg_is_set(cmd, removemissing_ARG);
 	int saved_ignore_suspended_devices = ignore_suspended_devices();
 	int ret;
@@ -187,7 +187,7 @@ int vgreduce(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 	
-	if (!argc) { /* repairing */
+	if (!argc && !arg_is_set(cmd, select_ARG)) { /* repairing */
 		log_error("Please give volume group name.");
 		return EINVALID_CMD_LINE;
 	}
@@ -213,9 +213,12 @@ int vgreduce(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
-	vg_name = skip_dev_dir(cmd, argv[0], NULL);
-	argv++;
-	argc--;
+	if (argc)
+	{
+		vg_name = skip_dev_dir(cmd, argv[0], NULL);
+		argv++;
+		argc--;
+	}
 
 	if (!lock_global(cmd, "ex"))
 		return_ECMD_FAILED;
