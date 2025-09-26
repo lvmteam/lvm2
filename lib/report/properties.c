@@ -344,6 +344,10 @@ GET_PV_STR_PROPERTY_FN(pv_device_id_type, pv->device_id_type)
 #define _cache_write_hits_get prop_not_implemented_get
 #define _cache_write_misses_set prop_not_implemented_set
 #define _cache_write_misses_get prop_not_implemented_get
+#define _cache_promotions_set prop_not_implemented_set
+#define _cache_promotions_get prop_not_implemented_get
+#define _cache_demotions_set prop_not_implemented_set
+#define _cache_demotions_get prop_not_implemented_get
 
 #define _writecache_total_blocks_set prop_not_implemented_set
 #define _writecache_total_blocks_get prop_not_implemented_get

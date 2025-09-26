@@ -143,6 +143,8 @@ FIELD(LVSSTATUS, lv, NUM, "CacheReadHits", lvid, 16, cache_read_hits, cache_read
 FIELD(LVSSTATUS, lv, NUM, "CacheReadMisses", lvid, 16, cache_read_misses, cache_read_misses, "Cache read misses.", 0)
 FIELD(LVSSTATUS, lv, NUM, "CacheWriteHits", lvid, 16, cache_write_hits, cache_write_hits, "Cache write hits.", 0)
 FIELD(LVSSTATUS, lv, NUM, "CacheWriteMisses", lvid, 0, cache_write_misses, cache_write_misses, "Cache write misses.", 0)
+FIELD(LVSSTATUS, lv, NUM, "CachePromotions", lvid, 0, cache_promotions, cache_promotions, "Number of times a block has been moved to the cache.", 0)
+FIELD(LVSSTATUS, lv, NUM, "CacheDemotions", lvid, 0, cache_demotions, cache_demotions, "Number of times a block has been removed from the cache.", 0)
 FIELD(LVSSTATUS, lv, STR_LIST, "KCacheSettings", lvid, 18, kernel_cache_settings, kernel_cache_settings, "Cache settings/parameters as set in kernel, including default values (cached segments only).", 0)
 FIELD(LVSSTATUS, lv, STR, "KCachePolicy", lvid, 18, kernel_cache_policy, kernel_cache_policy, "Cache policy used in kernel.", 0)
 FIELD(LVSSTATUS, lv, NUM, "KMFmt", lvid, 0, kernelmetadataformat, kernel_metadata_format, "Cache metadata format used in kernel.", 0)

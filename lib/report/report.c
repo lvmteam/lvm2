@@ -4132,6 +4132,8 @@ GENERATE_CACHE_STATUS_DISP_FN(read_hits)
 GENERATE_CACHE_STATUS_DISP_FN(read_misses)
 GENERATE_CACHE_STATUS_DISP_FN(write_hits)
 GENERATE_CACHE_STATUS_DISP_FN(write_misses)
+GENERATE_CACHE_STATUS_DISP_FN(promotions)
+GENERATE_CACHE_STATUS_DISP_FN(demotions)
 
 /*
  * Macro to generate '_writecache_<cache_status_field_name>_disp' reporting function.
