@@ -606,8 +606,8 @@ struct logical_volume *lv_origin_lv(const struct logical_volume *lv)
 		origin = first_seg(lv)->external_lv;
 	else if (lv_is_writecache(lv) && first_seg(lv)->origin)
 		origin = first_seg(lv)->origin;
-	else if (lv_is_integrity(lv) && first_seg(lv)->origin)
-		origin = first_seg(lv)->origin;
+	else if (lv_is_integrity(lv))
+		origin = seg_lv(first_seg(lv), 0);
 
 	return origin;
 }

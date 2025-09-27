@@ -161,7 +161,6 @@ static int _integrity_text_import(struct lv_segment *seg,
 		set->allow_discards_set = 1;
 	}
 
-	seg->origin = origin_lv;
 	seg->integrity_meta_dev = meta_lv;
 	seg->lv->status |= INTEGRITY;
 
