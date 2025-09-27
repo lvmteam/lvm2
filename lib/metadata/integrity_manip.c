@@ -891,7 +891,7 @@ int lv_has_integrity_recalculate_metadata(struct logical_volume *lv)
 	return ret;
 }
 
-int lv_raid_has_integrity(struct logical_volume *lv)
+int lv_raid_has_integrity(const struct logical_volume *lv)
 {
 	struct logical_volume *lv_image;
 	struct lv_segment *seg, *seg_image;

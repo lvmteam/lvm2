@@ -1506,7 +1506,7 @@ int lv_add_integrity_to_raid(struct logical_volume *lv, struct integrity_setting
 int lv_remove_integrity_from_raid(struct logical_volume *lv, char **remove_images);
 void lv_clear_integrity_recalculate_metadata(struct logical_volume *lv);
 int lv_has_integrity_recalculate_metadata(struct logical_volume *lv);
-int lv_raid_has_integrity(struct logical_volume *lv);
+int lv_raid_has_integrity(const struct logical_volume *lv);
 int lv_extend_integrity_in_raid(struct logical_volume *lv, struct dm_list *pvh);
 int lv_get_raid_integrity_settings(struct logical_volume *lv, struct integrity_settings **isettings);
 int integrity_mode_set(const char *mode, struct integrity_settings *settings);
