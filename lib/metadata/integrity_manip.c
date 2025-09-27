@@ -289,9 +289,12 @@ int lv_remove_integrity_from_raid(struct logical_volume *lv, char **remove_image
 		}
 
 		if (!(lv_iorig = seg_lv(seg_image, 0))) {
-			log_error("LV %s integrity segment has no origin", display_lvname(lv));
+			log_error("LV %s integrity segment has no origin.", display_lvname(lv));
 			return 0;
 		}
+
+		if (!remove_layer_from_lv(lv_image, lv_iorig))
+			return_0;
 
 		if (!remove_seg_from_segs_using_this_lv(seg_image->integrity_meta_dev, seg_image))
 			return_0;
@@ -300,12 +303,12 @@ int lv_remove_integrity_from_raid(struct logical_volume *lv, char **remove_image
 		imeta_lvs[s] = lv_imeta;
 
 		lv_image->status &= ~INTEGRITY;
+		lv_imeta->status &= ~INTEGRITY_METADATA;
+		lv_set_visible(lv_imeta);
+		lv_set_visible(lv_iorig);
 		seg_image->integrity_meta_dev = NULL;
 		seg_image->integrity_data_sectors = 0;
 		memset(&seg_image->integrity_settings, 0, sizeof(seg_image->integrity_settings));
-
-		if (!remove_layer_from_lv(lv_image, lv_iorig))
-			return_0;
 	}
 
 	if (is_active) {
@@ -324,7 +327,8 @@ int lv_remove_integrity_from_raid(struct logical_volume *lv, char **remove_image
 		lv_imeta = imeta_lvs[s];
 
 		if (is_active) {
-			log_debug("Deactivating unused integrity layers %s %s", lv_iorig->name, lv_imeta->name);
+			log_debug("Deactivating unused integrity layers %s %s.",
+				  display_lvname(lv_iorig), display_lvname(lv_imeta));
 
 			if (!deactivate_lv(cmd, lv_iorig))
 				log_error("Failed to deactivate unused iorig LV %s.", lv_iorig->name);
@@ -332,9 +336,6 @@ int lv_remove_integrity_from_raid(struct logical_volume *lv, char **remove_image
 			if (!deactivate_lv(cmd, lv_imeta))
 				log_error("Failed to deactivate unused imeta LV %s.", lv_imeta->name);
 		}
-
-		lv_imeta->status &= ~INTEGRITY_METADATA;
-		lv_set_visible(lv_imeta);
 
 		log_debug("Removing unused integrity LVs %s %s", lv_iorig->name, lv_imeta->name);
 
