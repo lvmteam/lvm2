@@ -266,6 +266,8 @@ char *build_dm_uuid(struct dm_pool *mem, const struct logical_volume *lv,
 			lv_is_cache_vol(lv) ? "cvol" :
 			((lv_is_mirror_image(lv) ||
 			  lv_is_mirror_log(lv) ||
+			  lv_is_integrity_origin(lv) ||
+			  lv_is_integrity_metadata(lv) ||
 			  lv_is_raid_image(lv) ||
 			  lv_is_raid_metadata(lv)) &&
 			 !lv_is_visible(lv)) ? "real" :

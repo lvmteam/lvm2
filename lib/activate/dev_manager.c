@@ -3594,6 +3594,7 @@ static int _lv_adjust_real_uuid(struct dev_manager *dm,	struct dm_tree *dtree,
 	if (!lv_is_visible(lv) ||
 	    lv_is_origin(lv) ||
 	    lv_is_external_origin(lv) ||
+	    lv_is_integrity_origin(lv) ||
 	    lv_is_cow(lv))
 		return 1;
 

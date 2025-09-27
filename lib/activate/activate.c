@@ -710,6 +710,7 @@ static int _lv_info_real(const struct logical_volume *lv,
 
 	if (lv_is_origin(lv) ||
 	    lv_is_external_origin(lv) ||
+	    lv_is_integrity_origin(lv) ||
 	    lv_is_cow(lv))
 		return 1;
 
