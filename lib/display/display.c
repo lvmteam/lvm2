@@ -415,6 +415,7 @@ int lvdisplay_full(struct cmd_context *cmd,
 	int thin_pool_active = 0;
 	dm_percent_t thin_data_percent = 0, thin_metadata_percent = 0;
 	int thin_active = 0;
+	uint64_t integrity_mismatches = 0;
 	dm_percent_t thin_percent = 0;
 	struct lv_status_thin *thin_status = NULL;
 	struct lv_status_thin_pool *thin_pool_status = NULL;
@@ -541,6 +542,20 @@ int lvdisplay_full(struct cmd_context *cmd,
 		seg = first_seg(lv);
 		log_print("LV Pool metadata       %s", seg->metadata_lv->name);
 		log_print("LV Pool data           %s", seg_lv(seg, 0)->name);
+	} else if (lv_is_integrity(lv)) {
+		seg = first_seg(lv);
+		log_print("LV Integrity origin    %s", seg_lv(seg, 0)->name);
+		log_print("LV Integrity metadata  %s", seg->integrity_meta_dev->name);
+		log_print("LV Integrity mode      %s",
+			  (seg->integrity_settings.mode[0] == 'B') ? "bitmap" :
+			  (seg->integrity_settings.mode[0] == 'J') ? "journal" : "");
+		log_print("LV Integrity blocksize %d",
+			  seg->integrity_settings.block_size);
+		if (inkernel &&
+		    lv_integrity_mismatches(lv->vg->cmd, lv, &integrity_mismatches))
+			log_print("LV Integrity mismatch  " FMTu64, integrity_mismatches);
+	} else if (lv_raid_has_integrity(lv)) {
+		log_print("LV Integrity           on");
 	} else if (lv_is_vdo_pool(lv)) {
 		seg = first_seg(lv);
 		log_print("LV VDO Pool data       %s", seg_lv(seg, 0)->name);
