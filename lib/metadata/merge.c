@@ -589,6 +589,17 @@ static void _check_lv_segment(struct logical_volume *lv, struct lv_segment *seg,
 			seg_error("sets pool LV");
 	}
 
+	if (seg_is_integrity(seg)) {
+		if (!lv_is_integrity(lv))
+			seg_error("is not flagged as integrity LV");
+		if (seg->area_count != 1)
+			seg_error("is missing integrity origin");
+		else if (!lv_is_integrity_origin(seg_lv(seg, 0)))
+			seg_error("has invalid integrity origin");
+		else if (!strstr(seg_lv(seg, 0)->name, "_iorig"))
+			 seg_error("is not using _iorig integrity origin name");
+	}
+
 	if (!seg_is_pool(seg) &&
 	    /* FIXME: format_pool/import_export.c  _add_linear_seg() sets chunk_size */
 	    !seg_is_linear(seg) &&
@@ -652,6 +663,7 @@ int check_lv_segments_complete_vg(struct logical_volume *lv)
 	if ((seg_count != 1) &&
 	    (lv_is_cache(lv) ||
 	     lv_is_cache_pool(lv) ||
+	     lv_is_integrity(lv) ||
 	     lv_is_raid(lv) ||
 	     lv_is_snapshot(lv) ||
 	     lv_is_thin_pool(lv) ||
