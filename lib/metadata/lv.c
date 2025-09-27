@@ -1158,7 +1158,6 @@ static int lv_raid_integrity_image_in_sync(const struct logical_volume *lv_iorig
 	struct logical_volume *lv_image = NULL;
 	struct logical_volume *lv_raid = NULL;
 	struct lv_segment *raid_seg = NULL;
-	const struct seg_list *sl;
 	char *raid_health;
 	unsigned int s;
 	int found = 0;
@@ -1169,14 +1168,7 @@ static int lv_raid_integrity_image_in_sync(const struct logical_volume *lv_iorig
 	/* Get top level raid LV from lv_iorig. */
 
 	/* step 1: get lv_image from lv_iorig */
-	dm_list_iterate_items(sl, &lv_iorig->segs_using_this_lv) {
-		if (!sl->seg || !sl->seg->lv || !sl->seg->origin)
-			continue;
-		if (lv_is_integrity(sl->seg->lv) && (sl->seg->origin == lv_iorig)) {
-			lv_image = sl->seg->lv;
-			break;
-		}
-	}
+	lv_image = lv_integrity_from_origin(lv_iorig);
 
 	if (!lv_image) {
 		log_error("No lv_image found for lv_iorig %s", lv_iorig->name);

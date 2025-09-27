@@ -30,17 +30,25 @@
 #define ONE_MB_IN_BYTES 1048576
 #define ONE_GB_IN_BYTES 1073741824
 
-int lv_is_integrity_origin(const struct logical_volume *lv)
+/* Return Integrity volume from Integrity Origin volume */
+struct logical_volume *lv_integrity_from_origin(const struct logical_volume *lv)
 {
 	struct seg_list *sl;
 
 	dm_list_iterate_items(sl, &lv->segs_using_this_lv) {
-		if (!sl->seg || !sl->seg->lv || !sl->seg->origin)
-			continue;
-		if (lv_is_integrity(sl->seg->lv) && (sl->seg->origin == lv))
-			return 1;
+		if (sl->seg &&
+		    sl->seg->lv &&
+		    lv_is_integrity(sl->seg->lv) &&
+		    (seg_lv(sl->seg, 0) == lv))
+			return sl->seg->lv;
 	}
-	return 0;
+
+	return NULL;
+}
+
+int lv_is_integrity_origin(const struct logical_volume *lv)
+{
+	return (lv_integrity_from_origin(lv)) ? 1 : 0;
 }
 
 /*
