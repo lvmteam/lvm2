@@ -36,7 +36,7 @@
 
 static int _dev_has_md_magic(struct device *dev, uint64_t sb_offset)
 {
-	uint32_t md_magic;
+	uint32_t md_magic = 0;
 
 	/* Version 1 is little endian; version 0.90.0 is machine endian */
 
@@ -353,11 +353,12 @@ static int _md_sysfs_attribute_scanf(struct dev_types *dt,
 				     const char *attribute_fmt,
 				     void *attribute_value)
 {
-	char path[PATH_MAX+1], buffer[MD_MAX_SYSFS_SIZE];
+	char path[PATH_MAX] = { 0 };
+	char buffer[MD_MAX_SYSFS_SIZE] = { 0 };
 	FILE *fp;
 	int ret = 0;
 
-	if (_md_sysfs_attribute_snprintf(path, PATH_MAX, dt,
+	if (_md_sysfs_attribute_snprintf(path, sizeof(path), dt,
 					 dev, attribute_name) < 0)
 		return ret;
 

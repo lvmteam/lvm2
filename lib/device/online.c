@@ -204,7 +204,7 @@ int get_pvs_online(struct dm_list *pvs_online, const char *vgname)
 
 void online_vg_file_remove(const char *vgname)
 {
-	char path[PATH_MAX];
+	char path[PATH_MAX] = { 0 };
 
 	if (dm_snprintf(path, sizeof(path), "%s/%s", VGS_ONLINE_DIR, vgname) < 0) {
 		log_debug("Path %s/%s is too long.", VGS_ONLINE_DIR, vgname);
@@ -466,7 +466,7 @@ void online_dir_setup(struct cmd_context *cmd)
 
 void online_lookup_file_remove(const char *vgname)
 {
-	char path[PATH_MAX];
+	char path[PATH_MAX] = { 0 };
 
 	if (dm_snprintf(path, sizeof(path), "%s/%s", PVS_LOOKUP_DIR, vgname) < 0) {
 		log_debug("Path %s/%s is too long.", PVS_LOOKUP_DIR, vgname);
@@ -481,7 +481,7 @@ void online_lookup_file_remove(const char *vgname)
 
 static int _online_pvid_file_remove(char *pvid)
 {
-	char path[PATH_MAX];
+	char path[PATH_MAX] = { 0 };
 
 	if (dm_snprintf(path, sizeof(path), "%s/%s", PVS_ONLINE_DIR, pvid) < 0)
 		return_0;

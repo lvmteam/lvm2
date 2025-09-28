@@ -1692,7 +1692,7 @@ bad:
 char *get_monitor_dso_path(struct cmd_context *cmd, int id)
 {
 	const char *libpath = find_config_tree_str(cmd, id, NULL);
-	char path[PATH_MAX];
+	char path[PATH_MAX] = { 0 };
 
 	get_shared_library_path(cmd, libpath, path, sizeof(path));
 

@@ -690,7 +690,7 @@ static int _ignore_frozen_raid(struct device *dev, const char *params)
 
 static int _is_usable_uuid(const struct device *dev, const char *name, const char *uuid, int check_reserved, int check_lv, int *is_lv)
 {
-	char *vgname, *lvname, *layer;
+	char *vgname = NULL, *lvname = NULL, *layer = NULL;
 	char vg_name[NAME_LEN];
 
 	if (!check_reserved && !check_lv)

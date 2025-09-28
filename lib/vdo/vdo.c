@@ -38,7 +38,7 @@ static int _bad_field(const char *field)
 static int _import_bool(const struct dm_config_node *n,
 			const char *name, bool *b)
 {
-	uint32_t t;
+	uint32_t t = 0;
 
 	if (dm_config_has_node(n, name)) {
 		if (!dm_config_get_uint32(n, name, &t))
