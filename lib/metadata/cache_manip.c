@@ -1041,7 +1041,7 @@ int cache_vol_set_params(struct cmd_context *cmd,
 	 */
 
 	if (!(extent_size = pool_lv->vg->extent_size)) {
-		log_error(INTERNAL_ERROR "Extend size can't be 0.");
+		log_error(INTERNAL_ERROR "Extent size can't be 0.");
 		return 0;
 	}
 	min_meta_size = extent_size;
