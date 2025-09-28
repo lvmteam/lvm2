@@ -114,6 +114,11 @@ static int _build_matcher(struct rfilter *rf, const struct dm_config_value *val)
 		count++;
 	}
 
+	if (!count) {
+		log_error("No quoted patterns.");
+		goto out;
+	}
+
 	/* Allocate space for them */
 	if (!(regex = dm_pool_alloc(scratch, sizeof(*regex) * count))) {
 		log_error("Failed to allocate regex.");
