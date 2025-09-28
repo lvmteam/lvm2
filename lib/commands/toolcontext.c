@@ -1186,7 +1186,7 @@ static int _init_dev_cache(struct cmd_context *cmd)
 	return 1;
 }
 
-#define MAX_FILTERS 10
+#define MAX_FILTERS 20
 
 static struct dev_filter *_init_filter_chain(struct cmd_context *cmd)
 {
