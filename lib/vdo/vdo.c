@@ -172,16 +172,16 @@ static void _vdo_pool_display(const struct lv_segment *seg)
 	log_print("  Minimum IO size\t%s",
 		  display_size(cmd, vtp->minimum_io_size));
 	log_print("  Block map cache sz\t%s",
-		  display_size(cmd, vtp->block_map_cache_size_mb * UINT64_C(2 * 1024)));
+		  display_mb_size(cmd, vtp->block_map_cache_size_mb));
 	log_print("  Block map era length %u", vtp->block_map_era_length);
 
 	_print_yes_no("Sparse index", vtp->use_sparse_index);
 
 	log_print("  Index memory size\t%s",
-		  display_size(cmd, vtp->index_memory_size_mb * UINT64_C(2 * 1024)));
+		  display_mb_size(cmd, vtp->index_memory_size_mb));
 
 	log_print("  Slab size\t\t%s",
-		  display_size(cmd, vtp->slab_size_mb * UINT64_C(2 * 1024)));
+		  display_mb_size(cmd, vtp->slab_size_mb));
 
 	log_print("  # Ack threads\t%u", (unsigned) vtp->ack_threads);
 	log_print("  # Bio threads\t%u", (unsigned) vtp->bio_threads);

@@ -208,6 +208,11 @@ const char *display_size(const struct cmd_context *cmd, uint64_t size)
 	return _display_size(cmd, size, DM_SIZE_SHORT);
 }
 
+const char *display_mb_size(const struct cmd_context *cmd, uint64_t size)
+{
+	return display_size(cmd, size << (20 - SECTOR_SHIFT));
+}
+
 void pvdisplay_colons(const struct physical_volume *pv)
 {
 	char uuid[64] __attribute__((aligned(8)));

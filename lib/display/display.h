@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2017 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2025 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -26,10 +26,13 @@ const char *display_lvname(const struct logical_volume *lv);
 
 const char *display_percent(struct cmd_context *cmd, dm_percent_t percent);
 
-/* Specify size in KB */
+/* Display size specified in sector units (512B) */
 const char *display_size(const struct cmd_context *cmd, uint64_t size);
 const char *display_size_long(const struct cmd_context *cmd, uint64_t size);
 const char *display_size_units(const struct cmd_context *cmd, uint64_t size);
+
+/* Display size specified in MiB units */
+const char *display_mb_size(const struct cmd_context *cmd, uint64_t size);
 
 char *display_uuid(char *uuidstr);
 void display_stripe(const struct lv_segment *seg, uint32_t s, const char *pre);

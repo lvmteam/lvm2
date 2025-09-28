@@ -329,14 +329,14 @@ static int _update_extents_params(struct volume_group *vg,
 			if (lcp->percent == PERCENT_NONE) {
 				log_error("Can't use %s size. Maximal supported VDO POOL volume size with slab size %s is %s.",
 					  display_size(vg->cmd, (uint64_t)vg->extent_size * extents),
-					  display_size(vg->cmd, (uint64_t)lp->vcp.vdo_params.slab_size_mb << (20 - SECTOR_SHIFT)),
+					  display_mb_size(vg->cmd, lp->vcp.vdo_params.slab_size_mb),
 					  display_size(vg->cmd, (uint64_t)vg->extent_size * vdo_pool_max_extents));
 				return 0;
 			}
 			extents = vdo_pool_max_extents;
 			log_verbose("Using maximal supported VDO POOL volume size %s (with slab size %s).",
 				    display_size(vg->cmd, (uint64_t)vg->extent_size * extents),
-				    display_size(vg->cmd, (uint64_t)lp->vcp.vdo_params.slab_size_mb << (20 - SECTOR_SHIFT)));
+				    display_mb_size(vg->cmd, lp->vcp.vdo_params.slab_size_mb));
 		}
 	}
 
