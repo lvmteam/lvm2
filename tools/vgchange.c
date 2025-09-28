@@ -1040,6 +1040,7 @@ int vgchange(struct cmd_context *cmd, int argc, char **argv)
 	struct vgchange_params vp = { 0 };
 	struct processing_handle *handle;
 	const char *vgname = NULL;
+	const char *pr_op;
 	uint32_t flags = 0;
 	int ret;
 
@@ -1138,8 +1139,7 @@ int vgchange(struct cmd_context *cmd, int argc, char **argv)
 			cmd->disable_pr_required = 1;
 
 		/* Either "-ay --persist start", or "-an --persist stop". */
-		if (arg_is_set(cmd, persist_ARG)) {
-			const char *pr_op = arg_str_value(cmd, persist_ARG, NULL);
+		if ((pr_op = arg_str_value(cmd, persist_ARG, NULL))) {
 			if (strcmp(pr_op, "start") && strcmp(pr_op, "stop")) {
 				log_error("Invalid --persist usage.");
 				return ECMD_FAILED;
@@ -1149,7 +1149,7 @@ int vgchange(struct cmd_context *cmd, int argc, char **argv)
 				log_error("Invalid --persist usage.");
 				return ECMD_FAILED;
 			}
-		       	/*
+			/*
 			 * Setting disable_pr_required to bypass the
 			 * persist_is_started check in vg_read requires
 			 * persist_start in vgchange_activate.
