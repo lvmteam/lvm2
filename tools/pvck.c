@@ -962,10 +962,19 @@ static int _dump_current_text(struct device *dev, struct devicefile *def,
 				   (unsigned long long)meta_size);
 			bad++;
 		} else {
-			if (cft->root && cft->root->key)
-				vgname = strdup(cft->root->key);
-			if (cft->root && cft->root->child)
-				dm_config_get_uint32(cft->root->child, "seqno", &seqno);
+			if (cft->root && cft->root->key) {
+				if (!(vgname = strdup(cft->root->key))) {
+					log_error("Falied to allocate vgname.");
+					goto out;
+				}
+			}
+			if ((cft->root && cft->root->child) &&
+			    !dm_config_get_uint32(cft->root->child, "seqno", &seqno)) {
+				log_print("CHECK: failed to parse seqno text at %llu",
+					  (unsigned long long)(mda_offset + meta_offset));
+				bad++;
+				seqno = 1;
+			}
 		}
 		config_destroy(cft);
 	}
