@@ -1151,7 +1151,7 @@ static int _do_report(struct cmd_context *cmd, struct processing_handle *handle,
 			else {
 				if (single_args->args_are_pvs)
 					r = process_each_pv(cmd, args->argc, args->argv, NULL,
-							    arg_is_set(cmd, all_ARG), 0,
+							    arg_is_set(cmd, all_ARG) ? 1 : 0, 0,
 							    handle, &_pvs_single);
 				else
 					r = process_each_vg(cmd, args->argc, args->argv, NULL, NULL,
