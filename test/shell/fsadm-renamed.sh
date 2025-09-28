@@ -83,7 +83,7 @@ echo "$i"
 aux udev_wait
 
 # mount /dev/test/lv1 on /mnt
-mount "$dev_vg_lv" "$mount_dir"
+mount "$dev_vg_lv" "$mount_dir" || continue
 
 aux udev_wait
 
