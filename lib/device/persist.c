@@ -639,6 +639,10 @@ static int _compare_uint64(const void *a, const void *b)
  * input:  find_all is set (to 1)
  * output: *found_count is set to the number of keys, and
  *         *found_all is set to an array of keys found.
+ *
+ *         Note: for mpath devs, an accurate found_count
+ *         requires found_all to be provided, to eliminate
+ *         duplicate keys for paths.
  */
 
 int dev_find_key(struct cmd_context *cmd, struct device *dev, int may_fail,
@@ -1603,6 +1607,7 @@ int persist_vgremove_before(struct cmd_context *cmd, struct volume_group *vg, st
 	if (vg_is_shared(vg)) {
 		struct pv_list *pvl;
 		struct device *dev;
+		uint64_t *found_keys;
 		int found_key_count;
 
 		dm_list_iterate_items(pvl, &vg->pvs) {
@@ -1610,17 +1615,21 @@ int persist_vgremove_before(struct cmd_context *cmd, struct volume_group *vg, st
 				continue;
 
 			found_key_count = 0;
+			found_keys = NULL;
 
-			if (!dev_find_key(cmd, dev, 0, 0, NULL, 0, NULL, 1, &found_key_count, NULL)) {
+			if (!dev_find_key(cmd, dev, 0, 0, NULL, 0, NULL, 1, &found_key_count, &found_keys)) {
 				/* shouldn't happen */
 				log_error("Failed to get PR keys from %s", dev_name(dev));
 				return 0;
 			}
+			if (found_keys)
+				dm_pool_free(cmd->mem, found_keys);
 			if (found_key_count > 1) {
 				log_error("Found %d PR keys on %s", found_key_count, dev_name(dev));
 				log_error("Stop PR for VG %s on other hosts (vgchange --persist stop)", vg->name);
 				return 0;
 			}
+
 		}
 	}
 
