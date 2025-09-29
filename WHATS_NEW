@@ -1,5 +1,11 @@
 Version 2.03.36 - 
 ==================
+  Display integrity info in lvdisplay.
+  Increase storage size for internal filter chain.
+  Add helper function display_mb_size().
+  Enhance code for adding and removing integrity to RAID volumes.
+  Add code for basic validation of integrity segment.
+  Use -real private suffix for integrity origin and meta volumes.
   Use -real private suffix for mirror and raid legs.
   Detect and use existing XFS quota mount options for lvresize --fs resize.
 
