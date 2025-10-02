@@ -73,7 +73,7 @@ lvremove -f $vg/$lv1
 
 # test that an actively merging snapshot may not be removed
 setup_merge_ $vg $lv1
-lvconvert -i+100 --merge --background "$vg/$(snap_lv_name_ "$lv1")"
+lvconvert -i+5 --merge -vvvv --background "$vg/$(snap_lv_name_ "$lv1")"
 not lvremove -f "$vg/$(snap_lv_name_ "$lv1")"
 lvremove -f $vg/$lv1
 
