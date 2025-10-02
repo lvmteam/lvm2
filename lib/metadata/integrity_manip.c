@@ -699,7 +699,10 @@ int lv_add_integrity_to_raid(struct logical_volume *lv, struct integrity_setting
 		goto bad;
 	}
 
-        if (!r)
+	if (!sync_local_dev_names(cmd))
+		stack;
+
+	if (!r)
 		goto bad;
 
 	/*
