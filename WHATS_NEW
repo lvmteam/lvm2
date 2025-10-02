@@ -1,5 +1,6 @@
 Version 2.03.36 - 
 ==================
+  Update pvmove logic when moving i.e. raid legs.
   Display integrity info in lvdisplay.
   Increase storage size for internal filter chain.
   Add helper function display_mb_size().
