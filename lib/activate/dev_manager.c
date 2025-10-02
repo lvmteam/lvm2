@@ -47,7 +47,18 @@ typedef enum {
 } action_t;
 
 /* This list must match lib/misc/lvm-string.c:build_dm_uuid(). */
-static const char * const _uuid_suffix_list[] = { "pool", "cdata", "cmeta", "cvol", "tdata", "tmeta", "vdata", "vpool", "imeta", NULL};
+static const char * const _uuid_suffix_list[] = {
+	"cdata",
+	"cmeta",
+	"cvol",
+	"imeta",
+	"pool",
+	"tdata",
+	"tmeta",
+	"vdata",
+	"vpool",
+	NULL
+};
 
 struct dlid_list {
 	struct dm_list list;
