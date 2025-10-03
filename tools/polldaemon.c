@@ -633,10 +633,6 @@ static int _poll_daemon(struct cmd_context *cmd, struct poll_operation_id *id,
 	int daemon_mode = 0;
 	int ret = ECMD_PROCESSED;
 
-	/* clear lvmcache/bcache/fds from the parent */
-	lvmcache_destroy(cmd, 1, 0);
-	label_scan_destroy(cmd);
-
 	if (parms->background) {
 		daemon_mode = become_daemon(cmd, 0);
 		if (daemon_mode == 0)
@@ -651,6 +647,10 @@ static int _poll_daemon(struct cmd_context *cmd, struct poll_operation_id *id,
 	/*
 	 * Process one specific task or all incomplete tasks?
 	 */
+
+	/* clear lvmcache/bcache/fds from the parent */
+	lvmcache_destroy(cmd, 1, 0);
+	label_scan_destroy(cmd);
 
 	if (id) {
 		if (!wait_for_single_lv(cmd, id, parms)) {
