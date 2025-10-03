@@ -131,6 +131,7 @@ struct async_engine {
 	io_context_t aio_context;
 	struct cb_set *cbs;
 	unsigned page_mask;
+	pid_t aio_context_pid; /* PID that created this AIO context */
 };
 
 static struct async_engine *_to_async(struct io_engine *e)
@@ -140,15 +141,21 @@ static struct async_engine *_to_async(struct io_engine *e)
 
 static void _async_destroy(struct io_engine *ioe)
 {
-	int r;
 	struct async_engine *e = _to_async(ioe);
 
 	_cb_set_destroy(e->cbs);
 
-	// io_destroy is really slow
-	r = io_destroy(e->aio_context);
-	if (r)
-		log_sys_warn("io_destroy");
+	/*
+	 * Only call io_destroy() if we're in the same process that created
+	 * the AIO context. After fork(), the child inherits the parent's
+	 * aio_context value but must not call io_destroy() on it.
+	 */
+	if (e->aio_context) {
+		if (e->aio_context_pid != getpid())
+			log_debug("Skipping io_destroy() for different pid.");
+		else if (io_destroy(e->aio_context)) // really slow
+			log_sys_warn("io_destroy");
+	}
 
 	free(e);
 }
@@ -376,6 +383,7 @@ struct io_engine *create_async_io_engine(void)
 	e->e.max_io = _async_max_io;
 
 	e->aio_context = 0;
+	e->aio_context_pid = getpid();
 	r = io_setup(MAX_IO, &e->aio_context);
 	if (r < 0) {
 		log_debug("io_setup failed %d", r);
