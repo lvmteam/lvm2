@@ -138,77 +138,61 @@ static int _remove_sibling_pvs_from_trim_list(struct logical_volume *lv,
 					      const char *lv_name,
 					      struct dm_list *trim_list)
 {
-	char *idx, *suffix;
-	const char *sibling;
-	char sublv_name[NAME_LEN];
-	char idx_buf[16];
-	struct logical_volume *sublv;
-	struct dm_list untrim_list, *pvh1, *pvh2;
+	struct logical_volume *sibling_lv = NULL;
+	struct lv_segment *raid_seg = first_seg(lv);
+	struct dm_list sibling_pvs, *pvh1, *pvh2;
 	struct pv_list *pvl1, *pvl2;
+	uint32_t s;
 
-	/* Give up with success unless @lv_name _and_ valid raid segment type */
+	/* Early return for invalid cases */
 	if (!lv_name || !*lv_name ||
-	    !seg_is_raid(first_seg(lv)) ||
-	    seg_is_raid0(first_seg(lv)) ||
+	    !seg_is_raid(raid_seg) ||
+	    seg_is_raid0(raid_seg) ||
 	    !strcmp(lv->name, lv_name))
 		return 1;
 
-	dm_list_init(&untrim_list);
+	/* Search within RAID sub-LVs and find sibling */
+	for (s = 0; s < raid_seg->area_count; s++) {
+		/* Check if this rimage matches lv_name */
+		if (seg_lv(raid_seg, s) && !strcmp(seg_lv(raid_seg, s)->name, lv_name)) {
+			/* Found rimage, sibling is rmeta at same index */
+			if (raid_seg->meta_areas)
+				sibling_lv = seg_metalv(raid_seg, s);
+			break;
+		}
+		/* Check if this rmeta matches lv_name */
+		if (raid_seg->meta_areas && seg_metalv(raid_seg, s) &&
+		    !strcmp(seg_metalv(raid_seg, s)->name, lv_name)) {
+			/* Found rmeta, sibling is rimage at same index */
+			sibling_lv = seg_lv(raid_seg, s);
+			break;
+		}
+	}
 
-	if (!_dm_strncpy(sublv_name, lv_name, sizeof(sublv_name))) {
-		log_error(INTERNAL_ERROR "LV name %s is too long.", lv_name);
+	if (!sibling_lv) {
+		log_debug("No sibling found for %s (not a RAID sub-LV).", lv_name);
+		return 1; /* Not an error - might not be a RAID sub-LV */
+	}
+
+	/* Get PV list for the sibling LV */
+	dm_list_init(&sibling_pvs);
+	if (!get_pv_list_for_lv(lv->vg->cmd->mem, sibling_lv, &sibling_pvs)) {
+		log_error("Can't find PVs for sibling LV %s.", sibling_lv->name);
 		return 0;
 	}
 
-	if ((suffix = strstr(sublv_name, "_rimage_")))
-		sibling = "meta";
-	else if ((suffix = strstr(sublv_name, "_rmeta_")))
-		sibling = "image";
-	else {
-		log_error("Can't find rimage or rmeta suffix.");
-		return 0;
-	}
-
-	if (!(idx = strchr(suffix + 1, '_'))) {
-		log_error("Can't find '_' after suffix %s.", suffix);
-		return 0;
-	}
-	idx++;
-
-        /* Copy idx to local buffer */
-	if (!_dm_strncpy(idx_buf, idx, sizeof(idx_buf))) {
-		log_error(INTERNAL_ERROR "Unexpected LV index %s.", idx);
-		return 0;
-	}
-
-	/* Create the siblings name (e.g. "raidlv_rmeta_N" -> "raidlv_rimage_N" */
-	if (dm_snprintf(suffix + 2, sizeof(sublv_name) - 2 - (suffix - sublv_name),
-			"%s_%s", sibling, idx_buf) < 0) {
-		log_error("Raid sublv for name %s too long.", lv_name);
-		return 0;
-	}
-
-	if (!(sublv = find_lv(lv->vg, sublv_name))) {
-		log_error("Can't find sub LV %s.", sublv_name);
-		return 0;
-	}
-
-	if (!get_pv_list_for_lv(lv->vg->cmd->mem, sublv, &untrim_list)) {
-		log_error("Can't find PVs for sub LV %s.", sublv_name);
-		return 0;
-	}
-
-	dm_list_iterate(pvh1, &untrim_list) {
+	/* Remove sibling PVs from trim_list */
+	dm_list_iterate(pvh1, &sibling_pvs) {
 		pvl1 = dm_list_item(pvh1, struct pv_list);
 
 		dm_list_iterate(pvh2, trim_list) {
 			pvl2 = dm_list_item(pvh2, struct pv_list);
 
 			if (pvl1->pv == pvl2->pv) {
-				log_debug("Removing PV %s from trim list.",
-					  pvl2->pv->dev->pvid);
+				log_debug("Removing PV %s from trim list (sibling of %s).",
+					  pvl2->pv->dev->pvid, lv_name);
 				dm_list_del(&pvl2->list);
-				break;
+				break;  /* PV found and removed, continue with next sibling PV */
 			}
 		}
 	}
