@@ -4387,6 +4387,11 @@ int vg_is_shared(const struct volume_group *vg)
 	return (vg->lock_type && is_lockd_type(vg->lock_type));
 }
 
+int vg_is_sanlock(const struct volume_group *vg)
+{
+	return (vg->lock_type && !strcmp(vg->lock_type, "sanlock"));
+}
+
 int vg_strip_outdated_historical_lvs(struct volume_group *vg) {
 	struct glv_list *glvl, *tglvl;
 	time_t current_time = time(NULL);

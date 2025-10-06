@@ -793,7 +793,12 @@ int vg_is_registered(struct cmd_context *cmd, struct volume_group *vg, uint64_t 
 	int local_host_id = find_config_tree_int(cmd, local_host_id_CFG, NULL);
 	int partial = 0;
 
-	if (!local_key && local_host_id && vg->lock_type && !strcmp(vg->lock_type, "sanlock")) {
+	if (vg_is_sanlock(vg)) {
+		local_key = NULL;
+
+		if (!local_host_id)
+			return_0;
+
 		if (!vg_is_registered_by_host_id(cmd, vg, local_host_id, &found_key, &found_gen, &partial))
 			return_0;
 
@@ -879,9 +884,14 @@ static int get_our_key(struct cmd_context *cmd, struct volume_group *vg,
 	char our_key_buf[PR_KEY_BUF_SIZE] = { 0 };
 	uint64_t our_key_val = 0;
 
-	if (!local_key && local_host_id && vg->lock_type && !strcmp(vg->lock_type, "sanlock")) {
+	if (vg_is_sanlock(vg)) {
 		int last_host_id = 0;
 		uint32_t last_gen = 0;
+
+		local_key = NULL;
+
+		if (!local_host_id)
+			return_0;
 
 		/*
 		 * persist_start saves the key it uses to a local file.
@@ -947,6 +957,10 @@ static int get_our_key(struct cmd_context *cmd, struct volume_group *vg,
 		}
 
 		log_debug("our key from host_id %d: 0x%llx", local_host_id, (unsigned long long)our_key_val);
+
+	} else {
+		log_error("No PR key source.");
+		return 0;
 	}
 
  done:
@@ -1088,19 +1102,14 @@ int persist_key_update(struct cmd_context *cmd, struct volume_group *vg, uint32_
 {
 	struct pv_list *pvl;
 	struct device *dev;
-	char *local_key = (char *)find_config_tree_str(cmd, local_pr_key_CFG, NULL);
 	int local_host_id = find_config_tree_int(cmd, local_host_id_CFG, NULL);
 	char new_key_buf[PR_KEY_BUF_SIZE] = { 0 };
 	uint64_t our_key_val = 0;
 	uint32_t key_gen = 0;
 	uint32_t want_gen = prev_gen + 1;
 
-	/*
-	 * When using an explicit pr_key setting, there's
-	 * not sanlock generation number that needs updating.
-	 */
-	if (local_key)
-		return 1;
+	if (!local_host_id)
+		return_0;
 
 	/* persist_vgcreate_done updates the key */
 	if (!strcmp(cmd->name, "vgcreate"))
@@ -1280,6 +1289,9 @@ int persist_check(struct cmd_context *cmd, struct volume_group *vg,
 	int pv_res_other = 0;
 	int prtype;
 
+	if (vg_is_sanlock(vg))
+		local_key = NULL;
+
 	if (!local_key && !local_host_id) {
 		log_error("No pr_key or host_id configured.");
 		return 0;
@@ -1431,7 +1443,7 @@ int persist_check(struct cmd_context *cmd, struct volume_group *vg,
 		}
 	}
 
-	if (our_key_val && !local_key && local_host_id &&
+	if (our_key_val && local_host_id &&
 	    vg->lock_type && !strcmp(vg->lock_type, "sanlock") &&
 	    !lockd_vg_is_started(cmd, vg, &current_sanlock_gen))
 		log_warn("WARNING: Skipped key generation check (VG not started.)");
@@ -1594,6 +1606,9 @@ int persist_vgremove_before(struct cmd_context *cmd, struct volume_group *vg, st
 	char our_key_buf[PR_KEY_BUF_SIZE] = { 0 };
 	uint64_t our_key_val = 0;
 
+	if (vg_is_sanlock(vg))
+		local_key = NULL;
+
 	if (!local_key && !local_host_id)
 		return 1;
 
@@ -1656,6 +1671,9 @@ int persist_stop(struct cmd_context *cmd, struct volume_group *vg)
 	char our_key_buf[PR_KEY_BUF_SIZE] = { 0 };
 	uint64_t our_key_val = 0;
 	uint32_t cur_gen = 0;
+
+	if (vg_is_sanlock(vg))
+		local_key = NULL;
 
 	if (!local_key && !local_host_id)
 		return 1;
@@ -1908,6 +1926,7 @@ int persist_vgcreate_update(struct cmd_context *cmd, struct volume_group *vg, ui
 	char our_key_buf[PR_KEY_BUF_SIZE] = { 0 };
 	char our_key_buf_stop[PR_KEY_BUF_SIZE] = { 0 };
 	uint64_t our_key_val = 0;
+	uint64_t our_key_val_stop = 0;
 	const char *access = vg_is_shared(vg) ? "sh" : "ex";
 	const char *devname;
 	const char **argv;
@@ -1921,7 +1940,9 @@ int persist_vgcreate_update(struct cmd_context *cmd, struct volume_group *vg, ui
 	if (!setpersist_on)
 		return 1;
 
-	if (!local_key && local_host_id && vg->lock_type && !strcmp(vg->lock_type, "sanlock")) {
+	if (vg_is_sanlock(vg)) {
+		if (!local_host_id)
+			return_0;
 		if (dm_snprintf(our_key_buf, PR_KEY_BUF_SIZE-1, "0x100000%06x%04x", 1, local_host_id) != 18) {
 			log_error("Failed to format key string for host_id %d", local_host_id);
 			return 0;
@@ -1946,11 +1967,23 @@ int persist_vgcreate_update(struct cmd_context *cmd, struct volume_group *vg, ui
 			log_error("Failed to parse generated key %s", our_key_buf);
 			return 0;
 		}
+	} else {
+		log_error("No PR key source.");
+		return 0;
 	}
 
-	if (local_key)
-		memcpy(our_key_buf_stop, our_key_buf, sizeof(our_key_buf));
-	else if (local_host_id) {
+	/*
+	 * If local_key is set, it was used in persist_vgcreate_begin, even if
+	 * a sanlock VG was created and now in update uses host_id for the key.
+	 */
+	if (local_key) {
+		if (!parse_prkey(local_key, &our_key_val_stop)) {
+			log_error("Failed to parse local key %s", local_key);
+			return 0;
+		}
+		if (dm_snprintf(our_key_buf_stop, PR_KEY_BUF_SIZE-1, "0x%llx", (unsigned long long)our_key_val_stop) < 0)
+			return_0;
+	} else if (local_host_id) {
 		/* The key used in persist_vgcreate_begin did not include gen 1. */
 		if (dm_snprintf(our_key_buf_stop, PR_KEY_BUF_SIZE-1, "0x100000000000%04x", local_host_id) != 18) {
 			log_error("Failed to format key string for host_id %d", local_host_id);
@@ -2034,6 +2067,9 @@ int persist_start_extend(struct cmd_context *cmd, struct volume_group *vg)
 	int found = 0;
 	int y = 0;
 	int n = 0;
+
+	if (vg_is_sanlock(vg))
+		local_key = NULL;
 
 	/*
 	 * PR is not in use without pr_key or host_id set.
@@ -2184,6 +2220,9 @@ int persist_start(struct cmd_context *cmd, struct volume_group *vg,
 	int args = 0;
 	int pv_count = 0;
 	int status;
+
+	if (vg_is_sanlock(vg))
+		local_key = NULL;
 
 	if (!local_key && !local_host_id) {
 		log_error("No pr_key or host_id configured (see lvmlocal.conf).");
@@ -2432,6 +2471,9 @@ int persist_remove(struct cmd_context *cmd, struct volume_group *vg,
 	if (dm_snprintf(rem_key_buf, PR_KEY_BUF_SIZE-1, "0x%llx", (unsigned long long)rem_key_val) < 0)
 		return_0;
 
+	if (vg_is_sanlock(vg))
+		local_key = NULL;
+
 	if (!get_our_key(cmd, vg, local_key, local_host_id, our_key_buf, &our_key_val))
 		return_0;
 
@@ -2494,6 +2536,9 @@ int persist_clear(struct cmd_context *cmd, struct volume_group *vg,
 	int args = 0;
 	int pv_count = 0;
 	int status;
+
+	if (vg_is_sanlock(vg))
+		local_key = NULL;
 
 	if (!get_our_key(cmd, vg, local_key, local_host_id, our_key_buf, &our_key_val))
 		return_0;
