@@ -45,7 +45,8 @@ int persist_check(struct cmd_context *cmd, struct volume_group *vg,
 int persist_read(struct cmd_context *cmd, struct volume_group *vg);
 
 int persist_start(struct cmd_context *cmd, struct volume_group *vg,
-		  char *local_key, int local_host_id, const char *remkey);
+		  char *local_key, int local_host_id, const char *remkey,
+		  const char *update_our_key);
 
 int persist_stop(struct cmd_context *cmd, struct volume_group *vg);
 

@@ -6385,7 +6385,7 @@ int persist_start_include(struct cmd_context *cmd, struct volume_group *vg,
 	 * Supplementary start: --persist start was added to the command.
 	 */
 	if (op && !strcmp(op, "start")) {
-		if (!persist_start(cmd, vg, local_key, local_host_id, remkey)) {
+		if (!persist_start(cmd, vg, local_key, local_host_id, remkey, NULL)) {
 			log_error("Failed to start persistent reservation.");
 			return 0;
 		}
@@ -6405,7 +6405,7 @@ int persist_start_include(struct cmd_context *cmd, struct volume_group *vg,
 	 * to those commands if it's wanted.
 	 */
 	if ((vg->pr & VG_PR_AUTOSTART) && (autoactivate || autolockstart)) {
-		if (!persist_start(cmd, vg, local_key, local_host_id, NULL)) {
+		if (!persist_start(cmd, vg, local_key, local_host_id, NULL, NULL)) {
 			if (vg->pr & VG_PR_REQUIRE) {
 				log_error("Failed to autostart persistent reservation.");
 				return 0;

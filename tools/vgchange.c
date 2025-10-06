@@ -1749,7 +1749,7 @@ static int _vgchange_persist_single(struct cmd_context *cmd, const char *vg_name
 		 * persist_start?
 		 */
 
-		ret = persist_start(cmd, vg, local_key, local_host_id, remkey);
+		ret = persist_start(cmd, vg, local_key, local_host_id, remkey, NULL);
 
 	} else if (!strcmp(op, "stop")) {
 		if (!arg_is_set(cmd, force_ARG) && lvs_in_vg_activated(vg)) {
@@ -1772,7 +1772,7 @@ static int _vgchange_persist_single(struct cmd_context *cmd, const char *vg_name
 	} else if (!strcmp(op, "autostart")) {
 		/* start if auto was enabled via --setpersist y|autostart */
 		if (vg->pr & VG_PR_AUTOSTART)
-			ret = persist_start(cmd, vg, local_key, local_host_id, NULL);
+			ret = persist_start(cmd, vg, local_key, local_host_id, NULL, NULL);
 
 	} else {
 		log_error("Unknown persist action.");
@@ -1890,7 +1890,7 @@ static int _vgchange_setpersist_single(struct cmd_context *cmd, const char *vg_n
 	 * will start PR before changing VG.
 	 */
 	if (on && op && strcmp(op, "start")) {
-		if (!persist_start(cmd, vg, local_key, local_host_id, NULL)) {
+		if (!persist_start(cmd, vg, local_key, local_host_id, NULL, NULL)) {
 			log_error("Failed to start PR, VG not changed.");
 			return_ECMD_FAILED;
 		}
