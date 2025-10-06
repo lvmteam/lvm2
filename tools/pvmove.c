@@ -437,12 +437,7 @@ static struct logical_volume *_set_up_pvmove_lv(struct cmd_context *cmd,
 			lv_found = 1;
 		}
 
-		seg = first_seg(lv);
-
-		if (seg_is_cache(seg) || seg_is_cache_pool(seg) ||
-		    seg_is_mirrored(seg) || seg_is_raid(seg) ||
-		    seg_is_snapshot(seg) ||
-		    seg_is_thin(seg) || seg_is_thin_pool(seg))
+		if (!lv_is_striped(lv))
 			continue; /* bottom-level LVs only... */
 
 		if (!lv_is_on_pvs(lv, source_pvl))
