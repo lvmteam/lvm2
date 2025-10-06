@@ -52,11 +52,6 @@ static int _pvmove_target_present(struct cmd_context *cmd, int clustered)
 	return found;
 }
 
-static unsigned _pvmove_is_exclusive(struct cmd_context *cmd,
-				     struct volume_group *vg)
-{
-	return 0;
-}
 
 /* Allow /dev/vgname/lvname, vgname/lvname or lvname */
 static const char *_extract_lvname(struct cmd_context *cmd, const char *vgname,
@@ -608,7 +603,7 @@ static int _pvmove_setup_single(struct cmd_context *cmd,
 	const struct logical_volume *lvh;
 	const char *pv_name = pv_dev_name(pv);
 	unsigned flags = PVMOVE_FIRST_TIME;
-	unsigned exclusive;
+	unsigned exclusive = 0;
 	int r = ECMD_FAILED;
 
 	if (!vg) {
@@ -672,8 +667,6 @@ static int _pvmove_setup_single(struct cmd_context *cmd,
 			return ECMD_FAILED;
 		}
 	}
-
-	exclusive = _pvmove_is_exclusive(cmd, vg);
 
 	if ((lv_mirr = find_pvmove_lv(vg, pv_dev(pv), PVMOVE))) {
 		log_print_unless_silent("Detected pvmove in progress for %s.", pv_name);
