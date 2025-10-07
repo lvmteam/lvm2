@@ -416,6 +416,26 @@ static int _inherit_lv_tags(const struct logical_volume *from_lv, struct logical
 }
 
 /*
+ * Helper to allocate and add an LV to a list
+ */
+static int _add_lv_to_list(struct dm_pool *mem,
+			   struct dm_list *list,
+			   struct logical_volume *lv)
+{
+	struct lv_list *lvl;
+
+	if (!(lvl = dm_pool_alloc(mem, sizeof(*lvl)))) {
+		log_error("lv_list alloc failed.");
+		return 0;
+	}
+
+	lvl->lv = lv;
+	dm_list_add(list, &lvl->list);
+
+	return 1;
+}
+
+/*
  * Deactivates and removes an 'orphan' temporary @lv,
  * which is expected to already have an 'error' segment.
  * Sets @updated_mda (!NULL) to 1 when LV is removed.
@@ -656,13 +676,8 @@ static int _split_mirror_images(struct logical_volume *lv,
 		}
 
 		/* If there is more than one image being split, add to list */
-		lvl = dm_pool_alloc(lv->vg->vgmem, sizeof(*lvl));
-		if (!lvl) {
-			log_error("lv_list alloc failed.");
-			return 0;
-		}
-		lvl->lv = sub_lv;
-		dm_list_add(&split_images, &lvl->list);
+		if (!_add_lv_to_list(lv->vg->vgmem, &split_images, sub_lv))
+			return_0;
 	}
 
 	if (!new_lv) {
@@ -921,12 +936,9 @@ static int _remove_mirror_images(struct logical_volume *lv,
 	for (m = new_area_count; m < mirrored_seg->area_count; m++) {
 		seg_lv(mirrored_seg, m)->status &= ~MIRROR_IMAGE;
 		lv_set_visible(seg_lv(mirrored_seg, m));
-		if (!(lvl = dm_pool_alloc(lv->vg->cmd->mem, sizeof(*lvl)))) {
-			log_error("lv_list alloc failed.");
-			return 0;
-		}
-		lvl->lv = seg_lv(mirrored_seg, m);
-		dm_list_add(&tmp_orphan_lvs, &lvl->list);
+		if (!_add_lv_to_list(lv->vg->cmd->mem, &tmp_orphan_lvs,
+				     seg_lv(mirrored_seg, m)))
+			return_0;
 		if (!release_lv_segment_area(mirrored_seg, m, mirrored_seg->area_len))
 			return_0;
 	}
@@ -1003,14 +1015,11 @@ static int _remove_mirror_images(struct logical_volume *lv,
 		 * the sub-lv's)
 		 */
 		for (m = 0; m < seg->area_count; m++) {
-			if (!(lvl = dm_pool_alloc(lv->vg->cmd->mem,
-						  sizeof(*lvl))))
-				return_0;
-
 			seg_lv(seg, m)->status &= ~MIRROR_IMAGE;
 			lv_set_visible(seg_lv(seg, m));
-			lvl->lv = seg_lv(seg, m);
-			dm_list_add(&tmp_orphan_lvs, &lvl->list);
+			if (!_add_lv_to_list(lv->vg->cmd->mem, &tmp_orphan_lvs,
+					     seg_lv(seg, m)))
+				return_0;
 		}
 
 		if (!replace_lv_with_error_segment(detached_log_lv)) {
@@ -1428,7 +1437,6 @@ struct dm_list *lvs_using_lv(struct cmd_context *cmd, struct volume_group *vg,
 			  struct logical_volume *lv)
 {
 	struct dm_list *lvs;
-	struct lv_list *lvl;
 	struct seg_list *sl;
 
 	if (!(lvs = dm_pool_alloc(cmd->mem, sizeof(*lvs)))) {
@@ -1440,12 +1448,8 @@ struct dm_list *lvs_using_lv(struct cmd_context *cmd, struct volume_group *vg,
 
 	dm_list_iterate_items(sl, &lv->segs_using_this_lv) {
 		/* Find whether any segment points at the supplied LV */
-		if (!(lvl = dm_pool_alloc(cmd->mem, sizeof(*lvl)))) {
-			log_error("lv_list alloc failed.");
+		if (!_add_lv_to_list(cmd->mem, lvs, sl->seg->lv))
 			return NULL;
-		}
-		lvl->lv = sl->seg->lv;
-		dm_list_add(lvs, &lvl->list);
 	}
 
 	return lvs;
