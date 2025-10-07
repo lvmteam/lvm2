@@ -1,6 +1,7 @@
 stages:
   - approve
   - test
+  - post
 
 approve1:
   stage: approve
@@ -101,4 +102,25 @@ test-job:
     - if: $CI_PROJECT_PATH != "csonto/lvm2" && $CI_PROJECT_PATH != "lvmteam/lvm2"
       when: manual
     - when: on_success
+
+# reboot must be configured to let runner finish cleanly while not accepting new jobs
+# NOTE: If this causes warnings, gitlab-runner needs to be configured to be stopped using SIGQUIT
+# See: https://docs.gitlab.com/runner/commands/#gitlab-runner-stop-doesnt-shut-down-gracefully
+# NOTE: It should be possible to use after_script in test job, which runs
+# before artifacts collection, but reboot may be too eager to stop the job
+# while collecting artifacts
+# NOTE: What would happen when there are multiple jobs in the queue for each
+# tag? Could the tests run first and reboot only after them? I think so!
+reboot:
+  stage: post
+  parallel:
+    matrix:
+      - TAG: rhel8
+      - TAG: rhel9
+  tags:
+      - ${TAG}
+  timeout: 1m
+  script:
+    - reboot
+  allow_failure: true
 
