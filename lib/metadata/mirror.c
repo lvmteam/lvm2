@@ -1281,6 +1281,34 @@ static int _create_mimage_lvs(struct alloc_handle *ah,
 }
 
 /*
+ * Validate that all segments in an LV are mirrored and optionally
+ * have required status bits set.
+ */
+static int _validate_mirror_segments(struct logical_volume *lv,
+				     uint64_t required_status_mask)
+{
+	struct lv_segment *seg;
+
+	dm_list_iterate_items(seg, &lv->segments) {
+		if (!seg_is_mirrored(seg)) {
+			log_error("Segment is not mirrored: %s:%u",
+				  display_lvname(lv), seg->le);
+			return 0;
+		}
+
+		if ((seg->status & required_status_mask) != required_status_mask) {
+			log_error("Segment status does not match: %s:%u"
+				  " status:0x" FMTx64 "/0x" FMTx64,
+				  display_lvname(lv), seg->le,
+				  seg->status, required_status_mask);
+			return 0;
+		}
+	}
+
+	return 1;
+}
+
+/*
  * Remove mirrors from each segment.
  * 'new_mirrors' is the number of mirrors after the removal. '0' for linear.
  * If 'status_mask' is non-zero, the removal happens only when all segments
@@ -1293,20 +1321,8 @@ int remove_mirrors_from_segments(struct logical_volume *lv,
 	uint32_t s;
 
 	/* Check the segment params are compatible */
-	dm_list_iterate_items(seg, &lv->segments) {
-		if (!seg_is_mirrored(seg)) {
-			log_error("Segment is not mirrored: %s:" FMTu32,
-				  display_lvname(lv), seg->le);
-			return 0;
-		}
-		if ((seg->status & status_mask) != status_mask) {
-			log_error("Segment status does not match: %s:" FMTu32
-				  " status:0x" FMTx64 "/0x" FMTx64,
-				  display_lvname(lv), seg->le,
-				  seg->status, status_mask);
-			return 0;
-		}
-	}
+	if (!_validate_mirror_segments(lv, status_mask))
+		return_0;
 
 	/* Convert the segments */
 	dm_list_iterate_items(seg, &lv->segments) {
