@@ -501,7 +501,9 @@ int driver_version(char *version, size_t size)
 	    !dm_driver_version(_vsn, sizeof(_vsn)))
 		return_0;
 
-	dm_strncpy(version, _vsn, size);
+	if (version &&
+	    !_dm_strncpy(version, _vsn, size))
+		return_0;
 
 	return 1;
 }
