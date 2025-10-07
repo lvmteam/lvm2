@@ -280,7 +280,12 @@ static int read_key_file(struct cmd_context *cmd, struct volume_group *vg,
 		if (line[0] == '#')
 			continue;
 
-		dm_strncpy(buf_key, line, sizeof(buf_key));
+		if (strncmp(line, "key: ", 5))
+			continue;
+
+		p = strchr(line, ' ') + 1;
+
+		dm_strncpy(buf_key, p, sizeof(buf_key));
 		break;
 	}
 
@@ -342,7 +347,7 @@ static int write_key_file(struct cmd_context *cmd, struct volume_group *vg, uint
 		return 0;
 	}
 
-	fprintf(fp, "0x%llx\n", (unsigned long long)key);
+	fprintf(fp, "key: 0x%llx\n", (unsigned long long)key);
 
 	if (fflush(fp))
 		log_debug("Failed to write/flush key file");
@@ -1024,6 +1029,19 @@ static int get_our_key_sanlock_start(struct cmd_context *cmd, struct volume_grou
 		goto read_keys;
 	}
 
+	/*
+	 * It's possible that the last persist_start wrote the key file with
+	 * a new generation, but sanlock was not started with that generation.
+	 * If persist_start now runs again using last_gen from the key file,
+	 * the gen used will be larger than what sanlock uses when it starts
+	 * the lockspace.  When lockstart completes successfully, it will
+	 * update the registered key and key file with the correct gen
+	 * matching the sanlock generation.  To avoid this issue of the key
+	 * gen advancing past the sanlock gen, we could have lockstart
+	 * add the actual gen it successfully started to the key file.
+	 * Then read_key_file() would use that value as last_gen rather
+	 * than taking the gen from the last key that it used.
+	 */
 	log_debug("last key from file: 0x%llx gen %u", (unsigned long long)our_key_val, last_gen);
 	goto done;
 
