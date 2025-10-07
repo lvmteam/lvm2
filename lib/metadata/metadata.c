@@ -2274,6 +2274,25 @@ static int _validate_lv_lock_args(struct logical_volume *lv)
 	return r;
 }
 
+/*
+ * Validate all tags in a list
+ * Returns 1 if all valid, 0 if any invalid
+ */
+static int _validate_tags(const struct dm_list *tags, const char *type, const char *name)
+{
+	struct dm_str_list *sl;
+	int valid = 1;
+
+	dm_list_iterate_items(sl, tags)
+		if (!validate_tag(sl->str)) {
+			log_error(INTERNAL_ERROR "%s %s tag %s has invalid form.",
+				  type, name, sl->str);
+			valid = 0;
+		}
+
+	return valid;
+}
+
 int vg_validate(struct volume_group *vg)
 {
 	struct pv_list *pvl;
@@ -2281,7 +2300,6 @@ int vg_validate(struct volume_group *vg)
 	struct glv_list *glvl;
 	struct historical_logical_volume *hlv;
 	struct lv_segment *seg;
-	struct dm_str_list *sl;
 	char uuid[64] __attribute__((aligned(8)));
 	char uuid2[64] __attribute__((aligned(8)));
 	int r = 1, rt;
@@ -2311,12 +2329,8 @@ int vg_validate(struct volume_group *vg)
 		return 0;
 	}
 
-	dm_list_iterate_items(sl, &vg->tags)
-		if (!validate_tag(sl->str)) {
-			log_error(INTERNAL_ERROR "VG %s tag %s has invalid form.",
-				  vg->name, sl->str);
-			r = 0;
-		}
+	if (!_validate_tags(&vg->tags, "VG", vg->name))
+		r = 0;
 
 	dm_list_iterate_items(pvl, &vg->pvs) {
 		if (++pv_count > vg->pv_count) {
@@ -2355,12 +2369,8 @@ int vg_validate(struct volume_group *vg)
 				  vg->name);
 		}
 
-		dm_list_iterate_items(sl, &pvl->pv->tags)
-			if (!validate_tag(sl->str)) {
-				log_error(INTERNAL_ERROR "PV %s tag %s has invalid form.",
-					  pv_dev_name(pvl->pv), sl->str);
-				r = 0;
-			}
+		if (!_validate_tags(&pvl->pv->tags, "PV", pv_dev_name(pvl->pv)))
+			r = 0;
 	}
 
 
@@ -2446,12 +2456,8 @@ int vg_validate(struct volume_group *vg)
 			r = 0;
 		}
 
-		dm_list_iterate_items(sl, &lvl->lv->tags)
-			if (!validate_tag(sl->str)) {
-				log_error(INTERNAL_ERROR "LV %s tag %s has invalid form.",
-					  lvl->lv->name, sl->str);
-				r = 0;
-			}
+		if (!_validate_tags(&lvl->lv->tags, "LV", lvl->lv->name))
+			r = 0;
 
 		if (lv_is_visible(lvl->lv))
 			lv_visible_count++;
