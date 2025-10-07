@@ -492,6 +492,53 @@ static int _merge_mirror_images(struct logical_volume *lv,
 				 MIRROR_IMAGE, first_seg(lv)->region_size);
 }
 
+/*
+ * Handle cleanup of a failed mirrored log during mirror image removal.
+ * This adds the mirrored log's sub-LVs to the orphan list and replaces
+ * the log with an error segment.
+ */
+static int _cleanup_failed_mirrored_log(struct logical_volume *lv,
+					struct logical_volume *detached_log_lv,
+					struct dm_list *tmp_orphan_lvs)
+{
+	struct lv_segment *seg;
+	uint32_t m;
+
+	if (!detached_log_lv || !lv_is_mirrored(detached_log_lv) ||
+	    !lv_is_partial(detached_log_lv))
+		return 1;
+
+	seg = first_seg(detached_log_lv);
+
+	log_very_verbose("%s being removed due to failures.",
+			 display_lvname(detached_log_lv));
+
+	/*
+	 * We are going to replace the mirror with an
+	 * error segment, but before we do, we must remember
+	 * all of the LVs that must be deleted later (i.e.
+	 * the sub-lv's)
+	 */
+	for (m = 0; m < seg->area_count; m++) {
+		seg_lv(seg, m)->status &= ~MIRROR_IMAGE;
+		lv_set_visible(seg_lv(seg, m));
+		if (!_add_lv_to_list(lv->vg->cmd->mem, tmp_orphan_lvs,
+				     seg_lv(seg, m)))
+			return_0;
+	}
+
+	if (!replace_lv_with_error_segment(detached_log_lv)) {
+		log_error("Failed error target substitution for %s.",
+			  display_lvname(detached_log_lv));
+		return 0;
+	}
+
+	if (!lv_update_and_reload(detached_log_lv))
+		return_0;
+
+	return 1;
+}
+
 /* Unlink the relationship between the segment and its log_lv */
 struct logical_volume *detach_mirror_log(struct lv_segment *mirrored_seg)
 {
@@ -866,7 +913,7 @@ static int _remove_mirror_images(struct logical_volume *lv,
 	struct logical_volume *sub_lv;
 	struct logical_volume *detached_log_lv = NULL;
 	struct logical_volume *temp_layer_lv = NULL;
-	struct lv_segment *seg, *pvmove_seg, *mirrored_seg = first_seg(lv);
+	struct lv_segment *pvmove_seg, *mirrored_seg = first_seg(lv);
 	uint32_t old_area_count = mirrored_seg->area_count;
 	uint32_t new_area_count = mirrored_seg->area_count;
 	struct lv_list *lvl;
@@ -1001,36 +1048,8 @@ static int _remove_mirror_images(struct logical_volume *lv,
 	 * have failed, we must replace with error target - it is
 	 * the only way to release the pending writes.
 	 */
-	if (detached_log_lv && lv_is_mirrored(detached_log_lv) &&
-	    lv_is_partial(detached_log_lv)) {
-		seg = first_seg(detached_log_lv);
-
-		log_very_verbose("%s being removed due to failures.",
-				 display_lvname(detached_log_lv));
-
-		/*
-		 * We are going to replace the mirror with an
-		 * error segment, but before we do, we must remember
-		 * all of the LVs that must be deleted later (i.e.
-		 * the sub-lv's)
-		 */
-		for (m = 0; m < seg->area_count; m++) {
-			seg_lv(seg, m)->status &= ~MIRROR_IMAGE;
-			lv_set_visible(seg_lv(seg, m));
-			if (!_add_lv_to_list(lv->vg->cmd->mem, &tmp_orphan_lvs,
-					     seg_lv(seg, m)))
-				return_0;
-		}
-
-		if (!replace_lv_with_error_segment(detached_log_lv)) {
-			log_error("Failed error target substitution for %s.",
-				  display_lvname(detached_log_lv));
-			return 0;
-		}
-
-		if (!lv_update_and_reload(detached_log_lv))
-			return_0;
-	}
+	if (!_cleanup_failed_mirrored_log(lv, detached_log_lv, &tmp_orphan_lvs))
+		return_0;
 
 	if (!collapse) {
 		dm_list_iterate_items(lvl, &tmp_orphan_lvs) {
