@@ -679,8 +679,8 @@ int lm_init_vg_sanlock(char *ls_name, char *vg_name, uint32_t flags, char *vg_ar
 	char lock_args_version[MAX_VERSION+1];
 	const char *gl_name = NULL;
 	uint32_t rs_flags;
-	uint32_t daemon_version;
-	uint32_t daemon_proto;
+	uint32_t daemon_version = 0;
+	uint32_t daemon_proto = 0;
 	uint64_t offset;
 	uint64_t dev_size;
 	int sector_size = 0;
