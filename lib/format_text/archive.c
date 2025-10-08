@@ -146,8 +146,11 @@ static struct dm_list *_scan_archive(struct dm_pool *mem,
 		if (strcmp(vgname, vgname_found))
 			continue;
 
-		if (!(name = dm_pool_strdup(mem, dirent[i]->d_name)))
-			goto_out;
+		if (!(name = dm_pool_strdup(mem, dirent[i]->d_name))) {
+			log_error("Couldn't copy archive name.");
+			results = NULL;
+			goto out;
+		}
 
 		/*
 		 * Create a new archive_file.
