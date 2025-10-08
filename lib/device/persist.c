@@ -1676,7 +1676,9 @@ int persist_vgremove_before(struct cmd_context *cmd, struct volume_group *vg, st
 
 void persist_vgremove_after(struct cmd_context *cmd, struct volume_group *vg, struct dm_list *devs, char *key)
 {
-	_run_stop(cmd, vg, devs, key, 0);
+	if (!_run_stop(cmd, vg, devs, key, 0))
+		stack;
+
 	persist_key_file_remove(cmd, vg);
 }
 
