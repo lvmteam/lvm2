@@ -409,8 +409,6 @@ static struct logical_volume *_set_up_pvmove_lv(struct cmd_context *cmd,
 			 * for collocation (e.g. *rmeta_0 -> *rimage_0).
 			 *
 			 * Callee checks for lv_name and valid raid segment type.
-			 *
-			 * FIXME: don't rely on namespace
 			 */
 			if (!_remove_sibling_pvs_from_trim_list(lv, lv_name, &trim_list))
 				return_NULL;
