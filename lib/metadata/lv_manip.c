@@ -8695,6 +8695,100 @@ static int _align_segment_boundary_to_pe_range(struct logical_volume *lv_where,
 }
 
 /*
+ * Split segments that exceed the pvmove_max_segment_size limit.
+ * This ensures that pvmove operations don't mirror excessively large
+ * chunks at once. Returns 1 on success, 0 on error.
+ */
+static int _split_large_segments_for_pvmove(struct cmd_context *cmd,
+					    struct logical_volume *lv_where,
+					    uint64_t status,
+					    struct pv_list *pvl)
+{
+	const uint32_t extent_size = lv_where->vg->extent_size;
+	struct lv_segment *seg;
+	uint64_t max_seg_size_mb;	/* Size in MiB (can be very large) */
+	uint32_t max_seg_extents;	/* Size in extents (limited to 32-bit) */
+	uint32_t max_aligned_extents;	/* Stripe size aligned extents */
+	uint32_t segment_extents;	/* Segment size in extents */
+	uint32_t split_le;
+	uint32_t s;
+
+	/* Only apply size limit for PVMOVE operations */
+	if (!(status & PVMOVE))
+		return 1;
+
+	/* Get configured maximum segment size in MiB (0 means unlimited) */
+	max_seg_size_mb = find_config_tree_int(cmd, allocation_pvmove_max_segment_size_mb_CFG, NULL);
+
+	if (!max_seg_size_mb)
+		return 1; /* No limit configured */
+
+	/* Convert MiB to extents (always at least 1 extent), round down */
+	max_seg_extents = (max_seg_size_mb << (20 - SECTOR_SHIFT)) / extent_size;
+	if (!max_seg_extents)
+		max_seg_extents = 1;
+	log_debug("Pvmove max segment size: %s (%u extent(s)).",
+		  display_mb_size(cmd, max_seg_size_mb), max_seg_extents);
+
+	/* Iterate through segments and split any that exceed the limit */
+	dm_list_iterate_items(seg, &lv_where->segments) {
+
+		/* Only process segments on the specified PV */
+		for (s = 0; s < seg->area_count; s++) {
+			if (!_match_seg_area_to_pe_range(seg, s, pvl))
+				continue;
+
+			if (seg->area_count < 2)
+				max_aligned_extents = max_seg_extents; /* Aligned */
+			else {
+				/* Align to whole stripe (always at least 1), round down */
+				max_aligned_extents = max_seg_extents / seg->area_count;
+				if (!max_aligned_extents)
+					max_aligned_extents = seg->area_count;
+				else
+					max_aligned_extents *= seg->area_count;
+			}
+
+			if (max_aligned_extents != max_seg_extents)
+				log_debug("Max segment extent count alinged to stripe: %u.",
+					  max_aligned_extents);
+
+			/* area_len is per stripe, multiply to get total logical extents */
+			segment_extents = seg->area_len * seg->area_count;
+
+			if (segment_extents <= max_aligned_extents) {
+				log_debug("Segment %s:%u-%u (%s) within limit.",
+					  lv_where->name, seg->le, seg->le + segment_extents - 1,
+					  display_size(cmd, segment_extents * (uint64_t)extent_size));
+				continue; /* Segment extent size is within limit */
+			}
+
+			log_verbose("Splitting %s segment %s:%u-%u (%s) into %s chunks.",
+				    lv_where->name, lv_where->name,
+				    seg->le, seg->le + segment_extents - 1,
+				    display_size(cmd, segment_extents * (uint64_t)extent_size),
+				    display_size(cmd, max_aligned_extents * (uint64_t)extent_size));
+
+			/* Split the segment into smaller chunks */
+			for(split_le = max_aligned_extents; /* Initial split after 1st. chunk */
+			    split_le < segment_extents; split_le += max_aligned_extents) {
+				if (!lv_split_segment(lv_where, seg->le + split_le)) {
+					log_error("Failed to split segment at LE %u.", seg->le + split_le);
+					return 0;
+				}
+				log_debug("Split segment of %s at LE %u.",
+					  display_lvname(lv_where), seg->le + split_le);
+			}
+
+			/* All splits for this segment are done, continue to next segment */
+			break;
+		}
+	}
+
+	return 1;
+}
+
+/*
  * Scan lv_where for segments on a PV in pvl, and for each one found
  * append a linear segment to lv_layer and insert it between the two.
  *
@@ -8717,6 +8811,10 @@ int insert_layer_for_segments_on_pv(struct cmd_context *cmd,
 	log_very_verbose("Inserting layer %s for segments of %s on %s",
 			 layer_lv->name, lv_where->name,
 			 pvl ? pv_dev_name(pvl->pv) : "any");
+
+	/* Split large segments into chunks if size limit is configured */
+	if (!_split_large_segments_for_pvmove(cmd, lv_where, status, pvl))
+		return_0;
 
 	if (!_align_segment_boundary_to_pe_range(lv_where, pvl))
 		return_0;
