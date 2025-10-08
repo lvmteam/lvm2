@@ -2197,7 +2197,7 @@ static int _add_metadata_area_to_pv(struct physical_volume *pv,
 
 	if (!(mdac = dm_pool_zalloc(pv->fid->mem, sizeof(struct mda_context)))) {
 		log_error("struct mda_context allocation failed");
-		free(mda);
+		dm_pool_free(pv->fid->mem, mda);
 		return 0;
 	}
 
