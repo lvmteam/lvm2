@@ -1,5 +1,9 @@
 Version 2.03.36 - 
 ==================
+  Fix driver_version() accepts NULL version buffer pointer.
+  Fix invalid free() call in error path of _add_metadata_area_to_pv().
+  Avoid destroying aio context in forked process.
+  Add lvs -o cache_promotions,cache_promotions fields.
   Update pvmove logic when moving i.e. raid legs.
   Display integrity info in lvdisplay.
   Increase storage size for internal filter chain.
