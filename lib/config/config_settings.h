@@ -676,6 +676,15 @@ cfg(allocation_cache_pool_max_chunks_CFG, "cache_pool_max_chunks", allocation_CF
 	"For cache target v1.9 the recommended maximum is 1000000 chunks.\n"
 	"Using cache pool with more chunks may degrade cache performance.\n")
 
+cfg(allocation_pvmove_max_segment_size_mb_CFG, "pvmove_max_segment_size_mb", allocation_CFG_SECTION, CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, DEFAULT_PVMOVE_MAX_SEGMENT_SIZE_MB, vsn(2, 3, 36), NULL, 0, NULL,
+	"Maximum size in MiB of segments to mirror at once during pvmove.\n"
+	"When pvmove needs to move large segments, it will split them into\n"
+	"smaller chunks of this size, mirror each chunk, and update metadata\n"
+	"between chunks. This prevents mirroring excessively large amounts\n"
+	"of data at once. A value of 0 (default) means no limit - the entire\n"
+	"segment will be mirrored at once. Setting this to e.g. 10240 will\n"
+	"limit each mirroring operation to 10GiB chunks.\n")
+
 cfg(allocation_thin_pool_metadata_require_separate_pvs_CFG, "thin_pool_metadata_require_separate_pvs", allocation_CFG_SECTION, CFG_DEFAULT_COMMENTED, CFG_TYPE_BOOL, DEFAULT_THIN_POOL_METADATA_REQUIRE_SEPARATE_PVS, vsn(2, 2, 89), NULL, 0, NULL,
 	"Thin pool metadata and data will always use different PVs.\n")
 
