@@ -777,7 +777,7 @@ int check_vdo_constrains(struct cmd_context *cmd, const struct vdo_pool_size_con
 	uint64_t req_mb, total_mb, available_mb;
 	uint64_t phy_mb = _round_sectors_to_tib(VDO_PHYSICAL_MEMORY_MB_FACTOR_PER_TIB * cfg->physical_size);
 	uint64_t virt_mb = _round_1024(VDO_VIRTUAL_MEMORY_MB_FACTOR_PER_TIB * _round_sectors_to_tib(cfg->virtual_size));
-	uint64_t cache_mb = _round_1024(VDO_CACHE_MEMORY_MB_FACTOR * cfg->block_map_cache_size_mb);
+	uint64_t cache_mb = _round_1024(VDO_CACHE_MEMORY_MB_FACTOR * (uint64_t)cfg->block_map_cache_size_mb);
 	char msg[VDO_MSG_BUF_SIZE];
 	size_t mlen = sizeof(msg);
 	char *pmsg = msg;
