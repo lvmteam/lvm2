@@ -137,6 +137,8 @@ void free_po_list(struct dm_list *list)
 		dm_list_del(&po->list);
 		free(po);
 	}
+
+	dm_list_init(list);     /* Coverity will see empty initialized list */
 }
 
 int get_pvs_online(struct dm_list *pvs_online, const char *vgname)
