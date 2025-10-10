@@ -71,7 +71,7 @@ static uint64_t _lv_size_bytes_to_integrity_meta_bytes(uint64_t lv_size_bytes, u
 		/* for calculating the metadata LV size for the specified
 		   journal size, round the specified journal size up to the
 		   nearest extent.  extent_size is in sectors. */
-		initial_bytes = dm_round_up(journal_sectors, (int64_t)extent_size) * 512;
+		initial_bytes = dm_round_up(journal_sectors, (uint64_t)extent_size) * 512;
 		goto out;
 	}
 
@@ -115,8 +115,9 @@ static int _lv_create_integrity_metadata(struct cmd_context *cmd,
 		.alloc = ALLOC_INHERIT,
 		.major = -1,
 		.minor = -1,
+		.lv_name = metaname,
 		.permission = LVM_READ | LVM_WRITE,
-		.pvh = &vg->pvs,
+		.pvh = lp->pvh,
 		.read_ahead = DM_READ_AHEAD_NONE,
 		.stripes = 1,
 		.vg_name = vg->name,
@@ -132,9 +133,7 @@ static int _lv_create_integrity_metadata(struct cmd_context *cmd,
 		return 0;
 	}
 
-	lp_meta.lv_name = metaname;
-	lp_meta.pvh = lp->pvh;
-
+	/* the calculated meta_bytes value is always a multiple of 4MB, do not round again */
 	lv_size_bytes = (uint64_t)lp->extents * (uint64_t)vg->extent_size * 512;
 	meta_bytes = _lv_size_bytes_to_integrity_meta_bytes(lv_size_bytes, settings->journal_sectors, vg->extent_size);
 	meta_sectors = meta_bytes / 512;
@@ -207,6 +206,7 @@ int lv_extend_integrity_in_raid(struct logical_volume *lv, struct dm_list *pvh)
 			return 0;
 		}
 
+		/* the calculated meta_bytes value is always a multiple of 4MB, do not round again */
 		lv_size_bytes = lv_iorig->size * 512;
 		meta_bytes = _lv_size_bytes_to_integrity_meta_bytes(lv_size_bytes, 0, 0);
 		meta_sectors = meta_bytes / 512;
