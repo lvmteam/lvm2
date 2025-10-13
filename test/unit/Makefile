@@ -32,8 +32,6 @@ UNIT_SOURCE=\
 	test/unit/string_t.c \
 	test/unit/vdo_t.c
 
-test/unit/radix_tree_t.o: test/unit/rt_case1.c
-
 UNIT_TARGET = test/unit/unit-test
 UNIT_DEPENDS = $(UNIT_SOURCE:%.c=%.d)
 UNIT_OBJECTS = $(UNIT_SOURCE:%.c=%.o)
