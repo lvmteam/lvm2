@@ -123,4 +123,5 @@ reboot:
   script:
     - reboot
   allow_failure: true
+  when: always
 
