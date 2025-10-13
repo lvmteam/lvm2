@@ -158,11 +158,6 @@ static int _lv_create_integrity_metadata(struct cmd_context *cmd,
 		return 0;
 	}
 
-	if (dm_list_size(&lv->segments) > 1) {
-		log_error("Integrity metadata uses more than one segment.");
-		return 0;
-	}
-
 	*meta_lv = lv;
 	return 1;
 }
