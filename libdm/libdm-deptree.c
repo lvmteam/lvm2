@@ -2906,8 +2906,8 @@ int dm_tree_preload_children(struct dm_tree_node *dnode,
 
 	/* Preload children first */
 	while ((child = dm_tree_next_child(&handle, dnode, 0))) {
-		/* Propagate prohibition of delay of resume from parent node */
-		if (dnode->props.delay_resume_if_new != 1)
+		/* Propagate delay of resume from parent node */
+		if (dnode->props.delay_resume_if_new > 1)
 			child->props.delay_resume_if_new = dnode->props.delay_resume_if_new;
 
 		/* Skip existing non-device-mapper devices */
