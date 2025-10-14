@@ -18,7 +18,7 @@ SKIP_WITH_LOW_SPACE=256
 
 aux have_integrity 1 5 0 || skip
 
-which mkfs.xfs || skip
+which mkfs.ext4 || skip
 mnt="mnt"
 mkdir -p $mnt
 
@@ -39,7 +39,7 @@ _prepare_vg() {
 }
 
 _add_data_to_lv() {
-        mkfs.xfs -f "$DM_DEV_DIR/$vg/$lv1"
+        mkfs.ext4 "$DM_DEV_DIR/$vg/$lv1"
 
         mount "$DM_DEV_DIR/$vg/$lv1" $mnt
 
