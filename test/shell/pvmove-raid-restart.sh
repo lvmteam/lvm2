@@ -51,15 +51,15 @@ dmsetup table
 #
 vgchange -ay $vg
 
-# Leave pvmove to finish fast.
-aux enable_dev "$dev4"
-sleep 5
-
 check lv_attr_bit health $vg/${lv1}_rimage_0 "-"
 check lv_attr_bit health $vg/${lv1}_rimage_1 "-"
 check lv_attr_bit health $vg/${lv2}_rimage_0 "-"
 check lv_attr_bit health $vg/${lv2}_rimage_1 "-"
 check lv_field $vg/$lv1 lv_health_status ""
 check lv_field $vg/$lv1 lv_health_status ""
+
+# Leave pvmove to finish fast.
+aux enable_dev "$dev4"
+sleep 4
 
 vgremove -ff $vg
