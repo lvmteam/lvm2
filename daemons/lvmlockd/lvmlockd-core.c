@@ -1296,12 +1296,12 @@ static int lm_unlock(struct lockspace *ls, struct resource *r, struct action *ac
 	return rv;
 }
 
-static int lm_hosts(struct lockspace *ls, int notify)
+static int lm_hosts(struct lockspace *ls, int notify, int *hosts_unknown)
 {
 	if (ls->lm_type == LD_LM_DLM)
 		return lm_hosts_dlm(ls, notify);
 	else if (ls->lm_type == LD_LM_SANLOCK)
-		return lm_hosts_sanlock(ls, notify);
+		return lm_hosts_sanlock(ls, notify, hosts_unknown);
 	else if (ls->lm_type == LD_LM_IDM)
 		return lm_hosts_idm(ls, notify);
 	return -1;
@@ -2774,6 +2774,7 @@ static void *lockspace_thread_main(void *arg_in)
 	int wait_flag = 0;
 	int nodelay = 0;
 	int nocreate;
+	int hosts_unknown = 0;
 	int retry;
 	int rv;
 
@@ -2894,6 +2895,8 @@ static void *lockspace_thread_main(void *arg_in)
 
 			act->ls_generation = ls->generation;
 
+			hosts_unknown = 0;
+
 			if (act->op == LD_OP_KILL_VG && act->rt == LD_RT_VG) {
 				/* Continue processing until DROP_VG arrives. */
 				log_debug("S %s kill_vg", ls->name);
@@ -2940,7 +2943,7 @@ static void *lockspace_thread_main(void *arg_in)
 			if (act->op == LD_OP_FREE && act->rt == LD_RT_VG) {
 				/* vgremove */
 				log_debug("S %s checking for lockspace hosts", ls->name);
-				rv = lm_hosts(ls, 1);
+				rv = lm_hosts(ls, 1, &hosts_unknown);
 				if (rv) {
 					/*
 					 * rv < 0: error (don't remove)
@@ -2953,6 +2956,8 @@ static void *lockspace_thread_main(void *arg_in)
 					log_error("S %s lockspace hosts %d", ls->name, rv);
 					list_del(&act->list);
 					act->result = (rv < 0) ? rv : -EBUSY;
+					if (hosts_unknown)
+						act->flags |= LD_AF_HOSTS_UNKNOWN;
 					add_client_result(act);
 					continue;
 				}
@@ -2965,13 +2970,15 @@ static void *lockspace_thread_main(void *arg_in)
 
 			if (act->op == LD_OP_BUSY && act->rt == LD_RT_VG) {
 				log_debug("S %s checking if lockspace is busy", ls->name);
-				rv = lm_hosts(ls, 0);
+				rv = lm_hosts(ls, 0, &hosts_unknown);
 				if (rv < 0)
 					act->result = rv;
 				else if (rv)
 					act->result = -EBUSY;
 				else
 					act->result = 0;
+				if (hosts_unknown)
+					act->flags |= LD_AF_HOSTS_UNKNOWN;
 				list_del(&act->list);
 				add_client_result(act);
 				continue;
@@ -2995,7 +3002,7 @@ static void *lockspace_thread_main(void *arg_in)
 				}
 
 				/* check that we are the only lockspace user */
-				rv = lm_hosts(ls, 1);
+				rv = lm_hosts(ls, 1, &hosts_unknown);
 				if (rv) {
 					/*
 					 * rv < 0: error (don't remove)
@@ -3008,6 +3015,8 @@ static void *lockspace_thread_main(void *arg_in)
 					log_error("S %s setlockargs_before hosts %d", ls->name, rv);
 					list_del(&act->list);
 					act->result = (rv < 0) ? rv : -EBUSY;
+					if (hosts_unknown)
+						act->flags |= LD_AF_HOSTS_UNKNOWN;
 					add_client_result(act);
 					continue;
 				}
@@ -3024,11 +3033,13 @@ static void *lockspace_thread_main(void *arg_in)
 			if (act->op == LD_OP_RENAME_BEFORE && act->rt == LD_RT_VG) {
 				/* vgrename */
 				log_debug("S %s checking for lockspace hosts", ls->name);
-				rv = lm_hosts(ls, 1);
+				rv = lm_hosts(ls, 1, &hosts_unknown);
 				if (rv) {
 					log_error("S %s lockspace hosts %d", ls->name, rv);
 					list_del(&act->list);
 					act->result = (rv < 0) ? rv : -EBUSY;
+					if (hosts_unknown)
+						act->flags |= LD_AF_HOSTS_UNKNOWN;
 					add_client_result(act);
 					continue;
 				}
@@ -3239,7 +3250,7 @@ out_rem:
 
 	if (free_vg) {
 		log_debug("S %s checking for lockspace hosts", ls->name);
-		rv = lm_hosts(ls, 1);
+		rv = lm_hosts(ls, 1, NULL);
 		if (rv)
 			log_error("S %s other lockspace hosts %d", ls->name, rv);
 	}
@@ -4684,6 +4695,9 @@ static int client_send_result(struct client *cl, struct action *act)
 	
 	if (act->flags & LD_AF_SH_EXISTS)
 		strcat(result_flags, "SH_EXISTS,");
+
+	if (act->flags & LD_AF_HOSTS_UNKNOWN)
+		strcat(result_flags, "HOSTS_UNKNOWN,");
 
 	if (act->op == LD_OP_INIT || act->op == LD_OP_SETLOCKARGS_FINAL) {
 		/*

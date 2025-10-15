@@ -262,6 +262,9 @@ static void _flags_str_to_lockd_flags(const char *flags_str, uint32_t *lockd_fla
 
 	if (strstr(flags_str, "SH_EXISTS"))
 		*lockd_flags |= LD_RF_SH_EXISTS;
+
+	if (strstr(flags_str, "HOSTS_UNKNOWN"))
+		*lockd_flags |= LD_RF_HOSTS_UNKNOWN;
 }
 
 static char *_owner_str(struct owner *owner)
@@ -1327,7 +1330,10 @@ int lockd_vg_is_busy(struct cmd_context *cmd, struct volume_group *vg)
 	}
 
 	if (result == -EBUSY) {
-		log_error("Lockspace for \"%s\" not stopped on other hosts", vg->name);
+		if (lockd_flags & LD_RF_HOSTS_UNKNOWN)
+			log_error("Lockspace for \"%s\" has unknown host state (wait and retry)", vg->name);
+		else
+			log_error("Lockspace for \"%s\" not stopped on other hosts", vg->name);
 		ret = 1;
 	} else if (result < 0) {
 		log_error("Lockspace busy check error %d for \"%s\"", result, vg->name);
@@ -1396,7 +1402,10 @@ static int _free_vg_sanlock(struct cmd_context *cmd, struct volume_group *vg)
 	 * VG.  Once other hosts stop using the VG it can be removed.
 	 */
 	if (result == -EBUSY) {
-		log_error("Lockspace for \"%s\" not stopped on other hosts", vg->name);
+		if (lockd_flags & LD_RF_HOSTS_UNKNOWN)
+			log_error("Lockspace for \"%s\" has unknown host state (wait and retry)", vg->name);
+		else
+			log_error("Lockspace for \"%s\" not stopped on other hosts", vg->name);
 		goto out;
 	} else if (result == -ENOLS) {
 		log_error("Lockspace for \"%s\" is not started.", vg->name);
@@ -4316,6 +4325,7 @@ int lockd_free_lv(struct cmd_context *cmd, struct volume_group *vg,
 int lockd_rename_vg_before(struct cmd_context *cmd, struct volume_group *vg)
 {
 	daemon_reply reply;
+	uint32_t lockd_flags = 0;
 	int result;
 	int ret;
 
@@ -4350,7 +4360,7 @@ int lockd_rename_vg_before(struct cmd_context *cmd, struct volume_group *vg)
 			"vg_lock_args = %s", vg->lock_args,
 			NULL);
 
-	if (!_lockd_result(cmd, "rename_vg_before", reply, &result, NULL, NULL, NULL)) {
+	if (!_lockd_result(cmd, "rename_vg_before", reply, &result, &lockd_flags, NULL, NULL)) {
 		ret = 0;
 	} else {
 		ret = (result < 0) ? 0 : 1;
@@ -4360,7 +4370,10 @@ int lockd_rename_vg_before(struct cmd_context *cmd, struct volume_group *vg)
 
 	/* Other hosts have not stopped the lockspace. */
 	if (result == -EBUSY) {
-		log_error("Lockspace for \"%s\" not stopped on other hosts", vg->name);
+		if (lockd_flags & LD_RF_HOSTS_UNKNOWN)
+			log_error("Lockspace for \"%s\" has unknown host state (wait and retry)", vg->name);
+		else
+			log_error("Lockspace for \"%s\" not stopped on other hosts", vg->name);
 		return 0;
 	}
 	
@@ -4744,7 +4757,14 @@ int lockd_setlockargs(struct cmd_context *cmd, struct volume_group *vg, const ch
 	}
 
 	if (result == -EBUSY) {
-		log_error("Lockspace for \"%s\" not stopped on other hosts", vg->name);
+		if (lockd_flags & LD_RF_HOSTS_UNKNOWN)
+			log_error("Lockspace for \"%s\" has unknown host state (wait and retry)", vg->name);
+		else
+			log_error("Lockspace for \"%s\" not stopped on other hosts", vg->name);
+		ret = 0;
+		goto out;
+	} else if (result == -EPROTONOSUPPORT) {
+		log_error("Lock manager does not support the specified lock args.");
 		ret = 0;
 		goto out;
 	} else if (result == -ENOTEMPTY) {

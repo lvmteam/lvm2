@@ -124,6 +124,7 @@ struct client {
 #define LD_AF_NODELAY              0x00400000
 #define LD_AF_REPAIR		   0x00800000
 #define LD_AF_NO_TIMEOUT	   0x01000000
+#define LD_AF_HOSTS_UNKNOWN	   0x02000000
 
 /*
  * Number of times to repeat a lock request after
@@ -616,7 +617,7 @@ int lm_unlock_sanlock(struct lockspace *ls, struct resource *r,
 		      uint32_t r_version, uint32_t lmu_flags);
 int lm_able_gl_sanlock(struct lockspace *ls, int enable);
 int lm_ex_disable_gl_sanlock(struct lockspace *ls);
-int lm_hosts_sanlock(struct lockspace *ls, int notify);
+int lm_hosts_sanlock(struct lockspace *ls, int notify, int *hosts_unknown);
 int lm_rem_resource_sanlock(struct lockspace *ls, struct resource *r);
 int lm_gl_is_enabled(struct lockspace *ls);
 int lm_get_lockspaces_sanlock(struct list_head *ls_rejoin);
@@ -704,7 +705,7 @@ static inline int lm_ex_disable_gl_sanlock(struct lockspace *ls)
 	return -1;
 }
 
-static inline int lm_hosts_sanlock(struct lockspace *ls, int notify)
+static inline int lm_hosts_sanlock(struct lockspace *ls, int notify, int *hosts_unknown)
 {
 	return -1;
 }

@@ -2656,7 +2656,7 @@ int lm_vg_status_sanlock(struct lockspace *ls, struct action *act)
  * If no other hosts are found (only ourself), returns 0.
  */
 
-int lm_hosts_sanlock(struct lockspace *ls, int notify)
+int lm_hosts_sanlock(struct lockspace *ls, int notify, int *hosts_unknown)
 {
 	struct sanlk_host *hss = NULL;
 	struct sanlk_host *hs;
@@ -2664,6 +2664,8 @@ int lm_hosts_sanlock(struct lockspace *ls, int notify)
 	int hss_count = 0;
 	int found_self = 0;
 	int found_others = 0;
+	int found_live = 0;
+	int found_unknown = 0;
 	int i, rv;
 
 	if (daemon_test)
@@ -2678,6 +2680,7 @@ int lm_hosts_sanlock(struct lockspace *ls, int notify)
 		 * there is one other host (busy).
 		 */
 		log_debug("S %s hosts_san no info, retry later", ls->name);
+		*hosts_unknown = 1;
 		return 1;
 	}
 
@@ -2707,11 +2710,15 @@ int lm_hosts_sanlock(struct lockspace *ls, int notify)
 		}
 
 		state = hs->flags & SANLK_HOST_MASK;
-		if ((state == SANLK_HOST_LIVE) || (state == SANLK_HOST_UNKNOWN))
-			found_others++;
+		if (state == SANLK_HOST_LIVE)
+			found_live++;
+		if (state == SANLK_HOST_UNKNOWN)
+			found_unknown++;
 		hs++;
 	}
 	free(hss);
+
+	found_others = found_live + found_unknown;
 
 	if (found_others && notify) {
 		/*
@@ -2731,6 +2738,9 @@ int lm_hosts_sanlock(struct lockspace *ls, int notify)
 		log_error("S %s hosts_san self not found others %d", ls->name, found_others);
 		return -1;
 	}
+
+	if (hosts_unknown && found_unknown && !found_live)
+		*hosts_unknown = 1;
 
 	return found_others;
 }
