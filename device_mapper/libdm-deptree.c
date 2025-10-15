@@ -3362,9 +3362,26 @@ int dm_tree_preload_children(struct dm_tree_node *dnode,
 
 	/* Preload children first */
 	while ((child = dm_tree_next_child(&handle, dnode, 0))) {
-		/* Propagate delay of resume from parent node */
-		if (dnode->props.delay_resume_if_new > 1)
-			child->props.delay_resume_if_new = dnode->props.delay_resume_if_new;
+		/* When a parent node (other than root) is inactive, we cannot delay
+		 * the resume of a new device.
+		 * For example, preloading a RAID table with a pvmoved leg requires the
+		 * leg LV to be active before loading the RAID LV, so the pvmove device must
+		 * be resumed immediately.
+		 * This scenario only occurs when neither the RAID nor pvmove device has
+		 * been instantiated yet. In this case, starting the pvmove device does
+		 * not leak access to the PV device without going through the mirror target.
+		 * However, if the RAID is already active and running, we can only preload
+		 * the new pvmove device, and a full suspend must occur before resuming
+		 * the new table with the running pvmove. So until the resume point
+		 * any IO is going through the existing table line and not via pvmove target.
+		 */
+		if ((child->props.delay_resume_if_new > 1) &&
+		    !dnode->info.exists &&
+		    (dnode != &dnode->dtree->root)) { /* Ignore when parent is root node */
+			log_debug("%s with inactive parent cancels delay_resume_if_new.",
+				  _node_name(child));
+			child->props.delay_resume_if_new = 0;
+		}
 
 		/* Skip existing non-device-mapper devices */
 		if (!child->info.exists && child->info.major)
