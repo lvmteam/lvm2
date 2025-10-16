@@ -574,22 +574,6 @@ int radix_tree_uniq_insert(struct radix_tree *rt, const void *key, size_t keylen
 		((entries != rt->nr_entries) ? 1 : -1) : 0;
 }
 
-// Note the degrade functions also free the original node.
-static void _degrade_to_n4(struct node16 *n16, struct value *result)
-{
-	struct node4 *n4 = zalloc(sizeof(*n4));
-
-	assert(n4 != NULL);
-
-	n4->nr_entries = n16->nr_entries;
-	memcpy(n4->keys, n16->keys, n16->nr_entries * sizeof(*n4->keys));
-	memcpy(n4->values, n16->values, n16->nr_entries * sizeof(*n4->values));
-	free(n16);
-
-	result->type = NODE4;
-	result->value.ptr = n4;
-}
-
 static void _degrade_to_n16(struct node48 *n48, struct value *result)
 {
 	unsigned i, count = 0;
@@ -747,8 +731,9 @@ static bool _remove(struct radix_tree *rt, struct value *root, const uint8_t *kb
 					}
 
 					n16->nr_entries--;
-					if (n16->nr_entries <= 4) {
-						_degrade_to_n4(n16, root);
+					if (!n16->nr_entries) {
+						free(n16);
+						root->type = UNSET;
 					}
 				}
 				return r;
@@ -903,8 +888,10 @@ static bool _remove_subtree(struct radix_tree *rt, struct value *root, const uin
 					}
 
 					n16->nr_entries--;
-					if (n16->nr_entries <= 4)
-						_degrade_to_n4(n16, root);
+					if (!n16->nr_entries) {
+						free(n16);
+						root->type = UNSET;
+					}
 				}
 				return r;
 			}
