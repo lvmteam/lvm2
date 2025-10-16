@@ -191,8 +191,8 @@ static bool _insert_unset(struct radix_tree *rt, struct value *v, const uint8_t 
 		v->value = rv;
 		rt->nr_entries++;
 	} else {
-		// prefix -> value
-		struct prefix_chain *pc = zalloc(sizeof(*pc) + len);
+		// prefix -> value (all fields explicitly initialized)
+		struct prefix_chain *pc = malloc(sizeof(*pc) + len);
 		if (!pc)
 			return false;
 
@@ -267,7 +267,8 @@ static bool _insert_prefix_chain(struct radix_tree *rt, struct value *v, const u
 			if (kb[i] != pc->prefix[i])
 				break;
 
-		if (!(pc2 = zalloc(sizeof(*pc2) + pc->len - i)))
+		// All fields of pc2 are explicitly initialized
+		if (!(pc2 = malloc(sizeof(*pc2) + pc->len - i)))
 			return false;
 		pc2->len = pc->len - i;
 		memmove(pc2->prefix, pc->prefix + i, pc2->len);
@@ -444,7 +445,8 @@ static bool _insert(struct radix_tree *rt, struct value *v, const uint8_t *kb, c
 			v->value = rv;
 
 		} else {
-			struct value_chain *vc = zalloc(sizeof(*vc));
+			// All fields explicitly initialized
+			struct value_chain *vc = malloc(sizeof(*vc));
 			if (!vc)
 				return false;
 
@@ -668,9 +670,10 @@ static bool _remove(struct radix_tree *rt, struct value *root, const uint8_t *kb
 			return true;
 
 		} else if (root->type == VALUE_CHAIN) {
+			// Free value_chain after copying child out
 			vc = root->value.ptr;
 			_dtr(rt, vc->value);
-			memcpy(root, &vc->child, sizeof(*root));
+			*root = vc->child;
 			free(vc);
 			return true;
 
