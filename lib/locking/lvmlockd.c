@@ -1486,6 +1486,10 @@ int lockd_start_vg(struct cmd_context *cmd, struct volume_group *vg, int *exists
 		return_0;
 
 	if (!strcmp(lock_type, "sanlock")) {
+		if (!vg->sanlock_lv) {
+			log_error("Missing internal lvmlock LV for sanlock.");
+			return 0;
+		}
 		/*
 		 * This is the big difference between starting
 		 * sanlock vgs vs starting dlm vgs: the internal
@@ -1545,6 +1549,7 @@ int lockd_start_vg(struct cmd_context *cmd, struct volume_group *vg, int *exists
 	switch (result) {
 	case 0:
 		log_print_unless_silent("VG %s starting %s lockspace", vg->name, lock_type);
+		ret = 1;
 		break;
 	case -ELOCKD:
 		log_error("VG %s start failed: lvmlockd not available", vg->name);
@@ -1576,6 +1581,12 @@ int lockd_start_vg(struct cmd_context *cmd, struct volume_group *vg, int *exists
 		break;
 	default:
 		log_error("VG %s start failed: %d", vg->name, result);
+	}
+
+	if (!ret && !strcmp(lock_type, "sanlock")) {
+		log_debug("lockd_starg_vg result %d deactivate sanlock lv", result);
+		if (!_deactivate_sanlock_lv(cmd, vg))
+			log_error("Failed to deactivate internal lvmlock LV for sanlock.");
 	}
 
 	/*
