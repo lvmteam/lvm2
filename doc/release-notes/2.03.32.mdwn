@@ -7,10 +7,10 @@ Version 2.03.32
 Mostly bugfix release:
 
 * Add support for using regex in selection criteria for string lists.
-* Accept thin pool data LV as cachable LV.
+* Accept thin pool data LV as cacheable LV.
 * Accept `--autobackup` option in pvresize.
 * Allow using zram block devices (likely for testing).
-* Lvconvert vdopool conversion propperly validates acceptable LVs.
+* Lvconvert vdopool conversion properly validates acceptable LVs.
 * Fix lvresize when resizing COW snapshots already covering origin.
 * Fix lvmdbusd read of executed lvm commands output.
 * Fix construction of DM UUID for cachevol `_cdata` and `_cmeta` devices.

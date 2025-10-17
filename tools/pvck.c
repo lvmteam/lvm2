@@ -964,7 +964,7 @@ static int _dump_current_text(struct device *dev, struct devicefile *def,
 		} else {
 			if (cft->root && cft->root->key) {
 				if (!(vgname = strdup(cft->root->key))) {
-					log_error("Falied to allocate vgname.");
+					log_error("Failed to allocate vgname.");
 					goto out;
 				}
 			}

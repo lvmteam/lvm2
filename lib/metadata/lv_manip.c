@@ -8750,7 +8750,7 @@ static int _split_large_segments_for_pvmove(struct cmd_context *cmd,
 			}
 
 			if (max_aligned_extents != max_seg_extents)
-				log_debug("Max segment extent count alinged to stripe: %u.",
+				log_debug("Max segment extent count aligned to stripe: %u.",
 					  max_aligned_extents);
 
 			/* area_len is per stripe, multiply to get total logical extents */

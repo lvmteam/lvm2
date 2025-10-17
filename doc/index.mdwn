@@ -91,7 +91,7 @@ incorrectly!
 
   To change size of LV it is recommended to use [lvresize(8)](https://man7.org/linux/man-pages/man8/lvresize.8.html) with `--resizefs` option.
 
-  To change properties of LV (e.g. to acivate/deactivate a volume, or change it to read only) use [lvchange(8)](https://man7.org/linux/man-pages/man8/lvchange.8.html).
+  To change properties of LV (e.g. to activate/deactivate a volume, or change it to read only) use [lvchange(8)](https://man7.org/linux/man-pages/man8/lvchange.8.html).
 
   To change the type of LV (e.g. change a linear volume to a RAID) use [lvconvert(8)](https://man7.org/linux/man-pages/man8/lvconvert.8.html).
 
