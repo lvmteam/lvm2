@@ -1,5 +1,6 @@
 Version 2.03.36 - 
 ==================
+  Use -real suffix for pvmove UUID.
   Add support pvmove segmentation allocation/pvmove_max_segmentation_size_mb.
   Fix driver_version() accepts NULL version buffer pointer.
   Fix invalid free() call in error path of _add_metadata_area_to_pv().
