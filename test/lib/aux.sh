@@ -2003,8 +2003,8 @@ have_raid_resizable() {
 	# array resync, so it's better to skip the test for affected kernels.
 	case "$(uname -r)" in
 	  6.1[34]*) return 1 ;;
-	  5.14.0-61*.el9.*) return 1 ;; # Kernel is missing fixing commit!
-	  6.12.0-12[456]*.el10.*) return 1 ;; # -- '' --
+	  5.14.0-6[12]*.el9.*) return 1 ;; # Kernel is missing fixing commit!
+	  6.12.0-12[456]*.el10*) return 1 ;; # -- '' --
 	esac
 }
 
