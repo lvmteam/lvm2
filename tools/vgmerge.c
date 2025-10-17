@@ -20,7 +20,7 @@ static struct volume_group *_vgmerge_vg_read(struct cmd_context *cmd,
 {
 	struct volume_group *vg;
 	log_verbose("Checking for volume group \"%s\"", vg_name);
-	vg = vg_read_for_update(cmd, vg_name, NULL, 0, 0);
+	vg = vg_read_for_update(cmd, vg_name, NULL, 0);
 	if (!vg)
 		return NULL;
 

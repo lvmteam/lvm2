@@ -26,6 +26,7 @@
 #include "lib/metadata/vg.h"
 #include "lib/metadata/lv.h"
 #include "lib/misc/lvm-percent.h"
+#include "lib/locking/lvmlockd.h"
 #include <stdbool.h>
 
 #define MAX_STRIPES 128U
@@ -750,10 +751,10 @@ int lv_extend_policy_calculate_percent(struct logical_volume *lv,
                                        uint32_t *amount, uint32_t *meta_amount);
 
 struct volume_group *vg_read(struct cmd_context *cmd, const char *vg_name, const char *vgid,
-			     uint32_t read_flags, uint32_t lockd_state,
+			     uint32_t read_flags, struct lockd_state *lks,
 			     uint32_t *error_flags, struct volume_group **error_vg);
 struct volume_group *vg_read_for_update(struct cmd_context *cmd, const char *vg_name,
-			 const char *vgid, uint32_t read_flags, uint32_t lockd_state);
+			 const char *vgid, uint32_t read_flags);
 struct volume_group *vg_read_orphans(struct cmd_context *cmd, const char *orphan_vgname);
 
 /* pe_start and pe_end relate to any existing data so that new metadata
@@ -1489,10 +1490,6 @@ int vgcreate_params_validate(struct cmd_context *cmd,
 int validate_vg_rename_params(struct cmd_context *cmd,
 			      const char *vg_name_old,
 			      const char *vg_name_new);
-
-int is_lockd_type(const char *lock_type);
-int vg_is_shared(const struct volume_group *vg);
-int vg_is_sanlock(const struct volume_group *vg);
 
 int is_system_id_allowed(struct cmd_context *cmd, const char *system_id);
 

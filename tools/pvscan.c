@@ -666,7 +666,7 @@ static int _pvscan_aa_quick(struct cmd_context *cmd, struct pvscan_aa_params *pp
 	struct volume_group *vg;
 	struct pv_list *pvl;
 	const char *vgid;
-	uint32_t lockd_state = 0;
+	struct lockd_state lks = { 0 };
 	uint32_t error_flags = 0;
 	int ret = ECMD_PROCESSED;
 
@@ -723,7 +723,7 @@ static int _pvscan_aa_quick(struct cmd_context *cmd, struct pvscan_aa_params *pp
 
 	cmd->can_use_one_scan = 1;
 
-	vg = vg_read(cmd, vgname, vgid, READ_WITHOUT_LOCK | READ_FOR_ACTIVATE, lockd_state, &error_flags, NULL);
+	vg = vg_read(cmd, vgname, vgid, READ_WITHOUT_LOCK | READ_FOR_ACTIVATE, &lks, &error_flags, NULL);
 
 	if (!vg) {
 		/*

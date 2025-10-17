@@ -211,7 +211,7 @@ int vgimportclone(struct cmd_context *cmd, int argc, char **argv)
 	const char *vgname;
 	char base_vgname[NAME_LEN] = { 0 };
 	char tmp_vgname[NAME_LEN] = { 0 };
-	uint32_t lockd_state = 0;
+	struct lockd_state lks = { 0 };
 	uint32_t error_flags = 0;
 	unsigned int vgname_count;
 	int ret = ECMD_FAILED;
@@ -480,7 +480,7 @@ retry_name:
 	cmd->can_use_one_scan = 1;
 	cmd->include_exported_vgs = 1;
 
-	vg = vg_read(cmd, vp.old_vgname, NULL, READ_WITHOUT_LOCK | READ_FOR_UPDATE, lockd_state, &error_flags, &error_vg);
+	vg = vg_read(cmd, vp.old_vgname, NULL, READ_WITHOUT_LOCK | READ_FOR_UPDATE, &lks, &error_flags, &error_vg);
 	if (!vg) {
 		log_error("Failed to read VG %s from devices being imported.", vp.old_vgname);
 		unlock_vg(cmd, NULL, vp.old_vgname);

@@ -39,6 +39,35 @@ struct owner {
 	char *name;
 };
 
+/*
+ * Check if a lock_type uses lvmlockd.
+ * If not (none, clvm), return 0.
+ * If so (dlm, sanlock), return 1.
+ */
+
+int is_lockd_type(const char *lock_type)
+{
+	if (!lock_type)
+		return 0;
+	if (!strcmp(lock_type, "dlm"))
+		return 1;
+	if (!strcmp(lock_type, "sanlock"))
+		return 1;
+	if (!strcmp(lock_type, "idm"))
+		return 1;
+	return 0;
+}
+
+int vg_is_shared(const struct volume_group *vg)
+{
+	return (vg->lock_type && is_lockd_type(vg->lock_type));
+}
+
+int vg_is_sanlock(const struct volume_group *vg)
+{
+	return (vg->lock_type && !strcmp(vg->lock_type, "sanlock"));
+}
+
 void lvmlockd_set_socket(const char *sock)
 {
 	_lvmlockd_socket = sock;
@@ -2445,7 +2474,7 @@ int lockd_global(struct cmd_context *cmd, const char *def_mode)
  */
 
 int lockd_vg(struct cmd_context *cmd, const char *vg_name, const char *def_mode,
-	     uint32_t flags, uint32_t *lockd_state)
+	     uint32_t flags, struct lockd_state *lks)
 {
 	struct owner owner = { 0 };
 	uint64_t our_generation = 0;
@@ -2453,7 +2482,7 @@ int lockd_vg(struct cmd_context *cmd, const char *vg_name, const char *def_mode,
 	const char *mode = NULL;
 	const char *opts = NULL;
 	uint32_t lockd_flags;
-	uint32_t prev_state = *lockd_state;
+	uint32_t prev_flags = lks->flags;
 	int retries = 0;
 	int result;
 	int ret = 1;
@@ -2463,7 +2492,7 @@ int lockd_vg(struct cmd_context *cmd, const char *vg_name, const char *def_mode,
 	 * passed into vg_read where the lock result is needed once we
 	 * know if this is a local VG or lockd VG.
 	 */
-	*lockd_state = 0;
+	memset(lks, 0, sizeof(struct lockd_state));
 
 	if (!is_real_vg(vg_name))
 		return 1;
@@ -2501,7 +2530,7 @@ int lockd_vg(struct cmd_context *cmd, const char *vg_name, const char *def_mode,
 	 * passed back to lockd_vg() for the corresponding unlock.
 	 */
 	if (def_mode && !strcmp(def_mode, "un")) {
-		if (prev_state & LDST_FAIL)
+		if (prev_flags & LDST_FAIL)
 			return 1;
 
 		mode = "un";
@@ -2542,7 +2571,7 @@ int lockd_vg(struct cmd_context *cmd, const char *vg_name, const char *def_mode,
 	}
 
 	if (!strcmp(mode, "ex"))
-		*lockd_state |= LDST_EX;
+		lks->flags |= LDST_EX;
 
  req:
 	/*
@@ -2555,7 +2584,7 @@ int lockd_vg(struct cmd_context *cmd, const char *vg_name, const char *def_mode,
 	 * then check if the lock_type required lvmlockd or not.
 	 */
 	if (!_use_lvmlockd) {
-		*lockd_state |= LDST_FAIL_REQUEST;
+		lks->flags |= LDST_FAIL_REQUEST;
 		return 1;
 	}
 
@@ -2571,7 +2600,7 @@ int lockd_vg(struct cmd_context *cmd, const char *vg_name, const char *def_mode,
 		 * the lock_type can be checked.  We don't care about
 		 * this error for local VGs, but we do care for lockd VGs.
 		 */
-		*lockd_state |= LDST_FAIL_REQUEST;
+		lks->flags |= LDST_FAIL_REQUEST;
 		return 1;
 	}
 
@@ -2592,13 +2621,13 @@ int lockd_vg(struct cmd_context *cmd, const char *vg_name, const char *def_mode,
 		/* success */
 		break;
 	case -ENOLS:
-		*lockd_state |= LDST_FAIL_NOLS;
+		lks->flags |= LDST_FAIL_NOLS;
 		break;
 	case -ESTARTING:
-		*lockd_state |= LDST_FAIL_STARTING;
+		lks->flags |= LDST_FAIL_STARTING;
 		break;
 	default:
-		*lockd_state |= LDST_FAIL_OTHER;
+		lks->flags |= LDST_FAIL_OTHER;
 	}
 
 	/*

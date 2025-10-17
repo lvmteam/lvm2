@@ -155,7 +155,7 @@ int wait_for_single_lv(struct cmd_context *cmd, struct poll_operation_id *id,
 	struct volume_group *vg = NULL;
 	struct logical_volume *lv;
 	int finished = 0;
-	uint32_t lockd_state = 0;
+	struct lockd_state lks;
 	uint32_t error_flags = 0;
 	int is_lockd;
 	int ret;
@@ -179,13 +179,14 @@ int wait_for_single_lv(struct cmd_context *cmd, struct poll_operation_id *id,
 		 * An ex VG lock is needed because the check can call finish_copy
 		 * which writes the VG.
 		 */
-		if (is_lockd && !lockd_vg(cmd, id->vg_name, "ex", 0, &lockd_state)) {
+		memset(&lks, 0, sizeof(lks));
+		if (is_lockd && !lockd_vg(cmd, id->vg_name, "ex", 0, &lks)) {
 			log_error("ABORTING: Can't lock VG for %s.", id->display_name);
 			return 0;
 		}
 
 		/* Locks the (possibly renamed) VG again */
-		vg = vg_read(cmd, id->vg_name, NULL, READ_FOR_UPDATE, lockd_state, &error_flags, NULL);
+		vg = vg_read(cmd, id->vg_name, NULL, READ_FOR_UPDATE, &lks, &error_flags, NULL);
 		if (!vg) {
 			/* What more could we do here? */
 			if (error_flags & FAILED_NOTFOUND) {
@@ -233,7 +234,7 @@ int wait_for_single_lv(struct cmd_context *cmd, struct poll_operation_id *id,
 
 		unlock_and_release_vg(cmd, vg, vg->name);
 
-		if (is_lockd && !lockd_vg(cmd, id->vg_name, "un", 0, &lockd_state))
+		if (is_lockd && !lockd_vg(cmd, id->vg_name, "un", 0, &lks))
 			stack;
 
 		wait_before_testing = 1;
@@ -244,7 +245,7 @@ int wait_for_single_lv(struct cmd_context *cmd, struct poll_operation_id *id,
 out:
 	if (vg)
 		unlock_and_release_vg(cmd, vg, vg->name);
-	if (is_lockd && !lockd_vg(cmd, id->vg_name, "un", 0, &lockd_state))
+	if (is_lockd && !lockd_vg(cmd, id->vg_name, "un", 0, &lks))
 		stack;
 
 	return ret;
@@ -416,7 +417,7 @@ static int _report_progress(struct cmd_context *cmd, struct poll_operation_id *i
 {
 	struct volume_group *vg;
 	struct logical_volume *lv;
-	uint32_t lockd_state = 0;
+	struct lockd_state lks;
 	uint32_t error_flags = 0;
 	int ret;
 
@@ -430,7 +431,7 @@ static int _report_progress(struct cmd_context *cmd, struct poll_operation_id *i
 	 * change done locally.
 	 */
 
-	vg = vg_read(cmd, id->vg_name, NULL, 0, lockd_state, &error_flags, NULL);
+	vg = vg_read(cmd, id->vg_name, NULL, 0, &lks, &error_flags, NULL);
 	if (!vg) {
 		log_error("Can't reread VG for %s error flags %x", id->display_name, error_flags);
 		ret = 0;

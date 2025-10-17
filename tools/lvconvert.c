@@ -5855,7 +5855,8 @@ static int _lvconvert_detach_writecache_when_clean(struct cmd_context *cmd,
 	struct volume_group *vg;
 	struct logical_volume *lv;
 	struct logical_volume *lv_fast;
-	uint32_t lockd_state, error_flags;
+	struct lockd_state lks;
+	uint32_t error_flags;
 	uint64_t dirty;
 	int is_lockd;
 	int ret = 0;
@@ -5883,17 +5884,17 @@ static int _lvconvert_detach_writecache_when_clean(struct cmd_context *cmd,
 	 */
 
  retry:
-	lockd_state = 0;
+	memset(&lks, 0, sizeof(lks));
 	error_flags = 0;
 
-	if (is_lockd && !lockd_vg(cmd, id->vg_name, "ex", 0, &lockd_state)) {
+	if (is_lockd && !lockd_vg(cmd, id->vg_name, "ex", 0, &lks)) {
 		log_error("Detaching writecache interrupted - locking VG failed.");
 		return 0;
 	}
 
 	log_debug("detach writecache check clean reading vg %s", id->vg_name);
 
-	vg = vg_read(cmd, id->vg_name, NULL, READ_FOR_UPDATE, lockd_state, &error_flags, NULL);
+	vg = vg_read(cmd, id->vg_name, NULL, READ_FOR_UPDATE, &lks, &error_flags, NULL);
 
 	if (!vg) {
 		log_error("Detaching writecache interrupted - reading VG failed.");
@@ -5923,7 +5924,7 @@ static int _lvconvert_detach_writecache_when_clean(struct cmd_context *cmd,
 	if (!lv_writecache_is_clean(cmd, lv, &dirty)) {
 		unlock_and_release_vg(cmd, vg, vg->name);
 
-		if (is_lockd && !lockd_vg(cmd, id->vg_name, "un", 0, &lockd_state))
+		if (is_lockd && !lockd_vg(cmd, id->vg_name, "un", 0, &lks))
 			stack;
 
 		log_print_unless_silent("Detaching writecache cleaning %llu blocks", (unsigned long long)dirty);
@@ -5976,7 +5977,7 @@ out_release:
 	unlock_and_release_vg(cmd, vg, vg->name);
 
 out_lockd:
-	if (is_lockd && !lockd_vg(cmd, id->vg_name, "un", 0, &lockd_state))
+	if (is_lockd && !lockd_vg(cmd, id->vg_name, "un", 0, &lks))
 		stack;
 
 	return ret;

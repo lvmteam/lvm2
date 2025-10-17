@@ -585,7 +585,7 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 			return ECMD_FAILED;
 		}
 	} else {
-		if (!(vg_to = vg_read_for_update(cmd, vg_name_to, NULL, 0, 0))) {
+		if (!(vg_to = vg_read_for_update(cmd, vg_name_to, NULL, 0))) {
 			log_error("Failed to read VG %s.", vg_name_to);
 			return ECMD_FAILED;
 		}
@@ -598,7 +598,7 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 		}
 	}
 
-	if (!(vg_from = vg_read_for_update(cmd, vg_name_from, NULL, 0, 0))) {
+	if (!(vg_from = vg_read_for_update(cmd, vg_name_from, NULL, 0))) {
 		log_error("Failed to read VG %s.", vg_name_to);
 		unlock_and_release_vg(cmd, vg_to, vg_name_to);
 		return ECMD_FAILED;

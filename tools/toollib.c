@@ -845,8 +845,8 @@ int lv_change_activate(struct cmd_context *cmd, struct logical_volume *lv,
 		}
 
 		if (vg_is_shared(lv->vg)) {
-			uint32_t lockd_state = 0;
-			if (!lockd_vg(cmd, lv->vg->name, "ex", 0, &lockd_state)) {
+			struct lockd_state lks = {0};
+			if (!lockd_vg(cmd, lv->vg->name, "ex", 0, &lks)) {
 				log_error("Cannot activate uninitialized integrity LV %s without lock.",
 					  display_lvname(lv));
 				return 0;
@@ -2327,7 +2327,7 @@ static int _process_vgnameid_list(struct cmd_context *cmd, uint32_t read_flags,
 	struct vgnameid_list *vgnl;
 	const char *vg_name;
 	const char *vg_uuid;
-	uint32_t lockd_state = 0;
+	struct lockd_state lks;
 	uint32_t error_flags = 0;
 	int whole_selected = 0;
 	int ret_max = ECMD_PROCESSED;
@@ -2373,14 +2373,15 @@ static int _process_vgnameid_list(struct cmd_context *cmd, uint32_t read_flags,
 
 		log_very_verbose("Processing VG %s %s", vg_name, uuid);
 do_lockd:
-		if (is_lockd && !lockd_vg(cmd, vg_name, NULL, 0, &lockd_state)) {
+		memset(&lks, 0, sizeof(lks));
+		if (is_lockd && !lockd_vg(cmd, vg_name, NULL, 0, &lks)) {
 			stack;
 			ret_max = ECMD_FAILED;
 			report_log_ret_code(ret_max);
 			continue;
 		}
 
-		vg = vg_read(cmd, vg_name, vg_uuid, read_flags, lockd_state, &error_flags, &error_vg);
+		vg = vg_read(cmd, vg_name, vg_uuid, read_flags, &lks, &error_flags, &error_vg);
 		if (_ignore_vg(cmd, error_flags, error_vg, vg_name, arg_vgnames, read_flags, &skip, &notfound)) {
 			stack;
 			ret_max = ECMD_FAILED;
@@ -2423,7 +2424,7 @@ do_lockd:
 		unlock_vg(cmd, vg, vg_name);
 endvg:
 		release_vg(vg);
-		if (is_lockd && !lockd_vg(cmd, vg_name, "un", 0, &lockd_state))
+		if (is_lockd && !lockd_vg(cmd, vg_name, "un", 0, &lks))
 			stack;
 
 		log_set_report_object_name_and_id(NULL, NULL);
@@ -4011,7 +4012,7 @@ static int _process_lv_vgnameid_list(struct cmd_context *cmd, uint32_t read_flag
 	struct dm_str_list *sl;
 	struct dm_list *tags_arg;
 	struct dm_list lvnames;
-	uint32_t lockd_state = 0;
+	struct lockd_state lks;
 	uint32_t error_flags = 0;
 	const char *vg_name;
 	const char *vg_uuid;
@@ -4078,13 +4079,14 @@ static int _process_lv_vgnameid_list(struct cmd_context *cmd, uint32_t read_flag
 		log_very_verbose("Processing VG %s %s", vg_name, vg_uuid ? uuid : "");
 
 do_lockd:
-		if (is_lockd && !lockd_vg(cmd, vg_name, NULL, 0, &lockd_state)) {
+		memset(&lks, 0, sizeof(lks));
+		if (is_lockd && !lockd_vg(cmd, vg_name, NULL, 0, &lks)) {
 			ret_max = ECMD_FAILED;
 			report_log_ret_code(ret_max);
 			continue;
 		}
 
-		vg = vg_read(cmd, vg_name, vg_uuid, read_flags, lockd_state, &error_flags, &error_vg);
+		vg = vg_read(cmd, vg_name, vg_uuid, read_flags, &lks, &error_flags, &error_vg);
 		if (_ignore_vg(cmd, error_flags, error_vg, vg_name, arg_vgnames, read_flags, &skip, &notfound)) {
 			stack;
 			ret_max = ECMD_FAILED;
@@ -4118,7 +4120,7 @@ do_lockd:
 		unlock_vg(cmd, vg, vg_name);
 endvg:
 		release_vg(vg);
-		if (is_lockd && !lockd_vg(cmd, vg_name, "un", 0, &lockd_state))
+		if (is_lockd && !lockd_vg(cmd, vg_name, "un", 0, &lks))
 			stack;
 		log_set_report_object_name_and_id(NULL, NULL);
 	}
@@ -4678,7 +4680,7 @@ static int _process_pvs_in_vgs(struct cmd_context *cmd, uint32_t read_flags,
 	struct vgnameid_list *vgnl;
 	const char *vg_name;
 	const char *vg_uuid;
-	uint32_t lockd_state = 0;
+	struct lockd_state lks;
 	uint32_t error_flags = 0;
 	int ret_max = ECMD_PROCESSED;
 	int ret;
@@ -4708,7 +4710,8 @@ static int _process_pvs_in_vgs(struct cmd_context *cmd, uint32_t read_flags,
 			log_set_report_object_name_and_id(vg_name, (const struct id*)vg_uuid);
 		}
 do_lockd:
-		if (is_lockd && !lockd_vg(cmd, vg_name, NULL, 0, &lockd_state)) {
+		memset(&lks, 0, sizeof(lks));
+		if (is_lockd && !lockd_vg(cmd, vg_name, NULL, 0, &lks)) {
 			ret_max = ECMD_FAILED;
 			report_log_ret_code(ret_max);
 			continue;
@@ -4718,7 +4721,7 @@ do_lockd:
 
 		error_flags = 0;
 
-		vg = vg_read(cmd, vg_name, vg_uuid, read_flags, lockd_state, &error_flags, &error_vg);
+		vg = vg_read(cmd, vg_name, vg_uuid, read_flags, &lks, &error_flags, &error_vg);
 		if (_ignore_vg(cmd, error_flags, error_vg, vg_name, NULL, read_flags, &skip, &notfound) ||
 		    (!vg && !error_vg)) {
 			stack;
@@ -4761,7 +4764,7 @@ endvg:
 		if (error_vg)
 			unlock_and_release_vg(cmd, error_vg, vg_name);
 		release_vg(vg);
-		if (is_lockd && !lockd_vg(cmd, vg_name, "un", 0, &lockd_state))
+		if (is_lockd && !lockd_vg(cmd, vg_name, "un", 0, &lks))
 			stack;
 
 		/* Quit early when possible. */

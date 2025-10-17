@@ -13,8 +13,11 @@
 
 #include "libdaemon/client/config-util.h"
 #include "libdaemon/client/daemon-client.h"
-#include "lib/metadata/metadata-exported.h" /* is_lockd_type() */
 #include "daemons/lvmlockd/lvmlockd-client.h"
+
+struct lockd_state {
+	uint32_t flags;
+};
 
 #define LOCKD_SANLOCK_LV_NAME "lvmlock"
 
@@ -65,6 +68,10 @@
 #define LOCKOPT_REPAIRVG	0x00020000
 #define LOCKOPT_REPAIRLV	0x00040000
 
+int is_lockd_type(const char *lock_type);
+int vg_is_shared(const struct volume_group *vg);
+int vg_is_sanlock(const struct volume_group *vg);
+
 #ifdef LVMLOCKD_SUPPORT
 
 void lockd_lockopt_get_flags(const char *str, uint32_t *flags);
@@ -109,7 +116,7 @@ int lockd_vg_is_busy(struct cmd_context *cmd, struct volume_group *vg);
 int lockd_global_create(struct cmd_context *cmd, const char *def_mode, const char *vg_lock_type);
 int lockd_global(struct cmd_context *cmd, const char *def_mode);
 int lockd_vg(struct cmd_context *cmd, const char *vg_name, const char *def_mode,
-	     uint32_t flags, uint32_t *lockd_state);
+	     uint32_t flags, struct lockd_state *lks);
 int lockd_vg_update(struct volume_group *vg);
 
 int lockd_lv_name(struct cmd_context *cmd, struct volume_group *vg,
@@ -250,9 +257,9 @@ static inline int lockd_global(struct cmd_context *cmd, const char *def_mode)
 }
 
 static inline int lockd_vg(struct cmd_context *cmd, const char *vg_name, const char *def_mode,
-	     uint32_t flags, uint32_t *lockd_state)
+	     uint32_t flags, struct lockd_state *lks)
 {
-	*lockd_state = 0;
+	*lks = 0;
 	return 1;
 }
 

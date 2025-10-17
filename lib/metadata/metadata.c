@@ -3801,7 +3801,7 @@ static int _allow_extra_system_id(struct cmd_context *cmd, const char *system_id
 }
 
 static int _access_vg_lock_type(struct cmd_context *cmd, struct volume_group *vg,
-				uint32_t lockd_state, uint32_t *failure)
+				struct lockd_state *lks, uint32_t *failure)
 {
 	if (cmd->lockd_vg_disable)
 		return 1;
@@ -3853,14 +3853,14 @@ static int _access_vg_lock_type(struct cmd_context *cmd, struct volume_group *vg
 	 * only being read, and it doesn't hurt to allow reading with
 	 * no lock.
 	 */
-	if (lockd_state & LDST_FAIL) {
-		if ((lockd_state & LDST_EX) || cmd->lockd_vg_enforce_sh) {
+	if (lks->flags & LDST_FAIL) {
+		if ((lks->flags & LDST_EX) || cmd->lockd_vg_enforce_sh) {
 			log_error("Cannot access VG %s due to failed lock.", vg->name);
 			*failure |= FAILED_LOCK_MODE;
 			return 0;
 		}
 
-		if (lockd_state & (LDST_FAIL_NOLS | LDST_FAIL_STARTING))
+		if (lks->flags & (LDST_FAIL_NOLS | LDST_FAIL_STARTING))
 			vg->lockd_not_started = 1;
 
 		log_warn("Reading VG %s without a lock.", vg->name);
@@ -4370,35 +4370,6 @@ const struct logical_volume *lv_committed(const struct logical_volume *lv)
 	}
 
 	return found_lv;
-}
-
-/*
- * Check if a lock_type uses lvmlockd.
- * If not (none, clvm), return 0.
- * If so (dlm, sanlock), return 1.
- */
-
-int is_lockd_type(const char *lock_type)
-{
-	if (!lock_type)
-		return 0;
-	if (!strcmp(lock_type, "dlm"))
-		return 1;
-	if (!strcmp(lock_type, "sanlock"))
-		return 1;
-	if (!strcmp(lock_type, "idm"))
-		return 1;
-	return 0;
-}
-
-int vg_is_shared(const struct volume_group *vg)
-{
-	return (vg->lock_type && is_lockd_type(vg->lock_type));
-}
-
-int vg_is_sanlock(const struct volume_group *vg)
-{
-	return (vg->lock_type && !strcmp(vg->lock_type, "sanlock"));
 }
 
 int vg_strip_outdated_historical_lvs(struct volume_group *vg) {
@@ -4945,7 +4916,7 @@ out:
 }
 
 struct volume_group *vg_read(struct cmd_context *cmd, const char *vg_name, const char *vgid,
-			     uint32_t vg_read_flags, uint32_t lockd_state,
+			     uint32_t vg_read_flags, struct lockd_state *lks,
 			     uint32_t *error_flags, struct volume_group **error_vg)
 {
 	char uuidstr[64] __attribute__((aligned(8)));
@@ -5143,7 +5114,7 @@ struct volume_group *vg_read(struct cmd_context *cmd, const char *vg_name, const
 	if (cmd->check_devs_used)
 		_check_devs_used_correspond_with_vg(vg);
 
-	if (!_access_vg_lock_type(cmd, vg, lockd_state, &failure)) {
+	if (!_access_vg_lock_type(cmd, vg, lks, &failure)) {
 		/* Either FAILED_LOCK_TYPE or FAILED_LOCK_MODE were set. */
 		goto_bad;
 	}
@@ -5293,12 +5264,13 @@ bad:
  * so vg_read should acquire an exclusive file lock on the vg.
  */
 struct volume_group *vg_read_for_update(struct cmd_context *cmd, const char *vg_name,
-			 const char *vgid, uint32_t vg_read_flags, uint32_t lockd_state)
+			 const char *vgid, uint32_t vg_read_flags)
 {
 	struct volume_group *vg;
+	struct lockd_state lks = { 0 };
 	uint32_t error_flags = 0;
 
-	vg = vg_read(cmd, vg_name, vgid, vg_read_flags | READ_FOR_UPDATE, lockd_state, &error_flags, NULL);
+	vg = vg_read(cmd, vg_name, vgid, vg_read_flags | READ_FOR_UPDATE, &lks, &error_flags, NULL);
 
 	return vg;
 }
