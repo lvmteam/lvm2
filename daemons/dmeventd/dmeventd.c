@@ -1297,14 +1297,20 @@ static void *_monitor_thread(void *arg)
 			 thread->events, thread->used);
 
 		_monitor_grace_period_wait(thread);
-		_unlock_mutex();
-
-		pthread_mutex_lock(&_timeout_mutex);
-		thread->next_time = time(NULL) + thread->timeout;
-		pthread_mutex_unlock(&_timeout_mutex);
-
-		_lock_mutex();
-		_thread_used(thread);
+		/*
+		 * Grace period wait completed - two possible wake-up scenarios:
+		 *
+		 * 1) Woken by _update_events() (new registration reusing this thread):
+		 *    - thread->events is non-zero and thread is moved to active registry
+		 *    - Status is set DM_THREAD_REGISTERING
+		 *    - _register_for_timeout() resets next_time for fresh timeout
+		 *    - Loop continues (events != 0), main loop sets status = RUNNING,
+		 *
+		 * 2) Natural timeout (grace period expired with no new registration):
+		 *    - thread->events is still 0 and loop exits
+		 *    - Thread terminates via cleanup handler
+		 *    - Thread remains in unused registry for _cleanup_unused_threads()
+		 */
 	}
 out:
 	/* ';' fixes gcc compilation problem with older pthread macros
@@ -1334,11 +1340,30 @@ static int _update_events(struct thread_status *thread, int events)
 	thread->events = events;
 	thread->pending = DM_EVENT_REGISTRATION_PENDING;
 
-	/* If needed, wake up thread waiting in grace period */
+	/* Wake up thread waiting in grace period for new registration or exit */
 	if ((events || _exit_now) && (thread->status == DM_THREAD_GRACE_PERIOD)) {
 		DEBUGLOG("Waking up thread %x waiting in grace period (events=%x).",
 			 (int)thread->thread, events);
-		/* Signal per-thread condition variable while holding global mutex */
+		/*
+		 * Move thread back to active registry NOW, before signaling.
+		 * This is critical to avoid race condition.
+		 * Moves thread to active registry and signals thread
+		 * Client queries GET_REGISTERED_DEVICE - FOUND immediately
+		 */
+		_thread_used(thread);
+
+		/* Set status to REGISTERING (not RUNNING) to ensure proper state flow. */
+		thread->status = DM_THREAD_REGISTERING;
+
+		/*
+		 * Signal the per-thread condition variable while holding _global_mutex.
+		 * Thread will wake from _monitor_grace_period_wait(), check events != 0,
+		 * and continue the monitoring loop.
+		 *
+		 * Note: Timeout reset happens after _update_events() returns, when
+		 * _register_for_event() calls _register_for_timeout() to give the
+		 * reused thread a fresh timeout period.
+		 */
 		pthread_cond_signal(&thread->grace_cond);
 		return 0;
 	}
