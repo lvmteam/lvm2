@@ -2109,7 +2109,7 @@ wait_pvmove_lv_ready() {
 			if test "${#lvid[@]}" -eq "$#" ; then
 				lvmpolld_dump > lvmpolld_dump.txt
 				all=1
-				for l in "${lvid[@]}" ; do
+				for l in "${lvid[@]%-real}" ; do
 					check_lvmpolld_init_rq_count 1 "${l##LVM-}" lvid || all=0
 				done
 				test "$all" = 1 && return
