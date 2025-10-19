@@ -199,8 +199,10 @@ static void _test_write_bytes(void *fixture)
 	T_ASSERT(bcache_write_bytes(cache, f->di, offset, sizeof(buf_out), buf_out));
 	T_ASSERT(bcache_read_bytes(cache, f->di, offset, sizeof(buf_in), buf_in));
 
-	_print_buffer("buf_out", (uint8_t *) buf_out, sizeof(buf_out));
-	_print_buffer("buf_in", (uint8_t *) buf_in, sizeof(buf_in));
+	if (memcmp(buf_out, buf_in, sizeof(buf_out))) {
+		_print_buffer("buf_out", (uint8_t *) buf_out, sizeof(buf_out));
+		_print_buffer("buf_in", (uint8_t *) buf_in, sizeof(buf_in));
+	}
 	T_ASSERT(!memcmp(buf_out, buf_in, sizeof(buf_out)));
 
 	bcache_destroy(cache);
