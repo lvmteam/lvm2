@@ -22,3 +22,7 @@ Allocation policy: (\fBc\fP)ontiguous, c(\fBl\fP)ing,
 .
 .IP 6
 (\fBc\fP)lustered, (\fBs\fP)hared
+.
+.IP 7
+(\fBP\fP)persistent reservation is required but is not started,
+(\fBp\fP)ersistent reservation is required and is started.

@@ -676,7 +676,7 @@ char *vg_attr_dup(struct dm_pool *mem, const struct volume_group *vg)
 {
 	char *repstr;
 
-	if (!(repstr = dm_pool_zalloc(mem, 7))) {
+	if (!(repstr = dm_pool_zalloc(mem, 8))) {
 		log_error("dm_pool_alloc failed");
 		return NULL;
 	}
@@ -693,6 +693,11 @@ char *vg_attr_dup(struct dm_pool *mem, const struct volume_group *vg)
 		repstr[5] = 's';
 	else
 		repstr[5] = '-';
+
+	if (vg->pr & VG_PR_REQUIRE)
+		repstr[6] = persist_is_started(vg->cmd, (struct volume_group *)vg, 1) ? 'p' : 'P';
+	else
+		repstr[6] = '-';
 
 	return repstr;
 }
