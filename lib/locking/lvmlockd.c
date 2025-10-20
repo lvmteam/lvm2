@@ -272,28 +272,28 @@ int lockd_lockargs_get_meta_flags(const char *str, uint32_t *flags)
 }
 
 /* Translate the result strings from lvmlockd to bit flags. */
-static void _flags_str_to_lockd_flags(const char *flags_str, uint32_t *lockd_flags)
+static void _result_str_to_flags(const char *result_str, uint32_t *result_flags)
 {
-	if (strstr(flags_str, "NO_LOCKSPACES"))
-		*lockd_flags |= LD_RF_NO_LOCKSPACES;
+	if (strstr(result_str, "NO_LOCKSPACES"))
+		*result_flags |= LD_RF_NO_LOCKSPACES;
 
-	if (strstr(flags_str, "NO_GL_LS"))
-		*lockd_flags |= LD_RF_NO_GL_LS;
+	if (strstr(result_str, "NO_GL_LS"))
+		*result_flags |= LD_RF_NO_GL_LS;
 
-	if (strstr(flags_str, "NO_LM"))
-		*lockd_flags |= LD_RF_NO_LM;
+	if (strstr(result_str, "NO_LM"))
+		*result_flags |= LD_RF_NO_LM;
 
-	if (strstr(flags_str, "DUP_GL_LS"))
-		*lockd_flags |= LD_RF_DUP_GL_LS;
+	if (strstr(result_str, "DUP_GL_LS"))
+		*result_flags |= LD_RF_DUP_GL_LS;
 
-	if (strstr(flags_str, "WARN_GL_REMOVED"))
-		*lockd_flags |= LD_RF_WARN_GL_REMOVED;
+	if (strstr(result_str, "WARN_GL_REMOVED"))
+		*result_flags |= LD_RF_WARN_GL_REMOVED;
 
-	if (strstr(flags_str, "SH_EXISTS"))
-		*lockd_flags |= LD_RF_SH_EXISTS;
+	if (strstr(result_str, "SH_EXISTS"))
+		*result_flags |= LD_RF_SH_EXISTS;
 
-	if (strstr(flags_str, "HOSTS_UNKNOWN"))
-		*lockd_flags |= LD_RF_HOSTS_UNKNOWN;
+	if (strstr(result_str, "HOSTS_UNKNOWN"))
+		*result_flags |= LD_RF_HOSTS_UNKNOWN;
 }
 
 static char *_owner_str(struct owner *owner)
@@ -326,12 +326,14 @@ static char *_owner_str(struct owner *owner)
 #define NO_LOCKD_RESULT (-1000)
 
 static int _lockd_result(struct cmd_context *cmd, const char *req_name, daemon_reply reply,
-			 int *result, uint32_t *lockd_flags, struct owner *owner, uint64_t *our_generation)
+			 int *result, uint32_t *result_flags, struct owner *owner, uint64_t *our_generation)
 {
 	int reply_result;
-	const char *str;
+	const char *result_str;
 
 	*result = -1;
+	if (result_flags)
+		*result_flags = 0;
 
 	if (reply.error) {
 		log_error("lockd %s result: reply error %d", req_name, reply.error);
@@ -351,16 +353,16 @@ static int _lockd_result(struct cmd_context *cmd, const char *req_name, daemon_r
 
 	*result = reply_result;
 
-	if (lockd_flags) {
-		if ((str = daemon_reply_str(reply, "result_flags", NULL)))
-			_flags_str_to_lockd_flags(str, lockd_flags);
+	if (result_flags) {
+		if ((result_str = daemon_reply_str(reply, "result_flags", NULL)))
+			_result_str_to_flags(result_str, result_flags);
 	}
 
 	if (owner) {
 		owner->host_id = (uint32_t)daemon_reply_int(reply, "owner_host_id", 0);
 		owner->generation = (uint32_t)daemon_reply_int(reply, "owner_generation", 0);
-		if ((str = daemon_reply_str(reply, "owner_name", "none")))
-			owner->name = dm_pool_strdup(cmd->mem, str);
+		if ((result_str = daemon_reply_str(reply, "owner_name", "none")))
+			owner->name = dm_pool_strdup(cmd->mem, result_str);
 	}
 
 	if (our_generation)
@@ -579,7 +581,7 @@ static int _lockd_request(struct cmd_context *cmd,
 		          const char *opts,
 			  const struct lvmlockd_pvs *lock_pvs,
 		          int *result,
-		          uint32_t *lockd_flags,
+		          uint32_t *result_flags,
 			  struct owner *owner,
 			  uint64_t *our_generation)
 {
@@ -588,7 +590,7 @@ static int _lockd_request(struct cmd_context *cmd,
 	int pid = getpid();
 
 	*result = 0;
-	*lockd_flags = 0;
+	*result_flags = 0;
 
 	if (!strcmp(mode, "na"))
 		return 1;
@@ -618,12 +620,12 @@ static int _lockd_request(struct cmd_context *cmd,
 					"lv_lock_args = %s", lv_lock_args ?: "none",
 					NULL);
 
-		if (!_lockd_result(cmd, req_name, reply, result, lockd_flags, owner, our_generation))
+		if (!_lockd_result(cmd, req_name, reply, result, result_flags, owner, our_generation))
 			goto fail;
 
 		/*
 		log_debug("lockd %s %s vg %s lv %s result %d %x",
-			  req_name, mode, vg_name, lv_name, *result, *lockd_flags);
+			  req_name, mode, vg_name, lv_name, *result, *result_flags);
 		*/
 
 	} else if (vg_name) {
@@ -638,12 +640,12 @@ static int _lockd_request(struct cmd_context *cmd,
 					"vg_lock_args = %s", vg_lock_args ?: "none",
 					NULL);
 
-		if (!_lockd_result(cmd, req_name, reply, result, lockd_flags, owner, our_generation))
+		if (!_lockd_result(cmd, req_name, reply, result, result_flags, owner, our_generation))
 			goto fail;
 
 		/*
 		log_debug("lockd %s %s vg %s result %d %x",
-			  req_name, mode, vg_name, *result, *lockd_flags);
+			  req_name, mode, vg_name, *result, *result_flags);
 		*/
 
 	} else {
@@ -656,16 +658,16 @@ static int _lockd_request(struct cmd_context *cmd,
 					"vg_lock_type = %s", vg_lock_type ?: "none",
 					NULL);
 
-		if (!_lockd_result(cmd, req_name, reply, result, lockd_flags, owner, our_generation))
+		if (!_lockd_result(cmd, req_name, reply, result, result_flags, owner, our_generation))
 			goto fail;
 
 		log_debug("lockd %s %s result %d %x",
-			  req_name, mode, *result, *lockd_flags);
+			  req_name, mode, *result, *result_flags);
 	}
 
 	daemon_reply_destroy(reply);
 
-	/* result/lockd_flags have lvmlockd result */
+	/* result/result_flags have lvmlockd result */
 	return 1;
 
  fail:
@@ -1930,7 +1932,7 @@ int lockd_global_create(struct cmd_context *cmd, const char *def_mode, const cha
 {
 	struct owner owner = { 0 };
 	const char *mode = NULL;
-	uint32_t lockd_flags;
+	uint32_t result_flags;
 	int retries = 0;
 	int result;
 
@@ -1976,7 +1978,7 @@ int lockd_global_create(struct cmd_context *cmd, const char *def_mode, const cha
  req:
 	if (!_lockd_request(cmd, "lock_gl",
 			      NULL, vg_lock_type, NULL, NULL, NULL, NULL, mode, NULL,
-			      NULL, &result, &lockd_flags, &owner, NULL)) {
+			      NULL, &result, &result_flags, &owner, NULL)) {
 		/* No result from lvmlockd, it is probably not running. */
 		log_error("Global lock failed: check that lvmlockd is running.");
 		return 0;
@@ -2040,8 +2042,8 @@ int lockd_global_create(struct cmd_context *cmd, const char *def_mode, const cha
 		 * the existing sanlock VGs is currently the simplest solution.
 		 */
 
-		if ((lockd_flags & LD_RF_NO_GL_LS) &&
-		    (lockd_flags & LD_RF_NO_LOCKSPACES) &&
+		if ((result_flags & LD_RF_NO_GL_LS) &&
+		    (result_flags & LD_RF_NO_LOCKSPACES) &&
 		    !strcmp(vg_lock_type, "sanlock")) {
 			if (lvmcache_contains_lock_type_sanlock(cmd)) {
 				/* FIXME: we could check that all are started, and then check that none have gl enabled. */
@@ -2058,7 +2060,7 @@ int lockd_global_create(struct cmd_context *cmd, const char *def_mode, const cha
 		else
 			log_error("Global lock failed: check that global lockspace is started.");
 
-		if (lockd_flags & LD_RF_NO_LM)
+		if (result_flags & LD_RF_NO_LM)
 			log_error("Start a lock manager, lvmlockd did not find one running.");
 		return 0;
 	}
@@ -2182,7 +2184,7 @@ int lockd_global(struct cmd_context *cmd, const char *def_mode)
 	char opt_buf[64] = {};
 	const char *mode = NULL;
 	const char *opts = NULL;
-	uint32_t lockd_flags;
+	uint32_t result_flags;
 	int retries = 0;
 	int result;
 
@@ -2240,7 +2242,7 @@ int lockd_global(struct cmd_context *cmd, const char *def_mode)
 
 	if (!_lockd_request(cmd, "lock_gl",
 			    NULL, NULL, NULL, NULL, NULL, NULL, mode, opts,
-			    NULL, &result, &lockd_flags, &owner, NULL)) {
+			    NULL, &result, &result_flags, &owner, NULL)) {
 		/* No result from lvmlockd, it is probably not running. */
 
 		/* We don't care if an unlock fails. */
@@ -2298,7 +2300,7 @@ int lockd_global(struct cmd_context *cmd, const char *def_mode)
 	 * access to lease storage.
 	 */
 
-	if (result == -ENOLS && (lockd_flags & LD_RF_NO_LM))
+	if (result == -ENOLS && (result_flags & LD_RF_NO_LM))
 		log_error("Start a lock manager, lvmlockd did not find one running.");
 
 	if (result == -ENOLS ||
@@ -2371,7 +2373,7 @@ int lockd_global(struct cmd_context *cmd, const char *def_mode)
 			goto allow;
 		}
 
-		if ((lockd_flags & LD_RF_NO_GL_LS) && (lockd_flags & LD_RF_WARN_GL_REMOVED)) {
+		if ((result_flags & LD_RF_NO_GL_LS) && (result_flags & LD_RF_WARN_GL_REMOVED)) {
 			log_warn("Skipping global lock: VG with global lock was removed");
 			goto allow;
 		}
@@ -2401,7 +2403,7 @@ int lockd_global(struct cmd_context *cmd, const char *def_mode)
 			goto allow;
 		}
 
-		if ((lockd_flags & LD_RF_NO_GL_LS) || (lockd_flags & LD_RF_NO_LOCKSPACES)) {
+		if ((result_flags & LD_RF_NO_GL_LS) || (result_flags & LD_RF_NO_LOCKSPACES)) {
 			log_debug("Skipping global lock: lockspace not found or started");
 			goto allow;
 		}
@@ -2415,7 +2417,7 @@ int lockd_global(struct cmd_context *cmd, const char *def_mode)
 		return 0;
 	}
 
-	if ((lockd_flags & LD_RF_DUP_GL_LS) && strcmp(mode, "un"))
+	if ((result_flags & LD_RF_DUP_GL_LS) && strcmp(mode, "un"))
 		log_warn("Duplicate sanlock global locks should be corrected");
 
 	if (result < 0) {
@@ -2481,8 +2483,8 @@ int lockd_vg(struct cmd_context *cmd, const char *vg_name, const char *def_mode,
 	char opt_buf[64] = {};
 	const char *mode = NULL;
 	const char *opts = NULL;
-	uint32_t lockd_flags;
 	uint32_t prev_flags = lks->flags;
+	uint32_t result_flags;
 	int retries = 0;
 	int result;
 	int ret = 1;
@@ -2592,7 +2594,7 @@ int lockd_vg(struct cmd_context *cmd, const char *vg_name, const char *def_mode,
 
 	if (!_lockd_request(cmd, "lock_vg",
 			      vg_name, NULL, NULL, NULL, NULL, NULL, mode, opts,
-			      NULL, &result, &lockd_flags, &owner, &our_generation)) {
+			      NULL, &result, &result_flags, &owner, &our_generation)) {
 		/*
 		 * No result from lvmlockd, it is probably not running.
 		 * Decide if it is ok to continue without a lock in
@@ -2803,7 +2805,7 @@ out:
 	 * A notice from lvmlockd that duplicate gl locks have been found.
 	 * It would be good for the user to disable one of them.
 	 */
-	if ((lockd_flags & LD_RF_DUP_GL_LS) && strcmp(mode, "un"))
+	if ((result_flags & LD_RF_DUP_GL_LS) && strcmp(mode, "un"))
 		log_warn("Duplicate sanlock global lock in VG %s", vg_name);
 
 	return ret;
@@ -3007,7 +3009,7 @@ int lockd_lv_name(struct cmd_context *cmd, struct volume_group *vg,
 	char opt_buf[64] = {};
 	const char *opts = NULL;
 	const char *mode = NULL;
-	uint32_t lockd_flags;
+	uint32_t result_flags;
 	uint64_t our_generation = 0;
 	int refreshed = 0;
 	int result;
@@ -3107,7 +3109,7 @@ int lockd_lv_name(struct cmd_context *cmd, struct volume_group *vg,
 		if (!_lockd_request(cmd, "lock_lv",
 				       vg->name, vg->lock_type, vg->lock_args,
 				       lv_name, lv_uuid, lock_args, mode, opts,
-				       &lock_pvs, &result, &lockd_flags, NULL, NULL)) {
+				       &lock_pvs, &result, &result_flags, NULL, NULL)) {
 			_lockd_free_pv_list(&lock_pvs);
 			/* No result from lvmlockd, it is probably not running. */
 			log_error("Locking failed for LV %s/%s", vg->name, lv_name);
@@ -3118,7 +3120,7 @@ int lockd_lv_name(struct cmd_context *cmd, struct volume_group *vg,
 		if (!_lockd_request(cmd, "lock_lv",
 				       vg->name, vg->lock_type, vg->lock_args,
 				       lv_name, lv_uuid, lock_args, mode, opts,
-				       NULL, &result, &lockd_flags, &owner, &our_generation)) {
+				       NULL, &result, &result_flags, &owner, &our_generation)) {
 			/* No result from lvmlockd, it is probably not running. */
 			log_error("Locking failed for LV %s/%s", vg->name, lv_name);
 			return 0;
@@ -3169,7 +3171,7 @@ int lockd_lv_name(struct cmd_context *cmd, struct volume_group *vg,
 		 * sh LV lock.
 		 */
 
-		if (lockd_flags & LD_RF_SH_EXISTS) {
+		if (result_flags & LD_RF_SH_EXISTS) {
 			if (flags & LDLV_SH_EXISTS_OK) {
 				log_warn("WARNING: Extending LV with a shared lock, other hosts may require LV refresh.");
 				cmd->lockd_lv_sh_for_ex = 1;
@@ -4354,7 +4356,7 @@ int lockd_free_lv(struct cmd_context *cmd, struct volume_group *vg,
 int lockd_rename_vg_before(struct cmd_context *cmd, struct volume_group *vg)
 {
 	daemon_reply reply;
-	uint32_t lockd_flags = 0;
+	uint32_t result_flags;
 	int result;
 	int ret;
 
@@ -4389,7 +4391,7 @@ int lockd_rename_vg_before(struct cmd_context *cmd, struct volume_group *vg)
 			"vg_lock_args = %s", vg->lock_args,
 			NULL);
 
-	if (!_lockd_result(cmd, "rename_vg_before", reply, &result, &lockd_flags, NULL, NULL)) {
+	if (!_lockd_result(cmd, "rename_vg_before", reply, &result, &result_flags, NULL, NULL)) {
 		ret = 0;
 	} else {
 		ret = (result < 0) ? 0 : 1;
@@ -4399,7 +4401,7 @@ int lockd_rename_vg_before(struct cmd_context *cmd, struct volume_group *vg)
 
 	/* Other hosts have not stopped the lockspace. */
 	if (result == -EBUSY) {
-		if (lockd_flags & LD_RF_HOSTS_UNKNOWN)
+		if (result_flags & LD_RF_HOSTS_UNKNOWN)
 			log_error("Lockspace for \"%s\" has unknown host state (wait and retry)", vg->name);
 		else
 			log_error("Lockspace for \"%s\" not stopped on other hosts", vg->name);
@@ -4699,7 +4701,7 @@ int lockd_setlockargs(struct cmd_context *cmd, struct volume_group *vg, const ch
 	daemon_reply reply;
 	const char *reply_str;
 	const char *vg_lock_args = NULL;
-	uint32_t lockd_flags = 0;
+	uint32_t result_flags;
 	uint32_t lock_args_flags = 0;
 	int result;
 	int ret;
@@ -4780,13 +4782,13 @@ int lockd_setlockargs(struct cmd_context *cmd, struct volume_group *vg, const ch
 				"set_lock_args = %s", set_args,
 				NULL);
 
-	if (!_lockd_result(cmd, "setlockargs_vg_before", reply, &result, &lockd_flags, NULL, NULL)) {
+	if (!_lockd_result(cmd, "setlockargs_vg_before", reply, &result, &result_flags, NULL, NULL)) {
 		ret = 0;
 		goto out;
 	}
 
 	if (result == -EBUSY) {
-		if (lockd_flags & LD_RF_HOSTS_UNKNOWN)
+		if (result_flags & LD_RF_HOSTS_UNKNOWN)
 			log_error("Lockspace for \"%s\" has unknown host state (wait and retry)", vg->name);
 		else
 			log_error("Lockspace for \"%s\" not stopped on other hosts", vg->name);
@@ -4847,7 +4849,7 @@ int lockd_setlockargs(struct cmd_context *cmd, struct volume_group *vg, const ch
 				"set_lock_args = %s", set_args,
 				NULL);
 
-	if (!_lockd_result(cmd, "setlockargs_vg_final", reply, &result, &lockd_flags, NULL, NULL)) {
+	if (!_lockd_result(cmd, "setlockargs_vg_final", reply, &result, &result_flags, NULL, NULL)) {
 		ret = 0;
 		goto out;
 	}
