@@ -1,5 +1,6 @@
 Version 2.03.36 - 
 ==================
+  Fix race in dmeventd remonitoring optimization (2.03.35).
   Use -real suffix for pvmove UUID.
   Add support pvmove segmentation allocation/pvmove_max_segmentation_size_mb.
   Fix driver_version() accepts NULL version buffer pointer.
