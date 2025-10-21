@@ -710,7 +710,7 @@ do_start:
 	if (!persist_start_include(cmd, vg, 0, auto_opt, NULL))
 		return 0;
 
-	if ((vg->pr & (VG_PR_REQUIRE|VG_PR_AUTOSTART)) && !persist_is_started(cmd, vg, 0)) {
+	if ((vg->pr & (VG_PR_REQUIRE|VG_PR_AUTOSTART)) && !persist_is_started(cmd, vg, NULL, 0)) {
 		log_error("VG %s PR should be started before locking (vgchange --persist start)", vg->name);
 		return 0;
 	}
@@ -1898,7 +1898,7 @@ static int _vgchange_setpersist_single(struct cmd_context *cmd, const char *vg_n
 	 * enabling/starting PR, otherwise enabling/starting PR will
 	 * cause i/o to begin failing on those other hosts.
 	 */
-	if (on && vg_is_shared(vg) && !persist_is_started(cmd, vg, 1) &&
+	if (on && vg_is_shared(vg) && !persist_is_started(cmd, vg, NULL, 1) &&
 	    lockd_vg_is_started(cmd, vg, NULL) && lockd_vg_is_busy(cmd, vg)) {
 		log_error("VG lockspace should be stopped on all hosts (vgchange --lockstop) before enabling PR.");
 		return ECMD_FAILED;

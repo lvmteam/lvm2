@@ -695,7 +695,7 @@ char *vg_attr_dup(struct dm_pool *mem, const struct volume_group *vg)
 		repstr[5] = '-';
 
 	if (vg->pr & VG_PR_REQUIRE)
-		repstr[6] = persist_is_started(vg->cmd, (struct volume_group *)vg, 1) ? 'p' : 'P';
+		repstr[6] = persist_is_started(vg->cmd, (struct volume_group *)vg, NULL, 1) ? 'p' : 'P';
 	else
 		repstr[6] = '-';
 

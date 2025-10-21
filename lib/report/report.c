@@ -3025,14 +3025,15 @@ static int _vgprstatus_disp(struct dm_report *rh, struct dm_pool *mem,
 {
 	struct volume_group *vg = (struct volume_group *) data;
 	struct cmd_context *cmd = (struct cmd_context *) private;
+	int is_error = 0;
 
 	if (!vg->pr)
 		return _field_string(rh, field, "");
 
-	if (persist_is_started(cmd, vg, 1))
+	if (persist_is_started(cmd, vg, &is_error, 1))
 		return _field_string(rh, field, "started");
 	else
-		return _field_string(rh, field, "stopped");
+		return _field_string(rh, field, is_error ? "error" : "stopped");
 }
 
 static int _lvuuid_disp(struct dm_report *rh __attribute__((unused)), struct dm_pool *mem,

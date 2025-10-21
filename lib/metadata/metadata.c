@@ -5135,7 +5135,7 @@ struct volume_group *vg_read(struct cmd_context *cmd, const char *vg_name, const
 	}
 
 	if ((vg->pr & VG_PR_REQUIRE) && (writing || activating) && !cmd->disable_pr_required) {
-		if (!persist_is_started(cmd, vg, 0)) {
+		if (!persist_is_started(cmd, vg, NULL, 0)) {
 			failure |= FAILED_PR_REQUIRED;
 			goto_bad;
 		}

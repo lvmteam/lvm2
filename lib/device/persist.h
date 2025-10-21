@@ -69,7 +69,7 @@ int persist_vgcreate_update(struct cmd_context *cmd, struct volume_group *vg, ui
 int persist_upgrade_ex(struct cmd_context *cmd, struct volume_group *vg, uint64_t *our_key_held);
 int persist_upgrade_stop(struct cmd_context *cmd, struct volume_group *vg, uint64_t our_key_val);
 
-int persist_is_started(struct cmd_context *cmd, struct volume_group *vg, int may_fail);
+int persist_is_started(struct cmd_context *cmd, struct volume_group *vg, int *is_error, int may_fail);
 
 int persist_key_update(struct cmd_context *cmd, struct volume_group *vg, uint32_t prev_gen);
 

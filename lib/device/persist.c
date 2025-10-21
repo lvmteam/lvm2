@@ -827,18 +827,21 @@ int vg_is_registered(struct cmd_context *cmd, struct volume_group *vg, uint64_t 
 	}
 }
 
-int persist_is_started(struct cmd_context *cmd, struct volume_group *vg, int may_fail)
+int persist_is_started(struct cmd_context *cmd, struct volume_group *vg, int *is_error, int may_fail)
 {
 	struct pv_list *pvl;
 	struct device *dev;
 	uint64_t our_key_val = 0;
 	uint64_t holder;
+	int is_stopped = 0;
+	int is_started = 0;
 	int partial = 0;
 	int prtype;
-	int ret = 0;
 
-	if (!vg_is_registered(cmd, vg, &our_key_val, &partial))
+	if (!vg_is_registered(cmd, vg, &our_key_val, &partial)) {
+		is_stopped = 1;
 		goto out;
+	}
 
 	if (partial) {
 		log_debug("PR is started: partial");
@@ -875,11 +878,18 @@ int persist_is_started(struct cmd_context *cmd, struct volume_group *vg, int may
 			goto out;
 		}
 	}
-	ret = 1;
+
+	is_started = 1;
+
 out:
-	if (!ret && !may_fail)
+	/* if not started and not stopped, then it's some error condition */
+	if (!is_started && !is_stopped && is_error)
+		*is_error = 1;
+
+	if (!is_started && !may_fail)
 		log_error("persistent reservation is not started.");
-	return ret;
+
+	return is_started;
 }
 
 static int get_our_key(struct cmd_context *cmd, struct volume_group *vg,
