@@ -856,11 +856,26 @@ static void _exit_timeout(void *unused __attribute__((unused)))
 	pthread_mutex_unlock(&_timeout_mutex);
 }
 
+static time_t _get_curr_time(void)
+{
+#ifdef HAVE_REALTIME
+	struct timespec real_time;
+
+	if (clock_gettime(CLOCK_REALTIME, &real_time) == 0)
+		/* 10ms back to the future */
+		return real_time.tv_sec + ((real_time.tv_nsec > (1000000000 - 10000000)) ? 1 : 0);
+
+	/* fallback to time() */
+	log_sys_debug("clock_gettime", "");
+#endif
+	return time(NULL);
+}
+
 /* Wake up monitor threads every so often. */
 static void *_timeout_thread(void *unused __attribute__((unused)))
 {
 	struct thread_status *thread;
-	struct timespec timeout, real_time;
+	struct timespec timeout;
 	time_t curr_time;
 	int ret;
 
@@ -871,16 +886,7 @@ static void *_timeout_thread(void *unused __attribute__((unused)))
 	while (!dm_list_empty(&_timeout_registry)) {
 		timeout.tv_sec = 0;
 		timeout.tv_nsec = 0;
-#ifndef HAVE_REALTIME
-		curr_time = time(NULL);
-#else
-		if (clock_gettime(CLOCK_REALTIME, &real_time)) {
-			log_error("Failed to read clock_gettime().");
-			break;
-		}
-		/* 10ms back to the future */
-		curr_time = real_time.tv_sec + ((real_time.tv_nsec > (1000000000 - 10000000)) ? 1 : 0);
-#endif
+		curr_time = _get_curr_time();
 
 		dm_list_iterate_items_gen(thread, &_timeout_registry, timeout_list) {
 			if (thread->next_time <= curr_time) {
@@ -926,11 +932,12 @@ static int _register_for_timeout(struct thread_status *thread)
 	pthread_mutex_lock(&_timeout_mutex);
 
 	if (dm_list_empty(&thread->timeout_list)) {
-		thread->next_time = time(NULL) + thread->timeout;
 		dm_list_add(&_timeout_registry, &thread->timeout_list);
 		if (_timeout_running)
 			pthread_cond_signal(&_timeout_cond);
 	}
+
+	thread->next_time = _get_curr_time() + thread->timeout;
 
 	if (!_timeout_running &&
 	    !(ret = _pthread_create_smallstack(NULL, _timeout_thread, NULL)))
@@ -1216,7 +1223,7 @@ static int _monitor_events(struct thread_status *thread)
 /* Thread awaits condition wake up for a grace period */
 static void _monitor_grace_period_wait(struct thread_status *thread)
 {
-	struct timespec grace_timeout = { .tv_sec = time(NULL) + _grace_period };
+	struct timespec grace_timeout = { .tv_sec = _get_curr_time() + _grace_period };
 
 	DEBUGLOG("Thread %x entering grace period for %d seconds.",
 		 (int)thread->thread, _grace_period);
