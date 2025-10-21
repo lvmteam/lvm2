@@ -1491,7 +1491,7 @@ int vgchange_locktype_cmd(struct cmd_context *cmd, int argc, char **argv)
 	 * lock_type.
 	 */
 	if (!lockd_global(cmd, "ex"))
-		return 0;
+		log_warn("WARNING: no global lock held in lvmlockd.");
 
 process:
 	if (!(handle = init_processing_handle(cmd, NULL))) {
