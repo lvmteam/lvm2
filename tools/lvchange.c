@@ -1780,6 +1780,9 @@ static int _lvchange_refresh_check(struct cmd_context *cmd,
 				       struct processing_handle *handle,
 				       int lv_is_named_arg)
 {
+	if (lv_is_lockd_sanlock_lv(lv) && lv_is_named_arg)
+		return 1;
+
 	if (!lv_is_visible(lv)) {
 		if (lv_is_named_arg)
 			log_error("Operation not permitted on hidden LV %s.", display_lvname(lv));
