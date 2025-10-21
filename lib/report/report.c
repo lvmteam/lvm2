@@ -24,6 +24,7 @@
 #include "lib/cache/lvmcache.h"
 #include "lib/device/device-types.h"
 #include "lib/device/device_id.h"
+#include "lib/device/persist.h"
 #include "lib/datastruct/str_list.h"
 #include "lib/locking/lvmlockd.h"
 
@@ -3016,6 +3017,22 @@ static int _vgpersist_disp(struct dm_report *rh, struct dm_pool *mem,
 	if (vg->pr & VG_PR_PTPL)
 		return _field_string(rh, field, "ptpl");
 	return _field_string(rh, field, "");
+}
+
+static int _vgprstatus_disp(struct dm_report *rh, struct dm_pool *mem,
+			    struct dm_report_field *field,
+			    const void *data, void *private)
+{
+	struct volume_group *vg = (struct volume_group *) data;
+	struct cmd_context *cmd = (struct cmd_context *) private;
+
+	if (!vg->pr)
+		return _field_string(rh, field, "");
+
+	if (persist_is_started(cmd, vg, 1))
+		return _field_string(rh, field, "started");
+	else
+		return _field_string(rh, field, "stopped");
 }
 
 static int _lvuuid_disp(struct dm_report *rh __attribute__((unused)), struct dm_pool *mem,
