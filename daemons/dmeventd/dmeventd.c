@@ -1990,6 +1990,13 @@ static void _cleanup_unused_threads(void)
 			if (thread->processing)
 				break; /* cleanup on the next round */
 
+			if (thread->status == DM_THREAD_GRACE_PERIOD) {
+				/* Wake-up thread in grace period */
+				if (_exit_now)
+					pthread_cond_signal(&thread->grace_cond);
+				break;
+			}
+
 			/* Signal possibly sleeping thread */
 			ret = pthread_kill(thread->thread, SIGALRM);
 			if (!ret || (ret != ESRCH))
