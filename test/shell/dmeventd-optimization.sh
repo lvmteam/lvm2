@@ -164,9 +164,7 @@ test 60 -lt "$(get_pool_usage_ pool2)"
 test 60 -lt "$(get_pool_usage_ pool3)"
 
 # Test that monitoring can be cleanly disabled and re-enabled for all pools
-lvchange --monitor n $vg/pool1
-lvchange --monitor n $vg/pool2
-lvchange --monitor n $vg/pool3
+lvchange --monitor n $vg/pool1 $vg/pool2 $vg/pool3
 
 sleep 2
 
@@ -175,9 +173,7 @@ check lv_field $vg/pool2 seg_monitor "not monitored"
 check lv_field $vg/pool3 seg_monitor "not monitored"
 
 # Re-enabling monitoring for all pools"
-lvchange --monitor y $vg/pool1
-lvchange --monitor y $vg/pool2
-lvchange --monitor y $vg/pool3
+lvchange --monitor y $vg/pool1 $vg/pool2 $vg/pool3
 
 check lv_field $vg/pool1 seg_monitor "monitored"
 check lv_field $vg/pool2 seg_monitor "monitored"
