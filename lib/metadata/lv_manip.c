@@ -3490,6 +3490,19 @@ static int _allocate(struct alloc_handle *ah,
 				  lv ? lv->name : "");
 			goto out;
 		}
+		/*
+		 * For RAID/mirror with split metadata, verify we allocated
+		 * at least 1 extent per data area. If total_area_len is less
+		 * than area_count, integer division during allocation would
+		 * result in some areas getting 0 extents, creating LVs with
+		 * no segments which triggers internal errors during vg_write.
+		 */
+		if (ah->alloc_and_split_meta && ah->total_area_len < ah->area_count) {
+			log_error("Insufficient suitable allocatable extents for logical volume %s: "
+				  "%u extents found but at least %u required (1 extent per data image).",
+				  lv ? lv->name : "", ah->total_area_len, ah->area_count);
+			goto out;
+		}
 		log_verbose("Found fewer %sallocatable extents "
 			    "for logical volume %s than requested: using %" PRIu32 " extents (reduced by %u).",
 			    can_split ? "" : "contiguous ",
