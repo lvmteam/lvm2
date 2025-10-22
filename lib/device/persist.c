@@ -827,7 +827,7 @@ int vg_is_registered(struct cmd_context *cmd, struct volume_group *vg, uint64_t 
 	}
 }
 
-int persist_is_started(struct cmd_context *cmd, struct volume_group *vg, int *is_error, int may_fail)
+static int _is_started(struct cmd_context *cmd, struct volume_group *vg, int *is_error, int may_fail, uint64_t *our_key_ret)
 {
 	struct pv_list *pvl;
 	struct device *dev;
@@ -879,6 +879,9 @@ int persist_is_started(struct cmd_context *cmd, struct volume_group *vg, int *is
 		}
 	}
 
+	if (our_key_ret)
+		*our_key_ret = our_key_val;
+
 	is_started = 1;
 
 out:
@@ -890,6 +893,38 @@ out:
 		log_error("persistent reservation is not started.");
 
 	return is_started;
+}
+
+int persist_is_started_gen(struct cmd_context *cmd, struct volume_group *vg, int *is_error, int may_fail, uint64_t ls_generation)
+{
+	uint64_t our_key_val = 0;
+	uint64_t key_gen;
+	int ret;
+
+	ret = _is_started(cmd, vg, is_error, may_fail, &our_key_val);
+
+	if (!ret)
+		return 0;
+
+	/* only sanlock vgs use generation in keys */
+	if (!vg_is_sanlock(vg))
+		return ret;
+
+	/* if the generation in the key isn't correct, then return 0 (not started) */
+
+	key_gen = (our_key_val & 0xFFFFFF0000) >> 16;
+
+	if (key_gen != ls_generation) {
+		log_error("persistent reservation key 0x%llx gen %llu needs update (run vgchange --persist start)",
+			  (unsigned long long)our_key_val, (unsigned long long)key_gen);
+		return 0;
+	}
+	return 1;
+}
+
+int persist_is_started(struct cmd_context *cmd, struct volume_group *vg, int *is_error, int may_fail)
+{
+	return _is_started(cmd, vg, is_error, may_fail, NULL);
 }
 
 static int get_our_key(struct cmd_context *cmd, struct volume_group *vg,

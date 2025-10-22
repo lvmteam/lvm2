@@ -17,6 +17,7 @@
 
 struct lockd_state {
 	uint32_t flags;
+	uint64_t generation;
 };
 
 #define LOCKD_SANLOCK_LV_NAME "lvmlock"

@@ -366,7 +366,7 @@ static int _lockd_result(struct cmd_context *cmd, const char *req_name, daemon_r
 	}
 
 	if (our_generation)
-		*our_generation = (uint64_t)daemon_reply_int(reply, "our_generation", 0);
+		*our_generation = (uint64_t)daemon_reply_int(reply, "ls_generation", 0);
 
 	log_debug("lockd %s result: %d", req_name, reply_result);
 	return 1;
@@ -2631,6 +2631,8 @@ int lockd_vg(struct cmd_context *cmd, const char *vg_name, const char *def_mode,
 	default:
 		lks->flags |= LDST_FAIL_OTHER;
 	}
+
+	lks->generation = our_generation;
 
 	/*
 	 * Normal success.
