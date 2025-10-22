@@ -2202,9 +2202,6 @@ out:
 
 static void _remove_files_on_exit(void)
 {
-	if (unlink(DMEVENTD_PIDFILE) && (errno != ENOENT))
-		log_sys_debug("unlink", DMEVENTD_PIDFILE);
-
 	if (!_systemd_activation) {
 		if (unlink(DM_EVENT_FIFO_CLIENT) && (errno != ENOENT))
 			log_sys_debug("unlink", DM_EVENT_FIFO_CLIENT);
@@ -2212,6 +2209,9 @@ static void _remove_files_on_exit(void)
 		if (unlink(DM_EVENT_FIFO_SERVER) && (errno != ENOENT))
 			log_sys_debug("unlink", DM_EVENT_FIFO_SERVER);
 	}
+
+	if (unlink(DMEVENTD_PIDFILE) && (errno != ENOENT))
+		log_sys_debug("unlink", DMEVENTD_PIDFILE);
 }
 
 static void _daemonize(void)
