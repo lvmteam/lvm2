@@ -93,7 +93,7 @@ test-job:
     - rm -rf /dev/shm/lvm2-test
     - cut -d' ' -f2 test/results/list | sort | uniq -c
     # Filter artifacts - keep only logs from tests which are not pass
-    - cd test/results && rm $(grep 'passed$' list | cut -d' ' -f1 | sed -e 's|/|_|g' -e 's|.*|\0.txt|')
+    - (cd test/results && rm $(grep 'passed$' list | cut -d' ' -f1 | sed -e 's|/|_|g' -e 's|.*|\0.txt|'))
     # TODO: Keep a list of known failures, and translate into regexp - or simply use python...
     - if grep failed test/results/list | grep -v '\\\(dbustest\|lvconvert-mirror\)\.sh' | sort; then false; else true; fi
   rules:
