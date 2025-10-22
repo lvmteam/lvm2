@@ -89,7 +89,7 @@ grep mirror_LV out
 not grep raid_LV out
 
 # Reduce mirror_LV size so there is some usable free space to create raid_LV
-lvreduce -l10%VG $vg/mirror_LV
+lvreduce --yes -l10%VG $vg/mirror_LV
 
 # Now lvcreate raid1 should succeed after metadata is fixed
 lvcreate --yes --type raid1 -n raid_LV --nosync -l100%FREE -m 3 $vg
