@@ -1,5 +1,6 @@
 Version 2.03.36 - 
 ==================
+  Fix approxima allocation for Raid with insufficient extents.
   Fix race in dmeventd remonitoring optimization (2.03.35).
   Use -real suffix for pvmove UUID.
   Add support pvmove segmentation allocation/pvmove_max_segmentation_size_mb.
