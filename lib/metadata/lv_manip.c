@@ -939,6 +939,7 @@ struct lv_segment *get_only_segment_using_this_lv(const struct logical_volume *l
 		return NULL;
 	}
 
+	/* coverity[unreachable] intentional single iteration to get first item */
 	dm_list_iterate_items(sl, &lv->segs_using_this_lv) {
 		/* Needs to be he only item in list */
 		if (!dm_list_end(&lv->segs_using_this_lv, &sl->list))

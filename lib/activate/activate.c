@@ -2213,6 +2213,7 @@ static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
 			goto_out;
 
 		/* Suspending 1st. LV above PVMOVE suspends whole tree */
+		/* coverity[unreachable] intentional single iteration to get first item */
 		dm_list_iterate_items(sl, &pvmove_lv->segs_using_this_lv) {
 			lv = sl->seg->lv;
 			break;

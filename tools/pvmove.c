@@ -542,6 +542,7 @@ static int _update_metadata(struct logical_volume *lv_mirr,
 	struct lv_list *lvl;
 	struct logical_volume *lv = lv_mirr;
 
+	/* coverity[unreachable] intentional single iteration to get first item */
 	dm_list_iterate_items(lvl, lvs_changed) {
 		lv = lvl->lv;
 		break;

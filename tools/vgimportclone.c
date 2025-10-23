@@ -86,6 +86,7 @@ static int _update_vg(struct cmd_context *cmd, struct volume_group *vg,
 		}
 	}
 
+	/* coverity[unreachable] intentional single iteration to get first item */
 	dm_list_iterate_items(devl, &vp->new_devs) {
 		/* device arg is not in the VG. */
 		log_error("Device %s was not found in VG %s.", dev_name(devl->dev), vg->name);

@@ -1781,6 +1781,7 @@ struct lv_segment *first_seg(const struct logical_volume *lv)
 {
 	struct lv_segment *seg;
 
+	/* coverity[unreachable] intentional single iteration to get first item */
 	dm_list_iterate_items(seg, &lv->segments)
 		return seg;
 
@@ -1791,6 +1792,7 @@ struct lv_segment *last_seg(const struct logical_volume *lv)
 {
 	struct lv_segment *seg;
 
+	/* coverity[unreachable] intentional single iteration to get first item */
 	dm_list_iterate_back_items(seg, &lv->segments)
 		return seg;
 

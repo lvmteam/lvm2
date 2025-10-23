@@ -282,6 +282,7 @@ static int _attach_metadata_devices(struct lv_segment *seg, struct dm_list *list
 		return 1;
 	}
 
+	/* coverity[unreachable] intentional single iteration to get first item */
 	dm_list_iterate_items(lvl, list)
 		break;  /* get first item */
 
