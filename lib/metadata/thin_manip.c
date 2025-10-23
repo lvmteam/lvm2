@@ -832,6 +832,8 @@ int update_thin_pool_params(struct cmd_context *cmd,
 	uint64_t max_pool_data_size;
 	const char *str;
 
+	*chunk_size_calc_method = 0;
+
 	if (!*chunk_size &&
 	    find_config_tree_node(cmd, allocation_thin_pool_chunk_size_CFG, profile))
 		*chunk_size = find_config_tree_int(cmd, allocation_thin_pool_chunk_size_CFG, profile) * 2;

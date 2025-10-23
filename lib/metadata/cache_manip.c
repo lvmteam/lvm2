@@ -212,6 +212,8 @@ int update_cache_pool_params(struct cmd_context *cmd,
 				    DM_CACHE_MIN_DATA_BLOCK_SIZE - 1) /
 				   DM_CACHE_MIN_DATA_BLOCK_SIZE) * DM_CACHE_MIN_DATA_BLOCK_SIZE;
 
+	*chunk_size_calc_method = 0;
+
 	if (!*chunk_size) {
 		if (!(*chunk_size = find_config_tree_int(cmd, allocation_cache_pool_chunk_size_CFG,
 							 profile) * 2)) {
