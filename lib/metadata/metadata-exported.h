@@ -891,14 +891,14 @@ int update_thin_pool_lv(struct logical_volume *lv, int activate);
 
 int recalculate_pool_chunk_size_with_dev_hints(struct logical_volume *pool_lv,
 					       struct logical_volume *pool_data_lv,
-					       int chunk_size_calc_policy);
+					       unsigned chunk_size_calc_policy);
 int validate_cache_chunk_size(struct cmd_context *cmd, uint32_t chunk_size);
 int validate_thin_pool_chunk_size(struct cmd_context *cmd, uint32_t chunk_size);
 int validate_pool_chunk_size(struct cmd_context *cmd, const struct segment_type *segtype, uint32_t chunk_size);
 int validate_thin_external_origin(const struct logical_volume *lv,
 				  const struct logical_volume *pool_lv);
 int get_default_allocation_thin_pool_chunk_size(struct cmd_context *cmd, struct profile *profile,
-						uint32_t *chunk_size, int *chunk_size_calc_method);
+						uint32_t *chunk_size, unsigned *chunk_size_calc_policy);
 int update_thin_pool_params(struct cmd_context *cmd,
 			    struct profile *profile,
 			    uint32_t extent_size,
@@ -908,12 +908,12 @@ int update_thin_pool_params(struct cmd_context *cmd,
 			    uint32_t *pool_metadata_extents,
 			    struct logical_volume *metadata_lv,
 			    thin_crop_metadata_t *crop_metadata,
-			    int *chunk_size_calc_method, uint32_t *chunk_size,
+			    unsigned *chunk_size_calc_policy, uint32_t *chunk_size,
 			    thin_discards_t *discards, thin_zero_t *zero_new_blocks);
 int thin_pool_set_params(struct lv_segment *seg,
 			 int error_when_full,
 			 thin_crop_metadata_t crop_metadata,
-			 int thin_chunk_size_calc_policy,
+			 unsigned chunk_size_calc_policy,
 			 uint32_t chunk_size,
 			 thin_discards_t discards,
 			 thin_zero_t zero_new_blocks);
@@ -1011,9 +1011,10 @@ struct lvcreate_params {
 	activation_change_t activate; /* non-snapshot, non-mirror */
 	thin_discards_t discards;     /* thin */
 	thin_zero_t zero_new_blocks;
-#define THIN_CHUNK_SIZE_CALC_METHOD_GENERIC 0x01
-#define THIN_CHUNK_SIZE_CALC_METHOD_PERFORMANCE 0x02
-	int thin_chunk_size_calc_policy;
+#define CHUNK_SIZE_CALC_POLICY_UNSELECTED 0x00
+#define CHUNK_SIZE_CALC_POLICY_GENERIC 0x01
+#define CHUNK_SIZE_CALC_POLICY_PERFORMANCE 0x02
+	unsigned chunk_size_calc_policy;
 	unsigned suppress_zero_warn : 1;
 	unsigned needs_lockd_init : 1;
 	unsigned ignore_type : 1;
@@ -1365,7 +1366,7 @@ int update_cache_pool_params(struct cmd_context *cmd,
 			     uint32_t pool_data_extents,
 			     uint32_t *pool_metadata_extents,
 			     struct logical_volume *metadata_lv,
-			     int *chunk_size_calc_method, uint32_t *chunk_size);
+			     unsigned *chunk_size_calc_policy, uint32_t *chunk_size);
 int validate_lv_cache_chunk_size(struct logical_volume *pool_lv, uint32_t chunk_size);
 int validate_lv_cache_create_pool(const struct logical_volume *pool_lv);
 int validate_lv_cache_create_origin(const struct logical_volume *origin_lv);

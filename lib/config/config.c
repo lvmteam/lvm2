@@ -2532,10 +2532,10 @@ const char *get_default_activation_mirror_image_fault_policy_CFG(struct cmd_cont
 int get_default_allocation_thin_pool_chunk_size_CFG(struct cmd_context *cmd, struct profile *profile)
 {
 	uint32_t chunk_size;
-	int chunk_size_calc_method;
+	unsigned chunk_size_calc_policy;
 
 	if (!get_default_allocation_thin_pool_chunk_size(cmd, profile, &chunk_size,
-							 &chunk_size_calc_method)) {
+							 &chunk_size_calc_policy)) {
 		stack; /* Ignore this error, never happens... */
 		chunk_size = DEFAULT_THIN_POOL_CHUNK_SIZE * 2;
 	}

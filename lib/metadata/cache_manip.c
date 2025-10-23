@@ -200,7 +200,7 @@ int update_cache_pool_params(struct cmd_context *cmd,
 			     uint32_t pool_data_extents,
 			     uint32_t *pool_metadata_extents,
 			     struct logical_volume *metadata_lv,
-			     int *chunk_size_calc_method, uint32_t *chunk_size)
+			     unsigned *chunk_size_calc_policy, uint32_t *chunk_size)
 {
 	uint64_t min_meta_size;
 	uint64_t pool_metadata_size = (uint64_t) *pool_metadata_extents * extent_size;
@@ -212,7 +212,7 @@ int update_cache_pool_params(struct cmd_context *cmd,
 				    DM_CACHE_MIN_DATA_BLOCK_SIZE - 1) /
 				   DM_CACHE_MIN_DATA_BLOCK_SIZE) * DM_CACHE_MIN_DATA_BLOCK_SIZE;
 
-	*chunk_size_calc_method = 0;
+	*chunk_size_calc_policy = CHUNK_SIZE_CALC_POLICY_UNSELECTED;
 
 	if (!*chunk_size) {
 		if (!(*chunk_size = find_config_tree_int(cmd, allocation_cache_pool_chunk_size_CFG,
@@ -1240,7 +1240,7 @@ int cache_set_params(struct lv_segment *seg,
 		    /* TODO: some calc_policy solution for cache ? */
 		    !recalculate_pool_chunk_size_with_dev_hints(pool_seg->lv,
 								seg_lv(pool_seg, 0),
-								THIN_CHUNK_SIZE_CALC_METHOD_GENERIC))
+								CHUNK_SIZE_CALC_POLICY_GENERIC))
 			return_0;
 	}
 

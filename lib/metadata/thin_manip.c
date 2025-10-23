@@ -733,7 +733,7 @@ static uint32_t _estimate_chunk_size(uint32_t data_extents, uint32_t extent_size
 }
 
 int get_default_allocation_thin_pool_chunk_size(struct cmd_context *cmd, struct profile *profile,
-						uint32_t *chunk_size, int *chunk_size_calc_method)
+						uint32_t *chunk_size, unsigned *chunk_size_calc_policy)
 {
 	const char *str;
 
@@ -744,10 +744,10 @@ int get_default_allocation_thin_pool_chunk_size(struct cmd_context *cmd, struct 
 
 	if (!strcasecmp(str, "generic")) {
 		*chunk_size = DEFAULT_THIN_POOL_CHUNK_SIZE * 2;
-		*chunk_size_calc_method = THIN_CHUNK_SIZE_CALC_METHOD_GENERIC;
+		*chunk_size_calc_policy = CHUNK_SIZE_CALC_POLICY_GENERIC;
 	} else if (!strcasecmp(str, "performance")) {
 		*chunk_size = DEFAULT_THIN_POOL_CHUNK_SIZE_PERFORMANCE * 2;
-		*chunk_size_calc_method = THIN_CHUNK_SIZE_CALC_METHOD_PERFORMANCE;
+		*chunk_size_calc_policy = CHUNK_SIZE_CALC_POLICY_PERFORMANCE;
 	} else {
 		log_error("Thin pool chunk size calculation policy \"%s\" is unrecognised.", str);
 		return 0;
@@ -791,14 +791,14 @@ thin_crop_metadata_t get_thin_pool_crop_metadata(struct cmd_context *cmd,
 int thin_pool_set_params(struct lv_segment *seg,
 			 int error_when_full,
 			 thin_crop_metadata_t crop_metadata,
-			 int thin_chunk_size_calc_policy,
+			 unsigned chunk_size_calc_policy,
 			 uint32_t chunk_size,
 			 thin_discards_t discards,
 			 thin_zero_t zero_new_blocks)
 {
 	seg->chunk_size = chunk_size;
 	if (!recalculate_pool_chunk_size_with_dev_hints(seg->lv, seg_lv(seg, 0),
-							thin_chunk_size_calc_policy))
+							chunk_size_calc_policy))
 		return_0;
 
 	if (error_when_full)
@@ -823,7 +823,7 @@ int update_thin_pool_params(struct cmd_context *cmd,
 			    uint32_t *pool_metadata_extents,
 			    struct logical_volume *metadata_lv,
 			    thin_crop_metadata_t *crop_metadata,
-			    int *chunk_size_calc_method, uint32_t *chunk_size,
+			    unsigned *chunk_size_calc_policy, uint32_t *chunk_size,
 			    thin_discards_t *discards, thin_zero_t *zero_new_blocks)
 {
 	uint64_t pool_metadata_size;
@@ -832,7 +832,7 @@ int update_thin_pool_params(struct cmd_context *cmd,
 	uint64_t max_pool_data_size;
 	const char *str;
 
-	*chunk_size_calc_method = 0;
+	*chunk_size_calc_policy = CHUNK_SIZE_CALC_POLICY_UNSELECTED;
 
 	if (!*chunk_size &&
 	    find_config_tree_node(cmd, allocation_thin_pool_chunk_size_CFG, profile))
@@ -865,7 +865,7 @@ int update_thin_pool_params(struct cmd_context *cmd,
 		if (!*chunk_size) {
 			if (!get_default_allocation_thin_pool_chunk_size(cmd, profile,
 									 chunk_size,
-									 chunk_size_calc_method))
+									 chunk_size_calc_policy))
 				return_0;
 
 			pool_metadata_size = _estimate_metadata_size(pool_data_extents, extent_size, *chunk_size);

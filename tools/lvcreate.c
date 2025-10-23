@@ -411,7 +411,7 @@ static int _update_extents_params(struct volume_group *vg,
 						     &lp->pool_metadata_extents,
 						     NULL,
 						     &lp->crop_metadata,
-						     &lp->thin_chunk_size_calc_policy,
+						     &lp->chunk_size_calc_policy,
 						     &lp->chunk_size,
 						     &lp->discards,
 						     &lp->zero_new_blocks))
@@ -422,7 +422,7 @@ static int _update_extents_params(struct volume_group *vg,
 						      lp->extents,
 						      &lp->pool_metadata_extents,
 						      NULL,
-						      &lp->thin_chunk_size_calc_policy,
+						      &lp->chunk_size_calc_policy,
 						      &lp->chunk_size))
 				return_0;
 		}

@@ -3103,7 +3103,7 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 	uint64_t meta_size;
 	uint32_t meta_extents;
 	uint32_t chunk_size;
-	int chunk_calc;
+	unsigned chunk_size_calc_policy;
 	cache_metadata_format_t cache_metadata_format;
 	cache_mode_t cache_mode;
 	const char *policy_name;
@@ -3278,7 +3278,7 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 					      lv->le_count,
 					      &meta_extents,
 					      metadata_lv,
-					      &chunk_calc,
+					      &chunk_size_calc_policy,
 					      &chunk_size))
 			goto_bad;
 	} else {
@@ -3288,7 +3288,7 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 					     &meta_extents,
 					     metadata_lv,
 					     &crop_metadata,
-					     &chunk_calc,
+					     &chunk_size_calc_policy,
 					     &chunk_size,
 					     &discards, &zero_new_blocks))
 			goto_bad;
@@ -3485,7 +3485,7 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 		if (!thin_pool_set_params(seg,
 					  error_when_full,
 					  crop_metadata,
-					  chunk_calc,
+					  chunk_size_calc_policy,
 					  chunk_size,
 					  discards,
 					  zero_new_blocks))

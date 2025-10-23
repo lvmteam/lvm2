@@ -9651,7 +9651,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		if (!thin_pool_set_params(first_seg(lv),
 					  lp->error_when_full,
 					  lp->crop_metadata,
-					  lp->thin_chunk_size_calc_policy,
+					  lp->chunk_size_calc_policy,
 					  lp->chunk_size,
 					  lp->discards,
 					  lp->zero_new_blocks)) {
