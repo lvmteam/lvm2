@@ -5855,7 +5855,7 @@ static int _lvconvert_detach_writecache_when_clean(struct cmd_context *cmd,
 						   struct lvconvert_result *lr)
 {
 	struct convert_poll_id_list *idl;
-	struct poll_operation_id *id;
+	struct poll_operation_id *id = NULL;
 	struct volume_group *vg;
 	struct logical_volume *lv;
 	struct logical_volume *lv_fast;
@@ -5864,13 +5864,17 @@ static int _lvconvert_detach_writecache_when_clean(struct cmd_context *cmd,
 	int is_lockd;
 	int ret = 0;
 
-	if (dm_list_empty(&lr->poll_idls)) {
+	/* coverity[unreachable] intentional single iteration to get first item */
+	dm_list_iterate_items(idl, &lr->poll_idls) {
+		id = idl->id;
+		break;	/* just grab first item */
+	}
+
+	if (!id) {
 		log_error(INTERNAL_ERROR "Cannot detach writecache.");
 		return 0;
 	}
 
-	idl = dm_list_item(dm_list_first(&lr->poll_idls), struct convert_poll_id_list);
-	id = idl->id;
 	is_lockd = lvmcache_vg_is_lockd_type(cmd, id->vg_name, NULL);
 
 	/*
