@@ -1,3 +1,6 @@
+Version 2.03.37 - 
+==================
+
 Version 2.03.36 - 24th October 2025
 ===================================
   Fix uninitialized chunk_size_calc_policy in pool parameter functions.
