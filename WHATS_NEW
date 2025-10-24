@@ -1,10 +1,11 @@
-Version 2.03.36 - 
-==================
+Version 2.03.36 - 24th October 2025
+===================================
   Fix uninitialized chunk_size_calc_policy in pool parameter functions.
   Fix approximate allocation for Raid with insufficient extents.
   Fix race in dmeventd remonitoring optimization (2.03.35).
   Use -real suffix for pvmove UUID.
   Add support pvmove segmentation allocation/pvmove_max_segmentation_size_mb.
+  Allow creating _imeta with multiple segments.
   Fix driver_version() accepts NULL version buffer pointer.
   Fix invalid free() call in error path of _add_metadata_area_to_pv().
   Avoid destroying aio context in forked process.

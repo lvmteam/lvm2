@@ -9,6 +9,7 @@ Version 2.03.36
 * Add cache promotions/demotions to reports.
 * Handle XFS quota when resizing.
 * Allow creating `_imeta` with multiple segments.
+* Fix race in dmeventd remonitoring optimization (2.03.35).
 * And [[!toggle text="more"]]
 
 [[!toggleable text="""
@@ -25,15 +26,14 @@ Other Changes
   should handle corner cases where where operations were not finishing cleanly.
 * Fix adding and removing integrity to RAID volumes.
 * Deactivate internal lvmlock LV if lock start fails.
-* Fix event server (dmeventd) failures.
 * Detect insufficient space for RAID with split metadata.
 
 """]]
 
 <!-- remove the pending tag on release, remove draft tag once editing is complete -->
-[[!tag draft pending]]
+[[!tag]]
 <!--
 For old releases add Release Timestamp like this, date from git show $COMMIT is fine.
-\[[!meta date="Tue Nov 21 14:26:07 2023 +0100"]]
+[!meta date="Fri Oct 24 18:22:00 2025 +0100"]]
 -->
 
