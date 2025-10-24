@@ -1302,9 +1302,9 @@ static void *_monitor_thread(void *arg)
 		 *
 		 * 1) Woken by _update_events() (new registration reusing this thread):
 		 *    - thread->events is non-zero and thread is moved to active registry
-		 *    - Status is set DM_THREAD_REGISTERING
+		 *    - Status is set DM_THREAD_RUNNING
 		 *    - _register_for_timeout() resets next_time for fresh timeout
-		 *    - Loop continues (events != 0), main loop sets status = RUNNING,
+		 *    - Loop continues (events != 0)
 		 *
 		 * 2) Natural timeout (grace period expired with no new registration):
 		 *    - thread->events is still 0 and loop exits
@@ -1352,8 +1352,9 @@ static int _update_events(struct thread_status *thread, int events)
 		 */
 		_thread_used(thread);
 
-		/* Set status to REGISTERING (not RUNNING) to ensure proper state flow. */
-		thread->status = DM_THREAD_REGISTERING;
+		/* Set status to RUNNING and processing to 1. */
+		thread->status = DM_THREAD_RUNNING;
+		thread->processing = 1; /* No signaling */
 
 		/*
 		 * Signal the per-thread condition variable while holding _global_mutex.
