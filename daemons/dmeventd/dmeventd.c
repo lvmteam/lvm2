@@ -1692,7 +1692,8 @@ static int _want_registered_device(char *dso_name, char *device_uuid,
  * Searches active registry (_thread_registry) for matching device.
  * Filters out GRACE_PERIOD threads (returns only active RUNNING/REGISTERING).
  *
- * @next: if true, return next device in iteration; if false, return exact match
+ * @next: if false, return exact match for (dso_name, device_uuid)
+ *        if true, find (dso_name, device_uuid) then return next device with same dso_name
  *
  * Note: Grace period threads stay in active registry but are filtered out
  * so clients only see actively monitored devices.
@@ -1700,6 +1701,7 @@ static int _want_registered_device(char *dso_name, char *device_uuid,
 static int _get_registered_dev(struct message_data *message_data, int next)
 {
 	struct thread_status *thread, *hit = NULL;
+	int found_start = !next;  /* If !next, we're ready to match immediately */
 	int ret = -ENOENT;
 
 	DEBUGLOG("Get%s dso:%s  uuid:%s.", next ? "Next" : "",
@@ -1708,59 +1710,44 @@ static int _get_registered_dev(struct message_data *message_data, int next)
 
 	_lock_mutex();
 
-	/* Iterate list of threads checking if we want a particular one.
+	/* Single iteration to find the target thread.
+	 * - If next==false: find first match for (dso_name, device_uuid)
+	 * - If next==true: find match for (dso_name, device_uuid),
+	 *   then continue to find next match for (dso_name, any device)
 	 * Skip GRACE_PERIOD threads - only return actively monitored devices. */
 	dm_list_iterate_items(thread, &_thread_registry) {
 		_lock_thread(thread);
-		if ((thread->status != DM_THREAD_GRACE_PERIOD) &&
-		    _want_registered_device(message_data->dso_name,
-					    message_data->device_uuid,
-					    thread)) {
-			hit = thread;
-			break; /* Keep thread locked */
+
+		/* Skip threads in grace period */
+		if (thread->status != DM_THREAD_GRACE_PERIOD) {
+			if (found_start) {
+				/* Ready to accept a match */
+				if (_want_registered_device(message_data->dso_name,
+							    next ? NULL : message_data->device_uuid,
+							    thread)) {
+					hit = thread;
+					break; /* Keep thread locked */
+				}
+			} else {
+				/* Still looking for the starting point */
+				if (_want_registered_device(message_data->dso_name,
+							    message_data->device_uuid,
+							    thread)) {
+					/* Found starting position, now look for next */
+					found_start = 1;
+				}
+			}
 		}
+
 		_unlock_thread(thread);
 	}
 
-	/*
-	 * If we got a registered device and want the next one ->
-	 * fetch next conforming element off the list.
-	 */
-	if (hit && !next)
-		goto reg;
-
-	/*
-	 * Grace period threads stay in active registry, so single search is sufficient.
-	 * Unused registry only contains DONE threads which shouldn't be returned.
-	 */
-
-	if (!hit) {
-		DEBUGLOG("Get%s not registered", next ? "" : "Next");
-		goto out;
-	}
-	_unlock_thread(hit); /* Unlock the first hit */
-	hit = NULL;
-
-	while (1) {
-		if (dm_list_end(&_thread_registry, &thread->list))
-			goto out;
-
-		thread = dm_list_item(thread->list.n, struct thread_status);
-		_lock_thread(thread);
-		if ((thread->status != DM_THREAD_GRACE_PERIOD) &&
-		    _want_registered_device(message_data->dso_name, NULL, thread)) {
-			hit = thread;
-			break; /* Keep new hit locked */
-		}
-		_unlock_thread(thread);
+	if (hit) {
+		/* hit is already locked from the search above */
+		ret = _registered_device(message_data, hit);
+		_unlock_thread(hit);
 	}
 
-      reg:
-	/* hit is already locked from the search above */
-	ret = _registered_device(message_data, hit);
-	_unlock_thread(hit);
-
-      out:
 	_unlock_mutex();
 
 	return ret;
