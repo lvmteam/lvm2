@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005-2015 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2005-2025 Red Hat, Inc. All rights reserved.
  *
  * This file is part of the device-mapper userspace tools.
  *
@@ -206,7 +206,7 @@ struct message_data {
 	char *device_uuid;	/* Mapped device path. */
 	char *events_str;	/* Events string as fetched from message. */
 	unsigned events_field;	/* Events bitfield. */
-	uint32_t timeout_secs;
+	unsigned timeout_secs;
 	char *timeout_str;
 	struct dm_event_daemon_message *msg;	/* Pointer to message buffer. */
 };
@@ -224,39 +224,47 @@ enum {
  *
  * One thread per mapped device which can block on it until an event
  * occurs and the event processing function of the DSO gets called.
+ *
+ * LOCKING PROTOCOL:
+ * - _global_mutex: Protects registry lists, prevents thread from being freed
+ * - _timeout_mutex: Protects timeout registry linkage
+ * - Lock ordering: _global_mutex FIRST, then thread->mutex (never reversed)
+ *
+ * REGISTRIES:
+ * - _thread_registry: Active threads (REGISTERING, RUNNING, GRACE_PERIOD)
+ * - _thread_registry_unused: Terminated threads (DONE only)
  */
 struct thread_status {
-	struct dm_list list;
+	struct dm_list list;		/* Protected by _global_mutex */
 
-	pthread_t thread;
+	/* === Fields protected by _timeout_mutex === */
+	struct dm_list timeout_list;	/* Timeout registry linkage */
 
-	struct dso_data *dso_data;	/* DSO this thread accesses. */
-
-	struct {
+	/* === Fields NOT requiring locks (immutable or special purpose) === */
+	pthread_t thread;		/* Thread ID, set once at creation */
+	pthread_cond_t grace_cond;	/* Condition variable for grace period */
+	struct dso_data *dso_data;	/* DSO ref (immutable, ref counted) */
+	void *dso_private;		/* DSO private (DSO responsibility) */
+	struct {			/* Device info (immutable after init) */
 		char *uuid;
 		char *name;
 		int major, minor;
 	} device;
-	int processing;		/* Set when event is being processed */
+	struct dm_task *wait_task;	/* DM task (immutable after init) */
+	uint64_t inode;			/* Device inode (immutable after init) */
+	unsigned used;			/* Debug counter (no sync needed) */
 
-	int status;		/* See DM_THREAD_{REGISTERING,RUNNING,GRACE_PERIOD,DONE} */
-
-	int events;		/* bitfield for event filter. */
-	int current_events;	/* bitfield for occurred events. */
-	struct dm_task *wait_task;
-	int pending;		/* Set when event filter change is pending */
-	int used;		/* Count thread reusage (for debugging) */
-	pthread_cond_t grace_cond;   /* Condition variable for grace period wait */
-	uint64_t inode;         /* Device path inode of monitored volume */
-	time_t next_time;
-	uint32_t timeout;
-	struct dm_list timeout_list;
-	void *dso_private; /* dso per-thread status variable */
-	/* TODO per-thread mutex */
+	unsigned status;		/* DM_THREAD_{REGISTERING,RUNNING,GRACE_PERIOD,DONE} */
+	int current_events;		/* Occurred events bitfield */
+	int events;			/* Event filter bitfield */
+	int pending;			/* Event filter change pending */
+	int processing;			/* Event processing in progress flag */
+	time_t next_time;		/* Next timeout timestamp */
+	unsigned timeout;		/* Timeout interval in seconds */
 };
 
-static DM_LIST_INIT(_thread_registry);
-static DM_LIST_INIT(_thread_registry_unused);
+static DM_LIST_INIT(_thread_registry);		/* Active threads (REGISTERING, RUNNING, GRACE_PERIOD) */
+static DM_LIST_INIT(_thread_registry_unused);	/* Terminated threads (DONE only) */
 
 static int _timeout_running;
 static DM_LIST_INIT(_timeout_registry);
@@ -339,11 +347,11 @@ static int _lookup_symbol(void *dl, void **symbol, const char *name)
 static int _lookup_symbols(void *dl, struct dso_data *data)
 {
 	return _lookup_symbol(dl, (void *) &data->process_event,
-			     "process_event") &&
-	    _lookup_symbol(dl, (void *) &data->register_device,
-			  "register_device") &&
-	    _lookup_symbol(dl, (void *) &data->unregister_device,
-			  "unregister_device");
+			      "process_event") &&
+		_lookup_symbol(dl, (void *) &data->register_device,
+			       "register_device") &&
+		_lookup_symbol(dl, (void *) &data->unregister_device,
+			       "unregister_device");
 }
 
 /* Load an application specific DSO. */
@@ -445,7 +453,7 @@ static struct thread_status *_alloc_thread_status(const struct message_data *dat
 	/* Initialize grace period condition variable */
 	if (pthread_cond_init(&thread->grace_cond, NULL)) {
 		log_error("Failed to initialize grace period condition variable.");
-		goto_out;
+		goto out;
 	}
 
 	/* runs ioctl and may register lvm2 plugin */
@@ -992,9 +1000,7 @@ static int _reset_pending_signal(int signal)
 	struct sigaction prev_act, act = { .sa_handler = SIG_IGN };
 
 	sigemptyset(&act.sa_mask);
-
 	sigemptyset(&prev_mask);
-
 	sigemptyset(&mask);
 	sigaddset(&mask, signal);
 
@@ -1028,6 +1034,7 @@ static int _event_wait(struct thread_status *thread)
 	sigset_t set, old;
 	int ret = DM_WAIT_RETRY;
 	struct dm_info info;
+	int task_result;
 
 	/* TODO: audit libdm thread usage */
 
@@ -1043,7 +1050,9 @@ static int _event_wait(struct thread_status *thread)
 		return ret; /* What better */
 	}
 
-	if (dm_task_run(thread->wait_task)) {
+	task_result = dm_task_run(thread->wait_task);
+
+	if (task_result) {
 		/* Recheck device info whether is still exists */
 		if (!_fill_device_data(thread))
 			goto disappeared; /* device is gone... */
@@ -1578,9 +1587,10 @@ static int _get_registered_dev(struct message_data *message_data, int next)
 	struct thread_status *thread, *hit = NULL;
 	int ret = -ENOENT;
 
-	DEBUGLOG("Get%s dso:%s  uuid:%s.", next ? "" : "Next",
+	DEBUGLOG("Get%s dso:%s  uuid:%s.", next ? "Next" : "",
 		 message_data->dso_name,
 		 message_data->device_uuid);
+
 	_lock_mutex();
 
 	/* Iterate list of threads checking if we want a particular one. */
@@ -1673,6 +1683,7 @@ static int _get_timeout(struct message_data *message_data)
 {
 	struct thread_status *thread;
 	struct dm_event_daemon_message *msg = message_data->msg;
+	unsigned timeout;
 
 	_lock_mutex();
 	thread = _lookup_thread_status(message_data);
@@ -1681,9 +1692,11 @@ static int _get_timeout(struct message_data *message_data)
 	if (!thread)
 		return -ENODEV;
 
+	timeout = thread->timeout;
+
 	free(msg->data);
-	msg->size = dm_asprintf(&(msg->data), "%s %" PRIu32,
-				message_data->id, thread->timeout);
+	msg->size = dm_asprintf(&(msg->data), "%s %u",
+				message_data->id, timeout);
 
 	return (msg->data && msg->size) ? 0 : -ENOMEM;
 }
