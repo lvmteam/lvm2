@@ -227,6 +227,7 @@ enum {
  *
  * LOCKING PROTOCOL:
  * - _global_mutex: Protects registry lists, prevents thread from being freed
+ * - thread->mutex: Protects mutable per-thread state fields
  * - _timeout_mutex: Protects timeout registry linkage
  * - Lock ordering: _global_mutex FIRST, then thread->mutex (never reversed)
  *
@@ -254,7 +255,9 @@ struct thread_status {
 	uint64_t inode;			/* Device inode (immutable after init) */
 	unsigned used;			/* Debug counter (no sync needed) */
 
+	/* === Fields protected by thread->mutex === */
 	unsigned status;		/* DM_THREAD_{REGISTERING,RUNNING,GRACE_PERIOD,DONE} */
+	pthread_mutex_t mutex;		/* The lock protecting fields */
 	int current_events;		/* Occurred events bitfield */
 	int events;			/* Event filter bitfield */
 	int pending;			/* Event filter change pending */
@@ -416,6 +419,9 @@ static void _free_thread_status(struct thread_status *thread)
 	/* Clean up grace period condition variable */
 	pthread_cond_destroy(&thread->grace_cond);
 
+	/* Clean up per-thread mutex */
+	pthread_mutex_destroy(&thread->mutex);
+
 	free(thread->device.uuid);
 	free(thread->device.name);
 	free(thread);
@@ -449,6 +455,12 @@ static struct thread_status *_alloc_thread_status(const struct message_data *dat
 	/* Until real name resolved, use UUID */
 	if (!(thread->device.name = strdup(data->device_uuid)))
 		goto_out;
+
+	/* Initialize per-thread mutex */
+	if (pthread_mutex_init(&thread->mutex, NULL)) {
+		log_error("Failed to initialize thread mutex.");
+		goto out;
+	}
 
 	/* Initialize grace period condition variable */
 	if (pthread_cond_init(&thread->grace_cond, NULL)) {
@@ -607,8 +619,13 @@ static int _parse_message(struct message_data *message_data)
 	return ret;
 }
 
-/* Global mutex to lock access to lists et al. See _global_mutex
-   above. */
+/*
+ * Global mutex locking.
+ * Protects:
+ * - Registry lists (_thread_registry, _thread_registry_unused)
+ * - Prevents threads from being freed during access
+ * Must be locked BEFORE any per-thread mutex to maintain lock ordering.
+ */
 static int _lock_mutex(void)
 {
 	return pthread_mutex_lock(&_global_mutex);
@@ -617,6 +634,21 @@ static int _lock_mutex(void)
 static int _unlock_mutex(void)
 {
 	return pthread_mutex_unlock(&_global_mutex);
+}
+
+/*
+ * Per-thread mutex locking.
+ * Protects thread fields: status, events, pending, processing, timeout, etc.
+ * Must be locked AFTER global mutex (if both needed) to maintain lock ordering.
+ */
+static int _lock_thread(struct thread_status *thread)
+{
+	return pthread_mutex_lock(&thread->mutex);
+}
+
+static int _unlock_thread(struct thread_status *thread)
+{
+	return pthread_mutex_unlock(&thread->mutex);
 }
 
 /* Check, if a device exists. */
