@@ -786,18 +786,18 @@ static int _get_status(struct message_data *message_data)
 		if ((current = dm_asprintf(buffers + i, "0:%d %s %s %u %" PRIu32 ";",
 					   i, thread->dso_data->dso_name,
 					   thread->device.uuid, thread->events,
-					   thread->timeout)) < 0) {
+					   thread->timeout)) < 1) {
 			_unlock_mutex();
 			goto out;
 		}
 		++i;
 		/* coverity[overflow] - only positive 'current' is used */
-		size += current; /* count with trailing '\0' */
+		size += current - 1; /* count without trailing '\0' */
 	}
 	_unlock_mutex();
 
 	len = strlen(message_data->id);
-	msg->size = size + len + 1;
+	msg->size = size + len + 1 + 1;
 	free(msg->data);
 	if (!(msg->data = malloc(msg->size)))
 		goto out;
@@ -810,6 +810,7 @@ static int _get_status(struct message_data *message_data)
 		memcpy(message, buffers[j], len);
 		message += len;
 	}
+	*message = 0;
 
 	ret = 0;
  out:
