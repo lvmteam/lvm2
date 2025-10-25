@@ -43,7 +43,7 @@ restart multipathd.)
 .SS Persistent reservation types
 .P
 LVM uses PR type "Write Exclusive" (WE) for devices in a local VG, and
-"Write Exclusive - all registrants" (WEAR) for devices in a shared VG.  
+"Write Exclusive - all registrants" (WEAR) for devices in a shared VG.
 One exception is dm-multipath devices, for which WEAR is used in both
 local and shared VGs (this is needed for all paths to remain usable.)
 .P
@@ -54,7 +54,7 @@ The lvmpersist command has two options for specifying the PR type:
 Set access to "ex" (exclusive) if the devices should be accessed by only
 one host (i.e. the devices are part of a local VG.)
 Set access to "sh" (shared) if the devices are meant to be accessed
-concurrently by multiple hosts (i.e. the devices are part of a shared VG.) 
+concurrently by multiple hosts (i.e. the devices are part of a shared VG.)
 lvmpersist will choose the appropriate PR type for each device (usually
 WE for "ex", and WEAR for "sh".)
 .TP
@@ -426,7 +426,7 @@ has been started independent of any setpersist settings, then vgremove
 will not automatically stop PR on the devices.
 .P
 .SS vgexport/vgimport
-.B vgexport --persist stop 
+.B vgexport --persist stop
 stops PR after exporting the VG, and
 .B vgimport --persist start
 starts PR before importing the VG.

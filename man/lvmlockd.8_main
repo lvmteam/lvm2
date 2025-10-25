@@ -267,7 +267,7 @@ in the last (sixth) attr position for a shared VG:
 .
 .P
 $ vgs
-  VG    #PV #LV #SN Attr   VSize   VFree  
+  VG    #PV #LV #SN Attr   VSize   VFree
   vgfoo   1   0   0 wz--ns 992.00m 736.00m
 .fi
 .
@@ -279,7 +279,7 @@ reporting field:
 .P
 .nf
 $ vgs -o+shared
-  VG    #PV #LV #SN Attr   VSize   VFree   Shared 
+  VG    #PV #LV #SN Attr   VSize   VFree   Shared
   vgfoo   1   0   0 wz--ns 992.00m 736.00m  shared
 .fi
 .P
@@ -292,7 +292,7 @@ command can also display the lock type:
 .nf
 $ vgs -o+locktype
   VG    #PV #LV #SN Attr   VSize   VFree   LockType
-  vgfoo   1   0   0 wz--ns 992.00m 736.00m sanlock 
+  vgfoo   1   0   0 wz--ns 992.00m 736.00m sanlock
 .fi
 .P
 .
@@ -306,7 +306,7 @@ option is added:
 .P
 .nf
 $ vgs --shared
-  VG    #PV #LV #SN Attr   VSize   VFree  
+  VG    #PV #LV #SN Attr   VSize   VFree
   vgfoo   1   0   0 wz--ns 992.00m 736.00m
 .fi
 .
