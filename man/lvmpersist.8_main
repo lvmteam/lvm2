@@ -71,16 +71,16 @@ Write Exclusive
 Exclusive Access
 .br
 .B WERO
-Write Exclusive – registrants only
+Write Exclusive - registrants only
 .br
 .B EARO
-Exclusive Access – registrants only
+Exclusive Access - registrants only
 .br
 .B WEAR
-Write Exclusive – all registrants
+Write Exclusive - all registrants
 .br
 .B EAAR
-Exclusive Access – all registrants
+Exclusive Access - all registrants
 .P
 (WERO and EARO types are not yet supported.)
 .P
