@@ -10,12 +10,12 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "tools/tool.h"
-
 #include "daemon-server.h"
 #include "daemon-log.h"
 #include "daemon-stray.h"
 #include "libdaemon/client/daemon-io.h"
+
+#include "lib/misc/util.h"
 
 #include <dlfcn.h>
 #include <errno.h>

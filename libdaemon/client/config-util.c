@@ -12,10 +12,10 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "tools/tool.h"
-
 #include "daemon-io.h"
 #include "device_mapper/misc/dm-logging.h"
+
+#include "lib/misc/util.h"
 
 #include <math.h>  /* fabs() */
 #include <float.h> /* DBL_EPSILON */

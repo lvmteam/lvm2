@@ -12,11 +12,12 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "tools/tool.h"
-
 #include "daemon-io.h"
 
+#include "lib/misc/util.h"
+
 #include <errno.h>
+#include <unistd.h>
 
 /*
  * Read a single message from a (socket) filedescriptor. Messages are delimited

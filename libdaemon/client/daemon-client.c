@@ -12,12 +12,13 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "tools/tool.h"
-
 #include "daemon-io.h"
 #include "daemon-client.h"
 #include "device_mapper/misc/dm-logging.h"
 
+#include "lib/misc/util.h"
+
+#include <unistd.h>
 #include <sys/un.h>
 #include <sys/socket.h>
 

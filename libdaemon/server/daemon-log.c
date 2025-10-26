@@ -10,8 +10,6 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 
-#include "tools/tool.h"
-
 #include "daemon-server.h"
 #include "daemon-log.h"
 
