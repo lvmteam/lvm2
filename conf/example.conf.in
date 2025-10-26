@@ -37,7 +37,7 @@ config {
 	# checks = 1
 
 	# Configuration option config/validate_metadata.
-	# Allows to select the level of validation after metadata transformation.
+	# Allows selecting the level of validation after metadata transformation.
 	# Validation takes extra CPU time to verify internal consistency.
 	# Accepted values:
 	#   full
@@ -207,7 +207,7 @@ devices {
 	# device is rejected. Unmatching path names do not affect the accept
 	# or reject decision. If no path names for a device match a pattern,
 	# then the device is accepted. Be careful mixing 'a' and 'r' patterns,
-	# as the combination might produce unexpected results (test changes.)
+	# as the combination might produce unexpected results (test changes).
 	# Run vgscan after changing the filter to regenerate the cache.
 	#
 	# Example
@@ -249,7 +249,7 @@ devices {
 	# Configuration option devices/sysfs_scan.
 	# Restrict device scanning to block devices appearing in sysfs.
 	# This is a quick way of filtering out block devices that are not
-	# present on the system. sysfs must be part of the kernel and mounted.)
+	# present on the system. sysfs must be part of the kernel and mounted.
 	# This configuration option has an automatic default value.
 	# sysfs_scan = 1
 
@@ -259,7 +259,7 @@ devices {
 	# avoid using PVs that belong to guest images stored on LVs.
 	# When enabled, the LVs scanned should be restricted using the
 	# devices file or the filter. This option does not enable autoactivation
-	# of layered VGs, which requires editing LVM udev rules (see LVM_PVSCAN_ON_LVS.)
+	# of layered VGs, which requires editing LVM udev rules (see LVM_PVSCAN_ON_LVS).
 	# This configuration option has an automatic default value.
 	# scan_lvs = 0
 
@@ -337,7 +337,7 @@ devices {
 	# penalty, e.g. MD chunk size. optimal_io_size is the device's
 	# preferred unit of receiving I/O, e.g. MD stripe width.
 	# minimum_io_size is used if optimal_io_size is undefined (0).
-	# If md_chunk_alignment is enabled, that detects the optimal_io_size.
+	# If md_chunk_alignment is enabled, it will detect the optimal_io_size.
 	# default_data_alignment and md_chunk_alignment will be overridden
 	# if they are not aligned with the value detected for this setting.
 	# This setting is overridden by data_alignment and the --dataalignment
@@ -497,7 +497,7 @@ allocation {
 	# is not claimed incorrectly by other tools because of old signatures
 	# from previous use. The number of signatures that LVM can detect
 	# depends on the detection code that is selected (see
-	# use_blkid_wiping.) Wiping each detected signature must be confirmed.
+	# use_blkid_wiping). Wiping each detected signature must be confirmed.
 	# When this setting is disabled, signatures on new LVs are not detected
 	# or erased unless the --wipesignatures option is used directly.
 	# This configuration option has an automatic default value.
@@ -529,7 +529,7 @@ allocation {
 	# Accepted values:
 	#   0  Automatically detected best available format
 	#   1  Original format
-	#   2  Improved 2nd. generation format
+	#   2  Improved second-generation format
 	#
 	# This configuration option has an automatic default value.
 	# cache_metadata_format = 0
@@ -596,9 +596,9 @@ allocation {
 	# thin_pool_metadata_require_separate_pvs = 0
 
 	# Configuration option allocation/thin_pool_crop_metadata.
-	# Older version of lvm2 cropped pool's metadata size to 15.81 GiB.
+	# Older versions of lvm2 cropped pool's metadata size to 15.81 GiB.
 	# This is slightly less than the actual maximum 15.88 GiB.
-	# For compatibility with older version and use of cropped size set to 1.
+	# For compatibility with older versions and to use the cropped size, set to 1.
 	# This configuration option has an automatic default value.
 	# thin_pool_crop_metadata = 0
 
@@ -910,7 +910,7 @@ log {
 
 	# Configuration option log/activation.
 	# Log messages during activation.
-	# Don't use this in low memory situations (can deadlock).
+	# Do not use this in low memory situations (can deadlock).
 	# This configuration option has an automatic default value.
 	# activation = 0
 
@@ -1085,7 +1085,7 @@ global {
 	# Additionally, read-only commands that encounter metadata in need of
 	# repair will still be allowed to proceed exactly as if the repair had
 	# been performed (except for the unchanged vg_seqno). Inappropriate
-	# use could mess up your system, so seek advice first!
+	# use could corrupt your system, so seek advice first!
 	# This configuration option has an automatic default value.
 	# metadata_read_only = 0
 
@@ -1119,7 +1119,7 @@ global {
 	# Configuration option global/support_mirrored_mirror_log.
 	# Enable mirrored 'mirror' log type for testing.
 	#
-	# This type is deprecated to create or convert to but can
+	# This type is deprecated for creation or conversion but can
 	# be enabled to test that activation of existing mirrored
 	# logs and conversion to disk/core works.
 	#
@@ -1219,7 +1219,7 @@ global {
 	# Configuration option global/sanlock_align_size.
 	# The sanlock lease size in MiB to use on disks with a 4K sector size.
 	# Possible values are 1,2,4,8.  The default is 8, which supports up to
-	# 2000 hosts (and max host_id 2000.)  Smaller values support smaller
+	# 2000 hosts (and max host_id 2000).  Smaller values support smaller
 	# numbers of max hosts (and max host_ids): 250, 500, 1000, 2000 for
 	# lease sizes 1,2,4,8.  Disks with 512 byte sectors always use 1MiB
 	# leases and support 2000 hosts, and are not affected by this setting.
@@ -1229,7 +1229,7 @@ global {
 	# Configuration option global/lvmlockctl_kill_command.
 	# The command that lvmlockctl --kill should use to force LVs offline.
 	# The lvmlockctl --kill command is run when a shared VG has lost
-	# access to locks (e.g. when sanlock has lost access to storage.)
+	# access to locks (e.g. when sanlock has lost access to storage).
 	# An empty string means that there will be no automatic attempt by
 	# lvmlockctl --kill to forcibly shut down LVs in the VG, and the user
 	# can manually intervene as described in lvmlockd(8).
@@ -1399,7 +1399,7 @@ global {
 	# Configuration option global/system_id_source.
 	# The method LVM uses to set the local system ID.
 	# Volume Groups can also be given a system ID (by vgcreate, vgchange,
-	# or vgimport.) A VG on shared storage devices is accessible only to
+	# or vgimport). A VG on shared storage devices is accessible only to
 	# the host with a matching system ID. See 'man lvmsystemid' for
 	# information on limitations and correct usage.
 	#
@@ -1743,7 +1743,7 @@ activation {
 	# Configuration option activation/snapshot_autoextend_threshold.
 	# Auto-extend a snapshot when its usage exceeds this percent.
 	# Setting this to 100 disables automatic extension.
-	# The minimum value is 50 (a smaller value is treated as 50.)
+	# The minimum value is 50 (a smaller value is treated as 50).
 	# Also see snapshot_autoextend_percent.
 	# Automatic extension requires dmeventd to be monitoring the LV.
 	#
@@ -1773,7 +1773,7 @@ activation {
 	# Configuration option activation/thin_pool_autoextend_threshold.
 	# Auto-extend a thin pool when its usage exceeds this percent.
 	# Setting this to 100 disables automatic extension.
-	# The minimum value is 50 (a smaller value is treated as 50.)
+	# The minimum value is 50 (a smaller value is treated as 50).
 	# Also see thin_pool_autoextend_percent.
 	# Automatic extension requires dmeventd to be monitoring the LV.
 	#
@@ -1803,7 +1803,7 @@ activation {
 	# Configuration option activation/vdo_pool_autoextend_threshold.
 	# Auto-extend a VDO pool when its usage exceeds this percent.
 	# Setting this to 100 disables automatic extension.
-	# The minimum value is 50 (a smaller value is treated as 50.)
+	# The minimum value is 50 (a smaller value is treated as 50).
 	# Also see vdo_pool_autoextend_percent.
 	# Automatic extension requires dmeventd to be monitoring the LV.
 	#
@@ -2035,7 +2035,7 @@ report {
 
 	# Configuration option report/compact_output.
 	# Do not print empty values for all report fields.
-	# If enabled, all fields that don't have a value set for any of the
+	# If enabled, all fields that do not have a value set for any of the
 	# rows reported are skipped and not printed. Compact output is
 	# applicable only if report/buffered is enabled. If you need to
 	# compact only specified fields, use compact_output=0 and define
@@ -2045,7 +2045,7 @@ report {
 
 	# Configuration option report/compact_output_cols.
 	# Do not print empty values for specified report fields.
-	# If defined, specified fields that don't have a value set for any
+	# If defined, specified fields that do not have a value set for any
 	# of the rows reported are skipped and not printed. Compact output
 	# is applicable only if report/buffered is enabled. If you need to
 	# compact all fields, use compact_output=1 instead in which case
