@@ -61,7 +61,6 @@
 #include <iomanip>
 #include <fstream>
 #include <sstream>
-#include <iostream>
 #include <cassert>
 #include <iterator>
 #include <algorithm>
@@ -89,6 +88,27 @@ static const long TEST_TIMEOUT = 10 * 60; // Timeout for a single test in second
 
 #ifndef BRICK_SHELLTEST_H
 #define BRICK_SHELLTEST_H
+
+namespace {
+
+const char* hasenv( const char *name ) {
+    const char *v = getenv( name );
+    if ( !v )
+        return NULL;
+    if ( strlen( v ) == 0 || !strcmp( v, "0" ) )
+        return NULL;
+    return v;
+}
+
+template< typename C >
+void split( std::string s, C &c ) {
+    std::stringstream ss( s );
+    std::string item;
+    while ( std::getline( ss, item, ',' ) )
+        c.push_back( item );
+}
+
+}
 
 namespace brick {
 namespace shelltest {
@@ -277,18 +297,23 @@ struct Journal {
     }
 
     friend std::istream &operator>>( std::istream &i, R &r ) {
+        typedef std::map< std::string, R > StringToResult;
+        static StringToResult string_to_result = {
+            { "failed",   FAILED },
+            { "interrupted", INTERRUPTED },
+            { "passed",   PASSED },
+            { "retried",  RETRIED },
+            { "skipped",  SKIPPED },
+            { "started",  STARTED },
+            { "timeout",  TIMEOUT },
+            { "warnings", WARNED }
+        };
+
         std::string x;
         i >> x;
 
-        if ( x == "started" ) r = STARTED;
-        else if ( x == "retried" ) r = RETRIED;
-        else if ( x == "failed" ) r = FAILED;
-        else if ( x == "interrupted" ) r = INTERRUPTED;
-        else if ( x == "passed" ) r = PASSED;
-        else if ( x == "skipped" ) r = SKIPPED;
-        else if ( x == "timeout" ) r = TIMEOUT;
-        else if ( x == "warnings" ) r = WARNED;
-        else r = UNKNOWN;
+        StringToResult::const_iterator it = string_to_result.find( x );
+        r = ( it != string_to_result.end() ) ? it->second : UNKNOWN;
         return i;
     }
 
@@ -679,7 +704,7 @@ struct KMsg : Source {
     bool can_clear;
     ssize_t buffer_size;
 
-    KMsg() : can_clear( strcmp(getenv("LVM_TEST_CAN_CLOBBER_DMESG") ? : "0", "0") ),
+    KMsg() : can_clear( hasenv("LVM_TEST_CAN_CLOBBER_DMESG") ),
         buffer_size(128 * 1024)
     {
 #ifdef __unix
@@ -1361,27 +1386,6 @@ struct Args {
         return *(i + 1);
     }
 };
-
-namespace {
-
-const char* hasenv( const char *name ) {
-    const char *v = getenv( name );
-    if ( !v )
-        return NULL;
-    if ( strlen( v ) == 0 || !strcmp( v, "0" ) )
-        return NULL;
-    return v;
-}
-
-template< typename C >
-void split( std::string s, C &c ) {
-    std::stringstream ss( s );
-    std::string item;
-    while ( std::getline( ss, item, ',' ) )
-        c.push_back( item );
-}
-
-}
 
 const char *DEF_FLAVOURS="ndev-vanilla";
 
