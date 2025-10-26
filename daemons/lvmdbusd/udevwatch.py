@@ -74,7 +74,19 @@ def filter_event(action, device):
 	else:
 		# This handles the wipefs -a path
 		if not refresh and 'DEVNAME' in device:
-			if cfg.om.get_object_by_lvm_id(device['DEVNAME']):
+			devname = device['DEVNAME']
+			found_obj = cfg.om.get_object_by_lvm_id(devname)
+
+			# Also check device symlinks - udev might report /dev/dm-X but
+			# the PV is tracked under a different name
+			if not found_obj and 'DEVLINKS' in device:
+				devlinks = device['DEVLINKS'].split()
+				for link in devlinks:
+					found_obj = cfg.om.get_object_by_lvm_id(link)
+					if found_obj:
+						break
+
+			if found_obj:
 				refresh = True
 
 	if refresh:
