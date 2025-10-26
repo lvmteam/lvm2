@@ -1180,8 +1180,14 @@ common_dev_() {
 	local type
 	local pvdev
 	local offset
+	local err_dev
+	local zero_dev
 
 	read -r pos size type pvdev offset < "$name.table"
+
+	# Cache device values to avoid repeated cat calls in loop
+	test -f ERR_DEV && err_dev=$(< ERR_DEV)
+	test -f ZERO_DEV && zero_dev=$(< ZERO_DEV)
 
 	for fromlen in "${@-0:}"; do
 		from=${fromlen%%:*}
@@ -1203,9 +1209,9 @@ common_dev_() {
 		delay)
 			echo "$from $len delay $pvdev $(( pos + offset )) $read_ms $pvdev $(( pos + offset )) $write_ms" ;;
 		writeerror)
-			echo "$from $len delay $pvdev $(( pos + offset )) 0 $(cat ERR_DEV) 0 0" ;;
+			echo "$from $len delay $pvdev $(( pos + offset )) 0 $err_dev 0 0" ;;
 		delayzero)
-			echo "$from $len delay $(cat ZERO_DEV) 0 $read_ms $(cat ZERO_DEV) 0 $write_ms" ;;
+			echo "$from $len delay $zero_dev 0 $read_ms $zero_dev 0 $write_ms" ;;
 		error|zero)
 			echo "$from $len $tgtype" ;;
 		esac
