@@ -298,16 +298,19 @@ struct Journal {
 
     friend std::istream &operator>>( std::istream &i, R &r ) {
         typedef std::map< std::string, R > StringToResult;
-        static StringToResult string_to_result = {
-            { "failed",   FAILED },
-            { "interrupted", INTERRUPTED },
-            { "passed",   PASSED },
-            { "retried",  RETRIED },
-            { "skipped",  SKIPPED },
-            { "started",  STARTED },
-            { "timeout",  TIMEOUT },
-            { "warnings", WARNED }
-        };
+        static StringToResult string_to_result;
+
+        // Initialize map on first use (compatible with pre-C++11 compilers)
+        if ( string_to_result.empty() ) {
+            string_to_result["failed"] = FAILED;
+            string_to_result["interrupted"] = INTERRUPTED;
+            string_to_result["passed"] = PASSED;
+            string_to_result["retried"] = RETRIED;
+            string_to_result["skipped"] = SKIPPED;
+            string_to_result["started"] = STARTED;
+            string_to_result["timeout"] = TIMEOUT;
+            string_to_result["warnings"] = WARNED;
+        }
 
         std::string x;
         i >> x;
