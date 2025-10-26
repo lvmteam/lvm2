@@ -1,5 +1,7 @@
 Version 2.03.37 - 
 ==================
+  Avoid passing uninitilized buffer in dmeventd to fix valgrind report.
+  Improve lvmdbusd matching of udevd reported device paths.
 
 Version 2.03.36 - 24th October 2025
 ===================================
