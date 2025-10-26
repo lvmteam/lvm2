@@ -18,6 +18,10 @@ aux have_integrity 1 5 0 || skip
 # Avoid 4K ramdisk devices on older kernels
 aux kernel_at_least  5 10 || export LVM_TEST_PREFER_BRD=0
 
+aux lvmconf 'activation/raid_fault_policy = "allocate"'
+
+aux prepare_dmeventd
+
 mnt="mnt"
 mkdir -p $mnt
 
@@ -92,11 +96,6 @@ _verify_data_on_lv() {
         umount $mnt
         lvchange -an $vg/$lv1
 }
-
-aux lvmconf \
-        'activation/raid_fault_policy = "allocate"'
-
-aux prepare_dmeventd
 
 # raid1, one device fails, dmeventd calls repair
 
