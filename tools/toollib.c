@@ -793,6 +793,19 @@ int lv_change_activate(struct cmd_context *cmd, struct logical_volume *lv,
 		}
 	}
 
+	if (lv_is_raid(lv) && lv_is_origin(lv) && lv_is_partial(lv)) {
+		struct lv_list *lvl;
+		dm_list_iterate_items(lvl, &lv->vg->lvs) {
+			if (lv_is_cow(lvl->lv) &&
+			    (lv_origin_lv(lvl->lv) == lv) &&
+			    lv_is_partial(lvl->lv)) {
+				log_error("Activating raid LV %s requires the removal of partial snapshot %s.",
+					  display_lvname(lv), display_lvname(lvl->lv));
+				return 0;
+			}
+		}
+	}
+
 	if (is_change_activating(activate) &&
 	    lvmcache_has_duplicate_devs() &&
 	    vg_has_duplicate_pvs(lv->vg) &&
