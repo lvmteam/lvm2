@@ -58,6 +58,9 @@ test_shell = os.getenv('LVM_DBUSD_TEST_MODE', 2)
 # LVM binary to use
 LVM_EXECUTABLE = os.getenv('LVM_BINARY', '/usr/sbin/lvm')
 
+# Max wait time in seconds for udev updates
+max_wait_timeout = int(os.getenv('LVM_LVMDBUSD_MAX_WAIT', '5'))
+
 # Empty options dictionary (EOD)
 EOD = dbus.Dictionary({}, signature=dbus.Signature('sv'))
 # Base interfaces on LV objects
@@ -2483,7 +2486,7 @@ class TestDbusService(unittest.TestCase):
 	def _block_present_absent(self, block_device, present=False):
 		start = time.time()
 		keep_looping = True
-		max_wait = 5
+		max_wait = max_wait_timeout
 		while keep_looping and time.time() < start + max_wait:
 			time.sleep(0.2)
 			if present:

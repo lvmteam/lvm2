@@ -127,7 +127,8 @@ help:
 	@echo "  LVM_VALGRIND_LVMPOLLD	Enable valgrind testing of lvmpolld (1)."
 	@echo "  LVM_STRACE		Enable strace logging."
 	@echo "  LVM_DEBUG_LEVEL	Sets debugging level for valgrind/strace (use > 0)."
-	@echo "  LVM_DEBUG_LVMDBUS	Run lvmdbus with --debug option."
+	@echo "  LVM_DEBUG_LVMDBUSD	Run lvmdbusd with --debug option."
+	@echo "  LVM_LVMDBUSD_MAX_WAIT	Max wait time in seconds for lvmdbus udev updates [5]."
 	@echo "  LVM_VERIFY_UDEV	Default verify state for lvm.conf."
 	@echo "  LVM_LOG_FILE_MAX_LINES	Maximum number of logged lines for lvm2 command [1000000]."
 	@echo "  S			Skip given test(s) (regex)."
@@ -309,9 +310,11 @@ lib/paths-common: $(srcdir)/Makefile.in Makefile .lib-dir-stamp
 	$(Q) echo 'LVM_TEST_CACHE_DUMP_CMD=$${LVM_TEST_CACHE_DUMP_CMD-@CACHE_DUMP_CMD@}' >> $@-t
 	$(Q) echo 'LVM_TEST_CACHE_REPAIR_CMD=$${LVM_TEST_CACHE_REPAIR_CMD-@CACHE_REPAIR_CMD@}' >> $@-t
 	$(Q) echo 'LVM_TEST_CACHE_RESTORE_CMD=$${LVM_TEST_CACHE_RESTORE_CMD-@CACHE_RESTORE_CMD@}' >> $@-t
+	$(Q) echo 'LVM_LVMDBUSD_MAX_WAIT=$${LVM_LVMDBUSD_MAX_WAIT-5}' >> $@-t
 	$(Q) echo 'export DM_UDEV_SYNCHRONIZATION THIN RAID CACHE\' >> $@-t
 	$(Q) echo ' LVM_TEST_THIN_CHECK_CMD LVM_TEST_THIN_DUMP_CMD LVM_TEST_THIN_REPAIR_CMD LVM_TEST_THIN_RESTORE_CMD\' >> $@-t
-	$(Q) echo ' LVM_TEST_CACHE_CHECK_CMD LVM_TEST_CACHE_DUMP_CMD LVM_TEST_CACHE_REPAIR_CMD LVM_TEST_CACHE_RESTORE_CMD' >> $@-t
+	$(Q) echo ' LVM_TEST_CACHE_CHECK_CMD LVM_TEST_CACHE_DUMP_CMD LVM_TEST_CACHE_REPAIR_CMD LVM_TEST_CACHE_RESTORE_CMD\' >> $@-t
+	$(Q) echo ' LVM_LVMDBUSD_MAX_WAIT' >> $@-t
 	$(Q) mv $@-t $@
 
 lib/paths-installed: lib/paths-common

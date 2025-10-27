@@ -312,7 +312,7 @@ prepare_lvmdbusd() {
 	echo "## preparing lvmdbusd..."
 	lvmconf "global/notify_dbus = 1"
 
-	test "${LVM_DEBUG_LVMDBUS:-0}" != "0" && lvmdbusdebug="--debug"
+	test "${LVM_DEBUG_LVMDBUSD:-0}" != "0" && lvmdbusdebug="--debug"
 
 	# Currently do not interfere with lvmdbusd testing of the file logging
 	unset LVM_LOG_FILE_EPOCH
