@@ -1,5 +1,6 @@
 Version 2.03.37 - 
 ==================
+  Warn on classic snapshot on raid creation and error on activation + test.
   Translate udev device paths in lvmdbusd for test environments.
   Use source='udev' in lvmdbusd to monitor processed udev events.
   Symlink to /dev nodes when using alternative dev dir to trigger udev.
