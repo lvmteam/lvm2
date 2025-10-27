@@ -1,4 +1,4 @@
-# Copyright (C) 2015-2016 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2015-2025 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,
 # modify, copy, or redistribute it subject to the terms and conditions
@@ -97,7 +97,8 @@ def add():
 	with observer_lock:
 		global observer
 		context = pyudev.Context()
-		monitor = pyudev.Monitor.from_netlink(context)
+		# Use source='udev' to get processed udev events, not raw kernel events
+		monitor = pyudev.Monitor.from_netlink(context, source='udev')
 		monitor.filter_by('block')
 		observer = pyudev.MonitorObserver(monitor, filter_event)
 		observer.start()
