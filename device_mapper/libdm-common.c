@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2012 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2025 Red Hat, Inc. All rights reserved.
  *
  * This file is part of the device-mapper userspace tools.
  *
@@ -1044,12 +1044,19 @@ static int _add_dev_node(const char *dev_name, uint32_t major, uint32_t minor,
 {
 	char path[PATH_MAX];
 	struct stat info;
+	struct stat linfo;
 	dev_t dev = MKDEV(major, minor);
 	mode_t old_mask;
 
 	if (!_build_dev_path(path, sizeof(path), dev_name))
 		return_0;
 
+	/*
+	 * Check if the device node already exists.
+	 * Note: stat() follows symlinks, so this checks the target device,
+	 * not the symlink itself. This works correctly for both real nodes
+	 * and symlinks pointing to the right device.
+	 */
 	if (stat(path, &info) >= 0) {
 		if (!S_ISBLK(info.st_mode)) {
 			log_error("A non-block device file at '%s' "
@@ -1058,16 +1065,71 @@ static int _add_dev_node(const char *dev_name, uint32_t major, uint32_t minor,
 		}
 
 		/* If right inode already exists we don't touch uid etc. */
-		if (info.st_rdev == dev)
+		if (info.st_rdev == dev) {
+			/*
+			 * Correct device exists (either as real node or symlink).
+			 * Use lstat() to distinguish between them for logging.
+			 */
+			if (lstat(path, &linfo) >= 0 && S_ISLNK(linfo.st_mode))
+				log_debug_activation("Symlink %s to correct device already exists", path);
 			return 1;
+		}
 
 		if (unlink(path) && (errno != ENOENT)) {
 			log_sys_error("unlink", path);
 			return 0;
 		}
-	} else if (_warn_if_op_needed(warn_if_udev_failed))
-		log_warn("%s not set up by udev: Falling back to direct "
-			 "node creation.", path);
+	} else {
+		/*
+		 * stat() failed. Check for dangling symlinks (where lstat succeeds
+		 * but stat fails with ENOENT because the symlink target doesn't exist).
+		 * Remove the dangling symlink before attempting to create a new node.
+		 */
+		if (errno == ENOENT && lstat(path, &linfo) >= 0 && S_ISLNK(linfo.st_mode)) {
+			log_debug_activation("Removing dangling symlink %s", path);
+			if (unlink(path) && (errno != ENOENT)) {
+				log_sys_error("unlink", path);
+				return 0;
+			}
+		}
+		if (_warn_if_op_needed(warn_if_udev_failed))
+			log_warn("%s not set up by udev: Falling back to direct "
+				 "node creation.", path);
+	}
+
+	/*
+	 * Test environment optimization: If using alternative dev dir (e.g., /tmp/LVMTEST/dev)
+	 * and the real /dev node already exists, create a symlink instead of a duplicate node.
+	 * This ensures operations trigger udev events which only monitors /dev.
+	 */
+	if (strcmp(_dm_dir, DEV_DIR) != 0) {
+		char real_path[PATH_MAX];
+		struct stat real_stat;
+
+		/* Build path to real /dev node (kernel always creates /dev/dm-N) */
+		if (dm_snprintf(real_path, sizeof(real_path), DEV_DIR "dm-%u", minor) >= 0) {
+			/* Check if real node exists with matching dev */
+			if (stat(real_path, &real_stat) >= 0 &&
+			    S_ISBLK(real_stat.st_mode) &&
+			    real_stat.st_rdev == dev) {
+				/*
+				 * Real /dev/dm-N exists. Create symlink from alternative location.
+				 * This allows operations to work through the symlink and trigger
+				 * udev events on the real device.
+				 */
+				log_debug_activation("Creating symlink %s -> %s", path, real_path);
+				(void) dm_prepare_selinux_context(path, S_IFLNK);
+				if (symlink(real_path, path) < 0) {
+					log_sys_error("symlink", path);
+					(void) dm_prepare_selinux_context(NULL, 0);
+					return 0;
+				}
+				(void) dm_prepare_selinux_context(NULL, 0);
+				log_debug_activation("Created symlink %s -> %s", path, real_path);
+				return 1;
+			}
+		}
+	}
 
 	(void) dm_prepare_selinux_context(path, S_IFBLK);
 	old_mask = umask(0);
