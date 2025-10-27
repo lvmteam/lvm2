@@ -9765,6 +9765,11 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 			goto revert_new_lv;
 	}
 
+	if (lp->snapshot && origin_lv && lv_is_raid(origin_lv)) {
+		log_warn("WARNING: Loss of snapshot %s will cause the activation of the %s LV %s to fail!",
+			 lp->lv_name, lvseg_name(first_seg(origin_lv)), display_lvname(origin_lv));
+	}
+
 	/* Do not scan this LV until properly zeroed/wiped. */
 	if (_should_wipe_lv(lp, lv, 0))
 		lv->status |= LV_NOSCAN;
