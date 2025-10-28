@@ -586,11 +586,24 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 			return ECMD_FAILED;
 		}
 		existing_vg = 1;
+
+		if (vg_is_shared(vg_to)) {
+			log_error("vgsplit is not supported with shared VGs.");
+			unlock_and_release_vg(cmd, vg_to, vg_name_to);
+			return ECMD_FAILED;
+		}
 	}
 
 	if (!(vg_from = vg_read_for_update(cmd, vg_name_from, NULL, 0, 0))) {
 		log_error("Failed to read VG %s.", vg_name_to);
 		unlock_and_release_vg(cmd, vg_to, vg_name_to);
+		return ECMD_FAILED;
+	}
+
+	if (vg_is_shared(vg_from)) {
+		log_error("vgsplit is not supported with shared VGs.");
+		unlock_and_release_vg(cmd, vg_to, vg_name_to);
+		unlock_and_release_vg(cmd, vg_from, vg_name_from);
 		return ECMD_FAILED;
 	}
 
