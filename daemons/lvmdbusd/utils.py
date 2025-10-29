@@ -406,10 +406,12 @@ def handler(signum):
 				cfg.ignore_sigterm = False
 				return True
 
+			# Set shutdown flag first so worker threads can detect shutdown
+			# even if exit_shell() blocks on shell_lock
+			cfg.run.value = 0
 			# If lvm shell is in use, tell it to exit
 			if cfg.SHELL_IN_USE is not None:
 				cfg.SHELL_IN_USE.exit_shell()
-			cfg.run.value = 0
 			log_error('Exiting daemon with signal %d' % signum)
 			if cfg.loop is not None:
 				cfg.loop.quit()
