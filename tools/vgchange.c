@@ -1400,7 +1400,15 @@ static int _vgchange_locktype_single(struct cmd_context *cmd, const char *vg_nam
 			             struct volume_group *vg,
 			             struct processing_handle *handle)
 {
+	char *pr_key = NULL;
+	DM_LIST_INIT(pr_devs);
 	int no_change = 0;
+
+	/* New lock type may use different PR key, save current key to stop PR below. */
+	if (vg->pr & VG_PR_REQUIRE) {
+		if (!persist_finish_before(cmd, vg, &pr_devs, &pr_key))
+			return_ECMD_FAILED;
+	}
 
 	if (!_vgchange_locktype(cmd, vg, &no_change))
 		return_ECMD_FAILED;
@@ -1427,6 +1435,9 @@ static int _vgchange_locktype_single(struct cmd_context *cmd, const char *vg_nam
 			return ECMD_FAILED;
 		}
 	}
+
+	if (pr_key)
+		persist_finish_after(cmd, vg, &pr_devs, pr_key);
 
 	log_print_unless_silent("Volume group \"%s\" successfully changed.", vg->name);
 

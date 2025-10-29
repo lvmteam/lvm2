@@ -74,7 +74,7 @@ static int _vgremove_single(struct cmd_context *cmd, const char *vg_name,
 	    !lvremove_single(cmd, vg->pool_metadata_spare_lv, &void_handle))
 		return_ECMD_FAILED;
 
-	if (pr_stop && !persist_vgremove_before(cmd, vg, &pr_devs, &pr_key))
+	if (pr_stop && !persist_finish_before(cmd, vg, &pr_devs, &pr_key))
 		return_ECMD_FAILED;
 
 	if (!lockd_free_vg_before(cmd, vg, 0, arg_count(cmd, yes_ARG)))
@@ -93,7 +93,7 @@ static int _vgremove_single(struct cmd_context *cmd, const char *vg_name,
 	lockd_free_vg_final(cmd, vg);
 
 	if (pr_stop)
-		persist_vgremove_after(cmd, vg, &pr_devs, pr_key);
+		persist_finish_after(cmd, vg, &pr_devs, pr_key);
 
 	return ECMD_PROCESSED;
 }

@@ -50,8 +50,8 @@ int persist_start(struct cmd_context *cmd, struct volume_group *vg,
 
 int persist_stop(struct cmd_context *cmd, struct volume_group *vg);
 
-int persist_vgremove_before(struct cmd_context *cmd, struct volume_group *vg, struct dm_list *devs, char **key);
-void persist_vgremove_after(struct cmd_context *cmd, struct volume_group *vg, struct dm_list *devs, char *key);
+int persist_finish_before(struct cmd_context *cmd, struct volume_group *vg, struct dm_list *devs, char **key);
+void persist_finish_after(struct cmd_context *cmd, struct volume_group *vg, struct dm_list *devs, char *key);
 
 int persist_remove(struct cmd_context *cmd, struct volume_group *vg,
                    char *local_key, int local_host_id, const char *remkey);

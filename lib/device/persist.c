@@ -1616,7 +1616,7 @@ static int _run_stop(struct cmd_context *cmd, struct volume_group *vg, struct dm
  * normal usage pattern, but is still possible.)
  */
 
-int persist_vgremove_before(struct cmd_context *cmd, struct volume_group *vg, struct dm_list *devs, char **key)
+int persist_finish_before(struct cmd_context *cmd, struct volume_group *vg, struct dm_list *devs, char **key)
 {
 	char *local_key = (char *)find_config_tree_str(cmd, local_pr_key_CFG, NULL);
 	int local_host_id = find_config_tree_int(cmd, local_host_id_CFG, NULL);
@@ -1674,7 +1674,7 @@ int persist_vgremove_before(struct cmd_context *cmd, struct volume_group *vg, st
 	return 1;
 }
 
-void persist_vgremove_after(struct cmd_context *cmd, struct volume_group *vg, struct dm_list *devs, char *key)
+void persist_finish_after(struct cmd_context *cmd, struct volume_group *vg, struct dm_list *devs, char *key)
 {
 	if (!_run_stop(cmd, vg, devs, key, 0))
 		stack;
