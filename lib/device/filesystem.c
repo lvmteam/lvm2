@@ -359,6 +359,8 @@ int fs_mount_state_is_misnamed(struct cmd_context *cmd, struct logical_volume *l
 	char proc_mntpath[PATH_MAX + 1];
 	char mtab_mntpath[PATH_MAX] = { 0 };
 	char dm_devpath[PATH_MAX];
+	char dm_devpath_resolved[PATH_MAX];
+	char proc_devpath_resolved[PATH_MAX];
 	char tmp_path[PATH_MAX];
 	char *dm_name;
 	struct stat st_lv;
@@ -458,9 +460,19 @@ int fs_mount_state_is_misnamed(struct cmd_context *cmd, struct logical_volume *l
 		 * it appears in /proc/mounts once as
 		 * /dev/mapper/vg-lvol0 on /foo type xfs ...
 		 */
-
 		dir_match = !strcmp(mtab_mntpath, proc_mntpath);
-		dev_match = !strcmp(dm_devpath, proc_devpath);
+
+		/*
+		 * Resolve symlinks before comparing device paths. In test environments,
+		 * dm_devpath may be a symlink (e.g., /dev/shm/LVMTEST/dev/mapper/vg-lv
+		 * -> /dev/mapper/vg-lv), while proc_devpath is the resolved real path.
+		 * Compare resolved paths to avoid false positives for rename detection.
+		 */
+		if (realpath(dm_devpath, dm_devpath_resolved) &&
+		    realpath(proc_devpath, proc_devpath_resolved))
+			dev_match = !strcmp(dm_devpath_resolved, proc_devpath_resolved);
+		else
+			dev_match = !strcmp(dm_devpath, proc_devpath);
 
 		if (!dir_match && !dev_match)
 			continue;
