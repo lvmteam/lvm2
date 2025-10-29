@@ -307,9 +307,16 @@ class DaemonInfo(object):
 			stdout_stream = None
 			stderr_stream = None
 			try:
-				stdout_stream = open(self.stdout, "ab")
-				stdin_stream = open(self.stdin, "rb")
-				stderr_stream = open(self.stderr, "ab")
+				# If stdout/stderr are sockets, they won't work when re-opened from /proc/PID/fd/
+				# Instead, let the subprocess inherit stdout/stderr from the test process
+				if 'socket:' in self.stdout or 'socket:' in self.stderr:
+					stdin_stream = open("/dev/null", "rb")
+					stdout_stream = None  # Inherit from parent test process
+					stderr_stream = None  # Inherit from parent test process
+				else:
+					stdout_stream = open(self.stdout, "ab")
+					stdin_stream = open(self.stdin, "rb")
+					stderr_stream = open(self.stderr, "ab")
 
 				self.process = Popen(self.cmdline, cwd=self.cwd, stdin=stdin_stream,
 									stdout=stdout_stream, stderr=stderr_stream, env=self.env)
