@@ -414,6 +414,10 @@ class DaemonInfo(object):
 class TestDbusService(unittest.TestCase):
 	def setUp(self):
 		self.pvs = []
+		# Property names acceptable to change - for monitoring stats
+		self._acceptable_property_changes = set()
+		# LV to monitor for property changes (set by tests that need it)
+		self._monitored_lv = None
 
 		# Get current test name
 		test_name = self.id().split('.')[-1]
@@ -523,7 +527,48 @@ class TestDbusService(unittest.TestCase):
 		# Only do consistency checks if we aren't running the unit tests
 		# concurrently
 		if pv_device_list is None:
-			self.assertEqual(self._refresh(), 0)
+			# Snapshot property values before refresh
+			before_values = {}
+
+			if self._acceptable_property_changes and self._monitored_lv:
+				# Read current values of monitored properties
+				self._monitored_lv.update()
+				for prop in self._acceptable_property_changes:
+					try:
+						before_values[prop] = getattr(self._monitored_lv.LvCommon, prop)
+					except AttributeError:
+						pass
+
+			# Do the refresh
+			changes = self._refresh()
+
+			# Check what actually changed
+			if self._acceptable_property_changes and changes > 0 and before_values:
+				# Read values after refresh
+				self._monitored_lv.update()
+				actual_changes = set()
+				for prop, before_val in before_values.items():
+					try:
+						after_val = getattr(self._monitored_lv.LvCommon, prop)
+						if before_val != after_val:
+							actual_changes.add(prop)
+					except AttributeError:
+						pass
+
+				# Verify only acceptable properties changed
+				if actual_changes:
+					unexpected = actual_changes - self._acceptable_property_changes
+					if unexpected:
+						self.fail("Refresh detected %d changes with unexpected properties: %s\n"
+								  "Acceptable properties: %s\n"
+								  "All changed properties: %s" %
+								  (changes, unexpected, self._acceptable_property_changes, actual_changes))
+					else:
+						std_err_print("INFO: Refresh detected %d changes, all in acceptable properties: %s" %
+									  (changes, actual_changes))
+			elif changes > 0:
+				# Strict mode - no changes allowed
+				self.fail("Refresh detected %d changes (expected 0)" % changes)
 
 	def handle_return(self, rc):
 		if isinstance(rc, (tuple, list)):
@@ -2373,8 +2418,13 @@ class TestDbusService(unittest.TestCase):
 		self._test_lv_method_interface_sequence(self._create_vdo_lv())
 
 	def test_lv_interface_cache_lv(self):
-		self._test_lv_method_interface_sequence(
-			self._create_cache_lv(), remove_lv=False)
+		# Cache LVs have monitoring properties that are queried from the kernel
+		# and can change asynchronously between lvs calls. Only allow these specific
+		# properties to change - any other property change indicates a real problem.
+		self._acceptable_property_changes = {'SnapPercent', 'DataPercent'}
+		cached_lv = self._create_cache_lv()
+		self._monitored_lv = cached_lv
+		self._test_lv_method_interface_sequence(cached_lv, remove_lv=False)
 
 	def test_lv_interface_thin_pool_lv(self):
 		self._test_lv_method_interface_sequence(
