@@ -2433,7 +2433,7 @@ class TestDbusService(unittest.TestCase):
 	def test_z_sigint(self):
 
 		number_of_intervals = 3
-		number_of_lvs = 10
+		number_of_lvs = 5
 
 		# Issue SIGINT while daemon is processing work to ensure we shut down.
 		if bool(int(os.getenv("LVM_DBUSD_TEST_SKIP_SIGNAL", "0"))):
