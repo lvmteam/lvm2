@@ -408,6 +408,13 @@ class TestDbusService(unittest.TestCase):
 	def setUp(self):
 		self.pvs = []
 
+		# Get current test name
+		test_name = self.id().split('.')[-1]
+		std_err_print("\n" + "="*80)
+		std_err_print("[TEST %.6f] >>>>>> STARTING TEST: %s" % (time.time(), test_name))
+		std_err_print("="*80 + "\n")
+		self._test_start_time = time.time()
+
 		# Because of the sensitive nature of running LVM tests we will only
 		# run if we have PVs and nothing else, so that we can be confident that
 		# we are not mucking with someone's data on their system
@@ -431,6 +438,14 @@ class TestDbusService(unittest.TestCase):
 
 		self.vdo = supports_vdo()
 		remove_lvm_debug()
+
+	def tearDown(self):
+		test_name = self.id().split('.')[-1]
+		elapsed = time.time() - self._test_start_time
+		std_err_print("\n" + "="*80)
+		std_err_print("[TEST %.6f] <<<<<< FINISHED TEST: %s (elapsed: %.2fs)" %
+			(time.time(), test_name, elapsed))
+		std_err_print("="*80 + "\n")
 
 	def _recurse_vg_delete(self, vg_proxy, pv_proxy, nested_pv_hash):
 		vg_name = str(vg_proxy.Vg.Name)
