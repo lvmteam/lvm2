@@ -48,10 +48,21 @@ int main (int argc, char *argv[])
 	char aes[] = "434r0pono02pn68sson9268222p3789q703sr62427o78o308518o3228s6n2122";
 	const char *device = (argc > 1) ? argv[1] : "/dev/loop0";  /* device for use */
 	const char *devname = (argc > 2) ? argv[2] : "test-secure"; /* name of dm device */
-	const char *cipher = (argc > 3) ? argv[3] : "aes-xts-plain64"; /* name of dm device */
+	const char *uuid = (argc > 3) ? argv[3] : "TEST-LVMTEST"; /* name of dm device */
+	const char *cipher = (argc > 4) ? argv[4] : "aes-xts-plain64"; /* name of dm device */
 	uint32_t cookie = 0;
 	char table[300];
 	struct dm_task *dmt;
+
+	const char *dev_dir = getenv("DM_DEV_DIR");
+	if (dev_dir && *dev_dir) {
+		if (!dm_set_dev_dir(dev_dir)) {
+			fprintf(stderr, "Invalid DM_DEV_DIR environment variable value.\n");
+			exit(1);
+		}
+		printf("Set device dir: %s\n", dev_dir);
+	}
+
 
 	if (geteuid() != 0) {
 		fprintf(stderr, "Needs root UID for execution!\n");
@@ -62,6 +73,7 @@ int main (int argc, char *argv[])
 
 	if ((dmt = dm_task_create(DM_DEVICE_CREATE))) {
 		(void) dm_task_set_name(dmt, devname);
+		(void) dm_task_set_uuid(dmt, uuid);
 		(void) dm_task_secure_data(dmt);
 		rot13(aes);
 		snprintf(table, sizeof(table), "%s %s 0 %s %u", cipher, aes, device, sz);
