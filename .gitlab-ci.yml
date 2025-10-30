@@ -58,6 +58,7 @@ test-job:
     paths:
       - test/results/
     expire_in: 1 week
+    when: always
   tags:
       - ${TAG}
   timeout: 2h
