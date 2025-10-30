@@ -1424,13 +1424,9 @@ static int _vgchange_locktype_single(struct cmd_context *cmd, const char *vg_nam
 	 * new leases to lvmlock, so we need to wait until after vg_write to
 	 * deactivate it.
 	 */
-	if (vg->lock_type && !strcmp(vg->lock_type, "sanlock") &&
-	    (cmd->command->command_enum == vgchange_locktype_CMD)) {
-		if (!deactivate_lv(cmd, vg->sanlock_lv)) {
-			log_error("Failed to deactivate %s.",
-				  display_lvname(vg->sanlock_lv));
-			return ECMD_FAILED;
-		}
+	if (vg_is_sanlock(vg)) {
+		if (!deactivate_lv(cmd, vg->sanlock_lv))
+			log_warn("WARNING: Failed to deactivate %s.", display_lvname(vg->sanlock_lv));
 	}
 
 	if (pr_key)
