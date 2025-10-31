@@ -2173,6 +2173,8 @@ test "${LVM_TEST_AUX_TRACE-0}" = "0" || set -x
 
 test -f DEVICES && devs=$(< DEVICES)
 
+unset LVM_VALGRIND
+
 if test "$1" = "dmsetup" ; then
     shift
     dmsetup_wrapped "$@"
