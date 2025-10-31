@@ -187,13 +187,13 @@ cleanup() {
 	# reset MOUNTPOINT - avoid recursion
 	test "$MOUNTPOINT" = "$TEMPDIR" && MOUNTPOINT="" temp_umount
 	if [ -n "$REMOUNT" ]; then
-		verbose "Remounting unmounted filesystem back"
+		verbose "Remounting unmounted filesystem back."
 		dry "$MOUNT" "$VOLUME" "$MOUNTED"
 	fi
 	IFS=$IFS_OLD
 	trap 2
 
-	test "$1" -eq 2 && verbose "Break detected"
+	test "$1" -eq 2 && verbose "Break detected."
 
 	if [ "$DO_LVRESIZE" -eq 2 ]; then
 		# start LVRESIZE with the filesystem modification flag
@@ -434,8 +434,8 @@ round_up_block_size() {
 }
 
 temp_mount() {
-	dry "$MKDIR" -p -m 0000 "$TEMPDIR" || error "Failed to create $TEMPDIR."
-	dry "$MOUNT" "$VOLUME" "$TEMPDIR" || error "Failed to mount $TEMPDIR."
+	dry "$MKDIR" -p -m 0000 "$TEMPDIR" || error "Failed to create temporary mount point \"$TEMPDIR\"."
+	dry "$MOUNT" "$VOLUME" "$TEMPDIR" || error "Failed to mount \"$VOLUME\" on \"$TEMPDIR\"."
 }
 
 temp_umount() {
@@ -518,7 +518,7 @@ resize_ext() {
 # - unmounted for downsize
 #############################
 resize_reiser() {
-	detect_mounted && verbose "ReiserFS resizes only unmounted filesystem" && try_umount
+	detect_mounted && verbose "ReiserFS resizes only unmounted filesystem." && try_umount
 	REMOUNT=$MOUNTED
 	verbose "Parsing $TUNE_REISER \"$VOLUME\""
 	for i in $(LC_ALL=C "$TUNE_REISER" "$VOLUME"); do
@@ -547,7 +547,7 @@ resize_xfs() {
 	MOUNTPOINT=$MOUNTED
 	if [ -z "$MOUNTED" ]; then
 		MOUNTPOINT=$TEMPDIR
-		temp_mount || error "Cannot mount Xfs filesystem."
+		temp_mount
 	fi
 	verbose "Parsing $TUNE_XFS \"$MOUNTPOINT\""
 	for i in $(LC_ALL=C "$TUNE_XFS" "$MOUNTPOINT"); do
@@ -563,9 +563,10 @@ resize_xfs() {
 		verbose "Resizing Xfs mounted on \"$MOUNTPOINT\" to fill device \"$VOLUME\""
 		dry "$RESIZE_XFS" "$MOUNTPOINT"
 	elif [ "$NEWBLOCKCOUNT" -eq "$BLOCKCOUNT" ]; then
-		verbose "Xfs filesystem already has the right size"
+		verbose "Xfs filesystem already has the right size."
 	else
-		error "Xfs filesystem shrinking is unsupported."
+		error "Xfs filesystem shrinking is unsupported." \
+		      "Current size: $(( BLOCKCOUNT * BLOCKSIZE )) bytes, requested: $NEWSIZE bytes."
 	fi
 }
 
@@ -602,7 +603,9 @@ detect_luks_device() {
 
 	# LUKS device must be active and mapped over volume where detected
 	if [ -z "$CRYPT_NAME" ] || [ -z "$CRYPT_DATA_OFFSET" ]; then
-		error "Can not find active LUKS device. Unlock \"$VOLUME\" volume first."
+		error "Cannot find active LUKS device for \"$VOLUME\"." \
+		      "LUKS device must be unlocked before resizing:" \
+		      "  cryptsetup luksOpen $VOLUME <name>"
 	fi
 }
 
@@ -646,7 +649,9 @@ resize_luks() {
 	fi
 
 	# resize LUKS device
-	dry "$CRYPTSETUP" resize "$NAME" --size $L_NEWBLOCKCOUNT || error "Failed to resize active LUKS device"
+	dry "$CRYPTSETUP" resize "$NAME" --size $L_NEWBLOCKCOUNT || \
+		error "Failed to resize LUKS device \"$NAME\"." \
+		      "Target size: $L_NEWSIZE bytes ($L_NEWBLOCKCOUNT sectors)."
 
 	if [ $SHRINK -eq 0 ]; then
 		# grow fs on top of LUKS device
@@ -659,11 +664,15 @@ detect_crypt_device() {
 	local L_NEWSIZE
 	local TMP
 
-	which "$CRYPTSETUP" >"$NULL" 2>&1 || error "$CRYPTSETUP utility required to resize crypt device"
+	which "$CRYPTSETUP" >"$NULL" 2>&1 || \
+		error "$CRYPTSETUP utility required to resize crypt device." \
+		      "Please install cryptsetup package."
 
 	CRYPT_TYPE=$("$CRYPTSETUP" status "$1" 2>"$NULL" | "$GREP" "type:")
 
-	test -n "$CRYPT_TYPE" || error "$CRYPTSETUP failed to detect device type on $1."
+	test -n "$CRYPT_TYPE" || \
+		error "Failed to detect crypt device type on \"$1\"." \
+		      "Device may not be active or not a valid crypt device."
 
 	CRYPT_TYPE=${CRYPT_TYPE##*[[:space:]]}
 
@@ -672,7 +681,8 @@ detect_crypt_device() {
 		verbose "\"$1\" crypt device is type $CRYPT_TYPE"
 		;;
 	 *)
-		error "Unsupported crypt type \"$CRYPT_TYPE\""
+		error "Unsupported crypt type \"$CRYPT_TYPE\" on device \"$1\"." \
+		      "Only LUKS1, LUKS2, and PLAIN types are supported."
 	esac
 
 	TMP=$NEWSIZE
@@ -698,7 +708,9 @@ detect_crypt_device() {
 #  (on direct user request only)
 #################################
 resize_crypt() {
-	dry "$CRYPTSETUP" resize "$1" --size $CRYPT_RESIZE_BLOCKS || error "$CRYPTSETUP failed to resize device $1"
+	dry "$CRYPTSETUP" resize "$1" --size "$CRYPT_RESIZE_BLOCKS" || \
+		error "Failed to resize crypt device \"$1\"." \
+		      "Target size: $CRYPT_RESIZE_BLOCKS sectors."
 }
 
 ####################
@@ -722,12 +734,13 @@ resize() {
 	  "reiserfs")	CMD=resize_reiser ;;
 	  "xfs")	CMD=resize_xfs ;;
 	  "crypto_LUKS")
-		which "$CRYPTSETUP" >"$NULL" 2>&1 || error "$CRYPTSETUP utility required to resize LUKS volume"
+		which "$CRYPTSETUP" >"$NULL" 2>&1 || error "$CRYPTSETUP utility required to resize LUKS volume."
 		CMD=resize_luks ;;
 	  *) error "Filesystem \"$FSTYPE\" on device \"$VOLUME\" is not supported by this tool." ;;
 	esac
 
-	$CMD $NEWSIZE || error "$FSTYPE resize failed."
+	$CMD "$NEWSIZE" || error "$FSTYPE resize failed on \"$VOLUME\"." \
+	                       "Target size: $NEWSIZE bytes."
 	test -z "${CRYPT_SHRINK-}" || resize_crypt "$VOLUME_ORIG"
 }
 
@@ -752,7 +765,7 @@ check_luks() {
 check() {
 	detect_fs "$1"
 	if detect_mounted; then
-		verbose "Skipping filesystem check for device \"$VOLUME\" as the filesystem is mounted on $MOUNTED";
+		verbose "Skipping filesystem check for device \"$VOLUME\" as the filesystem is mounted on $MOUNTED.";
 		cleanup 3
 	fi
 
@@ -771,7 +784,7 @@ check() {
 		  *)
 			LASTDIFF=$(diff_dates "$LASTMOUNT" "$LASTCHECKED")
 			if test "$LASTDIFF" -gt 0; then
-				verbose "Filesystem has not been checked after the last mount, using fsck -f"
+				verbose "Filesystem has not been checked after the last mount, using fsck -f."
 				FORCE="-f"
 			fi
 			;;
@@ -781,13 +794,15 @@ check() {
 
 	case "$FSTYPE" in
 	  "xfs") if which "$XFS_CHECK" >"$NULL" 2>&1 ; then
-			dry "$XFS_CHECK" "$VOLUME" || error "Xfs check failed."
+			dry "$XFS_CHECK" "$VOLUME" || error "Xfs check failed on \"$VOLUME\"."
 		 else
 			# Replacement for outdated xfs_check
 			# FIXME: for small devices we need to force_geometry,
 			# since we run in '-n' mode, it shouldn't be problem.
 			# Think about better way....
-			dry "$XFS_REPAIR" -n -o force_geometry "$VOLUME" || error "Xfs repair failed."
+			dry "$XFS_REPAIR" -n -o force_geometry "$VOLUME" || \
+				error "Xfs repair check failed on \"$VOLUME\"." \
+				      "Filesystem may have errors requiring repair."
 		 fi ;;
 	  ext[234]|"reiserfs")
 	        # check if executed from interactive shell environment
