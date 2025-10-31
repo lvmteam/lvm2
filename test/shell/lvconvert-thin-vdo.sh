@@ -35,13 +35,15 @@ aux prepare_vg 4 6400
 # Convert to thin-pool with VDO backend from existing VG/LV
 lvcreate -L5G --name $lv1 $vg
 
-# Keep volume in use for 6 seconds
-# - lvm retries for ~5sec to deactivate
-sleep 6 < "$DM_DEV_DIR/$vg/$lv1" &
+# Keep volume in use for at least 6 seconds
+# - lvm retries for ~5sec to deactivate (and longer with valgrind)
+sleep 9 < "$DM_DEV_DIR/$vg/$lv1" &
+SLEEP_PID=$!
 
 # Volume in use cannot be converted
 fail lvconvert -y --type thin-pool $vg/$lv1 --pooldatavdo y
 
+kill "$SLEEP_PID" || true
 # Wait for sleep to not use LV anymore
 wait
 
