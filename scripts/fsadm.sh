@@ -138,12 +138,48 @@ dry() {
 	$@
 }
 
-# Accept as success also return code 1 with fsck
-accept_0_1() {
-	$@
-	local ret="$?"
-	test "$ret" -eq 1 || return "$ret"
-	# Filesystem was corrected
+# Handle fsck return codes according to fsck(8) exit code specification
+# 0 = no errors, 1 = errors corrected, 2 = reboot required
+# 4 = errors left uncorrected, 8 = operational error
+# 16 = usage error, 32 = canceled, 128 = shared library error
+accept_fsck() {
+	local ret=0
+	"$@" || ret=$?
+
+	case "$ret" in
+	  0)
+		# No errors
+		return 0
+		;;
+	  1)
+		# Filesystem was corrected
+		verbose "Filesystem errors were corrected on \"$VOLUME\"."
+		return 0
+		;;
+	  2)
+		# System should be rebooted
+		echo "$TOOL: WARNING: Filesystem was corrected but system should be rebooted." >&2
+		return 0
+		;;
+	  4)
+		error "Filesystem errors left uncorrected on \"$VOLUME\"." \
+		      "Manual intervention may be required."
+		;;
+	  8)
+		error "Fsck operational error on \"$VOLUME\"." \
+		      "Check fsck command syntax or system resources."
+		;;
+	  16)
+		error "Fsck usage or syntax error." \
+		      "This may indicate a bug in $TOOL script."
+		;;
+	  32)
+		error "Fsck canceled by user request."
+		;;
+	  *)
+		error "Fsck failed with return code $ret on \"$VOLUME\"."
+		;;
+	esac
 }
 
 cleanup() {
@@ -468,7 +504,7 @@ resize_ext() {
 			*i*) FLAG=$YES ;;
 			*)   FLAG="-p" ;;
 			esac
-			accept_0_1 dry "$FSCK" -f $FLAG "$VOLUME" || error "Failed to fsck $VOLUME"
+			accept_fsck dry "$FSCK" -f $FLAG "$VOLUME"
 		fi
 	fi
 
@@ -759,7 +795,7 @@ check() {
 		  *i*) FLAG=$YES ;;
 		  *)   FLAG="-p" ;;
 		esac
-		accept_0_1 dry "$FSCK" $FORCE $FLAG "$VOLUME" || error "Fsck $FSTYPE failed."
+		accept_fsck dry "$FSCK" $FORCE $FLAG "$VOLUME"
 		;;
 	  "crypto_LUKS")
 		which "$CRYPTSETUP" >"$NULL" 2>&1 || error "$CRYPTSETUP utility required."
