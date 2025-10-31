@@ -14,7 +14,7 @@
 
 . lib/inittest --skip-with-lvmpolld
 
-ux have_raid_resizable || skip "Skip with buggy md raid resize"
+aux have_raid_resizable || skip "Skip with buggy md raid resize"
 
 aux have_raid 1 3 0 || skip
 PROGRESS=0
