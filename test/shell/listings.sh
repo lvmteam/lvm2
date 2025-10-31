@@ -107,16 +107,10 @@ vgmknodes --refresh
 lvscan
 lvmdiskscan
 
-invalid pvscan "$dev1"
-invalid pvscan -aay
-invalid pvscan --major 254
-invalid pvscan --minor 0
-invalid pvscan --novolumegroup -e
-invalid vgscan $vg
-invalid lvscan $vg
-
 if aux have_readline; then
 cat <<EOF | lvm
+pvdisplay -c "$dev1"
+pvdisplay -s "$dev1"
 vgdisplay --units k $vg
 vgdisplay -c $vg
 vgdisplay -C $vg
@@ -141,12 +135,55 @@ lvdisplay -m $vg
 lvdisplay --units g $vg
 fi
 
-pvdisplay -c "$dev1"
-pvdisplay -s "$dev1"
+# Check exported VG listing
+vgchange -an $vg
+vgexport -a
+pvscan
+pvdisplay --noheadings -C -o attr,name | tee out
+not grep -v "ax-" out
+vgimport -a
+pvdisplay --noheadings -C -o attr,name | tee out
+grep -v "ax-" out
+
+vgremove -ff $vg
+
+#test vgdisplay -A to select only active VGs
+# all LVs active - VG considered active
+pvcreate "$dev1" "$dev2" "$dev3"
+
+vgcreate $SHARED $vg1 "$dev1"
+lvcreate -l1 $vg1
+lvcreate -l1 $vg1
+
+# at least one LV active - VG considered active
+vgcreate $SHARED $vg2 "$dev2"
+lvcreate -l1 $vg2
+lvcreate -l1 -an -Zn $vg2
+
+# no LVs active - VG considered inactive
+vgcreate $SHARED $vg3 "$dev3"
+lvcreate -l1 -an -Zn $vg3
+lvcreate -l1 -an -Zn $vg3
+
+vgdisplay -s -A |& tee out
+grep $vg1 out
+grep $vg2 out
+not grep $vg3 out
+
+# Don't check these simple commands via length valgrind pass
+unset LVM_VALGRIND
 
 for i in h b s k m g t p e H B S K M G T P E; do
 	pvdisplay --units $i "$dev1"
 done
+
+invalid pvscan "$dev1"
+invalid pvscan -aay
+invalid pvscan --major 254
+invalid pvscan --minor 0
+invalid pvscan --novolumegroup -e
+invalid vgscan $vg
+invalid lvscan $vg
 
 invalid lvdisplay -C -m $vg
 invalid lvdisplay -c -m $vg
@@ -201,39 +238,5 @@ invalid pvdisplay --sort size
 invalid pvdisplay --unbuffered
 invalid pvdisplay --unquoted
 invalid pvdisplay -A $vg1
-
-# Check exported VG listing
-vgchange -an $vg
-vgexport -a
-pvscan
-pvdisplay --noheadings -C -o attr,name | tee out
-not grep -v "ax-" out
-vgimport -a
-pvdisplay --noheadings -C -o attr,name | tee out
-grep -v "ax-" out
-
-vgremove -ff $vg
-
-#test vgdisplay -A to select only active VGs
-# all LVs active - VG considered active
-pvcreate "$dev1" "$dev2" "$dev3"
-
-vgcreate $SHARED $vg1 "$dev1"
-lvcreate -l1 $vg1
-lvcreate -l1 $vg1
-
-# at least one LV active - VG considered active
-vgcreate $SHARED $vg2 "$dev2"
-lvcreate -l1 $vg2
-lvcreate -l1 -an -Zn $vg2
-
-# no LVs active - VG considered inactive
-vgcreate $SHARED $vg3 "$dev3"
-lvcreate -l1 -an -Zn $vg3
-lvcreate -l1 -an -Zn $vg3
-
-vgdisplay -s -A | grep $vg1
-vgdisplay -s -A | grep $vg2
-vgdisplay -s -A | not grep $vg3
 
 vgremove -f $vg1 $vg2 $vg3
