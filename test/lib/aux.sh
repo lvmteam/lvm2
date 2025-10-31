@@ -863,7 +863,7 @@ mdadm_create() {
 
 mdadm_assemble() {
 	STRACE=
-	[ "$DM_DEV_DIR" = "/dev" ] && mdadm -V 2>&1 | grep " v3.2" && {
+	mdadm -V 2>&1 | grep " v3.2" && {
 		# use this 'trick' to slow down mdadm which otherwise
 		# is racing with udev rule since mdadm internally
 		# opens and closes raid leg devices in RW mode and then
