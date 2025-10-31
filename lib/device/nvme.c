@@ -185,7 +185,7 @@ void dev_read_nvme_wwids(struct device *dev)
 	}
 
 	if (nvme_get_nsid(fd, &nsid)) {
-		log_print("dev_read_nvme_wwids nvme_get_nsid error %d %s", errno, devpath);
+		log_debug("dev_read_nvme_wwids nvme_get_nsid error %d %s", errno, devpath);
 		goto out;
 	}
 
