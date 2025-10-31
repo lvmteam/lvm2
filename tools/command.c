@@ -894,10 +894,20 @@ static void _add_pos_arg(struct command *cmd, char *str, int required)
 	_set_pos_def(cmd, str, &def);
 
 	if (required) {
+		if (cmd->rp_count >= CMD_RP_ARGS) {
+			log_error("Too many required pos args, increase CMD_RO_ARGS.");
+			cmd->cmd_flags |= CMD_FLAG_PARSE_ERROR;
+			return;
+		}
 		cmd->required_pos_args[cmd->rp_count].pos = cmd->pos_count++;
 		cmd->required_pos_args[cmd->rp_count].def = def;
 		cmd->rp_count++;
 	} else {
+		if (cmd->op_count >= CMD_OP_ARGS) {
+			log_error("Too many optional pos args, increase CMD_OP_ARGS.");
+			cmd->cmd_flags |= CMD_FLAG_PARSE_ERROR;
+			return;
+		}
 		cmd->optional_pos_args[cmd->op_count].pos = cmd->pos_count++;;
 		cmd->optional_pos_args[cmd->op_count].def = def;
 		cmd->op_count++;
