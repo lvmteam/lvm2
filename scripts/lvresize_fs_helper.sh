@@ -190,7 +190,7 @@ detect_xfs_mount_options() {
 
 	# Get quota flags using xfs_db.
 	if ! qflags_output=$(xfs_db -r "$device" -c 'sb 0' -c 'p qflags'); then
-		logerror "xfs_db failed"
+		logerror "xfs_db failed to read quota flags from \"$device\""
 		return 1
 	fi
 
@@ -203,7 +203,7 @@ detect_xfs_mount_options() {
 	fi
 
 	if [[ ! "$qflags_hex" =~ ^0x[0-9a-fA-F]+$ ]]; then
-		logerror "xfs_db unexpected output"
+		logerror "xfs_db unexpected output for \"$device\": got \"$qflags_hex\""
 		return 1
 	fi
 
@@ -254,7 +254,7 @@ fsextend() {
 		if umount "$MOUNTDIR"; then
 			logmsg "unmount done"
 		else
-			logmsg "unmount failed"
+			logerror "unmount failed for \"$MOUNTDIR\""
 			exit 1
 		fi
 	fi
@@ -268,7 +268,7 @@ fsextend() {
 			if btrfs check "$DEVPATH"; then
 				logmsg "btrfs check done"
 			else
-				logmsg "btrfs check failed"
+				logerror "btrfs check failed on \"$DEVPATH\""
 				exit 1
 			fi
 		fi
@@ -279,7 +279,7 @@ fsextend() {
 		if cryptsetup resize "$DEVPATH"; then
 			logmsg "cryptsetup done"
 		else
-			logmsg "cryptsetup failed"
+			logerror "cryptsetup resize failed on \"$DEVPATH\""
 			exit 1
 		fi
 	fi
@@ -294,7 +294,7 @@ fsextend() {
 			logmsg "mount done"
 			TMP_MOUNT_DONE=1
 		else
-			logmsg "mount failed"
+			logerror "mount failed for \"$DEVPATH\" on \"$TMPDIR\""
 			exit 1
 		fi
 	fi
@@ -304,7 +304,7 @@ fsextend() {
 		if resize2fs "$DEVPATH"; then
 			logmsg "resize2fs done"
 		else
-			logmsg "resize2fs failed"
+			logerror "resize2fs failed on \"$DEVPATH\""
 			RESIZEFS_FAILED=1
 		fi
 	elif [[ "$FSTYPE" == "xfs" ]]; then
@@ -312,7 +312,7 @@ fsextend() {
 		if xfs_growfs "$DEVPATH"; then
 			logmsg "xfs_growfs done"
 		else
-			logmsg "xfs_growfs failed"
+			logerror "xfs_growfs failed on \"$DEVPATH\""
 			RESIZEFS_FAILED=1
 		fi
 	elif [[ "$FSTYPE" == "btrfs" ]]; then
@@ -328,7 +328,7 @@ fsextend() {
 		if btrfs filesystem resize "$BTRFS_DEVID":"$NEWSIZEBYTES" "$REAL_MOUNTPOINT"; then
 			logmsg "btrfs filesystem resize done"
 		else
-			logmsg "btrfs filesystem resize failed"
+			logerror "btrfs filesystem resize failed: devid $BTRFS_DEVID to $NEWSIZEBYTES on \"$REAL_MOUNTPOINT\""
 			RESIZEFS_FAILED=1
 		fi
 	fi
@@ -341,7 +341,7 @@ fsextend() {
 			TMP_MOUNT_DONE=0
 			rmdir "$TMPDIR"
 		else
-			logmsg "cleanup unmount failed"
+			logerror "cleanup unmount failed for \"$TMPDIR\""
 			exit 1
 		fi
 	fi
@@ -362,7 +362,7 @@ fsextend() {
 	fi
 
 	if [ $RESIZEFS_FAILED -eq 1 ]; then
-		logmsg "File system extend failed."
+		logerror "File system extend failed."
 		exit 1
 	fi
 
@@ -375,7 +375,7 @@ fsreduce() {
 		if umount "$MOUNTDIR"; then
 			logmsg "unmount done"
 		else
-			logmsg "unmount failed"
+			logerror "unmount failed for \"$MOUNTDIR\""
 			exit 1
 		fi
 	fi
@@ -389,7 +389,7 @@ fsreduce() {
 			if btrfs check "$DEVPATH"; then
 				logmsg "btrfs check done"
 			else
-				logmsg "btrfs check failed"
+				logerror "btrfs check failed on \"$DEVPATH\""
 				exit 1
 			fi
 		fi
@@ -401,7 +401,7 @@ fsreduce() {
 			logmsg "mount done"
 			TMP_MOUNT_DONE=1
 		else
-			logmsg "mount failed"
+			logerror "mount failed for \"$DEVPATH\" on \"$TMPDIR\""
 			exit 1
 		fi
 	fi
@@ -412,7 +412,7 @@ fsreduce() {
 		if resize2fs "$DEVPATH" "$NEWSIZEKB"k; then
 			logmsg "resize2fs done"
 		else
-			logmsg "resize2fs failed"
+			logerror "resize2fs failed on \"$DEVPATH\" to ${NEWSIZEKB}k"
 			# will exit after cleanup unmount
 			RESIZEFS_FAILED=1
 		fi
@@ -428,7 +428,7 @@ fsreduce() {
 		if btrfs filesystem resize "$BTRFS_DEVID":"$NEWSIZEBYTES" "$REAL_MOUNTPOINT"; then
 			logmsg "btrfs filesystem resize done"
 		else
-			logmsg "btrfs filesystem resize failed"
+			logerror "btrfs filesystem resize failed: devid $BTRFS_DEVID to $NEWSIZEBYTES on \"$REAL_MOUNTPOINT\""
 			RESIZEFS_FAILED=1
 		fi
 	fi
@@ -441,13 +441,13 @@ fsreduce() {
 			TMP_MOUNT_DONE=0
 			rmdir "$TMPDIR"
 		else
-			logmsg "cleanup unmount failed"
+			logerror "cleanup unmount failed for \"$TMPDIR\""
 			exit 1
 		fi
 	fi
 
 	if [ $RESIZEFS_FAILED -eq 1 ]; then
-		logmsg "File system reduce failed."
+		logerror "File system reduce failed."
 		exit 1
 	fi
 
@@ -482,7 +482,7 @@ cryptresize() {
 	if cryptsetup resize --size "$NEWSIZESECTORS" "$DEVPATH"; then
 		logmsg "cryptsetup done"
 	else
-		logmsg "cryptsetup failed"
+		logerror "cryptsetup resize failed on \"$DEVPATH\" to $NEWSIZESECTORS sectors"
 		exit 1
 	fi
 
