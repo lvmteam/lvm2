@@ -487,7 +487,7 @@ convert_non_lv_() {
 	# after 'vdo convert' call there is ~(1-2)M free space at the front of the device
 	pvfree=$("$BLOCKDEV" --getsize64 "$DEVICE")
 	pvfree=$(( ( pvfree - vdo_offset ) / 1024 ))	# to KiB
-	if [ -n "$vdo_aligned" ] && [ "$vdo_aligned" != "0" ]; then
+	if [ "${vdo_aligned:-0}" -ne 0 ]; then
 		extent_size=$(( vdo_aligned / 1024 ))
 	else
 		extent_size=$(get_largest_extent_size_ "$pvfree" "$vdo_logicalSize")
@@ -630,7 +630,7 @@ convert2lvm_() {
 	esac
 
 	#parse_yaml_ "$TEMPDIR/vdoconf.yml" _
-	eval "$(parse_yaml_ "$TEMPDIR/vdoconf.yml" _ | grep "$TRVDONAME" | sed -e "s/_config_vdos_$TRVDONAME/vdo/g")"
+	eval "$(parse_yaml_ "$TEMPDIR/vdoconf.yml" _ | sed -ne "/$TRVDONAME/s/_config_vdos_$TRVDONAME/vdo/gp")"
 
 	vdo_logicalSize=$(get_kb_size_with_unit_ "$vdo_logicalSize")
 	vdo_physicalSize=$(get_kb_size_with_unit_ "$vdo_physicalSize")
