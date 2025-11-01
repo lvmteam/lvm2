@@ -102,69 +102,69 @@ create_sanlock_conf() {
 }
 
 prepare_sanlock() {
-	pgrep sanlock && skip "Cannot run while existing sanlock process exists"
+	pgrep sanlock && skip "Cannot run while existing sanlock process exists."
 
 	create_sanlock_conf
 
 	systemctl start sanlock
 	if ! pgrep sanlock; then
-		echo "Failed to start sanlock"
+		echo "Failed to start sanlock."
 		exit 1
 	fi
 }
 
 prepare_idm() {
-	pgrep seagate_ilm && skip "Cannot run while existing seagate_ilm process exists"
+	pgrep seagate_ilm && skip "Cannot run while existing seagate_ilm process exists."
 
 	seagate_ilm -D 0 -l 0 -L 7 -E 7 -S 7
 
 	if ! pgrep seagate_ilm; then
-		echo "Failed to start seagate_ilm"
+		echo "Failed to start seagate_ilm."
 		exit 1
 	fi
 }
 
 prepare_lvmlockd() {
-	pgrep lvmlockd && skip "Cannot run while existing lvmlockd process exists"
+	pgrep lvmlockd && skip "Cannot run while existing lvmlockd process exists."
 
 	if test -n "$LVM_TEST_LOCK_TYPE_SANLOCK"; then
 		# make check_lvmlockd_sanlock
-		echo "starting lvmlockd for sanlock"
+		echo "Starting lvmlockd for sanlock."
 		lvmlockd -o 2
 
 	elif test -n "$LVM_TEST_LOCK_TYPE_DLM"; then
 		# make check_lvmlockd_dlm
-		echo "starting lvmlockd for dlm"
+		echo "Starting lvmlockd for dlm."
 		lvmlockd
 
 	elif test -n "$LVM_TEST_LOCK_TYPE_IDM"; then
 		# make check_lvmlockd_idm
-		echo "starting lvmlockd for idm"
+		echo "Starting lvmlockd for idm."
 		lvmlockd -g idm
 
 	elif test -n "$LVM_TEST_LVMLOCKD_TEST_DLM"; then
 		# make check_lvmlockd_test
-		echo "starting lvmlockd --test (dlm)"
+		echo "Starting lvmlockd --test (dlm)."
 		lvmlockd --test -g dlm
 
 	elif test -n "$LVM_TEST_LVMLOCKD_TEST_SANLOCK"; then
 		# FIXME: add option for this combination of --test and sanlock
-		echo "starting lvmlockd --test (sanlock)"
+		echo "Starting lvmlockd --test (sanlock)."
 		lvmlockd --test -g sanlock -o 2
 
 	elif test -n "$LVM_TEST_LVMLOCKD_TEST_IDM"; then
 		# make check_lvmlockd_test
-		echo "starting lvmlockd --test (idm)"
+		echo "Starting lvmlockd --test (idm)."
 		lvmlockd --test -g idm
 
 	else
-		echo "not starting lvmlockd"
+		echo "Not starting lvmlockd."
 		exit 0
 	fi
 
 	sleep 1
 	if ! pgrep lvmlockd >LOCAL_LVMLOCKD; then
-		echo "Failed to start lvmlockd"
+		echo "Failed to start lvmlockd."
 		exit 1
 	fi
 }
@@ -276,7 +276,7 @@ prepare_lvmdbusd() {
 	# FIXME: This is not correct! Daemon is auto started.
 	echo -n "## checking lvmdbusd is NOT running..."
 	if pgrep -f -l lvmdbusd | grep python3 || pgrep -x -l lvmdbusd ; then
-		skip "Cannot run lvmdbusd while existing lvmdbusd process exists"
+		skip "Cannot run lvmdbusd while existing lvmdbusd process exists."
 	fi
 	echo ok
 
@@ -297,11 +297,11 @@ prepare_lvmdbusd() {
 		daemon=$(which lvmdbusd || :)
 		echo "$daemon"
 	fi
-	test -x "$daemon" || skip "The lvmdbusd daemon is missing"
-	which python3 >/dev/null || skip "Missing python3"
+	test -x "$daemon" || skip "The lvmdbusd daemon is missing."
+	which python3 >/dev/null || skip "Missing python3."
 
-	python3 -c "import pyudev, dbus, gi.repository" || skip "Missing python modules"
-	python3 -c "from json.decoder import JSONDecodeError" || skip "Python json module is missing JSONDecodeError"
+	python3 -c "import pyudev, dbus, gi.repository" || skip "Missing python modules."
+	python3 -c "from json.decoder import JSONDecodeError" || skip "Python json module is missing JSONDecodeError."
 
 	# Copy the needed file to run on the system bus if it doesn't
 	# already exist
@@ -1830,7 +1830,7 @@ wait_for_sync() {
 		sleep .2
 	done
 
-	echo "Sync is taking too long - assume stuck"
+	echo "Sync is taking too long - assume stuck."
 	echo t >/proc/sysrq-trigger 2>/dev/null
 	return 1
 }
@@ -1855,7 +1855,7 @@ wait_recalc() {
 #                dmsetup status "$DM_DEV_DIR/mapper/${checklv/\//-}"
 #		exit
 #	fi
-	echo "Timeout waiting for recalc"
+	echo "Timeout waiting for recalc."
 	dmsetup status "$DM_DEV_DIR/mapper/${checklv/\//-}"
 	return 1
 }
