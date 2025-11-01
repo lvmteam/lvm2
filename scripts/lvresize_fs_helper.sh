@@ -222,11 +222,11 @@ fsextend() {
 				exit 1
 			fi
 		elif [[ "$FSTYPE" == "btrfs" ]]; then
-			logmsg "btrfsck ${DEVPATH}"
-			if btrfsck "$DEVPATH"; then
-				logmsg "btrfsck done"
+			logmsg "btrfs check ${DEVPATH}"
+			if btrfs check "$DEVPATH"; then
+				logmsg "btrfs check done"
 			else
-				logmsg "btrfsck failed"
+				logmsg "btrfs check failed"
 				exit 1
 			fi
 		fi
@@ -348,11 +348,11 @@ fsreduce() {
 				exit 1
 			fi
 		elif [[ "$FSTYPE" == "btrfs" ]]; then
-			logmsg "btrfsck ${DEVPATH}"
-			if btrfsck "$DEVPATH"; then
-				logmsg "btrfsck done"
+			logmsg "btrfs check ${DEVPATH}"
+			if btrfs check "$DEVPATH"; then
+				logmsg "btrfs check done"
 			else
-				logmsg "btrfsck failed"
+				logmsg "btrfs check failed"
 				exit 1
 			fi
 		fi
