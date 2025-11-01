@@ -132,7 +132,7 @@ verbose() {
 
 # Support multi-line error messages
 error() {
-	for i in "$@" ;  do
+	for i in "$@"; do
 		echo "$TOOL: $i" >&2
 	done
 	return 1
@@ -164,7 +164,7 @@ cleanup() {
 
 	if [ -n "$VDO_DM_SNAPSHOT_NAME" ]; then
 		dry "$LVM" vgchange -an --devices "$VDO_DM_SNAPSHOT_DEVICE" "$VGNAME" &>/dev/null || true
-		for i in {1..20} ; do
+		for i in {1..20}; do
 			[ "$(dry "$DMSETUP" info --noheading -co open "$VDO_DM_SNAPSHOT_NAME")" = "0" ] && break
 			sleep .1
 		done
@@ -220,7 +220,7 @@ snapshot_merge_() {
 	# Loop for a while, till the snapshot is merged.
 	# Should be nearly instantaneous.
 	# FIXME: Recovery when something prevents merging is hard
-	for i in $(seq 1 20) ; do
+	for i in {1..20}; do
 		status=( $("$DMSETUP" status "$VDO_DM_SNAPSHOT_NAME") )
 		# Check if merging is finished
 		[ "${status[3]%/*}" = "${status[4]}" ] && break
@@ -280,7 +280,7 @@ get_largest_extent_size_() {
 	local i
 	local d
 
-	for i in 8 16 32 64 128 256 512 1024 2048 4096 ; do
+	for i in 8 16 32 64 128 256 512 1024 2048 4096; do
 		d=$(( $1 / i ))
 		[ $(( d * i )) -eq "$1" ] || break
 		d=$(( $2 / i ))
@@ -464,7 +464,7 @@ convert_non_lv_() {
 	local vdo_aligned=0
 	local vdo_offset=0
 	local vdo_non_converted=0
-	while IFS=  read -r line ; do
+	while IFS=  read -r line; do
 		# trim leading spaces
 		case "$(echo $line)" in
 		"Non converted"*) vdo_non_converted=1 ;;
@@ -602,7 +602,7 @@ convert2lvm_() {
 
 	# Check list of devices in VDO configure file for their major:minor
 	# and match with given $DEVICE devmajor:devminor
-	for i in $(awk '/.*device:/ {print $2}' "$TEMPDIR/vdoconf.yml") ; do
+	for i in $(awk '/.*device:/ {print $2}' "$TEMPDIR/vdoconf.yml"); do
 		local DEV
 		DEV=$("$READLINK" $READLINK_E "$i") || continue
 		RSTAT=$("$STAT" --format "MAJOR=\$((0x%t)) MINOR=\$((0x%T))" "$DEV" 2>/dev/null) || continue
