@@ -91,8 +91,55 @@ logmsg() {
 	logger "${SCRIPTNAME}: $1"
 }
 
-btrfs_path_major_minor()
-{
+# Handle e2fsck return codes according to fsck(8) exit code specification
+# 0 = no errors, 1 = errors corrected, 2 = reboot required
+# 4 = errors left uncorrected, 8 = operational error
+# 16 = usage error, 32 = canceled, 128 = shared library error
+accept_e2fsck() {
+	local ret=0
+	"$@" || ret=$?
+
+	case "$ret" in
+	  0)
+		# No errors
+		logmsg "e2fsck done"
+		return 0
+		;;
+	  1)
+		# Filesystem was corrected
+		logmsg "e2fsck done (filesystem errors were corrected)"
+		return 0
+		;;
+	  2)
+		# System should be rebooted
+		logerror "WARNING: Filesystem was corrected but system should be rebooted"
+		logmsg "e2fsck done (reboot recommended)"
+		return 0
+		;;
+	  4)
+		logerror "e2fsck failed: filesystem errors left uncorrected on \"$DEVPATH\""
+		exit 1
+		;;
+	  8)
+		logerror "e2fsck failed: operational error on \"$DEVPATH\""
+		exit 1
+		;;
+	  16)
+		logerror "e2fsck failed: usage or syntax error"
+		exit 1
+		;;
+	  32)
+		logerror "e2fsck canceled by user"
+		exit 1
+		;;
+	  *)
+		logerror "e2fsck failed with return code $ret on \"$DEVPATH\""
+		exit 1
+		;;
+	esac
+}
+
+btrfs_path_major_minor() {
 	local STAT
 
 	STAT=$(stat --format "echo \$((0x%t)):\$((0x%T))" "$(readlink -e "$1")") || \
@@ -215,12 +262,7 @@ fsextend() {
 	if [ "$DO_FSCK" -eq 1 ]; then
 		if [[ "$FSTYPE" == "ext"* ]]; then
 			logmsg "e2fsck ${DEVPATH}"
-			if e2fsck -f -p "$DEVPATH"; then
-				logmsg "e2fsck done"
-			else
-				logmsg "e2fsck failed"
-				exit 1
-			fi
+			accept_e2fsck e2fsck -f -p "$DEVPATH"
 		elif [[ "$FSTYPE" == "btrfs" ]]; then
 			logmsg "btrfs check ${DEVPATH}"
 			if btrfs check "$DEVPATH"; then
@@ -341,12 +383,7 @@ fsreduce() {
 	if [ "$DO_FSCK" -eq 1 ]; then
 		if [[ "$FSTYPE" == "ext"* ]]; then
 			logmsg "e2fsck ${DEVPATH}"
-			if e2fsck -f -p "$DEVPATH"; then
-				logmsg "e2fsck done"
-			else
-				logmsg "e2fsck failed"
-				exit 1
-			fi
+			accept_e2fsck e2fsck -f -p "$DEVPATH"
 		elif [[ "$FSTYPE" == "btrfs" ]]; then
 			logmsg "btrfs check ${DEVPATH}"
 			if btrfs check "$DEVPATH"; then
