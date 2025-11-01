@@ -1298,5 +1298,7 @@ int wipe_cache_pool(struct logical_volume *cache_pool_lv)
 		r = 0;
 	}
 
+	sync_local_dev_names(cache_pool_lv->vg->cmd);
+
 	return r;
 }
