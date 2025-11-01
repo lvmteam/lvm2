@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright (C) 2021-2023 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2021-2025 Red Hat, Inc. All rights reserved.
 #
 # This file is part of LVM2.
 #
@@ -105,20 +105,23 @@ vdo_writePolicy=
 
 # help message
 tool_usage() {
-	echo "${TOOL}: Utility to convert VDO volume to VDO LV."
-	echo
-	echo "	${TOOL} [options] <vdo_device_path>"
-	echo
-	echo "	Options:"
-	echo "	  -f | --force	      Bypass sanity checks"
-	echo "	  -h | --help	      Show this help message"
-	echo "	  -n | --name	      Specifies VG/LV name for converted VDO volume"
-	echo "	  -v | --verbose      Be verbose"
-	echo "	  -y | --yes	      Answer \"yes\" at any prompts"
-	echo "	       --dry-run      Print verbosely commands without running them"
-	echo "	       --no-snapshot  Do not use snapshot for converted VDO device"
-	echo "	       --uuid-prefix  Prefix for DM snapshot uuid"
-	echo "	       --vdo-config   Configuration file for VDO manager"
+	cat <<-EOF
+	  ${TOOL}: Utility to convert VDO volume to VDO LV.
+
+	  ${TOOL} [options] <vdo_device_path>
+
+	  Options:
+	      -f | --force	  Bypass sanity checks
+	      -h | --help	  Show this help message
+	      -n | --name	  Specifies VG/LV name for converted VDO volume
+	      -v | --verbose	  Be verbose
+	      -y | --yes	  Answer "yes" at any prompts
+		   --dry-run	  Print verbosely commands without running them
+		   --no-snapshot  Do not use snapshot for converted VDO device
+		   --uuid-prefix  Prefix for DM snapshot uuid
+		   --vdo-config   Configuration file for VDO manager
+
+	EOF
 
 	exit
 }
@@ -230,8 +233,8 @@ snapshot_merge_() {
 		# Keep snapshot in DM table for possible analysis...
 		VDO_DM_SNAPSHOT_NAME=
 		VDO_SNAPSHOT_LOOP=
-		echo "$TOOL: Initial snapshot status ${initial_status[*]}"
-		echo "$TOOL: Failing merge snapshot status ${status[*]}"
+		echo "$TOOL: Initial snapshot status ${initial_status[*]}."
+		echo "$TOOL: Failing merge snapshot status ${status[*]}."
 		error "ABORTING: Snapshot failed to merge! (Administrator required...)"
 	fi
 
@@ -633,30 +636,30 @@ convert2lvm_() {
 
 	verbose "Converted VDO device has logical/physical size $vdo_logicalSize/$vdo_physicalSize KiB."
 
-	VDO_ALLOCATION_PARAMS=$(cat <<EOF
-allocation {
-	vdo_use_compression = $(get_enabled_value_ "$vdo_compression")
-	vdo_use_deduplication = $(get_enabled_value_ "$vdo_deduplication")
-	vdo_use_metadata_hints=1
-	vdo_minimum_io_size = $vdo_logicalBlockSize
-	vdo_block_map_cache_size_mb = $(( $(get_kb_size_with_unit_ "$vdo_blockMapCacheSize") / 1024 ))
-	vdo_block_map_period = $vdo_blockMapPeriod
-	vdo_use_sparse_index = $(get_enabled_value_ "$vdo_indexSparse")
-	vdo_index_memory_size_mb = $(awk "BEGIN {print $vdo_indexMemory * 1024}")
-	vdo_slab_size_mb = $(( $(get_kb_size_with_unit_ "$vdo_slabSize") / 1024 ))
-	vdo_ack_threads = $vdo_ackThreads
-	vdo_bio_threads = $vdo_bioThreads
-	vdo_bio_rotation = $vdo_bioRotationInterval
-	vdo_cpu_threads = $vdo_cpuThreads
-	vdo_hash_zone_threads = $vdo_hashZoneThreads
-	vdo_logical_threads = $vdo_logicalThreads
-	vdo_physical_threads = $vdo_physicalThreads
-	vdo_write_policy = $vdo_writePolicy
-	vdo_max_discard = $(( $(get_kb_size_with_unit_ "$vdo_maxDiscardSize") / 4 ))
-	vdo_pool_header_size = 0
-}
-EOF
-)
+	VDO_ALLOCATION_PARAMS=$(cat <<-EOF
+	allocation {
+		vdo_use_compression = $(get_enabled_value_ "$vdo_compression")
+		vdo_use_deduplication = $(get_enabled_value_ "$vdo_deduplication")
+		vdo_use_metadata_hints=1
+		vdo_minimum_io_size = $vdo_logicalBlockSize
+		vdo_block_map_cache_size_mb = $(( $(get_kb_size_with_unit_ "$vdo_blockMapCacheSize") / 1024 ))
+		vdo_block_map_period = $vdo_blockMapPeriod
+		vdo_use_sparse_index = $(get_enabled_value_ "$vdo_indexSparse")
+		vdo_index_memory_size_mb = $(awk "BEGIN {print $vdo_indexMemory * 1024}")
+		vdo_slab_size_mb = $(( $(get_kb_size_with_unit_ "$vdo_slabSize") / 1024 ))
+		vdo_ack_threads = $vdo_ackThreads
+		vdo_bio_threads = $vdo_bioThreads
+		vdo_bio_rotation = $vdo_bioRotationInterval
+		vdo_cpu_threads = $vdo_cpuThreads
+		vdo_hash_zone_threads = $vdo_hashZoneThreads
+		vdo_logical_threads = $vdo_logicalThreads
+		vdo_physical_threads = $vdo_physicalThreads
+		vdo_write_policy = $vdo_writePolicy
+		vdo_max_discard = $(( $(get_kb_size_with_unit_ "$vdo_maxDiscardSize") / 4 ))
+		vdo_pool_header_size = 0
+	}
+	EOF
+	)
 	verbose "VDO conversion parameters: $VDO_ALLOCATION_PARAMS"
 
 	verbose "Stopping VDO volume."
