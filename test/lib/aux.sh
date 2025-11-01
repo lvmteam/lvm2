@@ -36,7 +36,7 @@ create_corosync_conf() {
 	local COROSYNC_NODE
 	COROSYNC_NODE=$(hostname || true)
 
-	if test -a "$COROSYNC_CONF"; then
+	if test -e "$COROSYNC_CONF"; then
 		if ! grep "created by lvm test suite" "$COROSYNC_CONF"; then
 			rm "$COROSYNC_CONF"
 		else
@@ -51,7 +51,7 @@ create_corosync_conf() {
 create_dlm_conf() {
 	local DLM_CONF="/etc/dlm/dlm.conf"
 
-	if test -a "$DLM_CONF"; then
+	if test -e "$DLM_CONF"; then
 		if ! grep "created by lvm test suite" "$DLM_CONF"; then
 			rm "$DLM_CONF"
 		else
@@ -88,7 +88,7 @@ prepare_dlm() {
 create_sanlock_conf() {
 	local SANLOCK_CONF="/etc/sanlock/sanlock.conf"
 
-	if test -a "$SANLOCK_CONF"; then
+	if test -e "$SANLOCK_CONF"; then
 		if ! grep "created by lvm test suite" "$SANLOCK_CONF"; then
 			rm "$SANLOCK_CONF"
 		else
@@ -1230,7 +1230,8 @@ common_dev_() {
 # If the size is missing, the remaining portion of device is taken
 # i.e.  delay_dev "$dev1" 0 200 256:
 delay_dev() {
-	if test ! -f HAVE_DM_DELAY ; then
+	set -x
+        if test ! -f HAVE_DM_DELAY ; then
 		target_at_least dm-delay 1 1 0 || return 0
 		touch HAVE_DM_DELAY
 	fi
