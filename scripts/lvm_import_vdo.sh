@@ -34,7 +34,7 @@ test ${#IMPORT_NAME} -lt 100 || error "Random name \"$IMPORT_NAME\" is too long!
 TEMPDIR="${TMPDIR:-/tmp}/$IMPORT_NAME"
 
 _SAVEPATH=$PATH
-PATH="/sbin:/usr/sbin:/bin:/usr/sbin:$PATH"
+PATH="/sbin:/usr/sbin:/bin:/usr/bin:$PATH"
 
 # Set of trapped signals
 declare -a SIGNALS=("HUP" "INT" "QUIT" "ABRT" "TERM" "EXIT")
@@ -139,7 +139,9 @@ error() {
 }
 
 warn() {
-	echo "$TOOL: WARNING: $i" >&2
+	for i in "$@"; do
+		echo "$TOOL: WARNING: $i" >&2
+	done
 }
 
 dry() {
