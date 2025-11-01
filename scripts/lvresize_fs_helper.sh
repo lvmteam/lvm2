@@ -494,78 +494,34 @@ REMOUNT=0
 MOUNT_OPTIONS=""
 MOUNTDIR=""
 
-if [ "$UID" != 0 ] && [ "$EUID" != 0 ]; then
-	errorexit "${SCRIPTNAME} must be run as root."
-fi
-
 OPTIONS=$("$GETOPT" -o h -l help,fsextend,fsreduce,cryptresize,mount,unmount,remount,fsck,fstype:,lvpath:,newsizebytes:,mountdir:,cryptpath: -n "${SCRIPTNAME}" -- "$@")
 eval set -- "$OPTIONS"
 
-while true
+while [ $# -gt 0 ]
 do
 	case $1 in
-	--fsextend)
-		DO_FSEXTEND=1
-		shift
-		;;
-	--fsreduce)
-		DO_FSREDUCE=1
-		shift
-		;;
-	--cryptresize)
-		DO_CRYPTRESIZE=1
-		shift
-		;;
-	--mount)
-		DO_MOUNT=1
-		shift
-		;;
-	--unmount)
-		DO_UNMOUNT=1
-		shift
-		;;
-	--fsck)
-		DO_FSCK=1
-		shift
-		;;
-	--remount)
-		REMOUNT=1
-		shift
-		;;
-	--fstype)
-		FSTYPE=$2;
-		shift; shift
-		;;
-	--lvpath)
-		LVPATH=$2;
-		shift; shift
-		;;
-	--newsizebytes)
-		NEWSIZEBYTES=$2;
-		shift; shift
-		;;
-	--mountdir)
-		MOUNTDIR=$2;
-		shift; shift
-		;;
-	--cryptpath)
-		CRYPTPATH=$2;
-		shift; shift
-		;;
-	-h|--help)
-		usage
-		shift
-		exit 0
-		;;
-	--)
-		shift
-		break
-		;;
-	*)
-		errorexit "Unknown option \"$1\"."
-		;;
-    esac
+	--fsextend)	DO_FSEXTEND=1 ;;
+	--fsreduce)	DO_FSREDUCE=1 ;;
+	--cryptresize)	DO_CRYPTRESIZE=1 ;;
+	--mount)	DO_MOUNT=1 ;;
+	--unmount)	DO_UNMOUNT=1 ;;
+	--fsck)		DO_FSCK=1 ;;
+	--remount)	REMOUNT=1 ;;
+	--fstype)	FSTYPE=$2; shift ;;
+	--lvpath)	LVPATH=$2; shift ;;
+	--newsizebytes)	NEWSIZEBYTES=$2; shift ;;
+	--mountdir)	MOUNTDIR=$2; shift ;;
+	--cryptpath)	CRYPTPATH=$2; shift ;;
+	-h|--help)	usage ;;
+	--)		shift; break ;;
+	*)		errorexit "Unknown option \"$1\"." ;;
+	esac
+	shift
 done
+
+if [ "$UID" != 0 ] && [ "$EUID" != 0 ]; then
+	errorexit "${SCRIPTNAME} must be run as root."
+fi
 
 #
 # Input arg checking
