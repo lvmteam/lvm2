@@ -1058,7 +1058,7 @@ usage() {
 #
 # BEGIN SCRIPT
 #
-PATH="/sbin:/usr/sbin:/bin:/usr/sbin:$PATH"
+PATH="/sbin:/usr/sbin:/bin:/usr/bin:$PATH"
 SCRIPTNAME=$(basename "$0")
 
 if [ $# -lt 1 ]; then
