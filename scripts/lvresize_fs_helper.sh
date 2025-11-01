@@ -186,6 +186,8 @@ RESIZEFS_FAILED=0
 detect_xfs_mount_options() {
 	local device=$1
 	local qflags_output qflags_hex
+	local prefix acct_flag enfd_flag
+	local -a opts=()
 	MOUNT_OPTIONS=""
 
 	# Get quota flags using xfs_db.
@@ -198,54 +200,35 @@ detect_xfs_mount_options() {
 	qflags_hex="${qflags_output#qflags = }"
 
 	# No flags set, no extra mount options needed.
-	if [[ "$qflags_hex" == "0" ]]; then
-		return 0
-	fi
+	[[ "$qflags_hex" == "0" ]] && return 0
 
 	if [[ ! "$qflags_hex" =~ ^0x[0-9a-fA-F]+$ ]]; then
 		logerror "xfs_db unexpected output for \"$device\": got \"$qflags_hex\""
 		return 1
 	fi
 
-	# Check XFS quota flags and set MOUNT_OPTIONS appropriately
+	# Check XFS quota flags and build mount options
 	# The quota flags as defined in Linux kernel source: fs/xfs/libxfs/xfs_log_format.h:
-	#   XFS_UQUOTA_ACCT = 0x0001
-	#   XFS_UQUOTA_ENFD = 0x0002
-	#   XFS_GQUOTA_ACCT = 0x0040
-	#   XFS_GQUOTA_ENFD = 0x0080
-	#   XFS_PQUOTA_ACCT = 0x0008
-	#   XFS_PQUOTA_ENFD = 0x0200
-
-	if [ $(($qflags_hex & 0x0001)) -ne 0 ]; then
-		if [ $(($qflags_hex & 0x0002)) -ne 0 ]; then
-			MOUNT_OPTIONS="${MOUNT_OPTIONS}uquota,"
-		else
-			MOUNT_OPTIONS="${MOUNT_OPTIONS}uqnoenforce,"
+	#   XFS_UQUOTA_ACCT = 0x0001, XFS_UQUOTA_ENFD = 0x0002
+	#   XFS_GQUOTA_ACCT = 0x0040, XFS_GQUOTA_ENFD = 0x0080
+	#   XFS_PQUOTA_ACCT = 0x0008, XFS_PQUOTA_ENFD = 0x0200
+	#
+	# Format: "prefix acct_flag enfd_flag"
+	for quota_type in "u 0x0001 0x0002" "g 0x0040 0x0080" "p 0x0008 0x0200"; do
+		read -r prefix acct_flag enfd_flag <<< "$quota_type"
+		if [ $((qflags_hex & acct_flag)) -ne 0 ]; then
+			if [ $((qflags_hex & enfd_flag)) -ne 0 ]; then
+				opts+=("${prefix}quota")
+			else
+				opts+=("${prefix}qnoenforce")
+			fi
 		fi
-	fi
+	done
 
-	if [ $(($qflags_hex & 0x0040)) -ne 0 ]; then
-		if [ $(($qflags_hex & 0x0080)) -ne 0 ]; then
-			MOUNT_OPTIONS="${MOUNT_OPTIONS}gquota,"
-		else
-			MOUNT_OPTIONS="${MOUNT_OPTIONS}gqnoenforce,"
-		fi
-	fi
+	# Join array elements with commas
+	MOUNT_OPTIONS=$(IFS=,; echo "${opts[*]}")
 
-	if [ $(($qflags_hex & 0x0008)) -ne 0 ]; then
-		if [ $(($qflags_hex & 0x0200)) -ne 0 ]; then
-			MOUNT_OPTIONS="${MOUNT_OPTIONS}pquota,"
-		else
-			MOUNT_OPTIONS="${MOUNT_OPTIONS}pqnoenforce,"
-		fi
-	fi
-
-	# Trim trailing comma
-	MOUNT_OPTIONS="${MOUNT_OPTIONS%,}"
-
-	if [[ -n "$MOUNT_OPTIONS" ]]; then
-		logmsg "mount options for xfs: ${MOUNT_OPTIONS}"
-	fi
+	[[ -n "$MOUNT_OPTIONS" ]] && logmsg "mount options for xfs: ${MOUNT_OPTIONS}"
 }
 
 fsextend() {
