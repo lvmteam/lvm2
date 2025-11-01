@@ -317,7 +317,7 @@ detect_lv_() {
 		;;
 	esac
 
-	[ "$DEVMAJOR" != "$(grep device-mapper /proc/devices | cut -f1 -d' ')" ] && return
+	[ "$DEVMAJOR" != "$(awk '/device-mapper/ {print $1}' /proc/devices)" ] && return
 
 	DEV="$("$DMSETUP" info -c -j "$DEVMAJOR" -m "$DEVMINOR" -o uuid,name --noheadings --nameprefixes --separator ' ')"
 	case "$DEV" in
