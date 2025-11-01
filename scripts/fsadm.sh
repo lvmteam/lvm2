@@ -793,16 +793,20 @@ check() {
 	esac
 
 	case "$FSTYPE" in
-	  "xfs") if which "$XFS_CHECK" >"$NULL" 2>&1 ; then
-			dry "$XFS_CHECK" "$VOLUME" || error "Xfs check failed on \"$VOLUME\"."
-		 else
-			# Replacement for outdated xfs_check
+	  "xfs") if which "$XFS_REPAIR" >"$NULL" 2>&1; then
+			# Prefer modern xfs_repair -n over deprecated xfs_check
 			# FIXME: for small devices we need to force_geometry,
 			# since we run in '-n' mode, it shouldn't be problem.
 			# Think about better way....
 			dry "$XFS_REPAIR" -n -o force_geometry "$VOLUME" || \
 				error "Xfs repair check failed on \"$VOLUME\"." \
 				      "Filesystem may have errors requiring repair."
+		 elif which "$XFS_CHECK" >"$NULL" 2>&1; then
+			# Fallback to xfs_check for very old systems (pre-2012)
+			dry "$XFS_CHECK" "$VOLUME" || error "Xfs check failed on \"$VOLUME\"."
+		 else
+			error "Neither xfs_repair nor xfs_check found." \
+			      "Please install xfsprogs package."
 		 fi ;;
 	  ext[234]|"reiserfs")
 	        # check if executed from interactive shell environment
