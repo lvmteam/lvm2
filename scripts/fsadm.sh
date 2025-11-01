@@ -36,6 +36,35 @@ TOOL="fsadm"
 _SAVEPATH=$PATH
 PATH="/sbin:/usr/sbin:/bin:/usr/bin:$PATH"
 
+tool_usage() {
+	cat <<-EOF
+	  ${TOOL}: Utility to resize or check the filesystem on a device
+
+	  ${TOOL} [options] check <device>
+	      - Check the filesystem on device using fsck
+
+	  ${TOOL} [options] resize <device> [<new_size>[BKMGTPE]]
+	      - Change the size of the filesystem on device to new_size
+
+	  Options:
+	      -h | --help	 Show this help message
+	      -v | --verbose	 Be verbose
+	      -e | --ext-offline Unmount filesystem before ext2/ext3/ext4 resize
+	      -f | --force	 Bypass sanity checks
+	      -n | --dry-run	 Print commands without running them
+	      -l | --lvresize	 Resize given device (if it is LVM device)
+	      -c | --cryptresize Resize given crypt device
+	      -y | --yes	 Answer "yes" at any prompts
+
+	  new_size - Absolute number of filesystem blocks to be in the filesystem,
+	             or an absolute size using a suffix (in powers of 1024).
+	             If new_size is not supplied, the whole device is used.
+
+	EOF
+
+	exit
+}
+
 # utilities
 TUNE_EXT="tune2fs"
 RESIZE_EXT="resize2fs"
@@ -87,32 +116,6 @@ IFS_OLD=$IFS
 # without bash $'\n'
 NL='
 '
-
-tool_usage() {
-	echo "${TOOL}: Utility to resize or check the filesystem on a device"
-	echo
-	echo "  ${TOOL} [options] check <device>"
-	echo "    - Check the filesystem on device using fsck"
-	echo
-	echo "  ${TOOL} [options] resize <device> [<new_size>[BKMGTPE]]"
-	echo "    - Change the size of the filesystem on device to new_size"
-	echo
-	echo "  Options:"
-	echo "    -h | --help         Show this help message"
-	echo "    -v | --verbose      Be verbose"
-	echo "    -e | --ext-offline  unmount filesystem before ext2/ext3/ext4 resize"
-	echo "    -f | --force        Bypass sanity checks"
-	echo "    -n | --dry-run      Print commands without running them"
-	echo "    -l | --lvresize     Resize given device (if it is LVM device)"
-	echo "    -c | --cryptresize  Resize given crypt device"
-	echo "    -y | --yes          Answer \"yes\" at any prompts"
-	echo
-	echo "  new_size - Absolute number of filesystem blocks to be in the filesystem,"
-	echo "             or an absolute size using a suffix (in powers of 1024)."
-	echo "             If new_size is not supplied, the whole device is used."
-
-	exit
-}
 
 verbose() {
 	test -z "$VERB" || echo "$TOOL:" "$@"
