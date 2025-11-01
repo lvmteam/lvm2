@@ -30,7 +30,6 @@ set -euE -o pipefail
 
 TOOL=lvm_import_vdo
 IMPORT_NAME="VDO_${TOOL}_${RANDOM}$$"
-test ${#IMPORT_NAME} -lt 100 || error "Random name \"$IMPORT_NAME\" is too long!"
 TEMPDIR="${TMPDIR:-/tmp}/$IMPORT_NAME"
 
 _SAVEPATH=$PATH
@@ -717,6 +716,8 @@ do
 	esac
 	shift
 done
+
+test ${#IMPORT_NAME} -lt 100 || error "Random name \"$IMPORT_NAME\" is too long!"
 
 [ -n "$DEVICE" ] || error "Device name is not specified. (see: $TOOL --help)"
 
