@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright (C) 2022 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2022-2025 Red Hat, Inc. All rights reserved.
 #
 # This file is part of LVM2.
 #
@@ -12,7 +12,69 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
+set -euE -o pipefail
+
+PATH="/sbin:/usr/sbin:/bin:/usr/bin:$PATH"
+GETOPT="getopt"
+SCRIPTNAME=$(basename "$0")
 DM_DEV_DIR="${DM_DEV_DIR:-/dev}"
+
+usage() {
+	cat <<-EOF
+	  ${SCRIPTNAME}: helper script called by lvresize to resize file systems.
+
+	  ${SCRIPTNAME} --fsextend --fstype name --lvpath path
+	      [ --mountdir path ]
+	      [ --mount ]
+	      [ --unmount ]
+	      [ --remount ]
+	      [ --fsck ]
+	      [ --cryptresize ]
+	      [ --cryptpath path ]
+	      [ --newsizebytes num ]
+
+	  ${SCRIPTNAME} --fsreduce --fstype name --lvpath path
+	      [ --newsizebytes num ]
+	      [ --mountdir path ]
+	      [ --mount ]
+	      [ --unmount ]
+	      [ --remount ]
+	      [ --fsck ]
+	      [ --cryptresize ]
+	      [ --cryptpath path ]
+
+	  ${SCRIPTNAME} --cryptresize --cryptpath path --newsizebytes num
+
+	  Options:
+	      --fsextend
+		  Extend the file system.
+	      --fsreduce
+		  Reduce the file system.
+	      --fstype name
+		  The type of file system (ext*, xfs, btrfs.)
+	      --lvpath path
+		  The path to the LV being resized.
+	      --mountdir path
+		  The file system is currently mounted here.
+	      --mount
+		  Mount the file system on a temporary directory before resizing.
+	      --unmount
+		  Unmount the file system before resizing.
+	      --remount
+		  Remount the file system after resizing if unmounted.
+	      --fsck
+		  Run fsck on the file system before resizing (only with ext*).
+	      --newsizebytes num
+		  The new size of the file system.
+	      --cryptresize
+		  Resize the crypt device between the LV and file system.
+	      --cryptpath path
+		  The path to the crypt device.
+
+	EOF
+
+	exit 0
+}
 
 errorexit() {
 	echo "$1" >&2
@@ -295,7 +357,7 @@ fsreduce() {
 			fi
 		fi
 	fi
-	
+
 	if [ "$DO_MOUNT" -eq 1 ]; then
 		logmsg "mount ${DEVPATH} ${TMPDIR}"
 		if mount -t "$FSTYPE" "$DEVPATH" "$TMPDIR"; then
@@ -390,64 +452,9 @@ cryptresize() {
 	exit 0
 }
 
-usage() {
-	echo "${SCRIPTNAME}: helper script called by lvresize to resize file systems."
-	echo ""
-	echo "${SCRIPTNAME} --fsextend --fstype name --lvpath path"
-	echo "    [ --mountdir path ]"
-	echo "    [ --mount ]"
-	echo "    [ --unmount ]"
-	echo "    [ --remount ]"
-	echo "    [ --fsck ]"
-	echo "    [ --cryptresize ]"
-	echo "    [ --cryptpath path ]"
-	echo "    [ --newsizebytes num ]"
-	echo ""
-	echo "${SCRIPTNAME} --fsreduce --fstype name --lvpath path"
-	echo "    [ --newsizebytes num ]"
-	echo "    [ --mountdir path ]"
-	echo "    [ --mount ]"
-	echo "    [ --unmount ]"
-	echo "    [ --remount ]"
-	echo "    [ --fsck ]"
-	echo "    [ --cryptresize ]"
-	echo "    [ --cryptpath path ]"
-	echo ""
-	echo "${SCRIPTNAME} --cryptresize --cryptpath path --newsizebytes num"
-	echo ""
-	echo "Options:"
-	echo "    --fsextend"
-	echo "        Extend the file system."
-	echo "    --fsreduce"
-	echo "        Reduce the file system."
-	echo "    --fstype name"
-	echo "        The type of file system (ext*, xfs, btrfs.)"
-	echo "    --lvpath path"
-	echo "        The path to the LV being resized."
-	echo "    --mountdir path"
-	echo "        The file system is currently mounted here."
-	echo "    --mount"
-	echo "        Mount the file system on a temporary directory before resizing."
-	echo "    --unmount"
-	echo "        Unmount the file system before resizing."
-	echo "    --remount"
-	echo "        Remount the file system after resizing if unmounted."
-	echo "    --fsck"
-	echo "        Run fsck on the file system before resizing (only with ext*)."
-	echo "    --newsizebytes num"
-	echo "        The new size of the file system."
-	echo "    --cryptresize"
-	echo "        Resize the crypt device between the LV and file system."
-	echo "    --cryptpath path"
-	echo "        The path to the crypt device."
-	echo ""
-}
-
 #
 # BEGIN SCRIPT
 #
-PATH="/sbin:/usr/sbin:/bin:/usr/sbin:$PATH"
-SCRIPTNAME=$(basename "$0")
 
 # These are the only commands that this script will run.
 # Each is enabled (1) by the corresponding command options:
@@ -465,12 +472,11 @@ REMOUNT=0
 
 # Initialize MOUNT_OPTIONS to ensure clean state
 MOUNT_OPTIONS=""
+MOUNTDIR=""
 
 if [ "$UID" != 0 ] && [ "$EUID" != 0 ]; then
 	errorexit "${SCRIPTNAME} must be run as root."
 fi
-
-GETOPT="getopt"
 
 OPTIONS=$("$GETOPT" -o h -l help,fsextend,fsreduce,cryptresize,mount,unmount,remount,fsck,fstype:,lvpath:,newsizebytes:,mountdir:,cryptpath: -n "${SCRIPTNAME}" -- "$@")
 eval set -- "$OPTIONS"
@@ -536,8 +542,7 @@ do
 		break
 		;;
 	*)
-		errorexit "Unknown option \"$1\."
-		exit 1
+		errorexit "Unknown option \"$1\"."
 		;;
     esac
 done
