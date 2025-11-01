@@ -135,7 +135,7 @@ dry() {
 		return 0
 	fi
 	verbose "Executing" "$@"
-	$@
+	"$@"
 }
 
 # Handle fsck return codes according to fsck(8) exit code specification
