@@ -336,7 +336,7 @@ parse_yaml_() {
 
 	s='[[:space:]]*'
 	w='[a-zA-Z0-9_.-]*'
-	fs="$(echo @|tr @ '\034')"
+	fs=$(printf '\034')
 
 	(
 	    sed -ne '/^--/s|--||g; s|\"|\\\"|g; s/[[:space:]]*$//g;' \
@@ -618,7 +618,7 @@ convert2lvm_() {
 	verbose "Found matching device $FOUND  $MAJOR:$MINOR."
 
 	VDONAME=$(awk -v DNAME="$FOUND" '/.*VDOService$/ {VNAME=substr($1, 0, length($1) - 1)} /[[:space:]]*device:/ { if ($2 ~ DNAME) {print VNAME}}' "$TEMPDIR/vdoconf.yml")
-	TRVDONAME=$(echo "$VDONAME" | tr '-' '_')
+	TRVDONAME=${VDONAME//-/_}
 
 	# When VDO volume is 'active', check it's not mounted/being used
 	DM_OPEN="$("$DMSETUP" info -c -o open  "$VDONAME" --noheadings --nameprefixes 2>/dev/null || true)"
