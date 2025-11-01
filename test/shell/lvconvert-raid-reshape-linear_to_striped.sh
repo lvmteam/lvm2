@@ -29,7 +29,7 @@ lvcreate -aey -L 16M -n $lv1 $vg
 check lv_field $vg/$lv1 segtype "linear"
 check lv_field $vg/$lv1 stripes 1
 check lv_field $vg/$lv1 data_stripes 1
-wipefs -a "$DM_DEV_DIR/$vg/$lv1"
+aux wipefs_a "$DM_DEV_DIR/$vg/$lv1"
 mkfs -t ext4 "$DM_DEV_DIR/$vg/$lv1"
 fsck -fn "$DM_DEV_DIR/$vg/$lv1"
 

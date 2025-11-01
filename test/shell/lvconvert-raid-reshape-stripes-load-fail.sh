@@ -45,7 +45,7 @@ check lv_first_seg_field $vg/$lv1 segtype "raid5_ls"
 check lv_first_seg_field $vg/$lv1 stripesize "64.00k"
 check lv_first_seg_field $vg/$lv1 data_stripes 10
 check lv_first_seg_field $vg/$lv1 stripes 11
-wipefs -a "$DM_DEV_DIR/$vg/$lv1"
+aux wipefs_a "$DM_DEV_DIR/$vg/$lv1"
 mkfs -t ext4 "$DM_DEV_DIR/$vg/$lv1"
 fsck -fn "$DM_DEV_DIR/$vg/$lv1"
 

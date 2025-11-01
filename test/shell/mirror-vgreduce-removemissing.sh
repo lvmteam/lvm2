@@ -124,7 +124,7 @@ recover_vg_()
 	pvscan --cache
 
 	pvcreate -ff "$@"
-	# wipefs -a "$@"
+	# aux wipefs_a "$@"
 	vgextend $vg "$@"
 
 	check_and_cleanup_lvs_

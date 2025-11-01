@@ -39,7 +39,7 @@ BLKDEVS_NUM=${#BLKDEVS[@]}
 
 for d in "${BLKDEVS[@]}"; do
 	dd if=/dev/zero of="$d" bs=32k count=1
-	wipefs -a "$d" 2>/dev/null || true
+	aux wipefs_a "$d" 2>/dev/null || true
 
 	sg_dev=$(sg_map26 "$d")
 	if [ -n "$LVM_TEST_LOCK_TYPE_IDM" ]; then

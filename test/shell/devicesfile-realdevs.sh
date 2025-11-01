@@ -67,7 +67,7 @@ get_real_devs
 
 wipe_all() {
 	for dev in "${REAL_DEVICES[@]}"; do
-		wipefs -a $dev
+		aux wipefs_a $dev
 	done
 }
 

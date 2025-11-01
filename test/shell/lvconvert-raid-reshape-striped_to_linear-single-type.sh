@@ -30,7 +30,7 @@ check lv_first_seg_field $vg/$lv segtype "striped"
 check lv_first_seg_field $vg/$lv stripes 4
 check lv_first_seg_field $vg/$lv data_stripes 4
 check lv_first_seg_field $vg/$lv stripesize "64.00k"
-wipefs -a "$DM_DEV_DIR/$vg/$lv"
+aux wipefs_a "$DM_DEV_DIR/$vg/$lv"
 mkfs -t ext4 "$DM_DEV_DIR/$vg/$lv"
 fsck -fn "$DM_DEV_DIR/$vg/$lv"
 lvextend -y -L64M $vg/$lv
