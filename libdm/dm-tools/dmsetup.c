@@ -6587,14 +6587,16 @@ static int _process_tree_options(const char *options)
 			;
 
 		/* Copy option to null-terminated buffer for bsearch */
-		if (!_dm_strncpy(opt_buf, s, sizeof(opt_buf)))
+		if (len >= (sizeof(opt_buf) - 1))
 			found = NULL;
-		else
+		else {
+			dm_strncpy(opt_buf, s, len + 1);
 			/* Binary search for option */
 			found = bsearch(opt_buf, _tree_options,
 					sizeof(_tree_options) / sizeof(_tree_options[0]),
 					sizeof(_tree_options[0]),
 					(int (*)(const void*, const void*))strcmp);
+		}
 
 		if (!found) {
 			log_error("Tree option not recognised: %.*s.", (int)len, s);
