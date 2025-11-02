@@ -749,9 +749,8 @@ These lists are evaluated from left to right.
 Use field name \fBlv_all\fP to view all LV fields,
 \fBvg_all\fP all VG fields,
 \fBpv_all\fP all PV fields,
-\fBpvseg_all\fP all PV segment fields,
 \fBseg_all\fP all LV segment fields, and
-\fBpvseg_all\fP all PV segment columns.
+\fBpvseg_all\fP all PV segment fields.
 See the \fBlvm.conf\fP(5) report section for more config options.
 See \fBlvmreport\fP(7) for more information about reporting.
 .
