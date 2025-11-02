@@ -6536,9 +6536,39 @@ static int _stats(CMD_ARGS)
 
 static int _process_tree_options(const char *options)
 {
+	/* Tree option lookup - must be sorted alphabetically by name for bsearch
+	 * char name must be the 1st. structure element
+	 * so we can use strcmp() directly without extra function elem->name */
+	struct tree_option {
+		char name[14];		/* option name (longest is "blkdevname" = 11 chars) */
+		int8_t switch_idx;	/* TR_* index, or -1 if setting symbol */
+		int8_t switch_value;	/* value to set (0 or 1) */
+		const void *tsym_value;	/* symbol pointer, or NULL if setting switch */
+	};
+
+	static const struct tree_option _tree_options[] = {
+		{ "active",      TR_ACTIVE,     1, NULL },
+		{ "ascii",       -1,            0, &_tsym_ascii },
+		{ "blkdevname",  TR_BLKDEVNAME, 1, NULL },
+		{ "compact",     TR_COMPACT,    1, NULL },
+		{ "device",      TR_DEVICE,     1, NULL },
+		{ "inverted",    TR_BOTTOMUP,   1, NULL },
+		{ "nodevice",    TR_DEVICE,     0, NULL },
+		{ "notrunc",     TR_TRUNCATE,   0, NULL },
+		{ "open",        TR_OPENCOUNT,  1, NULL },
+		{ "rw",          TR_RW,         1, NULL },
+		{ "status",      TR_STATUS,     1, NULL },
+		{ "table",       TR_TABLE,      1, NULL },
+		{ "utf",         -1,            0, &_tsym_utf },
+		{ "uuid",        TR_UUID,       1, NULL },
+		{ "vt100",       -1,            0, &_tsym_vt100 },
+	};
+
 	const char *s, *end;
 	struct winsize winsz = { 0 };
 	size_t len;
+	char opt_buf[sizeof(_tree_options[0].name)];
+	const struct tree_option *found;
 
 	/* Symbol set default */
 	if (!strcmp(nl_langinfo(CODESET), "UTF-8"))
@@ -6555,40 +6585,28 @@ static int _process_tree_options(const char *options)
 		len = 0;
 		for (end = s; *end && *end != ','; end++, len++)
 			;
-		if (!strncmp(s, "device", len))
-			_tree_switches[TR_DEVICE] = 1;
-		else if (!strncmp(s, "blkdevname", len))
-			_tree_switches[TR_BLKDEVNAME] = 1;
-		else if (!strncmp(s, "nodevice", len))
-			_tree_switches[TR_DEVICE] = 0;
-		else if (!strncmp(s, "status", len))
-			_tree_switches[TR_STATUS] = 1;
-		else if (!strncmp(s, "table", len))
-			_tree_switches[TR_TABLE] = 1;
-		else if (!strncmp(s, "active", len))
-			_tree_switches[TR_ACTIVE] = 1;
-		else if (!strncmp(s, "open", len))
-			_tree_switches[TR_OPENCOUNT] = 1;
-		else if (!strncmp(s, "uuid", len))
-			_tree_switches[TR_UUID] = 1;
-		else if (!strncmp(s, "rw", len))
-			_tree_switches[TR_RW] = 1;
-		else if (!strncmp(s, "utf", len))
-			_tsym = &_tsym_utf;
-		else if (!strncmp(s, "vt100", len))
-			_tsym = &_tsym_vt100;
-		else if (!strncmp(s, "ascii", len))
-			_tsym = &_tsym_ascii;
-		else if (!strncmp(s, "inverted", len))
-			_tree_switches[TR_BOTTOMUP] = 1;
-		else if (!strncmp(s, "compact", len))
-			_tree_switches[TR_COMPACT] = 1;
-		else if (!strncmp(s, "notrunc", len))
-			_tree_switches[TR_TRUNCATE] = 0;
-		else {
-			log_error("Tree options not recognised: %s.", s);
+
+		/* Copy option to null-terminated buffer for bsearch */
+		if (!_dm_strncpy(opt_buf, s, sizeof(opt_buf)))
+			found = NULL;
+		else
+			/* Binary search for option */
+			found = bsearch(opt_buf, _tree_options,
+					sizeof(_tree_options) / sizeof(_tree_options[0]),
+					sizeof(_tree_options[0]),
+					(int (*)(const void*, const void*))strcmp);
+
+		if (!found) {
+			log_error("Tree option not recognised: %.*s.", (int)len, s);
 			return 0;
 		}
+
+		/* Apply option directly from table */
+		if (found->tsym_value)
+			_tsym = found->tsym_value;
+		else
+			_tree_switches[found->switch_idx] = found->switch_value;
+
 		if (!*end)
 			break;
 		s = end;
