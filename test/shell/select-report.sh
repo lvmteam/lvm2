@@ -198,7 +198,7 @@ sel lv 'name="vol1"' vol1
 sel vg 'vg_mda_copies=unmanaged' $vg2 $vg3
 sel vg 'vg_mda_copies=2' $vg1
 # also, we must match only vg1, not including vg2 and vg3
-# when comparing ranges - unamanged is mapped onto 2^64 - 1 internally,
+# when comparing ranges - unmanaged is mapped onto 2^64 - 1 internally,
 # so we need to skip this internal value if it matches with selection criteria!
 sel vg 'vg_mda_copies>=2' $vg1
 not sel vg 'vg_mda_copies=18446744073709551615'

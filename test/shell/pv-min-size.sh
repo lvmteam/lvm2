@@ -27,7 +27,7 @@ aux lvmconf 'devices/pv_min_size = 10240'
 # and test device is not visible
 not check pv_field "$dev1" pv_name "$dev1"
 
-# set too low value erroneous value
+# set too low erroneous value
 aux lvmconf 'devices/pv_min_size = -100'
 
 # check the incorrect value is printed

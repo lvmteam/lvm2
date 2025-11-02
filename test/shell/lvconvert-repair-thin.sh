@@ -59,7 +59,7 @@ aux have_tool_at_least "$LVM_TEST_THIN_REPAIR_CMD" 0 3 1 || skip
 # Make some 'repairable' damage??
 dd if=/dev/zero of="$DM_DEV_DIR/$vg/repair" bs=1 seek=40960 count=1
 
-# Investige how to make such damage across different versions of thin-pool target.
+# Investigate how to make such damage across different versions of thin-pool target.
 should not "$LVM_TEST_THIN_CHECK_CMD" "$DM_DEV_DIR/$vg/repair"
 
 should not "$LVM_TEST_THIN_DUMP_CMD" "$DM_DEV_DIR/$vg/repair" | tee dump

@@ -261,7 +261,7 @@ test_merge_snap()
 	umount "$mount_dir"
 
 	for i in $(seq 1 10); do
-		# Wait tiil snapshot is surely merged
+		# Wait until snapshot is surely merged
 		dmsetup info $vg-snap || break
 		sleep 0.1
 	done

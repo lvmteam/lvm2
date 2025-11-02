@@ -34,7 +34,7 @@ if not which vdo ; then
 	which lvm_vdo_wrapper || skip "Missing 'lvm_vdo_wrapper'."
 	which oldvdoformat || skip "Emulation of vdo manager 'oldvdoformat' missing."
 	which oldvdoprepareforlvm || skip "Emulation of vdo manager 'oldvdoprepareforlvm' missing."
-	# enable expansion of aliasis within script itself
+	# enable expansion of aliases within script itself
 	shopt -s expand_aliases
 	alias vdo='lvm_vdo_wrapper'
 	export VDO_BINARY=lvm_vdo_wrapper
