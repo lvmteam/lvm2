@@ -1776,8 +1776,7 @@ int pvscan_cache_cmd(struct cmd_context *cmd, int argc, char **argv)
 	if (pp.activate_errors)
 		ret = ECMD_FAILED;
 
-	if (!sync_local_dev_names(cmd))
-		stack;
+	sync_local_dev_names(cmd);
 	return ret;
 }
 

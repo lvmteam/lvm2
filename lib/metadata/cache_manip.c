@@ -514,11 +514,7 @@ int lv_cache_wait_for_clean(struct logical_volume *cache_lv, int *is_clean)
 		if (!lv_update_and_reload_origin(cache_lv))
 			return_0;
 
-		if (!sync_local_dev_names(cache_lv->vg->cmd)) {
-			log_error("Failed to sync local devices when clearing cache volume %s.",
-				  display_lvname(cache_lv));
-			return 0;
-		}
+		sync_local_dev_names(cache_lv->vg->cmd);
 	}
 
 	/*
@@ -529,11 +525,7 @@ int lv_cache_wait_for_clean(struct logical_volume *cache_lv, int *is_clean)
 		if (!lv_refresh_suspend_resume(lock_lv))
 			return_0;
 
-		if (!sync_local_dev_names(cache_lv->vg->cmd)) {
-			log_error("Failed to sync local devices after final clearing of cache %s.",
-				  display_lvname(cache_lv));
-			return 0;
-		}
+		sync_local_dev_names(cache_lv->vg->cmd);
 	}
 
 	cache_seg->cleaner_policy = 0;

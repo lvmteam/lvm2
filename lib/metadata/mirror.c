@@ -344,11 +344,7 @@ static int _init_mirror_log(struct cmd_context *cmd,
 	}
 
 	/* Wait for events following any deactivation before reactivating */
-	if (!sync_local_dev_names(cmd)) {
-		log_error("Aborting. Failed to sync local devices before initialising mirror log %s.",
-			  display_lvname(log_lv));
-		goto revert_new_lv;
-	}
+	sync_local_dev_names(cmd);
 
 	/* Remove the temporary tags */
 	dm_list_iterate_items(sl, tagsl)
@@ -834,14 +830,12 @@ static int _split_mirror_images(struct logical_volume *lv,
 		    !_activate_lv_like_model(lv, detached_log_lv))
 			return_0;
 
-		if (!sync_local_dev_names(lv->vg->cmd))
-			stack;
+		sync_local_dev_names(lv->vg->cmd);
 
 		if (!deactivate_lv(lv->vg->cmd, new_lv))
 			return_0;
 
-		if (!sync_local_dev_names(lv->vg->cmd))
-			stack;
+		sync_local_dev_names(lv->vg->cmd);
 
 		if (!_activate_lv_like_model(lv, new_lv)) {
 			log_error("Failed to rename newly split LV in the kernel");
@@ -1088,8 +1082,7 @@ static int _remove_mirror_images(struct logical_volume *lv,
 		    !_activate_lv_like_model(lv, detached_log_lv))
 			return_0;
 
-		if (!sync_local_dev_names(lv->vg->cmd))
-			stack;
+		sync_local_dev_names(lv->vg->cmd);
 	}
 
 	if (!collapse) {

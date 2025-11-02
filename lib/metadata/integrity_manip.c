@@ -669,15 +669,13 @@ int lv_add_integrity_to_raid(struct logical_volume *lv, struct integrity_setting
 	}
 
 	if (!is_active) {
-		if (!sync_local_dev_names(cmd))
-			stack;
+		sync_local_dev_names(cmd);
 		/* checking block size of fs on the lv requires the lv to be active */
 		if (!activate_lv(cmd, lv)) {
 			log_error("Failed to activate LV to check block size %s", display_lvname(lv));
 			goto bad;
 		}
-		if (!sync_local_dev_names(cmd))
-			stack;
+		sync_local_dev_names(cmd);
 	}
 
 	/*
@@ -694,8 +692,7 @@ int lv_add_integrity_to_raid(struct logical_volume *lv, struct integrity_setting
 		goto bad;
 	}
 
-	if (!sync_local_dev_names(cmd))
-		stack;
+	sync_local_dev_names(cmd);
 
 	if (!r)
 		goto bad;

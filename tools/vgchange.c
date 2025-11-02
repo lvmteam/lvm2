@@ -157,10 +157,7 @@ static int _activate_lvs_in_vg(struct cmd_context *cmd, struct volume_group *vg,
 	}
 
 	/* Wait until devices are available */
-	if (!sync_local_dev_names(vg->cmd)) {
-		log_error("Failed to sync local devices for VG %s.", vg->name);
-		r = 0;
-	}
+	sync_local_dev_names(vg->cmd);
 
 	return r;
 }

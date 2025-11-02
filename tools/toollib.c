@@ -63,10 +63,7 @@ int become_daemon(struct cmd_context *cmd, int skip_lvm)
 		log_warn("WARNING: Failed to set SIGCHLD action.");
 
 	if (!skip_lvm)
-		if (!sync_local_dev_names(cmd)) { /* Flush ops and reset dm cookie */
-			log_error("Failed to sync local devices before forking.");
-			return -1;
-		}
+		sync_local_dev_names(cmd); /* Flush ops and reset dm cookie */
 
 	if ((pid = fork()) == -1) {
 		log_error("fork failed: %s", strerror(errno));
@@ -932,8 +929,7 @@ void lv_spawn_background_polling(struct cmd_context *cmd,
 	const struct logical_volume *lv_mirr = NULL;
 
 	/* Ensure there is nothing waiting on cookie */
-	if (!sync_local_dev_names(cmd))
-		log_warn("WARNING: Failed to sync local dev names.");
+	sync_local_dev_names(cmd);
 
 	if (lv_is_pvmove(lv))
 		lv_mirr = lv;

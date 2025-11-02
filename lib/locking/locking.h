@@ -57,8 +57,7 @@ int lock_vol(struct cmd_context *cmd, const char *vol, uint32_t flags, const str
 #define unlock_vg(cmd, vg, vol)	\
 	do { \
 		if (is_real_vg(vol)) { \
-			if (!sync_local_dev_names(cmd)) \
-				stack; \
+			sync_local_dev_names(cmd); \
 			vg_backup_if_needed(vg); \
 		} \
 		if (!lock_vol(cmd, vol, LCK_VG_UNLOCK, NULL)) \
@@ -70,7 +69,7 @@ int lock_vol(struct cmd_context *cmd, const char *vol, uint32_t flags, const str
 		release_vg(vg); \
 	} while (0)
 
-int sync_local_dev_names(struct cmd_context* cmd);
+void sync_local_dev_names(struct cmd_context* cmd);
 
 /* Process list of LVs */
 struct volume_group;

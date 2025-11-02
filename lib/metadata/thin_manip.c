@@ -663,11 +663,7 @@ int update_thin_pool_lv(struct logical_volume *lv, int activate)
 		/* Unlock memory if possible */
 		memlock_unlock(lv->vg->cmd);
 
-		if (!sync_local_dev_names(lv->vg->cmd)) {
-			log_error("Failed to sync local devices LV %s.",
-				  display_lvname(lv));
-			ret = 0;
-		}
+		sync_local_dev_names(lv->vg->cmd);
 
 		if (activate &&
 		    !deactivate_lv(lv->vg->cmd, lv)) {

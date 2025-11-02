@@ -6975,8 +6975,7 @@ int lv_resize(struct cmd_context *cmd, struct logical_volume *lv,
 			log_error("Failed to activate %s.", display_lvname(lv_top));
 			return 0;
 		}
-		if (!sync_local_dev_names(cmd))
-			stack;
+		sync_local_dev_names(cmd);
 		activated = 1;
 	}
 
@@ -7017,8 +7016,7 @@ int lv_resize(struct cmd_context *cmd, struct logical_volume *lv,
 			goto out;
 		}
 		lv_top->status &= ~LV_TEMPORARY;
-		if (!sync_local_dev_names(cmd))
-			stack;
+		sync_local_dev_names(cmd);
 		activated_checksize = 1;
 
 	} else if (lp->fsopt[0] && !is_active) {
@@ -7213,8 +7211,7 @@ int lv_resize(struct cmd_context *cmd, struct logical_volume *lv,
 
  out:
 	if (activated || activated_checksize) {
-		if (!sync_local_dev_names(cmd))
-			stack;
+		sync_local_dev_names(cmd);
 		if (!deactivate_lv(cmd, lv_top))
 			log_warn("Problem deactivating %s.", display_lvname(lv_top));
 	}
@@ -8895,11 +8892,7 @@ int wipe_lv(struct logical_volume *lv, struct wipe_params wp)
 	}
 
 	/* Wait until devices are available */
-	if (!sync_local_dev_names(lv->vg->cmd)) {
-		log_error("Failed to sync local devices before wiping volume %s.",
-			  display_lvname(lv));
-		return 0;
-	}
+	sync_local_dev_names(lv->vg->cmd);
 
 	/*
 	 * FIXME:
@@ -9084,8 +9077,7 @@ out:
 			r = 0; /* Continue deactivating as many as possible. */
 		}
 
-	if (!sync_local_dev_names(vg->cmd))
-		log_debug("Failed to sync local device names after deactivation of wiped volumes.");
+	sync_local_dev_names(vg->cmd);
 
 	return r;
 }
@@ -10005,11 +9997,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		}
 
 		/* Get in sync with deactivation, before reusing LV as snapshot */
-		if (!sync_local_dev_names(lv->vg->cmd)) {
-			log_error("Failed to sync local devices before creating snapshot using %s.",
-				  display_lvname(lv));
-			goto revert_new_lv;
-		}
+		sync_local_dev_names(lv->vg->cmd);
 
 		/* Create zero origin volume for spare snapshot */
 		if (lp->virtual_extents &&
@@ -10062,9 +10050,7 @@ out:
 
 deactivate_and_revert_new_lv:
 	log_debug("deactivating to revert new lv");
-	if (!sync_local_dev_names(lv->vg->cmd))
-		log_error("Failed to sync local devices before reverting %s.",
-			  display_lvname(lv));
+	sync_local_dev_names(lv->vg->cmd);
 	if (!deactivate_lv(cmd, lv)) {
 		log_error("Unable to deactivate failed new LV %s. "
 			  "Manual intervention required.",  display_lvname(lv));

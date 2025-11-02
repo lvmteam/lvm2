@@ -2813,10 +2813,7 @@ static int _lvconvert_to_thin_with_external(struct cmd_context *cmd,
 				  "Manual intervention required.");
 			return 0;
 		}
-		if (!sync_local_dev_names(cmd)) {
-			log_error("Failed to sync local devices before conversion.");
-			goto revert_new_lv;
-		}
+		sync_local_dev_names(cmd);
 	}
 
 	/*
@@ -2867,7 +2864,6 @@ deactivate_and_revert_new_lv:
 		return 0;
 	}
 
-revert_new_lv:
 	/* FIXME Better to revert to backup of metadata? */
 	if (!lv_remove(thin_lv) || !vg_write(vg) || !vg_commit(vg))
 		log_error("Manual intervention may be required to remove "
@@ -6376,12 +6372,7 @@ int lvconvert_writecache_attach_single(struct cmd_context *cmd,
 			log_error("Failed to activate LV to check block size %s", display_lvname(lv));
 			goto bad;
 		}
-		if (!sync_local_dev_names(cmd)) {
-			log_error("Failed to sync local dev names.");
-			if (!deactivate_lv(cmd, lv))
-				stack;
-			goto bad;
-		}
+		sync_local_dev_names(cmd);
 	}
 
 	if (!_set_writecache_block_size(cmd, lv, &block_size_sectors)) {

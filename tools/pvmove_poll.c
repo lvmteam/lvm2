@@ -102,8 +102,7 @@ int pvmove_finish(struct cmd_context *cmd, struct volume_group *vg,
 	if (!lv_update_and_reload(lv_mirr))
 		return_0;
 
-	if (!sync_local_dev_names(cmd))
-		stack;
+	sync_local_dev_names(cmd);
 
 	/* Deactivate mirror LV */
 	if (!deactivate_lv(cmd, lv_mirr)) {

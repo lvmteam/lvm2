@@ -23,8 +23,7 @@ static int _vgmknodes_single(struct cmd_context *cmd, struct logical_volume *lv,
 			log_error("Refresh failed for %s.", display_lvname(lv));
 			return_ECMD_FAILED;
 		}
-		if (!sync_local_dev_names(cmd))
-			stack;
+		sync_local_dev_names(cmd);
 	}
 
 	if (!lv_mknodes(cmd, lv))

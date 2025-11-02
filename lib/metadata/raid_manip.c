@@ -332,11 +332,7 @@ static int _deactivate_and_remove_lvs(struct volume_group *vg, struct dm_list *r
 	}
 
 	/* Wait for events following any deactivation. */
-	if (!sync_local_dev_names(vg->cmd)) {
-		log_error("Failed to sync local devices after removing %u LVs in VG %s.",
-			  dm_list_size(removal_lvs), vg->name);
-		return 0;
-	}
+	sync_local_dev_names(vg->cmd);
 
 	return 1;
 }
@@ -3507,8 +3503,7 @@ int lv_raid_split(struct logical_volume *lv, int yes, const char *split_name,
 		return 0;
 	}
 
-	if (!sync_local_dev_names(cmd))
-		stack;
+	sync_local_dev_names(cmd);
 
 	if (vg_is_shared(split_lv->vg)) {
 		if (!lv_active_change(cmd, split_lv, CHANGE_AEY))
@@ -3606,8 +3601,7 @@ int lv_raid_split_and_track(struct logical_volume *lv,
 	if (!deactivate_lv(lv->vg->cmd, seg_lv(seg, s)))
 		return_0;
 
-	if (!sync_local_dev_names(lv->vg->cmd))
-		stack;
+	sync_local_dev_names(lv->vg->cmd);
 
 	if (!activate_lv(lv->vg->cmd, seg_lv(seg, s)))
 		return_0;
@@ -3992,11 +3986,7 @@ static int _eliminate_extracted_lvs_optional_write_vg(struct volume_group *vg,
 						      struct dm_list *removal_lvs,
 						      int vg_write_requested)
 {
-	if (!sync_local_dev_names(vg->cmd)) {
-		log_error("Failed to sync local devices after removing %u LVs in VG %s.",
-			  dm_list_size(removal_lvs), vg->name);
-		return 0;
-	}
+	sync_local_dev_names(vg->cmd);
 
 	if (!removal_lvs || dm_list_empty(removal_lvs))
 		return 1;
@@ -4012,11 +4002,7 @@ static int _eliminate_extracted_lvs_optional_write_vg(struct volume_group *vg,
 	}
 
 	/* Wait for events following any deactivation. */
-	if (!sync_local_dev_names(vg->cmd)) {
-		log_error("Failed to sync local devices after removing %u LVs in VG %s.",
-			  dm_list_size(removal_lvs), vg->name);
-		return 0;
-	}
+	sync_local_dev_names(vg->cmd);
 
 	return 1;
 }
@@ -7454,8 +7440,7 @@ static int _raid_count_or_clear_failed_devices(const struct logical_volume *lv,
 	}
 
 	/* Wait for meta activation. */
-	if (!sync_local_dev_names(lv->vg->cmd))
-		stack;
+	sync_local_dev_names(lv->vg->cmd);
 
 	for (s = 0; s < raid_seg->area_count; s++) {
 		meta_lv = seg_metalv(raid_seg, s);
