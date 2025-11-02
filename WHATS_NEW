@@ -1,5 +1,6 @@
 Version 2.03.37 - 
 ==================
+  Add missing synchronization while converting cachevols.
   Warn on classic snapshot on raid creation and error on activation + test.
   Translate udev device paths in lvmdbusd for test environments.
   Use source='udev' in lvmdbusd to monitor processed udev events.
