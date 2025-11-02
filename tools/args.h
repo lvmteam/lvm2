@@ -904,7 +904,7 @@ arg(syncaction_ARG, '\0', "syncaction", syncaction_VAL, 0, 0,
     "Mind that these synchronization actions are transient and have to be restarted\n"
     "after a system failure/reboot or a configuration change to the RaidLV.\n"
     "See \\fBlvs\\fP(8) for reporting discrepancies found or repaired.\n")
-    
+
 arg(sysinit_ARG, '\0', "sysinit", 0, 0, 0,
     "Indicates that vgchange/lvchange is being invoked\n"
     "from early system initialisation\n"
@@ -1379,7 +1379,7 @@ arg(file_ARG, 'f', "file", string_VAL, 0, 0,
     "When backing up more than one VG, the file name is\n"
     "treated as a template, and %s is replaced by the VG name.\n"
     "#vgcfgrestore\n"
-    "Read metadata backup from the named file.\n" 
+    "Read metadata backup from the named file.\n"
     "Usually this file was created by vgcfgbackup.\n")
 
 arg(force_ARG, 'f', "force", 0, ARG_COUNTABLE, 0,
@@ -1636,9 +1636,8 @@ arg(options_ARG, 'o', "options", string_VAL, ARG_GROUPABLE, 0,
     "Use field name \\fBlv_all\\fP to view all LV fields,\n"
     "\\fBvg_all\\fP all VG fields,\n"
     "\\fBpv_all\\fP all PV fields,\n"
-    "\\fBpvseg_all\\fP all PV segment fields,\n"
     "\\fBseg_all\\fP all LV segment fields, and\n"
-    "\\fBpvseg_all\\fP all PV segment columns.\n"
+    "\\fBpvseg_all\\fP all PV segment fields.\n"
     "See the \\fBlvm.conf\\fP(5) report section for more config options.\n"
     "See \\fBlvmreport\\fP(7) for more information about reporting.\n")
 
