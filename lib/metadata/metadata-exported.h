@@ -731,10 +731,11 @@ void lv_set_hidden(struct logical_volume *lv);
 
 int pv_write(struct cmd_context *cmd, struct physical_volume *pv, int allow_non_orphan);
 int move_pv(struct volume_group *vg_from, struct volume_group *vg_to,
-	    const char *pv_name);
+	    const char *pv_name, struct device **dev_moved);
 int move_pvs_used_by_lv(struct volume_group *vg_from,
 			struct volume_group *vg_to,
-			const char *lv_name);
+			const char *lv_name,
+			struct dm_list *dev_list_moved);
 int is_orphan_vg(const char *vg_name);
 int is_real_vg(const char *vg_name);
 int vg_missing_pv_count(const struct volume_group *vg);

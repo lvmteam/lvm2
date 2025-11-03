@@ -523,6 +523,8 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 	struct vgcreate_params vp_def;
 	const char *vg_name_from, *vg_name_to;
 	struct volume_group *vg_to, *vg_from = NULL;
+	DM_LIST_INIT(devs_moved);
+	struct device *dev_moved;
 	int opt;
 	int existing_vg = 0;
 	int r = ECMD_FAILED;
@@ -648,12 +650,14 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 	/* Move PVs across to new structure */
 	for (opt = 0; opt < argc; opt++) {
 		dm_unescape_colons_and_at_signs(argv[opt], NULL, NULL);
-		if (!move_pv(vg_from, vg_to, argv[opt]))
+		if (!move_pv(vg_from, vg_to, argv[opt], &dev_moved))
+			goto_bad;
+		if (dev_moved && !device_list_add(cmd->mem, &devs_moved, dev_moved))
 			goto_bad;
 	}
 
 	/* If an LV given on the cmdline, move used_by PVs */
-	if (lv_name && !move_pvs_used_by_lv(vg_from, vg_to, lv_name))
+	if (lv_name && !move_pvs_used_by_lv(vg_from, vg_to, lv_name, &devs_moved))
 		goto_bad;
 
 	/*

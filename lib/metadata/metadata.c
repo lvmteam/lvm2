@@ -430,10 +430,13 @@ int add_pv_to_vg(struct volume_group *vg, const char *pv_name,
 }
 
 static int _move_pv(struct volume_group *vg_from, struct volume_group *vg_to,
-		    const char *pv_name, int enforce_pv_from_source)
+		    const char *pv_name, int enforce_pv_from_source,
+		    struct device **dev_moved)
 {
 	struct physical_volume *pv;
 	struct pv_list *pvl;
+
+	*dev_moved = NULL;
 
 	/* FIXME: handle tags */
 	if (!(pvl = find_pv_in_vg(vg_from, pv_name))) {
@@ -466,41 +469,51 @@ static int _move_pv(struct volume_group *vg_from, struct volume_group *vg_to,
 	vg_from->free_count -= pv_pe_count(pv) - pv_pe_alloc_count(pv);
 	vg_to->free_count += pv_pe_count(pv) - pv_pe_alloc_count(pv);
 
+	*dev_moved = pv->dev;
+
 	return 1;
 }
 
 int move_pv(struct volume_group *vg_from, struct volume_group *vg_to,
-	    const char *pv_name)
+	    const char *pv_name, struct device **dev_moved)
 {
-	return _move_pv(vg_from, vg_to, pv_name, 1);
+	return _move_pv(vg_from, vg_to, pv_name, 1, dev_moved);
 }
 
 struct vg_from_to {
 	struct volume_group *from;
 	struct volume_group *to;
+	struct dm_list *dev_list;
 };
 
 static int _move_pvs_used_by_lv_cb(struct logical_volume *lv, void *data)
 {
 	struct vg_from_to *v = (struct vg_from_to*) data;
 	struct lv_segment *lvseg;
+	struct dm_list *dev_list = v->dev_list;
+	struct device *dev_moved;
 	unsigned s;
 
-	dm_list_iterate_items(lvseg, &lv->segments)
-		for (s = 0; s < lvseg->area_count; s++)
-			if (seg_type(lvseg, s) == AREA_PV)
-				if (!_move_pv(v->from, v->to,
-					      pv_dev_name(seg_pv(lvseg, s)), 0))
+	dm_list_iterate_items(lvseg, &lv->segments) {
+		for (s = 0; s < lvseg->area_count; s++) {
+			if (seg_type(lvseg, s) == AREA_PV) {
+				if (!_move_pv(v->from, v->to, pv_dev_name(seg_pv(lvseg, s)), 0, &dev_moved))
 					return_0;
+				if (dev_list && dev_moved && !device_list_add(lv->vg->cmd->mem, dev_list, dev_moved))
+					return_0;
+			}
+		}
+	}
 
 	return 1;
 }
 
 int move_pvs_used_by_lv(struct volume_group *vg_from,
 			struct volume_group *vg_to,
-			const char *lv_name)
+			const char *lv_name,
+			struct dm_list *dev_list)
 {
-	struct vg_from_to data = { .from = vg_from, .to = vg_to };
+	struct vg_from_to data = { .from = vg_from, .to = vg_to, .dev_list = dev_list };
 	struct lv_list *lvl;
 
 	/* FIXME: handle tags */

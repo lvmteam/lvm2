@@ -64,3 +64,13 @@ struct device_list *device_list_find_dev(struct dm_list *devices, struct device 
 	return NULL;
 }
 
+int device_list_add(struct dm_pool *mem, struct dm_list *devices, struct device *dev)
+{
+	struct device_list *devl;
+
+	if (!(devl = dm_pool_alloc(mem, sizeof(struct device_list))))
+		return_0;
+	devl->dev = dev;
+	dm_list_add(devices, &devl->list);
+	return 1;
+}

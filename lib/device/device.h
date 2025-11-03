@@ -250,6 +250,7 @@ int parse_vpd_serial(const unsigned char *in, char *out, size_t outsize);
 int device_id_list_remove(struct dm_list *devices, struct device *dev);
 struct device_id_list *device_id_list_find_dev(struct dm_list *devices, struct device *dev);
 int device_list_remove(struct dm_list *devices, struct device *dev);
+int device_list_add(struct dm_pool *mem, struct dm_list *devices, struct device *dev);
 struct device_list *device_list_find_dev(struct dm_list *devices, struct device *dev);
 
 char *strdup_pvid(char *pvid);
