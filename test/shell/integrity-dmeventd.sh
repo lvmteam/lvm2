@@ -97,6 +97,24 @@ _verify_data_on_lv() {
         lvchange -an $vg/$lv1
 }
 
+# Wait for dmeventd repair to complete by checking if specified devices
+# are no longer present in lvs output. Times out after 11 seconds.
+# Usage: _wait_for_repair dev1 [dev2 ...]
+_wait_for_repair() {
+	local dev
+	sync
+	for i in {1..11}; do
+		sleep 1
+		lvs -a -o+devices $vg > out 2>&1 || true
+		for dev in "$@"; do
+			grep -q "$dev" out && continue 2
+		done
+		# All devices gone, repair completed
+		return 0
+	done
+	die "dmeventd repair timeout - expected devices removed: $*."
+}
+
 # raid1, one device fails, dmeventd calls repair
 
 vgcreate $SHARED $vg "$dev1" "$dev2" "$dev3" "$dev4"
@@ -113,8 +131,7 @@ aux disable_dev "$dev2"
 
 # wait for dmeventd to call lvconvert --repair which should
 # replace dev2 with dev4
-sync
-sleep 5
+_wait_for_repair "$dev2"
 
 lvs -a -o+devices $vg | tee out
 not grep "$dev2" out
@@ -153,8 +170,7 @@ aux disable_dev "$dev1" "$dev2"
 
 # wait for dmeventd to call lvconvert --repair which should
 # replace dev1 and dev2 with dev4 and dev5
-sync
-sleep 5
+_wait_for_repair "$dev1" "$dev2"
 
 lvs -a -o+devices $vg | tee out
 not grep "$dev1" out
@@ -199,8 +215,7 @@ aux disable_dev "$dev2"
 
 # wait for dmeventd to call lvconvert --repair which should
 # replace dev2 with dev6
-sync
-sleep 5
+_wait_for_repair "$dev2"
 
 lvs -a -o+devices $vg | tee out
 not grep "$dev2" out
@@ -238,8 +253,7 @@ aux disable_dev "$dev1"
 
 # wait for dmeventd to call lvconvert --repair which should
 # replace dev1 with dev5
-sync
-sleep 5
+_wait_for_repair "$dev1"
 
 lvs -a -o+devices $vg | tee out
 not grep "$dev1" out
