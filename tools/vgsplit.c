@@ -14,6 +14,7 @@
  */
 
 #include "tools.h"
+#include "lib/device/persist.h"
 
 static int _lv_is_in_vg(struct volume_group *vg, struct logical_volume *lv)
 {
@@ -525,6 +526,7 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 	struct volume_group *vg_to, *vg_from = NULL;
 	DM_LIST_INIT(devs_moved);
 	struct device *dev_moved;
+	int pr_from, pr_to;
 	int opt;
 	int existing_vg = 0;
 	int r = ECMD_FAILED;
@@ -712,6 +714,19 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 	log_verbose("Writing out updated volume groups");
 
 	/*
+	 * Make PR of moved PVs match the VG they are moved to.
+	 * !pr_from && pr_to: on dest, not on source: start dest PR before move
+	 * pr_from && !pr_to: on source, not on dest: stop dest PR after move
+	 */
+	pr_from = (vg_from->pr & (VG_PR_REQUIRE|VG_PR_AUTOSTART)) ? 1 : 0;
+	pr_to = (vg_to->pr & (VG_PR_REQUIRE|VG_PR_AUTOSTART)) ? 1 : 0;
+
+	if (!pr_from && pr_to && !persist_start(cmd, vg_to,
+						(char *)find_config_tree_str(cmd, local_pr_key_CFG, NULL),
+						find_config_tree_int(cmd, local_host_id_CFG, NULL), NULL, NULL))
+		goto_bad;
+
+	/*
 	 * First, write out the new VG as EXPORTED.  We do this first in case
 	 * there is a crash - we will still have the new VG information, in an
 	 * exported state.  Recovery after this point would importing and removal
@@ -754,6 +769,9 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 		goto_bad;
 
 	backup(vg_to);
+
+	if (pr_from && !pr_to && !persist_stop_devs(cmd, vg_to, &devs_moved))
+		log_warn("WARNING: Failed to stop PR.");
 
 	log_print_unless_silent("%s volume group \"%s\" successfully split from \"%s\"",
 				existing_vg ? "Existing" : "New",

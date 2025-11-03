@@ -1682,6 +1682,28 @@ void persist_finish_after(struct cmd_context *cmd, struct volume_group *vg, stru
 	persist_key_file_remove(cmd, vg);
 }
 
+int persist_stop_devs(struct cmd_context *cmd, struct volume_group *vg, struct dm_list *stop_devs)
+{
+	char *local_key = (char *)find_config_tree_str(cmd, local_pr_key_CFG, NULL);
+	int local_host_id = find_config_tree_int(cmd, local_host_id_CFG, NULL);
+	char our_key_buf[PR_KEY_BUF_SIZE] = { 0 };
+	uint64_t our_key_val = 0;
+
+	if (vg_is_sanlock(vg))
+		local_key = NULL;
+
+	if (!local_key && !local_host_id)
+		return 1;
+
+	if (!get_our_key(cmd, vg, local_key, local_host_id, our_key_buf, &our_key_val))
+		return_0;
+
+	if (!_run_stop(cmd, vg, stop_devs, our_key_buf, 0))
+		return_0;
+
+	return 1;
+}
+
 int persist_stop(struct cmd_context *cmd, struct volume_group *vg)
 {
 	DM_LIST_INIT(devs);

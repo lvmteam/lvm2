@@ -49,6 +49,7 @@ int persist_start(struct cmd_context *cmd, struct volume_group *vg,
 		  const char *update_our_key);
 
 int persist_stop(struct cmd_context *cmd, struct volume_group *vg);
+int persist_stop_devs(struct cmd_context *cmd, struct volume_group *vg, struct dm_list *stop_devs);
 
 int persist_finish_before(struct cmd_context *cmd, struct volume_group *vg, struct dm_list *devs, char **key);
 void persist_finish_after(struct cmd_context *cmd, struct volume_group *vg, struct dm_list *devs, char *key);
