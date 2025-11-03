@@ -1413,7 +1413,7 @@ static int run( int argc, const char **argv, std::string fl_envvar = "TEST_FLAVO
             "  lvm2-testsuite - Run a lvm2 testsuite.\n\n"
             "lvm2-testsuite"
             "\n\t"
-            " [--flavours FLAVOURS]"
+            " [--flavours=FLAVOURS]"
             " [--only TESTS]"
             "\n\t"
             " [--outdir OUTDIR]"
@@ -1437,7 +1437,7 @@ static int run( int argc, const char **argv, std::string fl_envvar = "TEST_FLAVO
             "OPTIONS:\n\n"
             // TODO: looks like this could be worth a man page...
             "Filters:\n"
-            "  --flavours FLAVOURS\n\t\t- comma separated list of flavours to run.\n\t\t  For the list of flavours see `$TESTDIR/lib/flavour-*`.\n\t\t  Default: \"" << DEF_FLAVOURS << "\".\n"
+            "  --flavours=FLAVOURS\n\t\t- comma separated list of flavours to run.\n\t\t  For the list of flavours see `$TESTDIR/lib/flavour-*`.\n\t\t  Default: \"" << DEF_FLAVOURS << "\".\n"
             "  --only TESTS\t- comma separated list of tests to run. Default: All tests.\n"
             "\n"
             "Directories:\n"
