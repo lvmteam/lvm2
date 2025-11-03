@@ -70,7 +70,7 @@ blockdev --getpbsz "$dev2"
 
 
 mnt="mnt"
-mkdir -p $mnt
+mkdir -p "$mnt"
 
 awk 'BEGIN { while (z++ < 16384) printf "A" }' > fileA
 awk 'BEGIN { while (z++ < 16384) printf "B" }' > fileB

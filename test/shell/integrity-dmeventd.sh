@@ -23,7 +23,7 @@ aux lvmconf 'activation/raid_fault_policy = "allocate"'
 aux prepare_dmeventd
 
 mnt="mnt"
-mkdir -p $mnt
+mkdir -p "$mnt"
 
 aux prepare_devs 6 64
 
@@ -131,7 +131,7 @@ grep "$dev4" out
 grep "$dev1" out
 grep "$dev3" out
 
-umount $mnt
+umount "$mnt"
 lvchange -an $vg/$lv1
 _verify_data_on_lv
 lvremove $vg/$lv1
@@ -175,7 +175,7 @@ grep "$dev4" out
 grep "$dev5" out
 grep "$dev3" out
 
-umount $mnt
+umount "$mnt"
 lvchange -an $vg/$lv1
 _verify_data_on_lv
 lvremove $vg/$lv1
@@ -215,7 +215,7 @@ lvs -a -o+devices $vg | tee out
 not grep "$dev2" out
 grep "$dev6" out
 
-umount $mnt
+umount "$mnt"
 lvchange -an $vg/$lv1
 _verify_data_on_lv
 lvremove $vg/$lv1
@@ -254,7 +254,7 @@ lvs -a -o+devices $vg | tee out
 not grep "$dev1" out
 grep "$dev5" out
 
-umount $mnt
+umount "$mnt"
 lvchange -an $vg/$lv1
 _verify_data_on_lv
 lvremove $vg/$lv1

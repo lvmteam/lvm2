@@ -18,7 +18,7 @@ aux have_integrity 1 5 0 || skip
 aux kernel_at_least  5 10 || export LVM_TEST_PREFER_BRD=0
 
 mnt="mnt"
-mkdir -p $mnt
+mkdir -p "$mnt"
 
 # prepare_devs uses ramdisk backing which has 512 LBS and 4K PBS
 # This should cause mkfs.xfs to use 4K sector size,
@@ -36,18 +36,18 @@ lvcreate --type raid1 -m1 -n $lv1 -l 8 $vg
 lvchange -an $vg/$lv1
 lvchange -ay $vg/$lv1
 mkfs.ext4 "$DM_DEV_DIR/$vg/$lv1"
-mount "$DM_DEV_DIR/$vg/$lv1" $mnt
-echo "hello world" > $mnt/hello
-umount $mnt
+mount "$DM_DEV_DIR/$vg/$lv1" "$mnt"
+echo "hello world" > "$mnt/hello"
+umount "$mnt"
 lvchange -an $vg
 lvconvert --raidintegrity y $vg/$lv1
 lvchange -ay $vg
 aux wait_recalc $vg/${lv1}_rimage_0
 aux wait_recalc $vg/${lv1}_rimage_1
 lvs -a -o+devices $vg
-mount "$DM_DEV_DIR/$vg/$lv1" $mnt
-cat $mnt/hello
-umount $mnt
+mount "$DM_DEV_DIR/$vg/$lv1" "$mnt"
+cat "$mnt/hello"
+umount "$mnt"
 lvchange -an $vg/$lv1
 lvremove $vg/$lv1
 
@@ -57,18 +57,18 @@ lvcreate --type raid1 -m1 -n $lv1 -l 8 $vg
 lvchange -an $vg/$lv1
 lvchange -ay $vg/$lv1
 mkfs.ext4 "$DM_DEV_DIR/$vg/$lv1"
-mount "$DM_DEV_DIR/$vg/$lv1" $mnt
-echo "hello world" > $mnt/hello
-umount $mnt
+mount "$DM_DEV_DIR/$vg/$lv1" "$mnt"
+echo "hello world" > "$mnt/hello"
+umount "$mnt"
 lvchange -an $vg
 lvchange -ay $vg
 lvconvert --raidintegrity y $vg/$lv1
 aux wait_recalc $vg/${lv1}_rimage_0
 aux wait_recalc $vg/${lv1}_rimage_1
 lvs -a -o+devices $vg
-mount "$DM_DEV_DIR/$vg/$lv1" $mnt
-cat $mnt/hello | grep "hello world"
-umount $mnt
+mount "$DM_DEV_DIR/$vg/$lv1" "$mnt"
+grep "hello world" "$mnt/hello"
+umount "$mnt"
 lvchange -an $vg/$lv1
 lvremove $vg/$lv1
 
@@ -78,19 +78,19 @@ lvcreate --type raid1 -m1 -n $lv1 -l 8 $vg
 lvchange -an $vg/$lv1
 lvchange -ay $vg/$lv1
 mkfs.ext4 "$DM_DEV_DIR/$vg/$lv1"
-mount "$DM_DEV_DIR/$vg/$lv1" $mnt
-echo "hello world" > $mnt/hello
+mount "$DM_DEV_DIR/$vg/$lv1" "$mnt"
+echo "hello world" > "$mnt/hello"
 lvconvert --raidintegrity y $vg/$lv1
 aux wait_recalc $vg/${lv1}_rimage_0
 aux wait_recalc $vg/${lv1}_rimage_1
 lvs -a -o+devices $vg
-cat $mnt/hello | grep "hello world"
-umount $mnt
+grep "hello world" "$mnt/hello"
+umount "$mnt"
 lvchange -an $vg/$lv1
 lvchange -ay $vg/$lv1
-mount "$DM_DEV_DIR/$vg/$lv1" $mnt
-cat $mnt/hello | grep "hello world"
-umount $mnt
+mount "$DM_DEV_DIR/$vg/$lv1" "$mnt"
+grep "hello world" "$mnt/hello"
+umount "$mnt"
 lvchange -an $vg/$lv1
 lvremove $vg/$lv1
 

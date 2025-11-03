@@ -19,7 +19,7 @@ aux have_integrity 1 5 0 || skip
 aux kernel_at_least  5 10 || export LVM_TEST_PREFER_BRD=0
 
 mnt="mnt"
-mkdir -p $mnt
+mkdir -p "$mnt"
 
 aux prepare_devs 5 64
 
@@ -100,11 +100,11 @@ aux wait_recalc $vg/${lv1}_rimage_0
 aux wait_recalc $vg/${lv1}_rimage_1
 aux wait_recalc $vg/$lv1
 _add_new_data_to_mnt
-umount $mnt
+umount "$mnt"
 lvrename $vg/$lv1 $vg/$lv2
-mount "$DM_DEV_DIR/$vg/$lv2" $mnt
+mount "$DM_DEV_DIR/$vg/$lv2" "$mnt"
 _verify_data_on_mnt
-umount $mnt
+umount "$mnt"
 lvchange -an $vg/$lv2
 lvremove $vg/$lv2
 vgremove -ff $vg
@@ -127,7 +127,7 @@ grep "$dev3" out
 not grep "$dev1" out
 _add_more_data_to_mnt
 _verify_data_on_mnt
-umount $mnt
+umount "$mnt"
 lvchange -an $vg/$lv1
 _verify_data_on_lv
 lvremove $vg/$lv1
@@ -150,7 +150,7 @@ grep "$dev3" out
 not grep "$dev1" out
 _add_more_data_to_mnt
 _verify_data_on_mnt
-umount $mnt
+umount "$mnt"
 lvchange -an $vg/$lv1
 _verify_data_on_lv
 lvremove $vg/$lv1
@@ -177,7 +177,7 @@ not grep "$dev2" out
 not grep unknown out
 _add_more_data_to_mnt
 _verify_data_on_mnt
-umount $mnt
+umount "$mnt"
 lvchange -an $vg/$lv1
 lvremove $vg/$lv1
 aux enable_dev "$dev2"
@@ -195,7 +195,7 @@ aux wait_recalc $vg/${lv1}_rimage_0
 aux wait_recalc $vg/${lv1}_rimage_1
 aux wait_recalc $vg/$lv1
 _add_new_data_to_mnt
-umount $mnt
+umount "$mnt"
 lvchange -an $vg/$lv1
 aux disable_dev "$dev2"
 lvs -a -o+devices $vg
@@ -204,10 +204,10 @@ not lvchange -ay --activationmode degraded $vg/$lv1
 not lvchange -ay --activationmode partial $vg/$lv1
 lvconvert --raidintegrity n $vg/$lv1
 lvchange -ay --activationmode degraded $vg/$lv1
-mount "$DM_DEV_DIR/$vg/$lv1" $mnt
+mount "$DM_DEV_DIR/$vg/$lv1" "$mnt"
 _add_more_data_to_mnt
 _verify_data_on_mnt
-umount $mnt
+umount "$mnt"
 lvchange -an $vg/$lv1
 lvremove $vg/$lv1
 aux enable_dev "$dev2"
@@ -232,7 +232,7 @@ not grep "$dev2" out
 grep error out
 _add_more_data_to_mnt
 _verify_data_on_mnt
-umount $mnt
+umount "$mnt"
 lvchange -an $vg/$lv1
 lvremove $vg/$lv1
 aux enable_dev "$dev2"

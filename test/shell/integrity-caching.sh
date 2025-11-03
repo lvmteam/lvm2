@@ -21,7 +21,7 @@ aux have_integrity 1 5 0 || skip
 aux kernel_at_least  5 10 || export LVM_TEST_PREFER_BRD=0
 
 mnt="mnt"
-mkdir -p $mnt
+mkdir -p "$mnt"
 
 aux prepare_devs 9 80
 
@@ -32,9 +32,9 @@ awk 'BEGIN { while (z++ < 4096) printf "B" ; while (z++ < 16384) printf "b" }' >
 awk 'BEGIN { while (z++ < 16384) printf "C" }' > fileC
 
 # generate random data
-dd if=/dev/urandom of=randA bs=512K count=2
-dd if=/dev/urandom of=randB bs=512K count=3
-dd if=/dev/urandom of=randC bs=512K count=4
+dd if=/dev/urandom of=randA bs=512K count=2 2>/dev/null
+dd if=/dev/urandom of=randB bs=512K count=3 2>/dev/null
+dd if=/dev/urandom of=randC bs=512K count=4 2>/dev/null
 
 _prepare_vg() {
 	# zero devs so we are sure to find the correct file data
@@ -47,14 +47,14 @@ _prepare_vg() {
 _test_fs_with_read_repair() {
 	mkfs.ext4 -b 4096 "$DM_DEV_DIR/$vg/$lv1"
 
-	mount "$DM_DEV_DIR/$vg/$lv1" $mnt
+	mount "$DM_DEV_DIR/$vg/$lv1" "$mnt"
 
-	cp randA $mnt
-	cp randB $mnt
-	cp randC $mnt
-	cp fileA $mnt
-	cp fileB $mnt
-	cp fileC $mnt
+	cp randA "$mnt"
+	cp randB "$mnt"
+	cp randC "$mnt"
+	cp fileA "$mnt"
+	cp fileB "$mnt"
+	cp fileC "$mnt"
 
 	# The files written above are in the writecache so reading
 	# them back later will come from the writecache and not from the
@@ -62,33 +62,33 @@ _test_fs_with_read_repair() {
 	# the original files from the writecache, so when they are read
 	# back the data will hopefully come from the underlying disk and
 	# trigger reading the corrupted data.
-	mkdir $mnt/new1
-	cat randA > $mnt/new1/randA
-	cat randB > $mnt/new1/randB
-	cat randC > $mnt/new1/randC
+	mkdir "$mnt/new1"
+	cp randA "$mnt/new1/randA"
+	cp randB "$mnt/new1/randB"
+	cp randC "$mnt/new1/randC"
 	sync
-	du -h $mnt/new1
-	cp -r $mnt/new1 $mnt/new2 || true
-	cp -r $mnt/new1 $mnt/new3 || true
-	cp -r $mnt/new1 $mnt/new4 || true
+	du -h "$mnt/new1"
+	cp -r "$mnt/new1" "$mnt/new2" || true
+	cp -r "$mnt/new1" "$mnt/new3" || true
+	cp -r "$mnt/new1" "$mnt/new4" || true
 	sync
-	du -h $mnt
+	du -h "$mnt"
 	df -h
 	# hopefully fileA is no longer in the writecache.
 
-	umount $mnt
+	umount "$mnt"
 	lvchange -an $vg/$lv1
 	for dev in "$@"; do
 		aux corrupt_dev "$dev" BBBBBBBBBBBBBBBBB BBBBBBBBCBBBBBBBB
 	done
 
 	lvchange -ay $vg/$lv1
-	mount "$DM_DEV_DIR/$vg/$lv1" $mnt
+	mount "$DM_DEV_DIR/$vg/$lv1" "$mnt"
 
-	cmp -b $mnt/fileA fileA
-	cmp -b $mnt/fileB fileB
-	cmp -b $mnt/fileC fileC
-	umount $mnt
+	cmp -b "$mnt/fileA" fileA
+	cmp -b "$mnt/fileB" fileB
+	cmp -b "$mnt/fileC" fileC
+	umount "$mnt"
 }
 
 _add_new_data_to_mnt() {
@@ -246,7 +246,7 @@ lvconvert --raidintegrity n $vg/${lv1}_${suffix}
 _add_more_data_to_mnt
 lvconvert --splitcache $vg/$lv1
 _verify_data_on_mnt
-umount $mnt
+umount "$mnt"
 lvchange -an $vg/$lv1
 _verify_data_on_lv
 lvremove $vg/$lv1
@@ -267,7 +267,7 @@ not lvconvert --raidintegrity y $vg/${lv1}_${suffix}
 #aux wait_recalc $vg/${lv1}_${suffix}_rimage_1
 _add_more_data_to_mnt
 _verify_data_on_mnt
-umount $mnt
+umount "$mnt"
 lvchange -an $vg/$lv1
 _verify_data_on_lv
 lvremove $vg/$lv1
@@ -284,7 +284,7 @@ lvcreate --type $create_type -n fast -l 4 -an $vg "$dev6"
 lvconvert -y --type $convert_type $convert_option fast $vg/$lv1
 lvs -a -o name,size,segtype,devices,sync_percent $vg
 _add_new_data_to_mnt
-umount $mnt
+umount "$mnt"
 lvchange -an $vg/$lv1
 # use two new devs for raid extend to ensure redundancy
 vgextend $vg "$dev7" "$dev8"
@@ -292,13 +292,13 @@ lvs -a -o name,segtype,devices $vg
 lvextend -l 16 $vg/$lv1 "$dev7" "$dev8"
 lvs -a -o name,segtype,devices $vg
 lvchange -ay $vg/$lv1
-mount "$DM_DEV_DIR/$vg/$lv1" $mnt
+mount "$DM_DEV_DIR/$vg/$lv1" "$mnt"
 resize2fs "$DM_DEV_DIR/$vg/$lv1"
 aux wait_recalc $vg/${lv1}_${suffix}_rimage_0
 aux wait_recalc $vg/${lv1}_${suffix}_rimage_1
 _add_more_data_to_mnt
 _verify_data_on_mnt
-umount $mnt
+umount "$mnt"
 lvchange -an $vg/$lv1
 _verify_data_on_lv
 lvremove $vg/$lv1
@@ -324,7 +324,7 @@ aux wait_recalc $vg/${lv1}_${suffix}_rimage_0
 aux wait_recalc $vg/${lv1}_${suffix}_rimage_1
 _add_more_data_to_mnt
 _verify_data_on_mnt
-umount $mnt
+umount "$mnt"
 lvchange -an $vg/$lv1
 _verify_data_on_lv
 lvremove $vg/$lv1
@@ -348,7 +348,7 @@ aux wait_recalc $vg/${lv1}_${suffix}_rimage_0
 aux wait_recalc $vg/${lv1}_${suffix}_rimage_1
 _add_more_data_to_mnt
 _verify_data_on_mnt
-umount $mnt
+umount "$mnt"
 lvchange -an $vg/$lv1
 _verify_data_on_lv
 lvremove $vg/$lv1
@@ -372,7 +372,7 @@ not lvconvert -y -m+1 $vg/${lv1}_${suffix}
 #aux wait_recalc $vg/${lv1}_${suffix}_rimage_2
 _add_more_data_to_mnt
 _verify_data_on_mnt
-umount $mnt
+umount "$mnt"
 lvchange -an $vg/$lv1
 _verify_data_on_lv
 lvremove $vg/$lv1
@@ -394,7 +394,7 @@ lvconvert -y -m-1 $vg/${lv1}_${suffix}
 lvs -a -o name,size,segtype,devices,sync_percent $vg
 _add_more_data_to_mnt
 _verify_data_on_mnt
-umount $mnt
+umount "$mnt"
 lvchange -an $vg/$lv1
 _verify_data_on_lv
 lvremove $vg/$lv1
@@ -430,7 +430,7 @@ not pvmove -n $vg/$lv1 "$dev1"
 not pvmove -n $vg/${lv1}_${suffix} "$dev1"
 not pvmove "$dev1"
 _verify_data_on_mnt
-umount $mnt
+umount "$mnt"
 lvchange -an $vg/$lv1
 _verify_data_on_lv
 lvremove $vg/$lv1
@@ -493,7 +493,7 @@ _add_new_data_to_mnt
 lvconvert --raidintegrity n $vg/${lv1}_${suffix}
 _add_more_data_to_mnt
 _verify_data_on_mnt
-umount $mnt
+umount "$mnt"
 lvchange -an $vg/$lv1
 _verify_data_on_lv
 lvremove $vg/$lv1
@@ -512,7 +512,7 @@ aux wait_recalc $vg/${lv1}_${suffix}_rimage_1
 aux wait_recalc $vg/${lv1}_${suffix}
 _add_more_data_to_mnt
 _verify_data_on_mnt
-umount $mnt
+umount "$mnt"
 lvchange -an $vg/$lv1
 _verify_data_on_lv
 lvremove $vg/$lv1

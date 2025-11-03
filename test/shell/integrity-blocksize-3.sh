@@ -16,7 +16,7 @@
 aux have_integrity 1 5 0 || skip
 
 mnt="mnt"
-mkdir -p $mnt
+mkdir -p "$mnt"
 
 # scsi_debug devices with 512 LBS 512 PBS
 aux prepare_scsi_debug_dev 256
@@ -35,18 +35,18 @@ lvcreate --type raid1 -m1 -n $lv1 -l 8 $vg
 lvchange -an $vg/$lv1
 lvchange -ay $vg/$lv1
 mkfs.ext4 "$DM_DEV_DIR/$vg/$lv1"
-mount "$DM_DEV_DIR/$vg/$lv1" $mnt
-echo "hello world" > $mnt/hello
-umount $mnt
+mount "$DM_DEV_DIR/$vg/$lv1" "$mnt"
+echo "hello world" > "$mnt/hello"
+umount "$mnt"
 lvchange -an $vg
 lvconvert --raidintegrity y $vg/$lv1
 lvchange -ay $vg
 aux wait_recalc $vg/${lv1}_rimage_0
 aux wait_recalc $vg/${lv1}_rimage_1
 lvs -a -o+devices $vg
-mount "$DM_DEV_DIR/$vg/$lv1" $mnt
-cat $mnt/hello
-umount $mnt
+mount "$DM_DEV_DIR/$vg/$lv1" "$mnt"
+cat "$mnt/hello"
+umount "$mnt"
 lvchange -an $vg/$lv1
 lvremove $vg/$lv1
 
@@ -55,18 +55,18 @@ lvcreate --type raid1 -m1 -n $lv1 -l 8 $vg
 lvchange -an $vg/$lv1
 lvchange -ay $vg/$lv1
 mkfs.ext4 "$DM_DEV_DIR/$vg/$lv1"
-mount "$DM_DEV_DIR/$vg/$lv1" $mnt
-echo "hello world" > $mnt/hello
-umount $mnt
+mount "$DM_DEV_DIR/$vg/$lv1" "$mnt"
+echo "hello world" > "$mnt/hello"
+umount "$mnt"
 lvchange -an $vg
 lvchange -ay $vg
 lvconvert --raidintegrity y $vg/$lv1
 aux wait_recalc $vg/${lv1}_rimage_0
 aux wait_recalc $vg/${lv1}_rimage_1
 lvs -a -o+devices $vg
-mount "$DM_DEV_DIR/$vg/$lv1" $mnt
-cat $mnt/hello | grep "hello world"
-umount $mnt
+mount "$DM_DEV_DIR/$vg/$lv1" "$mnt"
+grep "hello world" "$mnt/hello"
+umount "$mnt"
 lvchange -an $vg/$lv1
 lvremove $vg/$lv1
 
@@ -75,19 +75,19 @@ lvcreate --type raid1 -m1 -n $lv1 -l 8 $vg
 lvchange -an $vg/$lv1
 lvchange -ay $vg/$lv1
 mkfs.ext4 "$DM_DEV_DIR/$vg/$lv1"
-mount "$DM_DEV_DIR/$vg/$lv1" $mnt
-echo "hello world" > $mnt/hello
+mount "$DM_DEV_DIR/$vg/$lv1" "$mnt"
+echo "hello world" > "$mnt/hello"
 lvconvert --raidintegrity y $vg/$lv1
 aux wait_recalc $vg/${lv1}_rimage_0
 aux wait_recalc $vg/${lv1}_rimage_1
 lvs -a -o+devices $vg
-cat $mnt/hello | grep "hello world"
-umount $mnt
+grep "hello world" "$mnt/hello"
+umount "$mnt"
 lvchange -an $vg/$lv1
 lvchange -ay $vg/$lv1
-mount "$DM_DEV_DIR/$vg/$lv1" $mnt
-cat $mnt/hello | grep "hello world"
-umount $mnt
+mount "$DM_DEV_DIR/$vg/$lv1" "$mnt"
+grep "hello world" "$mnt/hello"
+umount "$mnt"
 lvchange -an $vg/$lv1
 lvremove $vg/$lv1
 
@@ -112,18 +112,18 @@ lvcreate --type raid1 -m1 -n $lv1 -l 8 $vg
 lvchange -an $vg/$lv1
 lvchange -ay $vg/$lv1
 mkfs.ext4 "$DM_DEV_DIR/$vg/$lv1"
-mount "$DM_DEV_DIR/$vg/$lv1" $mnt
-echo "hello world" > $mnt/hello
-umount $mnt
+mount "$DM_DEV_DIR/$vg/$lv1" "$mnt"
+echo "hello world" > "$mnt/hello"
+umount "$mnt"
 lvchange -an $vg
 lvconvert --raidintegrity y $vg/$lv1
 lvchange -ay $vg
 aux wait_recalc $vg/${lv1}_rimage_0
 aux wait_recalc $vg/${lv1}_rimage_1
 lvs -a -o+devices $vg
-mount "$DM_DEV_DIR/$vg/$lv1" $mnt
-cat $mnt/hello
-umount $mnt
+mount "$DM_DEV_DIR/$vg/$lv1" "$mnt"
+cat "$mnt/hello"
+umount "$mnt"
 lvchange -an $vg/$lv1
 lvremove $vg/$lv1
 
@@ -132,18 +132,18 @@ lvcreate --type raid1 -m1 -n $lv1 -l 8 $vg
 lvchange -an $vg/$lv1
 lvchange -ay $vg/$lv1
 mkfs.ext4 "$DM_DEV_DIR/$vg/$lv1"
-mount "$DM_DEV_DIR/$vg/$lv1" $mnt
-echo "hello world" > $mnt/hello
-umount $mnt
+mount "$DM_DEV_DIR/$vg/$lv1" "$mnt"
+echo "hello world" > "$mnt/hello"
+umount "$mnt"
 lvchange -an $vg
 lvchange -ay $vg
 lvconvert --raidintegrity y $vg/$lv1
 aux wait_recalc $vg/${lv1}_rimage_0
 aux wait_recalc $vg/${lv1}_rimage_1
 lvs -a -o+devices $vg
-mount "$DM_DEV_DIR/$vg/$lv1" $mnt
-cat $mnt/hello | grep "hello world"
-umount $mnt
+mount "$DM_DEV_DIR/$vg/$lv1" "$mnt"
+grep "hello world" "$mnt/hello"
+umount "$mnt"
 lvchange -an $vg/$lv1
 lvremove $vg/$lv1
 
@@ -152,19 +152,19 @@ lvcreate --type raid1 -m1 -n $lv1 -l 8 $vg
 lvchange -an $vg/$lv1
 lvchange -ay $vg/$lv1
 mkfs.ext4 "$DM_DEV_DIR/$vg/$lv1"
-mount "$DM_DEV_DIR/$vg/$lv1" $mnt
-echo "hello world" > $mnt/hello
+mount "$DM_DEV_DIR/$vg/$lv1" "$mnt"
+echo "hello world" > "$mnt/hello"
 lvconvert --raidintegrity y $vg/$lv1
 aux wait_recalc $vg/${lv1}_rimage_0
 aux wait_recalc $vg/${lv1}_rimage_1
 lvs -a -o+devices $vg
-cat $mnt/hello | grep "hello world"
-umount $mnt
+grep "hello world" "$mnt/hello"
+umount "$mnt"
 lvchange -an $vg/$lv1
 lvchange -ay $vg/$lv1
-mount "$DM_DEV_DIR/$vg/$lv1" $mnt
-cat $mnt/hello | grep "hello world"
-umount $mnt
+mount "$DM_DEV_DIR/$vg/$lv1" "$mnt"
+grep "hello world" "$mnt/hello"
+umount "$mnt"
 lvchange -an $vg/$lv1
 lvremove $vg/$lv1
 
@@ -189,18 +189,18 @@ lvcreate --type raid1 -m1 -n $lv1 -l 8 $vg
 lvchange -an $vg/$lv1
 lvchange -ay $vg/$lv1
 mkfs.ext4 "$DM_DEV_DIR/$vg/$lv1"
-mount "$DM_DEV_DIR/$vg/$lv1" $mnt
-echo "hello world" > $mnt/hello
-umount $mnt
+mount "$DM_DEV_DIR/$vg/$lv1" "$mnt"
+echo "hello world" > "$mnt/hello"
+umount "$mnt"
 lvchange -an $vg
 lvconvert --raidintegrity y $vg/$lv1
 lvchange -ay $vg
 aux wait_recalc $vg/${lv1}_rimage_0
 aux wait_recalc $vg/${lv1}_rimage_1
 lvs -a -o+devices $vg
-mount "$DM_DEV_DIR/$vg/$lv1" $mnt
-cat $mnt/hello
-umount $mnt
+mount "$DM_DEV_DIR/$vg/$lv1" "$mnt"
+cat "$mnt/hello"
+umount "$mnt"
 lvchange -an $vg/$lv1
 lvremove $vg/$lv1
 
@@ -210,18 +210,18 @@ lvcreate --type raid1 -m1 -n $lv1 -l 8 $vg
 lvchange -an $vg/$lv1
 lvchange -ay $vg/$lv1
 mkfs.ext4 "$DM_DEV_DIR/$vg/$lv1"
-mount "$DM_DEV_DIR/$vg/$lv1" $mnt
-echo "hello world" > $mnt/hello
-umount $mnt
+mount "$DM_DEV_DIR/$vg/$lv1" "$mnt"
+echo "hello world" > "$mnt/hello"
+umount "$mnt"
 lvchange -an $vg
 lvchange -ay $vg
 lvconvert --raidintegrity y $vg/$lv1
 aux wait_recalc $vg/${lv1}_rimage_0
 aux wait_recalc $vg/${lv1}_rimage_1
 lvs -a -o+devices $vg
-mount "$DM_DEV_DIR/$vg/$lv1" $mnt
-cat $mnt/hello | grep "hello world"
-umount $mnt
+mount "$DM_DEV_DIR/$vg/$lv1" "$mnt"
+grep "hello world" "$mnt/hello"
+umount "$mnt"
 lvchange -an $vg/$lv1
 lvremove $vg/$lv1
 
@@ -231,19 +231,19 @@ lvcreate --type raid1 -m1 -n $lv1 -l 8 $vg
 lvchange -an $vg/$lv1
 lvchange -ay $vg/$lv1
 mkfs.ext4 "$DM_DEV_DIR/$vg/$lv1"
-mount "$DM_DEV_DIR/$vg/$lv1" $mnt
-echo "hello world" > $mnt/hello
+mount "$DM_DEV_DIR/$vg/$lv1" "$mnt"
+echo "hello world" > "$mnt/hello"
 lvconvert --raidintegrity y $vg/$lv1
 aux wait_recalc $vg/${lv1}_rimage_0
 aux wait_recalc $vg/${lv1}_rimage_1
 lvs -a -o+devices $vg
-cat $mnt/hello | grep "hello world"
-umount $mnt
+grep "hello world" "$mnt/hello"
+umount "$mnt"
 lvchange -an $vg/$lv1
 lvchange -ay $vg/$lv1
-mount "$DM_DEV_DIR/$vg/$lv1" $mnt
-cat $mnt/hello | grep "hello world"
-umount $mnt
+mount "$DM_DEV_DIR/$vg/$lv1" "$mnt"
+grep "hello world" "$mnt/hello"
+umount "$mnt"
 lvchange -an $vg/$lv1
 lvremove $vg/$lv1
 

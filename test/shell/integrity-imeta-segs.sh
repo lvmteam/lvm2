@@ -20,7 +20,7 @@ aux have_integrity 1 5 0 || skip
 
 which mkfs.ext4 || skip
 mnt="mnt"
-mkdir -p $mnt
+mkdir -p "$mnt"
 
 # Use awk instead of anoyingly long log out from printf
 #printf "%0.sA" {1..16384} >> fileA
@@ -76,29 +76,29 @@ _verify_data_on_lv() {
 }
 
 _replace_data_on_lv() {
-        mount "$DM_DEV_DIR/$vg/$lv1" $mnt
+        mount "$DM_DEV_DIR/$vg/$lv1" "$mnt"
 
-        rm $mnt/randA
-        rm $mnt/randB
-        rm $mnt/randC
-        rm $mnt/1/fileA
-        rm $mnt/1/fileB
-        rm $mnt/1/fileC
-        rm $mnt/2/fileA
-        rm $mnt/2/fileB
-        rm $mnt/2/fileC
+        rm "$mnt/randA"
+        rm "$mnt/randB"
+        rm "$mnt/randC"
+        rm "$mnt/1/fileA"
+        rm "$mnt/1/fileB"
+        rm "$mnt/1/fileC"
+        rm "$mnt/2/fileA"
+        rm "$mnt/2/fileB"
+        rm "$mnt/2/fileC"
 
-        cp randA $mnt
-        cp randB $mnt
-        cp randC $mnt
-        cp fileA $mnt/1
-        cp fileB $mnt/1
-        cp fileC $mnt/1
-        cp fileA $mnt/2
-        cp fileB $mnt/2
-        cp fileC $mnt/2
+        cp randA "$mnt"
+        cp randB "$mnt"
+        cp randC "$mnt"
+        cp fileA "$mnt/1"
+        cp fileB "$mnt/1"
+        cp fileC "$mnt/1"
+        cp fileA "$mnt/2"
+        cp fileB "$mnt/2"
+        cp fileC "$mnt/2"
 
-        umount $mnt
+        umount "$mnt"
 }
 
 # Create a raid LV with multi-segment images (based on an example of vg metadata)

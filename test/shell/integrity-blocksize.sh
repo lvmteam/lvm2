@@ -33,7 +33,7 @@ cleanup_mounted_and_teardown()
 }
 
 mnt="mnt"
-mkdir -p $mnt
+mkdir -p "$mnt"
 
 # Tests with fs block sizes require a libblkid version that shows BLOCK_SIZE
 aux prepare_devs 1
@@ -146,8 +146,8 @@ blkid -p "$DM_DEV_DIR/$vg1/$lv1" | tee out
 grep BLOCK_SIZE=\"1024\" out
 lvconvert --raidintegrity y $vg1/$lv1
 blkid -p "$DM_DEV_DIR/$vg1/$lv1" | grep BLOCK_SIZE=\"1024\"
-mount "$DM_DEV_DIR/$vg1/$lv1" $mnt
-umount $mnt
+mount "$DM_DEV_DIR/$vg1/$lv1" "$mnt"
+umount "$mnt"
 pvck --dump metadata "$LOOP1" | grep 'block_size = 512'
 lvremove -y $vg1/$lv1
 
@@ -158,8 +158,8 @@ mkfs.ext4 "$DM_DEV_DIR/$vg2/$lv1"
 blkid -p "$DM_DEV_DIR/$vg2/$lv1" | grep BLOCK_SIZE=\"4096\"
 lvconvert --raidintegrity y $vg2/$lv1
 blkid -p "$DM_DEV_DIR/$vg2/$lv1" | grep BLOCK_SIZE=\"4096\"
-mount "$DM_DEV_DIR/$vg2/$lv1" $mnt
-umount $mnt
+mount "$DM_DEV_DIR/$vg2/$lv1" "$mnt"
+umount "$mnt"
 pvck --dump metadata $LOOP3 | grep 'block_size = 4096'
 lvremove -y $vg2/$lv1
 
@@ -170,8 +170,8 @@ mkfs.ext4 -b 1024 "$DM_DEV_DIR/$vg1/$lv1"
 blkid -p "$DM_DEV_DIR/$vg1/$lv1" | grep BLOCK_SIZE=\"1024\"
 lvconvert --raidintegrity y $vg1/$lv1
 blkid -p "$DM_DEV_DIR/$vg1/$lv1" | grep BLOCK_SIZE=\"1024\"
-mount "$DM_DEV_DIR/$vg1/$lv1" $mnt
-umount $mnt
+mount "$DM_DEV_DIR/$vg1/$lv1" "$mnt"
+umount "$mnt"
 pvck --dump metadata "$LOOP1" | grep 'block_size = 512'
 lvremove -y $vg1/$lv1
 
@@ -184,8 +184,8 @@ lvchange -an $vg1/$lv1
 lvconvert --raidintegrity y $vg1/$lv1
 lvchange -ay $vg1/$lv1
 blkid -p "$DM_DEV_DIR/$vg1/$lv1" | grep BLOCK_SIZE=\"1024\"
-mount "$DM_DEV_DIR/$vg1/$lv1" $mnt
-umount $mnt
+mount "$DM_DEV_DIR/$vg1/$lv1" "$mnt"
+umount "$mnt"
 pvck --dump metadata "$LOOP1" | grep 'block_size = 1024'
 lvremove -y $vg1/$lv1
 
@@ -196,8 +196,8 @@ mkfs.ext4 "$DM_DEV_DIR/$vg2/$lv1"
 blkid -p "$DM_DEV_DIR/$vg2/$lv1" | grep BLOCK_SIZE=\"4096\"
 lvconvert --raidintegrity y $vg2/$lv1
 blkid -p "$DM_DEV_DIR/$vg2/$lv1" | grep BLOCK_SIZE=\"4096\"
-mount "$DM_DEV_DIR/$vg2/$lv1" $mnt
-umount $mnt
+mount "$DM_DEV_DIR/$vg2/$lv1" "$mnt"
+umount "$mnt"
 pvck --dump metadata "$LOOP3" | grep 'block_size = 4096'
 lvremove -y $vg2/$lv1
 
@@ -211,8 +211,8 @@ blkid -p "$DM_DEV_DIR/$vg1/$lv1" | grep BLOCK_SIZE=\"4096\"
 lvconvert --raidintegrity y --raidintegrityblocksize 512 $vg1/$lv1
 lvs -o raidintegrityblocksize $vg1/$lv1 | grep 512
 blkid -p "$DM_DEV_DIR/$vg1/$lv1" | grep BLOCK_SIZE=\"4096\"
-mount "$DM_DEV_DIR/$vg1/$lv1" $mnt
-umount $mnt
+mount "$DM_DEV_DIR/$vg1/$lv1" "$mnt"
+umount "$mnt"
 pvck --dump metadata "$LOOP1" | grep 'block_size = 512'
 lvremove -y $vg1/$lv1
 
@@ -227,8 +227,8 @@ lvconvert --raidintegrity y --raidintegrityblocksize 1024 $vg1/$lv1
 lvs -o raidintegrityblocksize $vg1/$lv1 | grep 1024
 lvchange -ay $vg1/$lv1
 blkid -p "$DM_DEV_DIR/$vg1/$lv1" | grep BLOCK_SIZE=\"4096\"
-mount "$DM_DEV_DIR/$vg1/$lv1" $mnt
-umount $mnt
+mount "$DM_DEV_DIR/$vg1/$lv1" "$mnt"
+umount "$mnt"
 pvck --dump metadata "$LOOP1" | grep 'block_size = 1024'
 lvremove -y $vg1/$lv1
 
@@ -239,8 +239,8 @@ mkfs.ext4 -b 1024 "$DM_DEV_DIR/$vg1/$lv1"
 blkid -p "$DM_DEV_DIR/$vg1/$lv1" | grep BLOCK_SIZE=\"1024\"
 lvconvert --raidintegrity y --raidintegrityblocksize 512 $vg1/$lv1
 blkid -p "$DM_DEV_DIR/$vg1/$lv1" | grep BLOCK_SIZE=\"1024\"
-mount "$DM_DEV_DIR/$vg1/$lv1" $mnt
-umount $mnt
+mount "$DM_DEV_DIR/$vg1/$lv1" "$mnt"
+umount "$mnt"
 pvck --dump metadata "$LOOP1" | grep 'block_size = 512'
 lvremove -y $vg1/$lv1
 
@@ -260,16 +260,16 @@ lvremove -y $vg2/$lv1
 lvcreate --type raid1 -m1 -l 8 -n $lv1 $vg1
 aux wipefs_a "$DM_DEV_DIR//$vg1/$lv1"
 mkfs.ext4 "$DM_DEV_DIR/$vg1/$lv1"
-mount "$DM_DEV_DIR/$vg1/$lv1" $mnt
-echo "test" > $mnt/test
-umount $mnt
+mount "$DM_DEV_DIR/$vg1/$lv1" "$mnt"
+echo "test" > "$mnt/test"
+umount "$mnt"
 blkid -p "$DM_DEV_DIR/$vg1/$lv1" | grep BLOCK_SIZE=\"1024\"
 lvchange -an $vg1/$lv1
 lvconvert --raidintegrity y $vg1/$lv1
 lvchange -ay $vg1/$lv1
-mount "$DM_DEV_DIR/$vg1/$lv1" $mnt
-cat $mnt/test
-umount $mnt
+mount "$DM_DEV_DIR/$vg1/$lv1" "$mnt"
+cat "$mnt/test"
+umount "$mnt"
 blkid -p "$DM_DEV_DIR/$vg1/$lv1" | grep BLOCK_SIZE=\"1024\"
 pvck --dump metadata "$LOOP1" | tee out
 grep 'block_size = 1024' out
@@ -280,16 +280,16 @@ lvremove -y $vg1/$lv1
 lvcreate --type raid1 -m1 -l 8 -n $lv1 $vg2
 aux wipefs_a "$DM_DEV_DIR//$vg2/$lv1"
 mkfs.ext4 "$DM_DEV_DIR/$vg2/$lv1"
-mount "$DM_DEV_DIR/$vg2/$lv1" $mnt
-echo "test" > $mnt/test
-umount $mnt
+mount "$DM_DEV_DIR/$vg2/$lv1" "$mnt"
+echo "test" > "$mnt/test"
+umount "$mnt"
 blkid -p "$DM_DEV_DIR/$vg2/$lv1" | grep BLOCK_SIZE=\"4096\"
 lvchange -an $vg2/$lv1
 lvconvert --raidintegrity y $vg2/$lv1
 lvchange -ay $vg2/$lv1
-mount "$DM_DEV_DIR/$vg2/$lv1" $mnt
-cat $mnt/test
-umount $mnt
+mount "$DM_DEV_DIR/$vg2/$lv1" "$mnt"
+cat "$mnt/test"
+umount "$mnt"
 blkid -p "$DM_DEV_DIR/$vg2/$lv1" | grep BLOCK_SIZE=\"4096\"
 pvck --dump metadata "$LOOP3" | tee out
 grep 'block_size = 4096' out
