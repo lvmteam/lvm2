@@ -1250,7 +1250,6 @@ int cache_set_params(struct lv_segment *seg,
  */
 int wipe_cache_pool(struct logical_volume *cache_pool_lv)
 {
-	int r;
 	struct logical_volume *cache_data_lv;
 
 	/* Only unused cache-pool could be activated and wiped */
@@ -1270,27 +1269,11 @@ int wipe_cache_pool(struct logical_volume *cache_pool_lv)
 		return 1;
 	}
 
-	cache_pool_lv->status |= LV_TEMPORARY;
-	if (!activate_lv(cache_pool_lv->vg->cmd, cache_pool_lv)) {
-		log_error("Aborting. Failed to activate cache pool %s.",
+	if (!activate_and_wipe_lv(cache_pool_lv, WIPE_MODE_DO_ZERO, 0, 0)) {
+		log_error("Aborting. Failed to wipe cache pool %s.",
 			  display_lvname(cache_pool_lv));
 		return 0;
 	}
-	cache_pool_lv->status &= ~LV_TEMPORARY;
-	if (!(r = wipe_lv(cache_pool_lv, (struct wipe_params) { .do_zero = 1 }))) {
-		log_error("Aborting. Failed to wipe cache pool %s.",
-			  display_lvname(cache_pool_lv));
-		/* Delay return of error after deactivation */
-	}
 
-	/* Deactivate cleared cache-pool metadata */
-	if (!deactivate_lv(cache_pool_lv->vg->cmd, cache_pool_lv)) {
-		log_error("Aborting. Could not deactivate cache pool %s.",
-			  display_lvname(cache_pool_lv));
-		r = 0;
-	}
-
-	sync_local_dev_names(cache_pool_lv->vg->cmd);
-
-	return r;
+	return 1;
 }

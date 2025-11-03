@@ -5982,40 +5982,6 @@ out_lockd:
 	return ret;
 }
 
-static int _writecache_zero(struct cmd_context *cmd, struct logical_volume *lv)
-{
-	struct wipe_params wp = {
-		.do_wipe_signatures = 1, /* optional, to print warning if clobbering something */
-		.do_zero = 1,            /* required for dm-writecache to work */
-		.yes = arg_count(cmd, yes_ARG),
-		.force = arg_force_value(cmd)
-	};
-	int ret;
-
-	if (!(lv->status & LVM_WRITE)) {
-		log_error("Cannot initialize readonly LV %s", display_lvname(lv));
-		return 0;
-	}
-
-	if (test_mode())
-		return 1;
-
-	if (!activate_lv(cmd, lv)) {
-		log_error("Failed to activate LV %s for zeroing.", display_lvname(lv));
-		return 0;
-	}
-
-	if (!(ret = wipe_lv(lv, wp)))
-		stack;
-
-	if (!deactivate_lv(cmd, lv)) {
-		log_error("Failed to deactivate LV %s for zeroing.", display_lvname(lv));
-		ret = 0;
-	}
-
-	return ret;
-}
-
 static struct logical_volume *_lv_writecache_create(struct cmd_context *cmd,
 					    struct logical_volume *lv,
 					    struct logical_volume *lv_fast,
@@ -6411,7 +6377,9 @@ int lvconvert_writecache_attach_single(struct cmd_context *cmd,
 		lockd_fast_id = lv_fast->lvid.id[1];
 	}
 
-	if (!_writecache_zero(cmd, lv_fast)) {
+	if (!activate_and_wipe_lv(lv_fast, WIPE_MODE_DO_ZERO_AND_WIPE,
+				  arg_count(cmd, yes_ARG),
+				  arg_force_value(cmd))) {
 		log_error("LV %s could not be zeroed.", display_lvname(lv_fast));
 		goto bad;
 	}

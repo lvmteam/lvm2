@@ -565,7 +565,6 @@ int lv_add_integrity_to_raid(struct logical_volume *lv, struct integrity_setting
 	 */
 	for (s = 0; s < area_count; s++) {
 		struct logical_volume *meta_lv;
-		struct wipe_params wipe = { .do_zero = 1 };
 
 		if (s >= DEFAULT_RAID_MAX_IMAGES)
 			goto_bad;
@@ -650,20 +649,8 @@ int lv_add_integrity_to_raid(struct logical_volume *lv, struct integrity_setting
 		 * dm-integrity requires the metadata LV header to be zeroed.
 		 */
 
-		if (!activate_lv(cmd, meta_lv)) {
-			log_error("Failed to activate LV %s to zero", display_lvname(meta_lv));
-			goto bad;
-		}
-
-		if (!wipe_lv(meta_lv, wipe)) {
+		if (!activate_and_wipe_lv(meta_lv, WIPE_MODE_DO_ZERO, 0, 0)) {
 			log_error("Failed to zero LV for integrity metadata %s", display_lvname(meta_lv));
-			if (deactivate_lv(cmd, meta_lv))
-				log_error("Failed to deactivate LV %s after zero", display_lvname(meta_lv));
-			goto bad;
-		}
-
-		if (!deactivate_lv(cmd, meta_lv)) {
-			log_error("Failed to deactivate LV %s after zero", display_lvname(meta_lv));
 			goto bad;
 		}
 	}
