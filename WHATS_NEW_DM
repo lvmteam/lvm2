@@ -1,5 +1,7 @@
 Version 1.02.211 - 
 ===================
+  Consolidate dmsetup stats display functions using helper macros.
+  Refactor dmsetup _process_tree_options to use bsearch.
 
 Version 1.02.210 - 24th October 2025
 ====================================
