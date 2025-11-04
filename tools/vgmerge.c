@@ -109,6 +109,13 @@ static int _vgmerge_single(struct cmd_context *cmd, const char *vg_name_to,
 				return_ECMD_FAILED;
 	}
 
+	if (vg_from->pr != vg_to->pr) {
+		log_error("VGs must have the same PR settings to merge.");
+		unlock_and_release_vg(cmd, vg_from, vg_name_from);
+		unlock_and_release_vg(cmd, vg_to, vg_name_to);
+		return ECMD_FAILED;
+	}
+
 	if (!vgs_are_compatible(cmd, vg_from, vg_to))
 		goto_bad;
 
