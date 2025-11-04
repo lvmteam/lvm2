@@ -125,7 +125,7 @@ aux wait_recalc $vg/${lv1}_rimage_0
 aux wait_recalc $vg/${lv1}_rimage_1
 aux wait_recalc $vg/$lv1
 _test1 "$dev1"
-not check $vg/$lv1 integritymismatches "0"
+not check lv_field $vg/$lv1 integritymismatches "0"
 lvchange -an $vg/$lv1
 lvconvert --raidintegrity n $vg/$lv1
 lvremove $vg/$lv1
@@ -137,7 +137,7 @@ aux wait_recalc $vg/${lv1}_rimage_0
 aux wait_recalc $vg/${lv1}_rimage_1
 aux wait_recalc $vg/$lv1
 _test2
-not check $vg/$lv1 integritymismatches "0"
+not check lv_field $vg/$lv1 integritymismatches "0"
 lvchange -an $vg/$lv1
 lvconvert --raidintegrity n $vg/$lv1
 lvremove $vg/$lv1
@@ -150,7 +150,7 @@ aux wait_recalc $vg/${lv1}_rimage_1
 aux wait_recalc $vg/${lv1}_rimage_2
 aux wait_recalc $vg/$lv1
 _test1 "$dev1" "$dev2" "$dev3"
-not check $vg/$lv1 integritymismatches "0"
+not check lv_field $vg/$lv1 integritymismatches "0"
 lvchange -an $vg/$lv1
 lvconvert --raidintegrity n $vg/$lv1
 lvremove $vg/$lv1
