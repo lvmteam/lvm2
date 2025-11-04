@@ -117,6 +117,9 @@ static int _update_vg(struct cmd_context *cmd, struct volume_group *vg,
 	vg->lock_args = NULL;
 	vg->system_id = cmd->system_id ? dm_pool_strdup(vg->vgmem, cmd->system_id) : NULL;
 
+	/* The PR ability/settings of the orginal dev may not work on the cloned dev. */
+	vg->pr = 0;
+
 	dm_list_iterate_items(pvl, &vg->pvs) {
 		if (!(new_pvl = dm_pool_zalloc(vg->vgmem, sizeof(*new_pvl))))
 			goto_bad;
@@ -223,6 +226,8 @@ int vgimportclone(struct cmd_context *cmd, int argc, char **argv)
 	dm_list_init(&vp.new_devs);
 	vp.import_devices = arg_is_set(cmd, importdevices_ARG);
 	vp.import_vg = arg_is_set(cmd, import_ARG);
+
+	cmd->disable_pr_required = 1;
 
 	if (!lock_global(cmd, "ex"))
 		return ECMD_FAILED;
