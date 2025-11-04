@@ -4445,8 +4445,12 @@ static int _lv_extend_layered_lv(struct alloc_handle *ah,
 			if (!(lvl = _raid_list_metalvs(seg, &meta_lvs)))
 				return 0;
 
-			/* Wipe lv list committing metadata */
-			if (!activate_and_wipe_lvlist(&meta_lvs, 1)) {
+			/* Commit metadata before wiping */
+			if (!vg_write(vg) || !vg_commit(vg))
+				return_0;
+
+			/* Wipe lv list */
+			if (!activate_and_wipe_lvlist(&meta_lvs, WIPE_MODE_DO_ZERO, 0, 0)) {
 				/* If we failed clearing rmeta SubLVs, try removing the new RaidLV */
 				if (!lv_remove(lv))
 					log_error("Failed to remove LV");
@@ -9011,18 +9015,12 @@ retry_with_dev_set:
  *
  * Returns: 1 on success, 0 on failure
  */
-int activate_and_wipe_lvlist(struct dm_list *lv_list, int commit)
+int activate_and_wipe_lvlist(struct dm_list *lv_list, int wipe_mode, int yes, force_t force)
 {
 	struct lv_list *lvl;
 	struct volume_group *vg = NULL;
-	unsigned i = 0, sz = dm_list_size(lv_list);
-	char *was_active;
 	int r = 1;
-
-	if (!sz) {
-		log_debug_metadata(INTERNAL_ERROR "Empty list of LVs given for wiping.");
-		return 1;
-	}
+	struct wipe_params wp = { 0 };
 
 	dm_list_iterate_items(lvl, lv_list) {
 		if (!lv_is_visible(lvl->lv)) {
@@ -9030,69 +9028,76 @@ int activate_and_wipe_lvlist(struct dm_list *lv_list, int commit)
 				  "LVs must be set visible before wiping.");
 			return 0;
 		}
+		if (!(lvl->lv->status & LVM_WRITE)) {
+			log_error("Cannot wipe readonly LV %s.", display_lvname(lvl->lv));
+			return 0;
+		}
 		vg = lvl->lv->vg;
+	}
+
+	if (!vg) {
+		log_debug_metadata(INTERNAL_ERROR "Empty list of LVs given for wiping.");
+		return 1;
 	}
 
 	if (test_mode())
 		return 1;
 
-	/*
-	 * FIXME: only vg_[write|commit] if LVs are not already written
-	 * as visible in the LVM metadata (which is never the case yet).
-	 */
-	if (commit &&
-	    (!vg || !vg_write(vg) || !vg_commit(vg)))
-		return_0;
-
-	was_active = alloca(sz);
-
-	dm_list_iterate_items(lvl, lv_list)
-		if (!(was_active[i++] = lv_is_active(lvl->lv))) {
-			lvl->lv->status |= LV_TEMPORARY;
-			if (!activate_lv(vg->cmd, lvl->lv)) {
-				log_error("Failed to activate locally %s for wiping.",
+	dm_list_iterate_items(lvl, lv_list) {
+		lvl->lv->status |= LV_TEMPORARY;
+		if (!activate_lv(vg->cmd, lvl->lv)) {
+			log_error("Failed to activate locally %s for wiping.",
 					  display_lvname(lvl->lv));
-				r = 0;
-				goto out;
-			}
-			lvl->lv->status &= ~LV_TEMPORARY;
+			r = 0;
+			goto out;
 		}
+		lvl->lv->status &= ~LV_TEMPORARY;
+	}
+
+	/* Set wipe_params based on wipe_mode */
+	switch (wipe_mode) {
+	case WIPE_MODE_DO_ZERO_AND_WIPE:
+		wp.do_wipe_signatures = 1;
+		wp.force = force;
+		wp.yes = yes;
+		/* fall-through */
+	case WIPE_MODE_DO_ZERO:
+		wp.do_zero = 1;
+		break;
+	default:
+		wp.is_metadata = 1;
+		break;
+	}
 
 	dm_list_iterate_items(lvl, lv_list) {
 		/* Wipe any know signatures */
-		if (!wipe_lv(lvl->lv, (struct wipe_params) { .do_zero = 1 /* TODO: is_metadata = 1 */ })) {
+		if (!wipe_lv(lvl->lv, wp)) {
 			r = 0;
 			goto_out;
 		}
 	}
 out:
-	/* TODO:   deactivation is only needed with clustered locking
-	 *         in normal case we should keep device active
-	 */
-	sz = 0;
-	dm_list_iterate_items(lvl, lv_list)
-		if ((i > sz) && !was_active[sz++] &&
-		    !deactivate_lv(vg->cmd, lvl->lv)) {
+	dm_list_iterate_items(lvl, lv_list) {
+		if (!deactivate_lv(vg->cmd, lvl->lv)) {
 			log_error("Failed to deactivate %s.", display_lvname(lvl->lv));
 			r = 0; /* Continue deactivating as many as possible. */
 		}
+	}
 
 	sync_local_dev_names(vg->cmd);
 
 	return r;
 }
 
-/* Wipe logical volume @lv, optionally with @commit of metadata */
-int activate_and_wipe_lv(struct logical_volume *lv, int commit)
+/* Wipe logical volume @lv */
+int activate_and_wipe_lv(struct logical_volume *lv, int wipe_mode, int yes, force_t force)
 {
-	struct dm_list lv_list;
-	struct lv_list lvl;
+	struct lv_list lvl = { .lv = lv };
+	DM_LIST_INIT(lv_list);
 
-	lvl.lv = lv;
-	dm_list_init(&lv_list);
 	dm_list_add(&lv_list, &lvl.list);
 
-	return activate_and_wipe_lvlist(&lv_list, commit);
+	return activate_and_wipe_lvlist(&lv_list, wipe_mode, yes, force);
 }
 
 static struct logical_volume *_create_virtual_origin(struct cmd_context *cmd,

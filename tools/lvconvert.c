@@ -2130,7 +2130,7 @@ static int _lvconvert_snapshot(struct cmd_context *cmd,
 
 	if (!zero || !(lv->status & LVM_WRITE))
 		log_warn("WARNING: %s not zeroed.", snap_name);
-	else if (!activate_and_wipe_lv(lv, 0)) {
+	else if (!activate_and_wipe_lv(lv, WIPE_MODE_DO_ZERO, 0, 0)) {
 		log_error("Aborting. Failed to wipe snapshot exception store.");
 		return 0;
 	}

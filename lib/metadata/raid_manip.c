@@ -698,9 +698,13 @@ static int _lv_update_and_reload_list(struct logical_volume *lv, int origin_only
 }
 
 /* Wipe all LVs listed on @lv_list committing lvm metadata */
-static int _clear_lvs(struct dm_list *lv_list)
+static int _clear_lvs(struct volume_group *vg, struct dm_list *lv_list)
 {
-	return activate_and_wipe_lvlist(lv_list, 1);
+	/* Commit metadata before wiping */
+	if (!vg_write(vg) || !vg_commit(vg))
+		return_0;
+
+	return activate_and_wipe_lvlist(lv_list, WIPE_MODE_DO_ZERO, 0, 0);
 }
 
 /* External interface to clear logical volumes on @lv_list */
@@ -2713,7 +2717,7 @@ static int _raid_add_images_without_commit(struct logical_volume *lv,
 	}
 
 	/* Metadata LVs must be cleared before being added to the array */
-	if (!_clear_lvs(&meta_lvs)) {
+	if (!_clear_lvs(lv->vg, &meta_lvs)) {
 		stack;
 		goto fail;
 	}
@@ -3960,7 +3964,7 @@ static int _alloc_and_add_rmeta_devs_for_lv(struct logical_volume *lv, struct dm
 	/* Metadata LVs must be cleared before being added to the array */
 	log_debug_metadata("Clearing newly allocated metadata LVs for %s.",
 			   display_lvname(lv));
-	if (!_clear_lvs(&meta_lvs)) {
+	if (!_clear_lvs(lv->vg, &meta_lvs)) {
 		log_error("Failed to initialize metadata LVs for %s.",
 			  display_lvname(lv));
 		return 0;
@@ -4134,7 +4138,7 @@ static int _convert_mirror_to_raid1(struct logical_volume *lv,
 	}
 
 	log_debug_metadata("Clearing newly allocated metadata LVs.");
-	if (!_clear_lvs(&meta_lvs)) {
+	if (!_clear_lvs(lv->vg, &meta_lvs)) {
 		log_error("Failed to initialize metadata LVs.");
 		return 0;
 	}
@@ -5076,7 +5080,7 @@ static int _clear_meta_lvs(struct logical_volume *lv)
 			return_0;
 
 	log_debug_metadata("Clearing allocated raid0_meta metadata LVs for conversion to raid4.");
-	if (!_clear_lvs(&meta_lvs)) {
+	if (!_clear_lvs(lv->vg, &meta_lvs)) {
 		log_error("Failed to initialize metadata LVs.");
 		return 0;
 	}

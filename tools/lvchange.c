@@ -414,7 +414,7 @@ static int _lvchange_resync(struct cmd_context *cmd, struct logical_volume *lv)
 	/* No backup for intermediate metadata, so just unlock memory */
 	memlock_unlock(lv->vg->cmd);
 
-	if (!activate_and_wipe_lvlist(&device_list, 0))
+	if (!activate_and_wipe_lvlist(&device_list, WIPE_MODE_DO_ZERO, 0, 0))
 		return 0;
 
 	/* Put metadata sub-LVs back in place */

@@ -822,11 +822,16 @@ struct wipe_params {
 /* Zero out LV and/or wipe signatures */
 int wipe_lv(struct logical_volume *lv, struct wipe_params wp);
 
+/* Wipe mode for activate_and_wipe_lv* functions */
+#define WIPE_MODE_METADATA          0  /* Metadata wiping (.is_metadata = 1) */
+#define WIPE_MODE_DO_ZERO           1  /* Zero only first 4KB (.do_zero = 1) */
+#define WIPE_MODE_DO_ZERO_AND_WIPE  2  /* Zero + wipe signatures (.do_zero = 1, .do_wipe_signatures = 1) */
+
 /* Wipe any signatures and zero first sector on @lv */
-int activate_and_wipe_lv(struct logical_volume *lv, int commit);
+int activate_and_wipe_lv(struct logical_volume *lv, int wipe_mode, int yes, force_t force);
 
 /* Wipe any signatures and zero first sector of LVs listed on @lv_list */
-int activate_and_wipe_lvlist(struct dm_list *lv_list, int commit);
+int activate_and_wipe_lvlist(struct dm_list *lv_list, int wipe_mode, int yes, force_t force);
 
 int lv_change_tag(struct logical_volume *lv, const char *tag, int add_tag);
 
