@@ -3145,6 +3145,16 @@ bool lvmcache_has_old_metadata(struct cmd_context *cmd, const char *vgname, cons
 	if (info->summary_seqno_mismatch)
 		return true;
 
+	/* shouldn't happen? */
+	if (!info->vginfo)
+		return false;
+
+	/* PV moved to a different VG between label_scan and this vg_write */
+	if (memcmp(info->vginfo->vgid, vgid, ID_LEN)) {
+		log_debug("lvmcache_has_old_metadata: PV in new VG %s", dev_name(dev));
+		return false;
+	}
+
 	/* one or both mdas on this dev has older metadata than another dev */
 	if (vginfo->seqno > info->summary_seqno)
 		return true;
