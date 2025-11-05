@@ -43,6 +43,9 @@ arg(activationmode_ARG, '\0', "activationmode", activationmode_VAL, 0, 0,
 arg(adddev_ARG, '\0', "adddev", pv_VAL, 0, 0,
     "Add a device to the devices file.\n")
 
+arg(addid_ARG, '\0', "addid", string_VAL, 0, 0,
+    "Find the device with the given device_id and add it to the devices file.\n")
+
 arg(addpvid_ARG, '\0', "addpvid", string_VAL, 0, 0,
     "Find a device with the PVID and add the device to the devices file.\n")
 

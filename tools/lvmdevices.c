@@ -584,7 +584,8 @@ int lvmdevices(struct cmd_context *cmd, int argc, char **argv)
 
 	if (arg_is_set(cmd, update_ARG) ||
 	    arg_is_set(cmd, adddev_ARG) || arg_is_set(cmd, deldev_ARG) ||
-	    arg_is_set(cmd, addpvid_ARG) || arg_is_set(cmd, delpvid_ARG)) {
+	    arg_is_set(cmd, addpvid_ARG) || arg_is_set(cmd, delpvid_ARG) ||
+	    arg_is_set(cmd, addid_ARG)) {
 		if (!lock_devices_file(cmd, LOCK_EX)) {
 			log_error("Failed to lock the devices file to create.");
 			return ECMD_FAILED;
@@ -897,6 +898,43 @@ int lvmdevices(struct cmd_context *cmd, int argc, char **argv)
 			log_error(failed_to_write_devices_file_msg);
 			goto_bad;
 		}
+		goto out;
+	}
+
+	if (arg_is_set(cmd, addid_ARG) && arg_is_set(cmd, deviceidtype_ARG)) {
+		const char *idname = arg_str_value(cmd, addid_ARG, NULL);
+		uint16_t idtype;
+
+		deviceidtype = arg_str_value(cmd, deviceidtype_ARG, NULL);
+
+		if (!(idtype = idtype_from_str(deviceidtype))) {
+			log_error("Unknown device_id type %s", deviceidtype);
+			goto bad;
+		}
+
+		if ((du = get_du_for_device_id(cmd, idtype, idname))) {
+			log_print("The device_id is already added for %s.", dev_name(du->dev));
+			goto out;
+		}
+
+		if (!(dev = device_id_system_find(cmd, idname, idtype))) {
+			log_error("No device found with the specified device_id.");
+			goto bad;
+		}
+
+		label_scan_setup_bcache();
+		if (!label_read_pvid(dev, NULL))
+			log_warn("WARNING: failed to read PVID from %s", dev_name(dev));
+
+		if (!device_id_add(cmd, dev, dev->pvid, deviceidtype, NULL, 1))
+			goto_bad;
+
+		if (!device_ids_write(cmd)) {
+			log_error(failed_to_write_devices_file_msg);
+			goto_bad;
+		}
+
+		log_print_unless_silent("Added device %s", dev_name(dev));
 		goto out;
 	}
 

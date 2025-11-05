@@ -3035,6 +3035,54 @@ static void _get_devs_with_serial_numbers(struct cmd_context *cmd, struct dm_lis
 	dev_iter_destroy(iter);
 }
 
+struct device *device_id_system_find(struct cmd_context *cmd, const char *find_idname, uint16_t find_idtype)
+{
+	struct dev_iter *iter;
+	struct device *dev;
+	struct device *dev_found = NULL;
+	struct dev_id *id;
+	const char *idname;
+
+	if (!(iter = dev_iter_create(NULL, 0)))
+		return NULL;
+	while ((dev = dev_iter_get(cmd, iter))) {
+		dm_list_iterate_items(id, &dev->ids) {
+			if (id->idtype == find_idtype) {
+				if (!id->idname)
+					goto next_dev;
+				if (!strcmp(id->idname, find_idname)) {
+					dev_found = dev;
+					goto out;
+				}
+			}
+		}
+
+		/* just copying the no-data filters in similar device_ids_search */
+		if (!cmd->filter->passes_filter(cmd, cmd->filter, dev, "sysfs"))
+			continue;
+		if (!cmd->filter->passes_filter(cmd, cmd->filter, dev, "type"))
+			continue;
+		if (!cmd->filter->passes_filter(cmd, cmd->filter, dev, "usable"))
+			continue;
+		if (!cmd->filter->passes_filter(cmd, cmd->filter, dev, "mpath"))
+			continue;
+
+		if ((idname = device_id_system_read(cmd, dev, find_idtype))) {
+			if (!strcmp(idname, find_idname)) {
+				free((char *)idname);
+				dev_found = dev;
+				goto out;
+			}
+			free((char *)idname);
+		}
+ next_dev:
+		continue;
+	}
+ out:
+	dev_iter_destroy(iter);
+	return dev_found;
+}
+
 /*
  * This is called after devices are scanned to compare what was found on disks
  * vs what's in the devices file.  The devices file could be outdated and need
