@@ -474,7 +474,6 @@ static struct thread_status *_alloc_thread_status(const struct message_data *dat
 
 	thread->events = data->events_field;
 	thread->pending = DM_EVENT_REGISTRATION_PENDING;
-	thread->timeout = data->timeout_secs;
 	dm_list_init(&thread->timeout_list);
 
 	return thread;
@@ -955,12 +954,16 @@ static void *_timeout_thread(void *unused __attribute__((unused)))
 				thread->next_time = curr_time + thread->timeout;
 				if (thread->status != DM_THREAD_RUNNING) {
 					/* Skip wake up of non running thread (i.e. in grace period) */
-					log_debug("Skipping SIGALRM to non running Thr %x for timeout.",
-						  (int) thread->thread);
+					DEBUGLOG("Skipping SIGALRM to non running Thr %x for timeout (status=%d), "
+						 "extending next_time to %ld.",
+						 (int) thread->thread, thread->status,
+						 (long)thread->next_time);
 				} else if (thread->processing) {
 					/* Cannot signal processing monitoring thread */
-					log_debug("Skipping SIGALRM to processing Thr %x for timeout.",
-						  (int) thread->thread);
+					DEBUGLOG("Skipping SIGALRM to processing Thr %x for timeout, "
+						 "extending next_time to %ld.",
+						 (int) thread->thread,
+						 (long)thread->next_time);
 				} else {
 					DEBUGLOG("Sending SIGALRM to Thr %x for timeout.",
 						 (int) thread->thread);
@@ -990,6 +993,12 @@ static int _register_for_timeout(struct thread_status *thread)
 {
 	int ret = 0;
 
+	/*
+	 * Timeout (thread->timeout and thread->next_time) is already set
+	 * by _set_next_timeout() called from _register_for_event().
+	 * This function just adds the thread to timeout_registry.
+	 */
+
 	pthread_mutex_lock(&_timeout_mutex);
 
 	if (dm_list_empty(&thread->timeout_list)) {
@@ -1003,11 +1012,6 @@ static int _register_for_timeout(struct thread_status *thread)
 		_timeout_running = 1;
 
 	pthread_mutex_unlock(&_timeout_mutex);
-
-	/* Set next timeout under thread mutex */
-	_lock_thread(thread);
-	thread->next_time = _get_curr_time() + thread->timeout;
-	_unlock_thread(thread);
 
 	return ret;
 }
@@ -1385,10 +1389,9 @@ static void *_monitor_thread(void *arg)
 		 * Grace period wait completed - two possible wake-up scenarios:
 		 *
 		 * 1) Woken by _update_events() (new registration reusing this thread):
-		 *    - thread->events is non-zero and thread is moved to active registry
-		 *    - Status is set DM_THREAD_RUNNING
-		 *    - _register_for_timeout() resets next_time for fresh timeout
-		 *    - Loop continues (events != 0)
+		 *    - thread->events is non-zero (set by _update_events)
+		 *    - thread->next_time is reset (by _set_next_timeout after _update_events)
+		 *    - Loop continues for fresh monitoring cycle
 		 *
 		 * 2) Natural timeout (grace period expired with no new registration):
 		 *    - thread->events is still 0 and loop exits
@@ -1411,6 +1414,20 @@ out:
 static int _create_thread(struct thread_status *thread)
 {
 	return _pthread_create_smallstack(&thread->thread, _monitor_thread, thread);
+}
+
+/*
+ * Set timeout interval and next timeout timestamp for a thread.
+ * Should be called when enabling timeout events.
+ * Caller must hold thread->mutex when calling this (except for new thread creation).
+ */
+static void _set_next_timeout(struct thread_status *thread, unsigned timeout)
+{
+	thread->timeout = timeout;
+	if (timeout && (thread->events & DM_EVENT_TIMEOUT))
+		thread->next_time = _get_curr_time() + timeout;
+	else
+		thread->next_time = 0;
 }
 
 /* Update events - needs to be locked */
@@ -1440,17 +1457,10 @@ static int _update_events(struct thread_status *thread, int events)
 		 * Thread will wake from _monitor_grace_period_wait(), check events != 0,
 		 * and continue the monitoring loop.
 		 *
-		 * Note: Timeout reset happens after _update_events() returns, when
-		 * _register_for_event() calls _register_for_timeout() to give the
-		 * reused thread a fresh timeout period.
-		 */
-		pthread_cond_signal(&thread->grace_cond);
-
-		/*
 		 * Thread stays in active registry (no list movement needed).
-		 * Thread will wake and check events != 0.
 		 * Client queries GET_REGISTERED_DEVICE - FOUND immediately
 		 */
+		pthread_cond_signal(&thread->grace_cond);
 
 		return 0;
 	}
@@ -1596,6 +1606,8 @@ static int _register_for_event(struct message_data *message_data)
 		/* Lookup functions return with both _global_mutex and thread->mutex held */
 		/* OR event # into events bitfield. */
 		ret = _update_events(thread, (thread->events | message_data->events_field));
+		/* Update timeout from message and set next_time if needed */
+		_set_next_timeout(thread, message_data->timeout_secs);
 		/* Unlock in correct order: thread->mutex first, then _global_mutex */
 		_unlock_thread(thread);
 	} else {
@@ -1607,6 +1619,9 @@ static int _register_for_event(struct message_data *message_data)
 			stack;
 			return -ENOMEM;
 		}
+
+		/* Set next timeout for new thread before it starts */
+		_set_next_timeout(thread, message_data->timeout_secs);
 
 		if ((ret = _create_thread(thread))) {
 			stack;
