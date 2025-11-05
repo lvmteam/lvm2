@@ -69,18 +69,19 @@ struct lockd_state {
 #define LOCKOPT_REPAIRVG	0x00020000
 #define LOCKOPT_REPAIRLV	0x00040000
 
+
+struct lvresize_params;
+struct lvcreate_params;
+
+#ifdef LVMLOCKD_SUPPORT
+
 int is_lockd_type(const char *lock_type);
 int vg_is_shared(const struct volume_group *vg);
 int vg_is_sanlock(const struct volume_group *vg);
 
-#ifdef LVMLOCKD_SUPPORT
-
 void lockd_lockopt_get_flags(const char *str, uint32_t *flags);
 int lockd_lockargs_get_user_flags(const char *str, uint32_t *flags);
 int lockd_lockargs_get_meta_flags(const char *str, uint32_t *flags);
-
-struct lvresize_params;
-struct lvcreate_params;
 
 /* lvmlockd connection and communication */
 
@@ -159,11 +160,31 @@ int lockd_setlockargs(struct cmd_context *cmd, struct volume_group *vg, const ch
 
 #else /* LVMLOCKD_SUPPORT */
 
+static inline int is_lockd_type(const char *lock_type)
+{
+	return 0;
+}
+
+static inline int vg_is_shared(const struct volume_group *vg)
+{
+	return 0;
+}
+
+static inline int vg_is_sanlock(const struct volume_group *vg)
+{
+	return 0;
+}
+
 static inline void lockd_lockopt_get_flags(const char *str, uint32_t *flags)
 {
 }
 
 static inline int lockd_lockargs_get_user_flags(const char *str, uint32_t *flags)
+{
+	return 0;
+}
+
+static inline int lockd_lockargs_get_meta_flags(const char *str, uint32_t *flags)
 {
 	return 0;
 }
@@ -246,7 +267,7 @@ static inline int lockd_global_create(struct cmd_context *cmd, const char *def_m
 	 * a shared lock type should fail.
 	 */
 	if (is_lockd_type(vg_lock_type)) {
-		log_error("Using a shared lock type requires lvmlockd.");
+		fprintf(stderr, "Using a shared lock type requires lvmlockd.\n");
 		return 0;
 	}
 	return 1;
@@ -260,7 +281,7 @@ static inline int lockd_global(struct cmd_context *cmd, const char *def_mode)
 static inline int lockd_vg(struct cmd_context *cmd, const char *vg_name, const char *def_mode,
 	     uint32_t flags, struct lockd_state *lks)
 {
-	*lks = 0;
+	memset(lks, 0, sizeof(*lks));
 	return 1;
 }
 
@@ -316,7 +337,7 @@ static inline void lockd_free_removed_lvs(struct cmd_context *cmd, struct volume
 
 static inline const char *lockd_running_lock_type(struct cmd_context *cmd, int *found_multiple)
 {
-	log_error("Using a shared lock type requires lvmlockd.");
+	fprintf(stderr, "Using a shared lock type requires lvmlockd.\n");
 	return NULL;
 }
 
