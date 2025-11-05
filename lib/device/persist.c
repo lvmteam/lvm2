@@ -1237,7 +1237,7 @@ int persist_key_update(struct cmd_context *cmd, struct volume_group *vg, uint32_
 		return 0;
 	}
 
-	if (!persist_start(cmd, vg, NULL, local_host_id, NULL, new_key_buf)) {
+	if (!persist_start(cmd, vg, NULL, new_key_buf)) {
 		log_error("Failed to update persistent reservation key to %s.", new_key_buf);
 		return 0;
 	}
@@ -1317,9 +1317,10 @@ static char *key_vals_to_str(struct cmd_context *cmd, int count, uint64_t *vals)
 	return str;
 }
 
-int persist_check(struct cmd_context *cmd, struct volume_group *vg,
-		  char *local_key, int local_host_id)
+int persist_check(struct cmd_context *cmd, struct volume_group *vg)
 {
+	char *local_key = (char *)find_config_tree_str(cmd, local_pr_key_CFG, NULL);
+	int local_host_id = find_config_tree_int(cmd, local_host_id_CFG, NULL);
 	struct pv_list *pvl;
 	struct device *dev;
 	uint64_t our_key_val = 0;
@@ -2408,9 +2409,10 @@ int persist_start_extend(struct cmd_context *cmd, struct volume_group *vg)
 }
 
 int persist_start(struct cmd_context *cmd, struct volume_group *vg,
-		  char *local_key, int local_host_id, const char *remkey,
-		  const char *update_our_key)
+		  const char *remkey, const char *update_our_key)
 {
+	char *local_key = (char *)find_config_tree_str(cmd, local_pr_key_CFG, NULL);
+	int local_host_id = find_config_tree_int(cmd, local_host_id_CFG, NULL);
 	DM_LIST_INIT(devs);
 	struct pv_list *pvl;
 	struct device *dev;
@@ -2658,9 +2660,10 @@ int persist_start(struct cmd_context *cmd, struct volume_group *vg,
 	return 0;
 }
 
-int persist_remove(struct cmd_context *cmd, struct volume_group *vg,
-		   char *local_key, int local_host_id, const char *remkey)
+int persist_remove(struct cmd_context *cmd, struct volume_group *vg, const char *remkey)
 {
+	char *local_key = (char *)find_config_tree_str(cmd, local_pr_key_CFG, NULL);
+	int local_host_id = find_config_tree_int(cmd, local_host_id_CFG, NULL);
 	struct pv_list *pvl;
 	struct device *dev;
 	uint64_t our_key_val = 0;
@@ -2740,9 +2743,10 @@ int persist_remove(struct cmd_context *cmd, struct volume_group *vg,
 	return 1;
 }
 
-int persist_clear(struct cmd_context *cmd, struct volume_group *vg,
-		  char *local_key, int local_host_id)
+int persist_clear(struct cmd_context *cmd, struct volume_group *vg)
 {
+	char *local_key = (char *)find_config_tree_str(cmd, local_pr_key_CFG, NULL);
+	int local_host_id = find_config_tree_int(cmd, local_host_id_CFG, NULL);
 	struct pv_list *pvl;
 	struct device *dev;
 	uint64_t our_key_val = 0;

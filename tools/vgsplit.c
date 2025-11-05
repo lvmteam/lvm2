@@ -721,9 +721,7 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 	pr_from = (vg_from->pr & (VG_PR_REQUIRE|VG_PR_AUTOSTART)) ? 1 : 0;
 	pr_to = (vg_to->pr & (VG_PR_REQUIRE|VG_PR_AUTOSTART)) ? 1 : 0;
 
-	if (!pr_from && pr_to && !persist_start(cmd, vg_to,
-						(char *)find_config_tree_str(cmd, local_pr_key_CFG, NULL),
-						find_config_tree_int(cmd, local_host_id_CFG, NULL), NULL, NULL))
+	if (!pr_from && pr_to && !persist_start(cmd, vg_to, NULL, NULL))
 		goto_bad;
 
 	/*

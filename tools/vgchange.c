@@ -1713,15 +1713,13 @@ static int _vgchange_persist_single(struct cmd_context *cmd, const char *vg_name
 {
 	const char *op = arg_str_value(cmd, persist_ARG, NULL);
 	const char *remkey = arg_str_value(cmd, removekey_ARG, NULL);
-	char *local_key = (char *)find_config_tree_str(cmd, local_pr_key_CFG, NULL);
-	int local_host_id = find_config_tree_int(cmd, local_host_id_CFG, NULL);
 	int ret = 1;
 
 	if (!op)
 		return ECMD_FAILED;
 
 	if (!strcmp(op, "check")) {
-		ret = persist_check(cmd, vg, local_key, local_host_id);
+		ret = persist_check(cmd, vg);
 
 	} else if (!strcmp(op, "read")) {
 		ret = persist_read(cmd, vg);
@@ -1753,7 +1751,7 @@ static int _vgchange_persist_single(struct cmd_context *cmd, const char *vg_name
 		 * persist_start?
 		 */
 
-		ret = persist_start(cmd, vg, local_key, local_host_id, remkey, NULL);
+		ret = persist_start(cmd, vg, remkey, NULL);
 
 	} else if (!strcmp(op, "stop")) {
 		if (!arg_is_set(cmd, force_ARG) && lvs_in_vg_activated(vg)) {
@@ -1763,7 +1761,7 @@ static int _vgchange_persist_single(struct cmd_context *cmd, const char *vg_name
 		ret = persist_stop(cmd, vg);
 
 	} else if (!strcmp(op, "remove")) {
-		ret = persist_remove(cmd, vg, local_key, local_host_id, remkey);
+		ret = persist_remove(cmd, vg, remkey);
 
 	} else if (!strcmp(op, "clear")) {
 		if (!arg_is_set(cmd, yes_ARG) &&
@@ -1771,12 +1769,12 @@ static int _vgchange_persist_single(struct cmd_context *cmd, const char *vg_name
 			log_error("PR not cleared.");
 			return ECMD_FAILED;
 		}
-		ret = persist_clear(cmd, vg, local_key, local_host_id);
+		ret = persist_clear(cmd, vg);
 
 	} else if (!strcmp(op, "autostart")) {
 		/* start if auto was enabled via --setpersist y|autostart */
 		if (vg->pr & VG_PR_AUTOSTART)
-			ret = persist_start(cmd, vg, local_key, local_host_id, NULL, NULL);
+			ret = persist_start(cmd, vg, NULL, NULL);
 
 	} else {
 		log_error("Unknown persist action.");
@@ -1905,7 +1903,7 @@ static int _vgchange_setpersist_single(struct cmd_context *cmd, const char *vg_n
 	 * will start PR before changing VG.
 	 */
 	if (on && op && strcmp(op, "start")) {
-		if (!persist_start(cmd, vg, local_key, local_host_id, NULL, NULL)) {
+		if (!persist_start(cmd, vg, NULL, NULL)) {
 			log_error("Failed to start PR, VG not changed.");
 			return_ECMD_FAILED;
 		}

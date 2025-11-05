@@ -39,14 +39,12 @@
 #define SETPR_NOPTPL		0x00000080
 #define MAX_SETPR_ARGS		8
 
-int persist_check(struct cmd_context *cmd, struct volume_group *vg,
-                  char *local_key, int local_host_id);
+int persist_check(struct cmd_context *cmd, struct volume_group *vg);
 
 int persist_read(struct cmd_context *cmd, struct volume_group *vg);
 
 int persist_start(struct cmd_context *cmd, struct volume_group *vg,
-		  char *local_key, int local_host_id, const char *remkey,
-		  const char *update_our_key);
+		  const char *remkey, const char *update_our_key);
 
 int persist_stop(struct cmd_context *cmd, struct volume_group *vg);
 int persist_stop_devs(struct cmd_context *cmd, struct volume_group *vg, struct dm_list *stop_devs);
@@ -54,11 +52,9 @@ int persist_stop_devs(struct cmd_context *cmd, struct volume_group *vg, struct d
 int persist_finish_before(struct cmd_context *cmd, struct volume_group *vg, struct dm_list *devs, char **key);
 void persist_finish_after(struct cmd_context *cmd, struct volume_group *vg, struct dm_list *devs, char *key);
 
-int persist_remove(struct cmd_context *cmd, struct volume_group *vg,
-                   char *local_key, int local_host_id, const char *remkey);
+int persist_remove(struct cmd_context *cmd, struct volume_group *vg, const char *remkey);
 
-int persist_clear(struct cmd_context *cmd, struct volume_group *vg,
-                  char *local_key, int local_host_id);
+int persist_clear(struct cmd_context *cmd, struct volume_group *vg);
 
 int persist_start_extend(struct cmd_context *cmd, struct volume_group *vg);
 
