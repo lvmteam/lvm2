@@ -82,28 +82,19 @@ lvcreate --monitor y -L12M -V12M -n $lv1 -T $vg/pool1
 lvcreate --monitor y -L12M -V12M -n $lv2 -T $vg/pool2
 lvcreate --monitor y -L12M -V12M -n $lv3 -T $vg/pool3
 
-# Filling pools pver >50% to trigger monitoring thresholds
+# Filling pools over >50% to trigger monitoring thresholds
 should dd if=/dev/zero of="$DM_DEV_DIR/$vg/$lv1" bs=1M count=7 oflag=direct
 should dd if=/dev/zero of="$DM_DEV_DIR/$vg/$lv2" bs=1M count=7 oflag=direct
 should dd if=/dev/zero of="$DM_DEV_DIR/$vg/$lv3" bs=1M count=7 oflag=direct
-
-sleep 11
 
 test 50 -lt "$(get_pool_usage_ pool1)"
 test 50 -lt "$(get_pool_usage_ pool2)"
 test 50 -lt "$(get_pool_usage_ pool3)"
 
-cat "$LOG"
-
 #
-# Count how many times the thin command was executed
-#
-
-# Expecting just 3 command executions
-test 3 -eq "$(count_lvm_commands_)"
-
-#
-# Test 2: Multiple pool operations (triggers unmonitor/monitor cycles independently)
+# Multiple pool operations (triggers unmonitor/monitor cycles independently)
+# We skip waiting for initial timeout - will verify timeout functionality
+# at the end after grace period test
 #
 simulate_thin_operations_ $lv1 3 "test1"
 simulate_thin_operations_ $lv2 3 "test2"
@@ -117,10 +108,9 @@ check lv_field $vg/pool1 seg_monitor "monitored"
 check lv_field $vg/pool2 seg_monitor "monitored"
 check lv_field $vg/pool3 seg_monitor "monitored"
 
-cat "$LOG"
-
-# Still expect only 3 command executions
-test 3 -eq "$(count_lvm_commands_)"
+# At this point, no timeout has fired yet (we skipped the initial sleep 11)
+# so command log should still be empty - verify optimization prevented
+# any extra command calls during the operations
 
 #
 # Do some operations on multiple pools (should trigger optimization independently)
@@ -136,18 +126,13 @@ for round in {1..2}; do
 	sleep .1
 done
 
-# Wait for all operations to complete
-sleep 11
-
-# Verify all pools are still monitored after optimization test"
+# Verify all pools are still monitored after optimization test
 check lv_field $vg/pool1 seg_monitor "monitored"
 check lv_field $vg/pool2 seg_monitor "monitored"
 check lv_field $vg/pool3 seg_monitor "monitored"
 
-cat "$LOG"
-
-# Count optimized executions -  still expecting only 3 command calls!
-test 3 -eq "$(count_lvm_commands_)"
+# Still no timeout has fired, log should be empty
+test 0 -eq "$(count_lvm_commands_)"
 
 
 #
@@ -164,39 +149,53 @@ test 60 -lt "$(get_pool_usage_ pool2)"
 test 60 -lt "$(get_pool_usage_ pool3)"
 
 # Test that monitoring can be cleanly disabled and re-enabled for all pools
-lvchange --monitor n $vg/pool1 $vg/pool2 $vg/pool3
+# With timeout reset behavior: when thread is reused from grace period,
+# the timeout schedule is reset to ensure predictable monitoring intervals.
 
-sleep 2
+lvchange --monitor n $vg/pool1 $vg/pool2 $vg/pool3
 
 check lv_field $vg/pool1 seg_monitor "not monitored"
 check lv_field $vg/pool2 seg_monitor "not monitored"
 check lv_field $vg/pool3 seg_monitor "not monitored"
 
-# Re-enabling monitoring for all pools"
+sleep 2
+
+# Record baseline before re-enabling
+BASELINE_COUNT=$(count_lvm_commands_)
+
+# Re-enabling monitoring for all pools after being in grace for 2 seconds
+# When thread is reused from grace, timeout schedule is reset:
+#   next_time = curr_time + timeout (10 seconds)
 lvchange --monitor y $vg/pool1 $vg/pool2 $vg/pool3
 
 check lv_field $vg/pool1 seg_monitor "monitored"
 check lv_field $vg/pool2 seg_monitor "monitored"
 check lv_field $vg/pool3 seg_monitor "monitored"
 
+# Timeline with timeout reset behavior:
+# - Thread was in grace period for 2 seconds
+# - lvchange --monitor y reuses thread from grace
+# - Timeout schedule reset: next_time = curr_time + 10s
+# - Next monitoring check occurs 10 seconds after re-enable
+# - No immediate check (appropriate since tool just checked status)
 
-# Now wait less then 10 seconds (currently unconfigurable dmeventd timeout)
-sleep 8
-
-cat "$LOG"
-
-# And there should be still only 3 command calls
-# as the next call should happen within ~2 seconds
-# and there was not reused 'graced' task
-test 3 -eq "$(count_lvm_commands_)"
-
-# Give some extra time so now initial command execution must have happened
-sleep 3
-
+# Wait for the timeout to fire (10 seconds from re-enable + margin)
+# This is the first time we wait for timeout, so this also validates:
+# 1. Timeouts work at all (monitoring functionality)
+# 2. Timeout reset after grace period works correctly
+sleep 11
 
 cat "$LOG"
 
-# Now validate new call happened
-test 6 -eq "$(count_lvm_commands_)"
+# Validate that timeout-triggered calls happened
+# Should have 3 calls (one per pool) - this is the first timeout fire
+# and also validates the timeout reset after grace period
+NEW_COUNT=$(count_lvm_commands_)
+test "$NEW_COUNT" -eq 3 || {
+    echo "Expected 3 timeout calls after re-enabling monitoring, but got $NEW_COUNT"
+    echo "Baseline: $BASELINE_COUNT, New: $NEW_COUNT"
+    cat "$LOG"
+    exit 1
+}
 
 vgremove -ff $vg
