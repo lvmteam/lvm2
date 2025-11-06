@@ -1177,16 +1177,19 @@ static int _do_unregister_device(struct thread_status *thread)
 static void _do_process_event(struct thread_status *thread)
 {
 	struct dm_task *task;
+	int current_events = thread->current_events;
+
+	thread->current_events = 0; /* Clear events before processing */
 
 	/* NOTE: timeout event gets status */
-	task = (thread->current_events & DM_EVENT_TIMEOUT)
+	task = (current_events & DM_EVENT_TIMEOUT)
 		? _get_device_status(thread) : thread->wait_task;
 
 	if (!task)
 		log_error("Lost event in Thr %x.", (int)thread->thread);
 	else {
 		_unlock_thread(thread);
-		thread->dso_data->process_event(task, (enum dm_event_mask) thread->current_events,
+		thread->dso_data->process_event(task, (enum dm_event_mask) current_events,
 						&(thread->dso_private));
 		_lock_thread(thread);
 		if (task != thread->wait_task)
@@ -1266,7 +1269,6 @@ static int _monitor_events(struct thread_status *thread)
 
 			_do_process_event(thread);
 
-			thread->current_events = 0; /* Current events processed */
 			thread->processing = 0;
 
 			/*
