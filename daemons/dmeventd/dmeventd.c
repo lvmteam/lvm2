@@ -65,6 +65,7 @@
 
 #define DM_SIGNALED_EXIT  1
 #define DM_SCHEDULED_EXIT 2
+#define DM_EXITING	  3
 static volatile sig_atomic_t _exit_now = 0;	/* set to '1' when signal is given to exit */
 
 /* List (un)link macros. */
@@ -950,7 +951,7 @@ static void *_timeout_thread(void *unused __attribute__((unused)))
 	pthread_cleanup_push(_exit_timeout, NULL);
 	pthread_mutex_lock(&_timeout_mutex);
 
-	for (;;) {
+	while (_exit_now != DM_EXITING) {
 		curr_time = _get_curr_time();
 		timeout.tv_sec = curr_time + (24 * 60 * 60);  /* Max 24 hour sleep */
 		timeout.tv_nsec = 0;
@@ -2918,8 +2919,10 @@ int main(int argc, char *argv[])
 
 	/* Terminate timeout thread if it exists */
 	if (_timeout_thread_id) {
-		if (pthread_cancel(_timeout_thread_id))
-			log_sys_debug("pthread_cancel", "timeout thread");
+		_exit_now = DM_EXITING;
+		pthread_mutex_lock(&_timeout_mutex);
+		pthread_cond_signal(&_timeout_cond);  /* Wake it up to check exit */
+		pthread_mutex_unlock(&_timeout_mutex);
 		if (pthread_join(_timeout_thread_id, NULL))
 			log_sys_debug("pthread_join", "timeout thread");
 	}
