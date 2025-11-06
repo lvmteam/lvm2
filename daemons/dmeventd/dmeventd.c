@@ -274,6 +274,29 @@ static DM_LIST_INIT(_timeout_registry);
 static pthread_mutex_t _timeout_mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t _timeout_cond = PTHREAD_COND_INITIALIZER;
 
+/*
+ * Get current time with single time() handling wrapper.
+ *
+ * Uses clock_gettime(CLOCK_REALTIME) when available for better precision,
+ * with a small forward adjustment (10ms) to handle sub-second timing edge cases.
+ * Falls back to time() if HAVE_REALTIME is not defined or clock_gettime() fails.
+ *
+ * All time() calls in dmeventd should use this wrapper for consistent time handling.
+ */
+static time_t _get_curr_time(void)
+{
+#ifdef HAVE_REALTIME
+	struct timespec real_time;
+
+	if (clock_gettime(CLOCK_REALTIME, &real_time) == 0)
+		/* 10ms back to the future */
+		return real_time.tv_sec + ((real_time.tv_nsec > (1000000000 - 10000000)) ? 1 : 0);
+
+	/* fallback to time() */
+	log_sys_debug("clock_gettime", "");
+#endif
+	return time(NULL);
+}
 
 /**********
  *   DSO
@@ -319,7 +342,7 @@ static void _lib_put(struct dso_data *data)
 			DEBUGLOG("Unholding control device.");
 			dm_hold_control_dev(0);
 			dm_lib_release();
-			_idle_since = time(NULL);
+			_idle_since = _get_curr_time();
 		}
 	}
 }
@@ -885,7 +908,7 @@ static int _get_parameters(struct message_data *message_data) {
 	char idle_buf[32] = "";
 
 	if (_idle_since)
-		(void)dm_snprintf(idle_buf, sizeof(idle_buf), " idle=%lu", (long unsigned) (time(NULL) - _idle_since));
+		(void)dm_snprintf(idle_buf, sizeof(idle_buf), " idle=%lu", (long unsigned) (_get_curr_time() - _idle_since));
 
 	free(msg->data);
 	if ((size = dm_asprintf(&msg->data, "%s pid=%d daemon=%s exec_method=%s exit_on=\"%s\"%s",
@@ -914,21 +937,6 @@ static void _exit_timeout(void *unused __attribute__((unused)))
 {
 	_timeout_running = 0;
 	pthread_mutex_unlock(&_timeout_mutex);
-}
-
-static time_t _get_curr_time(void)
-{
-#ifdef HAVE_REALTIME
-	struct timespec real_time;
-
-	if (clock_gettime(CLOCK_REALTIME, &real_time) == 0)
-		/* 10ms back to the future */
-		return real_time.tv_sec + ((real_time.tv_nsec > (1000000000 - 10000000)) ? 1 : 0);
-
-	/* fallback to time() */
-	log_sys_debug("clock_gettime", "");
-#endif
-	return time(NULL);
 }
 
 /* Wake up monitor threads every so often. */
@@ -2831,7 +2839,7 @@ int main(int argc, char *argv[])
 
 	log_notice("dmeventd ready for processing.");
 
-	_idle_since = time(NULL);
+	_idle_since = _get_curr_time();
 
 	if (_initial_registrations)
 		_process_initial_registrations();
@@ -2843,11 +2851,11 @@ int main(int argc, char *argv[])
 					break; /* Only prints shutdown message */
 				log_info("dmeventd detected break while being idle "
 					 "for %ld second(s), exiting.",
-					 (long) (time(NULL) - _idle_since));
+					 (long) (_get_curr_time() - _idle_since));
 				break;
 			}
 			if (idle_exit_timeout) {
-				now = time(NULL);
+				now = _get_curr_time();
 				if (now < _idle_since)
 					_idle_since = now; /* clock change? */
 				now -= _idle_since;
