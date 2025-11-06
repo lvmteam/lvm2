@@ -1098,6 +1098,7 @@ static int _event_wait(struct thread_status *thread)
 	struct dm_info info;
 	int task_result;
 
+	_unlock_thread(thread);
 	/* TODO: audit libdm thread usage */
 
 	/*
@@ -1112,8 +1113,11 @@ static int _event_wait(struct thread_status *thread)
 		return ret; /* What better */
 	}
 
-	_unlock_thread(thread);
 	task_result = dm_task_run(thread->wait_task);
+
+	if (pthread_sigmask(SIG_SETMASK, &old, NULL) != 0)
+		log_sys_error("pthread_sigmask", "block alarm");
+
 	_lock_thread(thread);
 
 	if (task_result) {
@@ -1142,8 +1146,6 @@ disappeared:
 		}
 	}
 
-	if (pthread_sigmask(SIG_SETMASK, &old, NULL) != 0)
-		log_sys_error("pthread_sigmask", "block alarm");
 
 #ifdef DEBUG_SIGNALS
 	_print_sigset("dmeventd blocking ", &old);
