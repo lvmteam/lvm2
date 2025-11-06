@@ -1610,6 +1610,10 @@ static int _register_for_event(struct message_data *message_data)
 		_set_next_timeout(thread, message_data->timeout_secs);
 		/* Unlock in correct order: thread->mutex first, then _global_mutex */
 		_unlock_thread(thread);
+
+		/* If new registration doesn't want timeout, unregister from timeout */
+		if (!(message_data->events_field & DM_EVENT_TIMEOUT))
+			_unregister_for_timeout(thread);
 	} else {
 		_unlock_mutex();
 
