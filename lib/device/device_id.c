@@ -823,9 +823,22 @@ char *device_id_system_read(struct cmd_context *cmd, struct device *dev, uint16_
 		_dev_read_sys_serial(cmd, dev, sysbuf, sizeof(sysbuf));
                 break;
 	case DEV_ID_TYPE_MPATH_UUID:
+		if (!dev_dm_uuid(cmd, dev, sysbuf, sizeof(sysbuf)))
+			stack;
+		if (sysbuf[0] && !dm_uuid_has_prefix(sysbuf, "mpath-"))
+			sysbuf[0] = '\0';
+                break;
 	case DEV_ID_TYPE_CRYPT_UUID:
+		if (!dev_dm_uuid(cmd, dev, sysbuf, sizeof(sysbuf)))
+			stack;
+		if (sysbuf[0] && !dm_uuid_has_prefix(sysbuf, "CRYPT-"))
+			sysbuf[0] = '\0';
+                break;
 	case DEV_ID_TYPE_LVMLV_UUID:
-		(void)dev_dm_uuid(cmd, dev, sysbuf, sizeof(sysbuf));
+		if (!dev_dm_uuid(cmd, dev, sysbuf, sizeof(sysbuf)))
+			stack;
+		if (sysbuf[0] && !dm_uuid_has_prefix(sysbuf, "LVM-"))
+			sysbuf[0] = '\0';
                 break;
 	case DEV_ID_TYPE_MD_UUID:
 		read_sys_block(cmd, dev, "md/uuid", sysbuf, sizeof(sysbuf));
@@ -2509,6 +2522,33 @@ static int _match_dm_names(struct cmd_context *cmd, char *idname, struct device 
 	return 0;
 }
 
+static void _replace_incorrect_dm_idtype(struct dev_use *du)
+{
+	/* Previous bug let one of these types be swapped for another
+	   because they all read their value from sysfs file dm/uuid. */
+	if (du->idtype != DEV_ID_TYPE_MPATH_UUID &&
+	    du->idtype != DEV_ID_TYPE_CRYPT_UUID &&
+	    du->idtype != DEV_ID_TYPE_LVMLV_UUID)
+		return;
+
+	/* Use the IDNAME value to determine the correct IDTYPE. */
+	if (dm_uuid_has_prefix(du->idname, "mpath-") && (du->idtype != DEV_ID_TYPE_MPATH_UUID)) {
+		log_debug("replace incorrect mpath device id type for %u %s", du->idtype, du->idname);
+		du->idtype = DEV_ID_TYPE_MPATH_UUID;
+		return;
+	}
+	if (dm_uuid_has_prefix(du->idname, "CRYPT-") && (du->idtype != DEV_ID_TYPE_CRYPT_UUID)) {
+		log_debug("replace incorrect crypt device id type for %u %s", du->idtype, du->idname);
+		du->idtype = DEV_ID_TYPE_CRYPT_UUID;
+		return;
+	}
+	if (dm_uuid_has_prefix(du->idname, "LVM-") && (du->idtype != DEV_ID_TYPE_LVMLV_UUID)) {
+		log_debug("replace incorrect lvmlv device id type for %u %s", du->idtype, du->idname);
+		du->idtype = DEV_ID_TYPE_LVMLV_UUID;
+		return;
+	}
+}
+
 /*
  * du is a devices file entry.  dev is any device on the system.
  * check if du is for dev by comparing the device's ids to du->idname.
@@ -2618,6 +2658,18 @@ static int _match_du_to_dev(struct cmd_context *cmd, struct dev_use *du, struct 
 		if (du->idtype == DEV_ID_TYPE_SYS_WWID && !strncmp(du_idname, "t10", 3) && strstr(du_idname, "__"))
 			_reduce_repeating_underscores(du_idname, sizeof(du_idname));
 	}
+
+	/*
+	 * A past bug allowed mpath, crypt, or lvm devices to be added to
+	 * system.devices using any of the dm id types, and they could be
+	 * used normally.  Accept an old system.devices with that mistake
+	 * by updating du->idtype to have the correct idtype based on the
+	 * idname dm prefix.
+	 */
+	if (((du->idtype == DEV_ID_TYPE_MPATH_UUID) && !dm_uuid_has_prefix(du->idname, "mpath-")) ||
+	    ((du->idtype == DEV_ID_TYPE_CRYPT_UUID) && !dm_uuid_has_prefix(du->idname, "CRYPT-")) ||
+	    ((du->idtype == DEV_ID_TYPE_LVMLV_UUID) && !dm_uuid_has_prefix(du->idname, "LVM")))
+		_replace_incorrect_dm_idtype(du);
 
 	/*
 	 * Try to match du with ids that have already been read for the dev
