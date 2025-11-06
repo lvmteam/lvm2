@@ -1438,23 +1438,45 @@ static void _set_next_timeout(struct thread_status *thread, unsigned timeout)
 		thread->next_time = 0;
 }
 
-/* Update events - needs to be locked */
-/* Called with thread->mutex LOCKED, returns with thread->mutex LOCKED
- * Caller must also hold _global_mutex */
-static int _update_events(struct thread_status *thread, int events)
+/*
+ * Helper functions for event mask manipulation.
+ * Operate directly on thread->events to make bit operations more readable.
+ * Return 1 if events changed, 0 if no change.
+ * Caller must hold thread->mutex.
+ */
+static inline int _add_events_to_thread(struct thread_status *thread, int events)
+{
+	int old_events = thread->events;
+
+	thread->events |= events;
+	return (thread->events != old_events);
+}
+
+static inline int _remove_events_from_thread(struct thread_status *thread, int events)
+{
+	int old_events = thread->events;
+
+	thread->events &= ~events;
+	return (thread->events != old_events);
+}
+
+/*
+ * Handle event changes - wake up thread if needed.
+ * Called with thread->mutex LOCKED, returns with thread->mutex LOCKED.
+ * Caller must also hold _global_mutex.
+ * Should be called after _add_events_to_thread() or _remove_events_from_thread()
+ * returned 1 (indicating events changed).
+ */
+static int _update_events(struct thread_status *thread)
 {
 	int ret = 0;
 
-	if (thread->events == events)
-		return 0; /* Nothing has changed */
-
-	thread->events = events;
 	thread->pending = DM_EVENT_REGISTRATION_PENDING;
 
 	/* Wake up thread waiting in grace period for new registration or exit */
-	if ((events || _exit_now) && (thread->status == DM_THREAD_GRACE_PERIOD)) {
+	if ((thread->events || _exit_now) && (thread->status == DM_THREAD_GRACE_PERIOD)) {
 		DEBUGLOG("Waking up thread %x waiting in grace period (events=%x).",
-			 (int)thread->thread, events);
+			 (int)thread->thread, thread->events);
 
 		/* Set status to RUNNING and processing to 1. */
 		thread->status = DM_THREAD_RUNNING;
@@ -1521,8 +1543,9 @@ static int _unregister_for_event(struct message_data *message_data)
 
 	/* _lookup_thread_status returns with both _global_mutex and thread->mutex held */
 
-	/* AND mask event ~# from events bitfield. */
-	ret = _update_events(thread, (thread->events & ~message_data->events_field));
+	/* Remove events from the thread's event mask */
+	if (_remove_events_from_thread(thread, message_data->events_field))
+		ret = _update_events(thread);
 
 	/* Unlock in correct order: thread->mutex first, then _global_mutex */
 	_unlock_thread(thread);
@@ -1546,8 +1569,10 @@ static void _unregister_threads(unsigned only_grace)
 
 	dm_list_iterate_items_safe(thread, tmp, &_thread_registry) {
 		_lock_thread(thread);
-		if (!only_grace)
-			_update_events(thread, 0);
+		if (!only_grace && thread->events) {
+			thread->events = 0;
+			_update_events(thread);
+		}
 		if (thread->status == DM_THREAD_GRACE_PERIOD)
 			pthread_cond_signal(&thread->grace_cond);
 		_unlock_thread(thread);
@@ -1612,8 +1637,9 @@ static int _register_for_event(struct message_data *message_data)
 	if ((thread = _lookup_thread_status(message_data)) ||
 	    (thread = _lookup_grace_thread_status(message_data))) {
 		/* Lookup functions return with both _global_mutex and thread->mutex held */
-		/* OR event # into events bitfield. */
-		ret = _update_events(thread, (thread->events | message_data->events_field));
+		/* Add events to the thread's event mask */
+		if (_add_events_to_thread(thread, message_data->events_field))
+			ret = _update_events(thread);
 		/* Update timeout from message and set next_time if needed */
 		_set_next_timeout(thread, message_data->timeout_secs);
 		/* Unlock in correct order: thread->mutex first, then _global_mutex */
