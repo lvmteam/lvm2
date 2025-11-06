@@ -939,13 +939,27 @@ static void _exit_timeout(void *unused __attribute__((unused)))
 	pthread_mutex_unlock(&_timeout_mutex);
 }
 
+/*
+ * Send SIGALRM to wake up a monitor thread.
+ * Returns: 0 on success, ESRCH if thread gone, other errno on error.
+ */
+static int _thread_wakeup_signal(struct thread_status *thread)
+{
+	int ret = pthread_kill(thread->thread, SIGALRM);
+
+	if (ret && (ret != ESRCH))
+		log_error("Unable to wakeup Thr %x: %s.",
+			  (int)thread->thread, strerror(ret));
+
+	return ret;
+}
+
 /* Wake up monitor threads every so often. */
 static void *_timeout_thread(void *unused __attribute__((unused)))
 {
 	struct thread_status *thread;
 	struct timespec timeout;
 	time_t curr_time;
-	int ret;
 
 	DEBUGLOG("Timeout thread starting.");
 	pthread_cleanup_push(_exit_timeout, NULL);
@@ -970,10 +984,7 @@ static void *_timeout_thread(void *unused __attribute__((unused)))
 				} else {
 					DEBUGLOG("Sending SIGALRM to Thr %x for timeout.",
 						 (int) thread->thread);
-					ret = pthread_kill(thread->thread, SIGALRM);
-					if (ret && (ret != ESRCH))
-						log_error("Unable to wakeup Thr %x for timeout: %s.",
-							  (int) thread->thread, strerror(ret));
+					(void) _thread_wakeup_signal(thread);
 				}
 			}
 
@@ -1500,13 +1511,8 @@ static int _update_events(struct thread_status *thread)
 		DEBUGLOG("Sending SIGALRM to wakeup Thr %x.", (int)thread->thread);
 
 		/* Notify thread waiting in ioctl (to speed-up) */
-		if ((ret = pthread_kill(thread->thread, SIGALRM))) {
-			if (ret == ESRCH)
-				thread->events = 0;  /* thread is gone */
-			else
-				log_error("Unable to wakeup thread: %s",
-					  strerror(ret));
-		}
+		if ((ret = _thread_wakeup_signal(thread)) == ESRCH)
+			thread->events = 0;  /* thread is gone */
 	}
 
 	/* Threads with no events will enter grace period in their main loop */
@@ -2219,7 +2225,7 @@ static void _cleanup_unused_threads(void)
 			}
 
 			/* Signal possibly sleeping thread */
-			ret = pthread_kill(thread->thread, SIGALRM);
+			ret = _thread_wakeup_signal(thread);
 			if (!ret || (ret != ESRCH)) {
 				_unlock_thread(thread);
 				break; /* check again on the next round */
