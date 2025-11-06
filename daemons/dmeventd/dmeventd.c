@@ -1958,19 +1958,16 @@ static int _open_fifos(struct dm_event_fifos *fifos)
 {
 	/* Create client fifo. */
 	if ((fifos->client = _open_fifo(fifos->client_path)) < 0)
-		goto fail;
+		return_0;
 
 	/* Create server fifo. */
-	if ((fifos->server = _open_fifo(fifos->server_path)) < 0)
-		goto fail;
+	if ((fifos->server = _open_fifo(fifos->server_path)) < 0) {
+		if (close(fifos->client))
+			log_sys_error("close", fifos->client_path);
+		return_0;
+	}
 
 	return 1;
-
-fail:
-	if (fifos->client >= 0 && close(fifos->client))
-		log_sys_error("close", fifos->client_path);
-
-	return 0;
 }
 
 /*
