@@ -7088,7 +7088,7 @@ static int add_fence_action(struct lockspace *ls, struct owner *owner)
 	memcpy(act->vg_uuid, ls->vg_uuid, sizeof(act->vg_uuid));
 	act->op = LD_OP_FENCE;
 	act->ourkey = 0x1000000000000000 | ((ls->generation & 0xFFFFFF) << 16) | (ls->host_id & 0xFFFF);
-	act->remkey = 0x1000000000000000 | ((owner->generation & 0xFFFFFF) << 16) | (owner->host_id & 0xFFFF);
+	act->remkey = 0x1000000000000000 | (((uint64_t)owner->generation & 0xFFFFFF) << 16) | (owner->host_id & 0xFFFF);
 	memcpy(&act->owner, owner, sizeof(struct owner));
 
 	log_debug("add_fence_action vg %s for host_id %u gen %u ourkey 0x%llx remkey 0x%llx",
