@@ -957,6 +957,7 @@ static void *_timeout_thread(void *unused __attribute__((unused)))
 		timeout.tv_nsec = 0;
 
 		dm_list_iterate_items_gen(thread, &_timeout_registry, timeout_list) {
+			/* coverity[lock_order] we always lock timeout mutex first */
 			_lock_thread(thread);
 			if (thread->next_time <= curr_time) {
 				thread->next_time = curr_time + thread->timeout;
@@ -1337,6 +1338,7 @@ static void *_monitor_thread(void *arg)
 	_lock_thread(thread);
 
 	pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, NULL);
+	/* coverity[lock_order] thread mutex is released before grabbing global mutex */
 	pthread_cleanup_push(_monitor_unregister, thread);
 
 	if (!_fill_device_data(thread)) {
