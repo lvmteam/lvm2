@@ -29,6 +29,7 @@
 #define SANLK_GET_HOST_LOCAL   0x00000001
 #define SANLK_LSF_NO_TIMEOUT   0x00000004
 #define SANLK_WRITE_LS_FLAGS   0x00000001
+#define SANLK_ACQUIRE_OWNED_NO_TIMEOUT -249
 
 #include <stddef.h>
 #include <poll.h>
@@ -2257,9 +2258,7 @@ int lm_lock_sanlock(struct lockspace *ls, struct resource *r, int ld_mode,
 	    rv == SANLK_ACQUIRE_OWNED ||
 	    rv == SANLK_ACQUIRE_OTHER ||
 	    rv == SANLK_ACQUIRE_OWNED_RETRY ||
-#if LOCKDSANLOCK_SUPPORT >= 420
 	    rv == SANLK_ACQUIRE_OWNED_NO_TIMEOUT ||
-#endif
 	    rv == -EAGAIN) {
 
 		/*
@@ -2288,10 +2287,8 @@ int lm_lock_sanlock(struct lockspace *ls, struct resource *r, int ld_mode,
 		if (rv == SANLK_ACQUIRE_OWNED_RETRY)
 			*retry = 0;
 
-#if LOCKDSANLOCK_SUPPORT >= 420
 		if (rv == SANLK_ACQUIRE_OWNED_NO_TIMEOUT)
 			*retry = 0;
-#endif
 
 		if (owner && owner_host.host_id) {
 			const char *host_state;
@@ -2483,9 +2480,7 @@ int lm_convert_sanlock(struct lockspace *ls, struct resource *r,
 	case SANLK_ACQUIRE_IDLIVE:
 	case SANLK_ACQUIRE_OWNED:
 	case SANLK_ACQUIRE_OWNED_RETRY:
-#if LOCKDSANLOCK_SUPPORT >= 420
 	case SANLK_ACQUIRE_OWNED_NO_TIMEOUT:
-#endif
 	case SANLK_ACQUIRE_OTHER:
 	case SANLK_AIO_TIMEOUT:
 		/* expected errors from known/normal cases like lock contention or io timeouts */
