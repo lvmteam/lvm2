@@ -1521,7 +1521,7 @@ static int _active(struct message_data *message_data)
 static int _unregister_for_event(struct message_data *message_data)
 {
 	struct thread_status *thread;
-	int ret;
+	int ret = 0;
 
 	/*
 	 * Clear event in bitfield and deactivate
