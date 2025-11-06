@@ -41,6 +41,9 @@ cleanup_mounted_and_teardown()
 
 check_vg_mounted()
 {
+	# Sleep so malfunctioning systemd has time to umount
+	# so it is not happening later during test
+	sleep 1
 	mount | tee out
 	grep -q "$vg" out
 }
@@ -86,16 +89,16 @@ aux udev_wait
 # but "df" and "mount" commands will still show /dev/test/lv1 mounted on /mnt.
 lvrename $vg_lv $vg_lv_ren
 
-if check_vg_mounted ; then
-	# fails on renamed LV
-	# lvextend -r test/lv1_renamed succeeds in extending the LV (as lv1_renamed),
-	# but xfs_growfs /dev/test/lv1_renamed fails because it doesn't recognize
-	# that device is mounted, because the old lv name reported as being mounted.
-	fail lvresize -y -L+10M -r $vg_lv_ren
+# skip this resize test if the volume is unmounted
+check_vg_mounted || continue
+# fails on renamed LV
+# lvextend -r test/lv1_renamed succeeds in extending the LV (as lv1_renamed),
+# but xfs_growfs /dev/test/lv1_renamed fails because it doesn't recognize
+# that device is mounted, because the old lv name reported as being mounted.
+fail lvresize -y -L+10M -r $vg_lv_ren
 
-	# fails on unknown mountpoint  (FIXME: umount)
-	not umount "$dev_vg_lv"
-fi
+# fails on unknown mountpoint  (FIXME: umount)
+not umount "$dev_vg_lv"
 
 # create a new LV with the previous name of the renamed lv
 lvcreate -L300 -n $lv1 $vg
