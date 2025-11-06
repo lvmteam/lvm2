@@ -24,12 +24,15 @@ aux lvmconf 'allocation/maximise_cling = 0' \
 aux prepare_vg 8 80
 get_devs
 
-offset=$(get first_extent_sector "$dev1")
+offset=$(( $(get first_extent_sector "$dev1") + 128 ))
 
 function delay
 {
+	local rd=0
+	[ "$1" = "0" ] || rd=1
+
 	for d in "${DEVICES[@]}"; do
-		aux delay_dev "$d" 0 $1 "$offset"
+		aux delay_dev "$d" "$rd" "$1" "$offset"
 	done
 }
 
@@ -38,7 +41,6 @@ function delay
 RAID_SIZE=32
 
 # Fast sync and repair afterwards
-delay 0
 
 # RAID1 transient failure check
 lvcreate --type raid1 -m 1 -L $RAID_SIZE -n $lv1 $vg "$dev1" "$dev2"
