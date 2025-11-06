@@ -269,7 +269,7 @@ struct thread_status {
 static DM_LIST_INIT(_thread_registry);		/* Active threads (REGISTERING, RUNNING, GRACE_PERIOD) */
 static DM_LIST_INIT(_thread_registry_unused);	/* Terminated threads (DONE only) */
 
-static int _timeout_running;
+static pthread_t _timeout_thread_id;
 static DM_LIST_INIT(_timeout_registry);
 static pthread_mutex_t _timeout_mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t _timeout_cond = PTHREAD_COND_INITIALIZER;
@@ -935,7 +935,6 @@ static void _exit_dm_lib(void)
 
 static void _exit_timeout(void *unused __attribute__((unused)))
 {
-	_timeout_running = 0;
 	pthread_mutex_unlock(&_timeout_mutex);
 }
 
@@ -951,10 +950,10 @@ static void *_timeout_thread(void *unused __attribute__((unused)))
 	pthread_cleanup_push(_exit_timeout, NULL);
 	pthread_mutex_lock(&_timeout_mutex);
 
-	while (!dm_list_empty(&_timeout_registry)) {
-		timeout.tv_sec = 0;
-		timeout.tv_nsec = 0;
+	for (;;) {
 		curr_time = _get_curr_time();
+		timeout.tv_sec = curr_time + (24 * 60 * 60);  /* Max 24 hour sleep */
+		timeout.tv_nsec = 0;
 
 		dm_list_iterate_items_gen(thread, &_timeout_registry, timeout_list) {
 			_lock_thread(thread);
@@ -976,7 +975,7 @@ static void *_timeout_thread(void *unused __attribute__((unused)))
 				}
 			}
 
-			if (thread->next_time < timeout.tv_sec || !timeout.tv_sec)
+			if (thread->next_time < timeout.tv_sec)
 				timeout.tv_sec = thread->next_time;
 			_unlock_thread(thread);
 		}
@@ -1005,13 +1004,12 @@ static int _register_for_timeout(struct thread_status *thread)
 
 	if (dm_list_empty(&thread->timeout_list)) {
 		dm_list_add(&_timeout_registry, &thread->timeout_list);
-		if (_timeout_running)
+		if (_timeout_thread_id)
 			pthread_cond_signal(&_timeout_cond);
 	}
 
-	if (!_timeout_running &&
-	    !(ret = _pthread_create_smallstack(NULL, _timeout_thread, NULL)))
-		_timeout_running = 1;
+	if (!_timeout_thread_id)
+		ret = _pthread_create_smallstack(&_timeout_thread_id, _timeout_thread, NULL);
 
 	pthread_mutex_unlock(&_timeout_mutex);
 
@@ -1025,7 +1023,7 @@ static void _unregister_for_timeout(struct thread_status *thread)
 		dm_list_del(&thread->timeout_list);
 		dm_list_init(&thread->timeout_list);
 		if (dm_list_empty(&_timeout_registry))
-			/* No more work -> wakeup to finish quickly */
+			/* No more timeouts -> wakeup to enter idle sleep */
 			pthread_cond_signal(&_timeout_cond);
 	}
 	pthread_mutex_unlock(&_timeout_mutex);
@@ -2916,6 +2914,14 @@ int main(int argc, char *argv[])
 
 		_process_request(&fifos);
 		_cleanup_unused_threads();
+	}
+
+	/* Terminate timeout thread if it exists */
+	if (_timeout_thread_id) {
+		if (pthread_cancel(_timeout_thread_id))
+			log_sys_debug("pthread_cancel", "timeout thread");
+		if (pthread_join(_timeout_thread_id, NULL))
+			log_sys_debug("pthread_join", "timeout thread");
 	}
 
 	pthread_mutex_destroy(&_global_mutex);
