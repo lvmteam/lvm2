@@ -960,13 +960,7 @@ static void *_timeout_thread(void *unused __attribute__((unused)))
 			_lock_thread(thread);
 			if (thread->next_time <= curr_time) {
 				thread->next_time = curr_time + thread->timeout;
-				if (thread->status != DM_THREAD_RUNNING) {
-					/* Skip wake up of non running thread (i.e. in grace period) */
-					DEBUGLOG("Skipping SIGALRM to non running Thr %x for timeout (status=%d), "
-						 "extending next_time to %ld.",
-						 (int) thread->thread, thread->status,
-						 (long)thread->next_time);
-				} else if (thread->processing) {
+				if (thread->processing) {
 					/* Cannot signal processing monitoring thread */
 					DEBUGLOG("Skipping SIGALRM to processing Thr %x for timeout, "
 						 "extending next_time to %ld.",
