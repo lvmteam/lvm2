@@ -1331,6 +1331,9 @@ static void *_monitor_thread(void *arg)
 	struct thread_status *thread = arg;
 	int ret;
 
+	/* Holds thread->mutex throughout the loop */
+	_lock_thread(thread);
+
 	pthread_setcanceltype(PTHREAD_CANCEL_DEFERRED, NULL);
 	pthread_cleanup_push(_monitor_unregister, thread);
 
@@ -1347,9 +1350,7 @@ static void *_monitor_thread(void *arg)
 		goto out;
 	}
 
-	/* Main monitoring loop with grace period support
-	 * Holds thread->mutex throughout the loop */
-	_lock_thread(thread);
+	/* Main monitoring loop with grace period support */
 	while (thread->events) {
 		DEBUGLOG("Monitoring %s with Thr %x  (events: %x, used: %d).",
 			 thread->device.name, (int)thread->thread,
