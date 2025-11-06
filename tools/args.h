@@ -387,6 +387,9 @@ arg(labelsector_ARG, '\0', "labelsector", number_VAL, 0, 0,
     "start of the disk (between 0 and 3 inclusive - see LABEL_SCAN_SECTORS\n"
     "in the source). Use with care.\n")
 
+arg(listids_ARG, '\0', "listids", pv_VAL, 0, 0,
+    "Print a list of device IDs available for the device.\n")
+
 arg(listlvs_ARG, '\0', "listlvs", 0, 0, 0,
     "Print a list of LVs that use the device.\n")
 

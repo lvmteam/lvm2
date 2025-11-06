@@ -1508,6 +1508,11 @@ lvmdevices --delid String --deviceidtype String
 ID: lvmdevices_edit
 DESC: Remove the devices file entry with the given device_id.
 
+lvmdevices --listids PV
+ID: lvmdevices_edit
+OO: --deviceidtype String
+DESC: Print device_id types and values available for the device.
+
 ---
 
 lvreduce --size NSizeMB LV

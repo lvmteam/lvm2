@@ -862,6 +862,8 @@ char *device_id_system_read(struct cmd_context *cmd, struct device *dev, uint16_
 				return strdup(dw->id);
 		}
 		return NULL;
+	case DEV_ID_TYPE_UNUSED:
+		return NULL;
 	}
 
 	/*
@@ -1095,6 +1097,7 @@ static const char _dev_id_types[][16] = {
 	[DEV_ID_TYPE_WWID_NAA]	 = "wwid_naa",
 	[DEV_ID_TYPE_WWID_EUI]	 = "wwid_eui",
 	[DEV_ID_TYPE_WWID_T10]	 = "wwid_t10",
+	[DEV_ID_TYPE_UNUSED]	 = "unused",
 	[DEV_ID_TYPE_NVME_EUI64] = "nvme_eui64",
 	[DEV_ID_TYPE_NVME_NGUID] = "nvme_nguid",
 	[DEV_ID_TYPE_NVME_UUID]	 = "nvme_uuid",
@@ -1115,6 +1118,9 @@ const char *idtype_to_str(uint16_t idtype)
 uint16_t idtype_from_str(const char *str)
 {
 	uint16_t i;
+
+	if (!str)
+		return 0;
 
 	for (i = 1; i < DM_ARRAY_SIZE(_dev_id_types); ++i)
 		if (!strcmp(str, _dev_id_types[i]))
@@ -3081,6 +3087,31 @@ struct device *device_id_system_find(struct cmd_context *cmd, const char *find_i
  out:
 	dev_iter_destroy(iter);
 	return dev_found;
+}
+
+int device_id_system_list(struct cmd_context *cmd, struct device *dev, uint16_t check_idtype)
+{
+	char *idname;
+	uint16_t idtype;
+	int found = 0;
+
+	for (idtype = 1; idtype <= DEV_ID_TYPE_LAST; idtype++) {
+		if (check_idtype && (check_idtype != idtype))
+			continue;
+		if ((idname = device_id_system_read(cmd, dev, idtype))) {
+			if (check_idtype)
+				log_print("%s", idname);
+			else
+				log_print("%-16s %s", idtype_to_str(idtype), idname);
+			found++;
+		}
+	}
+
+	if (check_idtype && !found) {
+		log_error("deviceidtype %s not found for %s", idtype_to_str(check_idtype), dev_name(dev));
+		return 0;
+	}
+	return 1;
 }
 
 /*

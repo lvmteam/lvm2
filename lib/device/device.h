@@ -74,10 +74,11 @@ struct dev_ext {
 #define DEV_ID_TYPE_WWID_NAA   9
 #define DEV_ID_TYPE_WWID_EUI  10
 #define DEV_ID_TYPE_WWID_T10  11
-/* reserve 12 for "scsi name string" if we decide to add that */
+#define DEV_ID_TYPE_UNUSED    12  /* reserve 12 for "scsi name string" if we decide to add that */
 #define DEV_ID_TYPE_NVME_EUI64 13
 #define DEV_ID_TYPE_NVME_NGUID 14
 #define DEV_ID_TYPE_NVME_UUID  15
+#define DEV_ID_TYPE_LAST       15
 
 /* Max length of SCSI or NVME WWID */
 #define DEV_WWID_SIZE 128

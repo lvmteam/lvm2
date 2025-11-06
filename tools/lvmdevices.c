@@ -574,6 +574,36 @@ int lvmdevices(struct cmd_context *cmd, int argc, char **argv)
 	dm_list_init(&found_devs);
 	dm_list_init(&scan_devs);
 
+	/*
+	 * listids does not use the devices file at all, it just reads
+	 * all the device IDs available for a device on the system.
+	 */
+	if (arg_is_set(cmd, listids_ARG)) {
+		const char *devname;
+		uint16_t idtype = 0;
+
+		if (!(devname = arg_str_value(cmd, listids_ARG, NULL)))
+			return ECMD_FAILED;
+
+		dev_cache_scan(cmd);
+
+		if (!(dev = dev_cache_get(cmd, devname, NULL))) {
+			log_error("No device found for %s.", devname);
+			return ECMD_FAILED;
+		}
+
+		if ((deviceidtype = arg_str_value(cmd, deviceidtype_ARG, NULL))) {
+			if (!(idtype = idtype_from_str(deviceidtype))) {
+				log_error("Unknown deviceidtype.");
+				return ECMD_FAILED;
+			}
+		}
+
+		if (!device_id_system_list(cmd, dev, idtype))
+			return ECMD_FAILED;
+		return ECMD_PROCESSED;
+	}
+
 	if (!setup_devices_file(cmd))
 		return ECMD_FAILED;
 
