@@ -1596,7 +1596,7 @@ static int _register_for_event(struct message_data *message_data)
 #else
 		ret = ENODEV;
 #endif
-		return ret;
+		return -ret;
 	}
 
 	_lock_mutex();
