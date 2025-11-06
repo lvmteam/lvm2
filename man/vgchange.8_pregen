@@ -211,6 +211,10 @@
 .OPA setautoactivation
 \fBy\fP|\fBn\fP
 ..
+.de O_setlockargs
+.OPA setlockargs
+\fIString\fP
+..
 .de O_setpersist
 .OPA setpersist
 \fIString\fP
@@ -355,6 +359,8 @@ vgchange \(em Change volume group attributes
 .O_select
 .br
 .O_setautoactivation
+.br
+.O_setlockargs
 .br
 .O_setpersist
 .br
@@ -762,6 +768,23 @@ Perform persistent reservation commands on devices.
 \(em
 .P
 .
+Set or clear lock_args flags to control lock manager behavior.
+.P
+.B vgchange
+.O_setlockargs
+\fIVG\fP|\fITag\fP|\fISelect\fP
+.RS
+[
+.O_select
+]
+.br
+[ COMMON_OPTIONS ]
+.RE
+.
+.P
+\(em
+.P
+.
 Start the lockspace of a shared VG in lvmlockd.
 .P
 .B vgchange
@@ -812,6 +835,10 @@ Change the lock type for a shared VG.
 .O_locktype
 \fIVG\fP
 .RS
+[
+.O_setlockargs
+]
+.br
 [ COMMON_OPTIONS ]
 .RE
 .P
@@ -1250,6 +1277,21 @@ If autoactivation is disabled on a VG, no LVs will be autoactivated
 in that VG, and the LV autoactivation property has no effect.
 If autoactivation is enabled on a VG, autoactivation can be disabled
 for individual LVs.
+.
+.TP
+.O_setlockargs
+Add or remove lock_args settings for a shared VG.
+The lock_args determine lock manager behavior for the VG.
+These settings are only allowed for lock_type sanlock.
+persist: use persistent reservations for lock recovery.
+lvmlockd will preempt-abort the persistent reservation of a failed
+lock owner so that the lock can be acquired.
+notimeout: use locks that do not time out when the owner fails.
+In this case, a lock owned by a failed host can only be acquired
+using the persist feature.
+nopersist: do not use the persist feature.
+timeout: do not use the notimeout feature.
+The default behavior with no settings configured is: nopersist and timeout.
 .
 .TP
 .O_setpersist
