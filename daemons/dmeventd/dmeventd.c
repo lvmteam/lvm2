@@ -1003,7 +1003,7 @@ static int _register_for_timeout(struct thread_status *thread)
 
 	/*
 	 * Timeout (thread->timeout and thread->next_time) is already set
-	 * by _set_next_timeout() called from _register_for_event().
+	 * by _set_timeout_to_thread() called from _register_for_event().
 	 * This function just adds the thread to timeout_registry.
 	 */
 
@@ -1398,7 +1398,7 @@ static void *_monitor_thread(void *arg)
 		 *
 		 * 1) Woken by _update_events() (new registration reusing this thread):
 		 *    - thread->events is non-zero (set by _update_events)
-		 *    - thread->next_time is reset (by _set_next_timeout after _update_events)
+		 *    - thread->next_time is reset (by _set_timeout_to_thread after _update_events)
 		 *    - Loop continues for fresh monitoring cycle
 		 *
 		 * 2) Natural timeout (grace period expired with no new registration):
@@ -1429,7 +1429,7 @@ static int _create_thread(struct thread_status *thread)
  * Should be called when enabling timeout events.
  * Caller must hold thread->mutex when calling this (except for new thread creation).
  */
-static void _set_next_timeout(struct thread_status *thread, unsigned timeout)
+static void _set_timeout_to_thread(struct thread_status *thread, unsigned timeout)
 {
 	thread->timeout = timeout;
 	if (timeout && (thread->events & DM_EVENT_TIMEOUT))
@@ -1641,7 +1641,7 @@ static int _register_for_event(struct message_data *message_data)
 		if (_add_events_to_thread(thread, message_data->events_field))
 			ret = _update_events(thread);
 		/* Update timeout from message and set next_time if needed */
-		_set_next_timeout(thread, message_data->timeout_secs);
+		_set_timeout_to_thread(thread, message_data->timeout_secs);
 		/* Unlock in correct order: thread->mutex first, then _global_mutex */
 		_unlock_thread(thread);
 
@@ -1659,7 +1659,7 @@ static int _register_for_event(struct message_data *message_data)
 		}
 
 		/* Set next timeout for new thread before it starts */
-		_set_next_timeout(thread, message_data->timeout_secs);
+		_set_timeout_to_thread(thread, message_data->timeout_secs);
 
 		if ((ret = _create_thread(thread))) {
 			stack;
@@ -1819,6 +1819,8 @@ static int _get_next_registered_device(struct message_data *message_data)
 static int _set_timeout(struct message_data *message_data)
 {
 	struct thread_status *thread;
+	unsigned timeout = message_data->timeout_secs;
+	int ret = 0;
 
 	_lock_mutex();
 	if (!(thread = _lookup_thread_status(message_data))) {
@@ -1828,20 +1830,24 @@ static int _set_timeout(struct message_data *message_data)
 
 	/* _lookup_thread_status returns with both _global_mutex and thread->mutex held */
 
-	/* Reprogram timer - update thread fields under thread mutex */
-	thread->timeout = message_data->timeout_secs;
-	thread->next_time = 0;
+	/* Update timeout value and event mask */
+	_set_timeout_to_thread(thread, timeout);
+	if (timeout)
+		_add_events_to_thread(thread, DM_EVENT_TIMEOUT);
+	else
+		_remove_events_from_thread(thread, DM_EVENT_TIMEOUT);
 
 	/* Unlock in reverse order: thread mutex, then global mutex */
 	_unlock_thread(thread);
 	_unlock_mutex();
 
-	/* Wake up timeout thread to recalculate next wakeup time */
-	pthread_mutex_lock(&_timeout_mutex);
-	pthread_cond_signal(&_timeout_cond);
-	pthread_mutex_unlock(&_timeout_mutex);
+	/* Register or unregister for timeout based on new setting */
+	if (timeout)
+		ret = _register_for_timeout(thread);
+	else
+		_unregister_for_timeout(thread);
 
-	return 0;
+	return ret;
 }
 
 static int _get_timeout(struct message_data *message_data)
