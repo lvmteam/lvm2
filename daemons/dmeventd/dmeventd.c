@@ -272,8 +272,8 @@ static DM_LIST_INIT(_thread_registry_unused);	/* Terminated threads (DONE only) 
 
 static pthread_t _timeout_thread_id;
 static DM_LIST_INIT(_timeout_registry);
-static pthread_mutex_t _timeout_mutex = PTHREAD_MUTEX_INITIALIZER;
-static pthread_cond_t _timeout_cond = PTHREAD_COND_INITIALIZER;
+static pthread_mutex_t _timeout_mutex;
+static pthread_cond_t _timeout_cond;
 
 /*
  * Get current time with single time() handling wrapper.
@@ -2857,7 +2857,9 @@ int main(int argc, char *argv[])
 
 	_init_thread_signals();
 
-	if (pthread_mutex_init(&_global_mutex, NULL))
+	if (pthread_mutex_init(&_global_mutex, NULL) ||
+	    pthread_mutex_init(&_timeout_mutex, NULL) ||
+	    pthread_cond_init(&_timeout_cond, NULL))
 		exit(EXIT_FAILURE);
 
 	if (!_systemd_activation && !_open_fifos(&fifos))
@@ -2932,6 +2934,8 @@ int main(int argc, char *argv[])
 			log_sys_debug("pthread_join", "timeout thread");
 	}
 
+	pthread_cond_destroy(&_timeout_cond);
+	pthread_mutex_destroy(&_timeout_mutex);
 	pthread_mutex_destroy(&_global_mutex);
 
 	log_notice("dmeventd shutting down.");
