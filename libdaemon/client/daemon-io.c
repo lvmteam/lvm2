@@ -14,8 +14,6 @@
 
 #include "daemon-io.h"
 
-#include "lib/misc/util.h"
-
 #include <errno.h>
 #include <unistd.h>
 
