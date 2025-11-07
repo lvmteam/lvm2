@@ -1186,7 +1186,7 @@ static int lm_prepare_lockspace(struct lockspace *ls, struct action *act, int re
 	} else if (ls->lm_type == LD_LM_SANLOCK) {
 		rv = lm_prepare_lockspace_sanlock(ls, &prev_generation, repair);
 		/* borrowing action.owner to avoid adding another action field */
-		if (!rv)
+		if (!rv && act)
 			act->owner.generation = (uint32_t)prev_generation;
 	} else if (ls->lm_type == LD_LM_IDM) {
 		rv = lm_prepare_lockspace_idm(ls);
