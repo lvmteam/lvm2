@@ -162,8 +162,8 @@ Name: lvm2
 Version: 2.02.120
 Release: 1%{?dist}
 License: GPLv2
-URL: http://sources.redhat.com/lvm2
-Source0: ftp://sources.redhat.com/pub/lvm2/LVM2.%{version}.tgz
+URL: https://sourceware.org/lvm2
+Source0: https://sourceware.org/pub/lvm2/releases/LVM2.%{version}.tgz
 Source91: source.inc
 Source92: build.inc
 Source93: packages.inc

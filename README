@@ -6,8 +6,8 @@ Installation instructions are in INSTALL.
 There is no warranty - see COPYING and COPYING.LIB.
 
 Tarballs are available from:
+  https://sourceware.org/pub/lvm2/releases/
   ftp://sourceware.org/pub/lvm2/
-  https://github.com/lvmteam/lvm2/releases
 
 The source code is stored in git:
   https://gitlab.com/lvmteam/lvm2
