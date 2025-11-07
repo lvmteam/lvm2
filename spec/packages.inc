@@ -235,9 +235,7 @@ Requires: device-mapper-event >= %{device_mapper_version}-%{release}
 %description libs
 This package contains shared lvm2 libraries for applications.
 
-%post libs -p /sbin/ldconfig
-
-%postun libs -p /sbin/ldconfig
+%ldconfig_scriptlets libs
 
 %files libs
 %defattr(-,root,root,-)
@@ -473,9 +471,7 @@ Requires: device-mapper = %{device_mapper_version}-%{release}
 %description -n device-mapper-libs
 This package contains the device-mapper shared library, libdevmapper.
 
-%post -n device-mapper-libs -p /sbin/ldconfig
-
-%postun -n device-mapper-libs -p /sbin/ldconfig
+%ldconfig_scriptlets -n device-mapper-libs
 
 %files -n device-mapper-libs
 %attr(755,root,root) %{_libdir}/libdevmapper.so.*
@@ -539,9 +535,7 @@ License: %{license_lgpl}
 This package contains the device-mapper event daemon shared library,
 libdevmapper-event.
 
-%post -n device-mapper-event-libs -p /sbin/ldconfig
-
-%postun -n device-mapper-event-libs -p /sbin/ldconfig
+%ldconfig_scriptlets -n device-mapper-event-libs
 
 %files -n device-mapper-event-libs
 %attr(755,root,root) %{_libdir}/libdevmapper-event.so.*

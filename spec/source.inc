@@ -47,6 +47,7 @@
 # NOTE: Required by fedora 38+, maybe older
 %global buildreq_udev systemd-devel, systemd-units
 %global req_udev udev >= 181-1
+%global systemd_version 219
 
 
 %if %{fedora} >= 35 || %{rhel} >= 9
@@ -203,6 +204,10 @@ BuildRequires: libblkid-devel
 %maybe BuildRequires: %{?buildreq_python3_setuptools}
 %maybe BuildRequires: %{?buildreq_python3_dbus}
 %maybe BuildRequires: %{?buildreq_python3_pyudev}
+# systemd-rpm-macros needed for systemd macros (Fedora 30+, RHEL 8+)
+%if 0%{?fedora} >= 30 || 0%{?rhel} >= 8
+BuildRequires: systemd-rpm-macros
+%endif
 
 %description
 LVM2 includes all of the support for handling read/write operations on

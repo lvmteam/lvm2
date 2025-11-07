@@ -58,6 +58,8 @@ test -e %{_sourcedir}/source.inc || cp source.inc build.inc packages.inc macros.
 %check
 %{?check_commands}
 
+# %clean section deprecated in Fedora 18+, RHEL 7+
+%if 0%{?fedora} < 18 && 0%{?rhel} < 7
 %clean
-pwd
-test -n rpm-no-clean || rm -rf $RPM_BUILD_ROOT
+rm -rf $RPM_BUILD_ROOT
+%endif
