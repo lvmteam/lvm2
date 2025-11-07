@@ -34,11 +34,17 @@
 /* Forward declarations */
 struct lv_segment;
 struct logical_volume;
-struct segment_type;
 struct cmd_context;
 struct profile;
 struct dm_pool;
 struct dm_list;
+
+/* Partial definition of segment_type - only fields we need for modeling */
+struct segment_type {
+	const char *name;
+	const char *dso;
+	/* other fields omitted */
+};
 
 /*
  * These functions never return NULL for valid LVs with segments
@@ -312,4 +318,43 @@ void dm_list_add(struct dm_list *head, struct dm_list *elem)
 	__coverity_writeall__(head);
 	__coverity_writeall__(elem);
 	__coverity_escape__(elem);
+}
+
+struct segtype_library;
+
+/* lvm_register_segtype - registers a segment type
+ * Returns 1 on success, 0 on failure
+ * On failure, it calls segtype->ops->destroy(segtype) which frees the resource
+ * On success, the segtype is added to the list and ownership is transferred
+ */
+int lvm_register_segtype(struct segtype_library *seglib,
+			 struct segment_type *segtype)
+{
+	int success;
+	char *dso;
+
+	if (!seglib || !segtype) {
+		__coverity_panic__();
+	}
+
+	__coverity_read_pointee__(seglib);
+	__coverity_read_pointee__(segtype);
+
+	if (!success) {
+		/* On failure, the function calls segtype->ops->destroy(segtype)
+		 * which frees both segtype->dso and segtype itself */
+
+		/* Read dso field and mark it as freed if it exists */
+		dso = segtype->dso;
+		if (dso)
+			__coverity_free__(dso);
+
+		/* Then free the segtype structure itself */
+		__coverity_free__(segtype);
+		return 0;
+	}
+
+	/* On success, segtype is added to the list and ownership transfers */
+	__coverity_escape__(segtype);
+	return 1;
 }
