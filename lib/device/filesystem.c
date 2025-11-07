@@ -181,6 +181,8 @@ static int _btrfs_get_mnt(struct fs_info *fsi, dev_t lv_devt)
 			fsi->mounted = 0;
 			return 1;
 		}
+		log_sys_error("opendir", devices_path);
+		return 0;
 	}
 
 	/*
