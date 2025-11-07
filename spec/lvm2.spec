@@ -32,3 +32,5 @@
 %import packages.inc
 
 %changelog
+* Wed Mar 31 2004 LVM Development Team <linux-lvm@lists.linux.dev>
+- See git log for detailed change history
