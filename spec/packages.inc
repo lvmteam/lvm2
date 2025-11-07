@@ -211,7 +211,7 @@ fi
 ##############################################################################
 %package devel
 Summary: Development libraries and headers
-License: LGPLv2
+License: %{license_lgpl}
 Requires: %{name} = %{version}-%{release}
 Requires: device-mapper-devel >= %{device_mapper_version}-%{release}
 Requires: device-mapper-event-devel >= %{device_mapper_version}-%{release}
@@ -229,7 +229,7 @@ the lvm2 libraries.
 
 %package libs
 Summary: Shared libraries for lvm2
-License: LGPLv2
+License: %{license_lgpl}
 Requires: device-mapper-event >= %{device_mapper_version}-%{release}
 
 %description libs
@@ -348,7 +348,7 @@ fi
 %if %{enable_dbusd}
 %package dbusd
 Summary: LVM2 D-Bus daemon
-License: GPLv2
+License: %{license_gpl}
 Requires: lvm2 >= %{version}-%{release}
 Requires: dbus
 Requires: python3-dbus
@@ -389,7 +389,7 @@ Daemon for access to LVM2 functionality through a D-Bus interface.
 %if %{enable_testsuite}
 %package testsuite
 Summary: LVM2 Testsuite
-License: LGPLv2
+License: %{license_lgpl}
 
 %description testsuite
 An extensive functional testsuite for LVM2.
@@ -408,7 +408,7 @@ An extensive functional testsuite for LVM2.
 Summary: Device mapper utility
 Version: %{device_mapper_version}
 Release: %{release}
-License: GPLv2
+License: %{license_gpl}
 URL: http://sources.redhat.com/dm
 Requires: device-mapper-libs = %{device_mapper_version}-%{release}
 Requires: util-linux >= 2.15
@@ -449,7 +449,7 @@ for the kernel device-mapper.
 Summary: Development libraries and headers for device-mapper
 Version: %{device_mapper_version}
 Release: %{release}
-License: LGPLv2
+License: %{license_lgpl}
 Requires: device-mapper = %{device_mapper_version}-%{release}
 Requires: pkgconfig
 
@@ -467,7 +467,7 @@ the device-mapper libraries.
 Summary: Device-mapper shared library
 Version: %{device_mapper_version}
 Release: %{release}
-License: LGPLv2
+License: %{license_lgpl}
 Requires: device-mapper = %{device_mapper_version}-%{release}
 
 %description -n device-mapper-libs
@@ -533,7 +533,7 @@ fi
 Summary: Device-mapper event daemon shared library
 Version: %{device_mapper_version}
 Release: %{release}
-License: LGPLv2
+License: %{license_lgpl}
 
 %description -n device-mapper-event-libs
 This package contains the device-mapper event daemon shared library,
@@ -550,7 +550,7 @@ libdevmapper-event.
 Summary: Development libraries and headers for the device-mapper event daemon
 Version: %{device_mapper_version}
 Release: %{release}
-License: LGPLv2
+License: %{license_lgpl}
 Requires: device-mapper-event = %{device_mapper_version}-%{release}
 Requires: pkgconfig
 

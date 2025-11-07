@@ -14,6 +14,15 @@
 %global rhel 0
 %endif
 
+# SPDX license identifiers (required in Fedora 37+)
+%if 0%{?fedora} >= 37
+%global license_gpl GPL-2.0-only
+%global license_lgpl LGPL-2.0-only
+%else
+%global license_gpl GPLv2
+%global license_lgpl LGPLv2
+%endif
+
 %global enableif() \
 %%global configure_flags %%{?configure_flags} --%%(if test %%1 -gt 0; then echo enable-%%2; else echo disable-%%2; fi)
 

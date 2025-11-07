@@ -161,7 +161,7 @@ Summary: Userland logical volume management tools
 Name: lvm2
 Version: 2.02.120
 Release: 1%{?dist}
-License: GPLv2
+License: %{license_gpl}
 URL: https://sourceware.org/lvm2
 Source0: https://sourceware.org/pub/lvm2/releases/LVM2.%{version}.tgz
 Source91: source.inc
