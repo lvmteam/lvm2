@@ -90,7 +90,12 @@ aux udev_wait
 lvrename $vg_lv $vg_lv_ren
 
 # skip this resize test if the volume is unmounted
-check_vg_mounted || continue
+check_vg_mounted || {
+	umount "$mount_dir" || skip "Likely systemd unmounted our test volume."
+	# Old system were using /dev/dm-xxx names, which are imune to renames.
+	# On such system we have nothing to test...
+	skip "System uses different mount name."
+}
 # fails on renamed LV
 # lvextend -r test/lv1_renamed succeeds in extending the LV (as lv1_renamed),
 # but xfs_growfs /dev/test/lv1_renamed fails because it doesn't recognize
