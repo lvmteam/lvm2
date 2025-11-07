@@ -1477,7 +1477,7 @@ OO: --refresh
 DESC: Check the devices file and report incorrect values.
 
 lvmdevices --update
-OO: --delnotfound, --refresh
+OO: --delnotfound, --refresh, --force
 ID: lvmdevices_update
 DESC: Update the devices file to fix incorrect values.
 

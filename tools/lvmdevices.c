@@ -787,7 +787,7 @@ int lvmdevices(struct cmd_context *cmd, int argc, char **argv)
 		}
 
 		if (arg_is_set(cmd, update_ARG)) {
-			if (update_needed || !dm_list_empty(&found_devs) || cmd->devices_file_hash_mismatch) {
+			if (update_needed || !dm_list_empty(&found_devs) || cmd->devices_file_hash_mismatch || arg_is_set(cmd, force_ARG)) {
 				if (!device_ids_write(cmd)) {
 					log_error(failed_to_write_devices_file_msg);
 					goto_bad;
