@@ -1121,6 +1121,7 @@ static int _event_wait(struct thread_status *thread)
 	sigaddset(&set, SIGALRM);
 	if (pthread_sigmask(SIG_UNBLOCK, &set, &old) != 0) {
 		log_sys_error("pthread_sigmask", "unblock alarm");
+		_lock_thread(thread);
 		return ret; /* What better */
 	}
 
