@@ -7253,6 +7253,7 @@ static void process_fence_result(struct helper_msg *msg)
 
 	if (!found) {
 		log_error("fence result does not match a fence request");
+		free_action(act);
 		goto out;
 	}
 
