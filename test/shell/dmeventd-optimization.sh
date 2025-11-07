@@ -16,6 +16,8 @@ export LVM_TEST_THIN_REPAIR_CMD=${LVM_TEST_THIN_REPAIR_CMD-/bin/false}
 
 . lib/inittest --skip-with-lvmpolld
 
+test "${LVM_VALGRIND:-0}" -eq 0 || skip "Timing is too slow with valgrind."
+
 LOG="$TESTDIR/command.log"
 
 # TODO: make configurable monitoring timeout for 'dmeventd'

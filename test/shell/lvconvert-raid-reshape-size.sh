@@ -45,6 +45,8 @@ pvsz=0
 
 . lib/inittest
 
+test "${LVM_VALGRIND:-0}" -eq 0 || skip "Timing is too slow with valgrind."
+
 aux kernel_at_least 6 9 0 || skip
 
 test "$(aux total_mem)" -gt 1048576 || skip "Not enough RAM for this test"
