@@ -215,8 +215,9 @@ struct message_data {
 /* There are three states a thread can attain. */
 enum {
 	DM_THREAD_REGISTERING,	/* Registering, transitions to RUNNING */
-	DM_THREAD_RUNNING,	/* Working on events, transitions to GRACE or DONE */
+	DM_THREAD_RUNNING,	/* Working on events, transitions to GRACE or TERMINATING */
 	DM_THREAD_GRACE_PERIOD,	/* Thread awaits reuse for a grace period */
+	DM_THREAD_TERMINATING,	/* Thread transitions to DONE */
 	DM_THREAD_DONE		/* Terminated and cleanup is pending */
 };
 
@@ -803,7 +804,7 @@ static struct thread_status *_lookup_thread_status(struct message_data *data)
 	/* Find active threads (not in grace period) */
 	dm_list_iterate_items(thread, &_thread_registry) {
 		_lock_thread(thread);
-		if ((thread->status != DM_THREAD_GRACE_PERIOD) &&
+		if ((thread->status < DM_THREAD_GRACE_PERIOD) &&
 		    !strcmp(data->device_uuid, thread->device.uuid))
 			return thread; /* Return with both mutexes held */
 		_unlock_thread(thread);
@@ -1233,6 +1234,7 @@ static void _monitor_unregister(void *arg)
 	thread->pending = 0;	/* Event pending resolved */
 	thread->processing = 1;	/* Process unregistering */
 	status = thread->status;
+	thread->status = DM_THREAD_TERMINATING;
 	_unlock_thread(thread);
 
 	/* Move to unused registry */
@@ -1778,8 +1780,8 @@ static int _get_registered_dev(struct message_data *message_data, int next)
 	dm_list_iterate_items(thread, &_thread_registry) {
 		_lock_thread(thread);
 
-		/* Skip threads in grace period */
-		if (thread->status != DM_THREAD_GRACE_PERIOD) {
+		/* Skip threads in grace period or terminating */
+		if (thread->status < DM_THREAD_GRACE_PERIOD) {
 			if (found_start) {
 				/* Ready to accept a match */
 				if (_want_registered_device(message_data->dso_name,
