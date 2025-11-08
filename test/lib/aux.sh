@@ -1584,69 +1584,69 @@ generate_config() {
 	fi
 	if [[ ! -f "$config_values" ]]; then
 		cat > "$config_values" <<-EOF
-activation/checks = 1
-activation/monitoring = 0
-activation/polling_interval = 1
-activation/retry_deactivation = 1
-activation/snapshot_autoextend_percent = 50
-activation/snapshot_autoextend_threshold = 50
-activation/verify_udev_operations = $LVM_VERIFY_UDEV
-activation/raid_region_size = 512
-allocation/wipe_signatures_when_zeroing_new_lvs = 0
-allocation/vdo_slab_size_mb = 128
-allocation/zero_metadata = 0
-backup/archive = 0
-backup/backup = 0
-devices/cache_dir = "$LVM_SYSTEM_DIR"
-devices/default_data_alignment = 1
-devices/dir = "$DM_DEV_DIR"
-devices/md_component_detection = 0
-devices/scan = "$DM_DEV_DIR"
-devices/sysfs_scan = 1
-devices/write_cache_state = 0
-devices/use_devicesfile = $LVM_TEST_DEVICES_FILE
-devices/filter = "a|.*|"
-devices/global_filter = [ "a|$DM_DEV_DIR/mapper/${PREFIX}.*pv[0-9_]*$|", "r|.*|" ]
-global/abort_on_internal_errors = 1
-global/cache_check_executable = "$LVM_TEST_CACHE_CHECK_CMD"
-global/cache_dump_executable = "$LVM_TEST_CACHE_DUMP_CMD"
-global/cache_repair_executable = "$LVM_TEST_CACHE_REPAIR_CMD"
-global/cache_restore_executable = "$LVM_TEST_CACHE_RESTORE_CMD"
-global/detect_internal_vg_cache_corruption = 1
-global/etc = "$LVM_SYSTEM_DIR"
-global/event_activation = 1
-global/fallback_to_local_locking = 0
-global/locking_type=$LVM_TEST_LOCKING
-global/notify_dbus = 0
-global/si_unit_consistency = 1
-global/thin_check_executable = "$LVM_TEST_THIN_CHECK_CMD"
-global/thin_dump_executable = "$LVM_TEST_THIN_DUMP_CMD"
-global/thin_repair_executable = "$LVM_TEST_THIN_REPAIR_CMD"
-global/thin_restore_executable = "$LVM_TEST_THIN_RESTORE_CMD"
-global/use_lvmlockd = $LVM_TEST_LVMLOCKD
-global/use_lvmpolld = $LVM_TEST_LVMPOLLD
-log/activation = 1
-log/file = "$TESTDIR/debug.log"
-log/indent = 1
-log/level = 9
-log/overwrite = 1
-log/syslog = 0
-log/verbose = 0
-EOF
+		activation/checks = 1
+		activation/monitoring = 0
+		activation/polling_interval = 1
+		activation/retry_deactivation = 1
+		activation/snapshot_autoextend_percent = 50
+		activation/snapshot_autoextend_threshold = 50
+		activation/verify_udev_operations = $LVM_VERIFY_UDEV
+		activation/raid_region_size = 512
+		allocation/wipe_signatures_when_zeroing_new_lvs = 0
+		allocation/vdo_slab_size_mb = 128
+		allocation/zero_metadata = 0
+		backup/archive = 0
+		backup/backup = 0
+		devices/cache_dir = "$LVM_SYSTEM_DIR"
+		devices/default_data_alignment = 1
+		devices/dir = "$DM_DEV_DIR"
+		devices/md_component_detection = 0
+		devices/scan = "$DM_DEV_DIR"
+		devices/sysfs_scan = 1
+		devices/write_cache_state = 0
+		devices/use_devicesfile = $LVM_TEST_DEVICES_FILE
+		devices/filter = "a|.*|"
+		devices/global_filter = [ "a|$DM_DEV_DIR/mapper/${PREFIX}.*pv[0-9_]*$|", "r|.*|" ]
+		global/abort_on_internal_errors = 1
+		global/cache_check_executable = "$LVM_TEST_CACHE_CHECK_CMD"
+		global/cache_dump_executable = "$LVM_TEST_CACHE_DUMP_CMD"
+		global/cache_repair_executable = "$LVM_TEST_CACHE_REPAIR_CMD"
+		global/cache_restore_executable = "$LVM_TEST_CACHE_RESTORE_CMD"
+		global/detect_internal_vg_cache_corruption = 1
+		global/etc = "$LVM_SYSTEM_DIR"
+		global/event_activation = 1
+		global/fallback_to_local_locking = 0
+		global/locking_type=$LVM_TEST_LOCKING
+		global/notify_dbus = 0
+		global/si_unit_consistency = 1
+		global/thin_check_executable = "$LVM_TEST_THIN_CHECK_CMD"
+		global/thin_dump_executable = "$LVM_TEST_THIN_DUMP_CMD"
+		global/thin_repair_executable = "$LVM_TEST_THIN_REPAIR_CMD"
+		global/thin_restore_executable = "$LVM_TEST_THIN_RESTORE_CMD"
+		global/use_lvmlockd = $LVM_TEST_LVMLOCKD
+		global/use_lvmpolld = $LVM_TEST_LVMPOLLD
+		log/activation = 1
+		log/file = "$TESTDIR/debug.log"
+		log/indent = 1
+		log/level = 9
+		log/overwrite = 1
+		log/syslog = 0
+		log/verbose = 0
+		EOF
 		# For 'rpm' builds use system installed binaries
 		# and libraries and locking dir and some more built-in
 		# defaults
 		# For test suite run use binaries from builddir.
 		if [[ -n "${abs_top_builddir+varset}" ]]; then
 			cat >> "$config_values" <<-EOF
-dmeventd/executable = "$abs_top_builddir/test/lib/dmeventd"
-activation/udev_rules = 1
-activation/udev_sync = 1
-global/fsadm_executable = "$abs_top_builddir/test/lib/fsadm"
-global/lvresize_fs_helper_executable = "$abs_top_builddir/test/lib/lvresize_fs_helper"
-global/library_dir = "$TESTDIR/lib"
-global/locking_dir = "$TESTDIR/var/lock/lvm"
-EOF
+			dmeventd/executable = "$abs_top_builddir/test/lib/dmeventd"
+			activation/udev_rules = 1
+			activation/udev_sync = 1
+			global/fsadm_executable = "$abs_top_builddir/test/lib/fsadm"
+			global/lvresize_fs_helper_executable = "$abs_top_builddir/test/lib/lvresize_fs_helper"
+			global/library_dir = "$TESTDIR/lib"
+			global/locking_dir = "$TESTDIR/var/lock/lvm"
+			EOF
 		fi
 	fi
 
