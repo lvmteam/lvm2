@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 # Copyright (C) 2011-2017 Red Hat, Inc.
 #
 # This copyrighted material is made available to anyone wishing to use,
@@ -12,30 +12,26 @@
 . lib/paths
 
 CMD=${0##*/}
-test "$CMD" != lvm || unset CMD
+[[ "$CMD" != lvm ]] || unset CMD
 
 # When needed to trace command from test suite use env var before program
 # and run program directly via shell in test dir i.e.:
 # sh shell/activate-mirror.sh
 # 'LVM_GDB=1 lvcreate -l1 $vg'
 # > run
-test -z "$LVM_GDB" || exec gdb --readnow --args "$abs_top_builddir/tools/lvm" $CMD "$@"
+[[ -z "$LVM_GDB" ]] || exec gdb --readnow --args "$abs_top_builddir/tools/lvm" $CMD "$@"
 
 # Multiple level of LVM_VALGRIND support
 # the higher level the more commands are traced
-if test -n "$LVM_VALGRIND"; then
-	RUN_DBG="${VALGRIND:-valgrind}";
-fi
+[[ -n "$LVM_VALGRIND" ]] && RUN_DBG="${VALGRIND:-valgrind}";
 
-if test -n "$LVM_STRACE"; then
-	RUN_DBG="strace $LVM_STRACE -o strace.log"
-fi
+[[ -n "$LVM_STRACE" ]] && RUN_DBG="strace $LVM_STRACE -o strace.log"
 
 case "$CMD" in
   lvs|pvs|vgs|vgck|vgscan)
-	test "${LVM_DEBUG_LEVEL:-0}" -lt 2 && RUN_DBG="" ;;
+	[[ "${LVM_DEBUG_LEVEL:-0}" -lt 2 ]] && RUN_DBG="" ;;
   pvcreate|pvremove|lvremove|vgcreate|vgremove)
-	test "${LVM_DEBUG_LEVEL:-0}" -lt 1 && RUN_DBG="" ;;
+	[[ "${LVM_DEBUG_LEVEL:-0}" -lt 1 ]] && RUN_DBG="" ;;
 esac
 
 # Capture parallel users of debug.log file
@@ -45,7 +41,7 @@ esac
 #}
 
 # the exec is important, because otherwise fatal signals inside "not" go unnoticed
-if test -n "$abs_top_builddir"; then
+if [[ -n "$abs_top_builddir" ]]; then
     exec $RUN_DBG "$abs_top_builddir/tools/lvm" $CMD "$@"
 else # we are testing the lvm on $PATH
     PATH=$(echo "$PATH" | sed -e 's,[^:]*lvm2-testsuite[^:]*:,,g')
