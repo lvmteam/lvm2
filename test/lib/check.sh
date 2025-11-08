@@ -22,7 +22,7 @@
 
 # ...
 
-test -z "$BASH" || set -e -o pipefail
+[[ -z "$BASH" ]] || set -e -o pipefail
 
 die() {
 	rm -f debug.log
@@ -48,7 +48,7 @@ mirror_images_redundant() {
 
 	(grep -v ^# check.tmp.all || true) | sort | uniq -d > check.tmp
 
-	test "$(wc -l < check.tmp)" -eq 0 || \
+	[[ "$(wc -l < check.tmp)" -eq 0 ]] || \
 		die "mirror images of $lv expected redundant, but are not:" \
 			"$(cat check.tmp.all)"
 }
@@ -113,7 +113,7 @@ mirror_log_on() {
 	local vg=$1
 	local lv=$2
 	local where=$3
-	if test "$where" = "core"; then
+	if [[ "$where" = "core" ]]; then
 		get lv_field "$vg/$lv" mirror_log | not grep mlog
 	else
 		lv_on "$vg" "${lv}_mlog" "$where"
@@ -122,14 +122,14 @@ mirror_log_on() {
 
 lv_is_contiguous() {
 	local lv="$1/$2"
-	test "$(lvl --segments "$lv" | wc -l)" -eq 1 || \
+	[[ "$(lvl --segments "$lv" | wc -l)" -eq 1 ]] || \
 		die "LV $lv expected to be contiguous, but is not:" \
 			"$(lvl --segments "$lv")"
 }
 
 lv_is_clung() {
 	local lv="$1/$2"
-	test "$(lvdevices "$lv" | sort | uniq | wc -l)" -eq 1 || \
+	[[ "$(lvdevices "$lv" | sort | uniq | wc -l)" -eq 1 ]] || \
 		die "LV $lv expected to be clung, but is not:" \
 			"$(lvdevices "$lv" | sort | uniq)"
 }
@@ -165,12 +165,12 @@ mirror_nonredundant() {
 				"$(lvs "$lv")"
 		fi
 	}
-	test -z "$3" || mirror_log_on "$1" "$2" "$3"
+	[[ -z "$3" ]] || mirror_log_on "$1" "$2" "$3"
 }
 
 mirror_legs() {
 	local expect_legs=$3
-	test "$expect_legs" -eq "$(lvdevices "$1/$2" | wc -w)"
+	[[ "$expect_legs" -eq "$(lvdevices "$1/$2" | wc -w)" ]]
 }
 
 mirror_no_temporaries() {
@@ -183,7 +183,7 @@ mirror_no_temporaries() {
 
 linear() {
 	local lv="$1/$2"
-	test "$(get lv_field "$lv" stripes -a)" -eq 1 || \
+	[[ "$(get lv_field "$lv" stripes -a)" -eq 1 ]] || \
 		die "$lv expected linear, but is not:" \
 			"$(lvl "$lv" -o+devices)"
 }
@@ -204,7 +204,7 @@ in_sync() {
 	a=( $(dmsetup status "$dm_name") )  || \
 		die "Unable to get sync status of $1"
 
-	if [ "${a[2]}" = "snapshot-origin" ]; then
+	if [[ "${a[2]}" = "snapshot-origin" ]]; then
 		a=( $(dmsetup status "${dm_name}-real") ) || \
 			die "Unable to get sync status of $1"
 		snap=": under snapshot"
@@ -215,7 +215,7 @@ in_sync() {
 		# 6th argument is the sync ratio for RAID
 		idx=6
 		type=${a[3]}
-		if [ "${a[$(( idx + 1 ))]}" != "idle" ]; then
+		if [[ "${a[$(( idx + 1 ))]}" != "idle" ]]; then
 			echo "$lvm_name ($type$snap) is not in-sync    " "${a[@]}"
 			return 1
 		fi
@@ -233,12 +233,12 @@ in_sync() {
 	b=${a[$idx]%%/*} # split ratio   x/y
 	c=${a[$idx]##*/}
 
-	if [ "$b" -eq 0 ] || [ "$b" != "$c" ]; then
+	if [[ "$b" -eq 0 || "$b" != "$c" ]]; then
 		echo "$lvm_name ($type$snap) is not in-sync    " "${a[@]}"
 		return 1
 	fi
 
-	if [[ ${a[$(( idx - 1 ))]} =~ a ]] ; then
+	if [[ ${a[$(( idx - 1 ))]} =~ a ]]; then
 		[ "$ignore_a" = 0 ] && \
 			die "$lvm_name ($type$snap) in-sync, but 'a' characters in health status"
 		echo "$lvm_name ($type$snap) is not in-sync    " "${a[@]}"
@@ -275,14 +275,14 @@ lv_exists() {
 		shift
 		list+=( "$vg/$1" )
 	done
-	test  "${#list[@]}" -gt 0 || list=( "$vg" )
+	[[  "${#list[@]}" -gt 0 ]] || list=( "$vg" )
 	lvl "${list[@]}" &>/dev/null || \
 		die "${list[@]}" "expected to exist, but does not!"
 }
 
 lv_not_exists() {
 	local vg=$1
-	if test $# -le 1 ; then
+	if [[ $# -le 1  ]]; then
 		if lvl "$vg" &>/dev/null ; then
 			die "$vg expected to not exist but it does!"
 		fi
@@ -298,14 +298,14 @@ lv_not_exists() {
 pv_field() {
 	local actual
 	actual=$(get pv_field "$1" "$2" "${@:4}")
-	test "$actual" = "$3" || \
+	[[ "$actual" = "$3" ]] || \
 		die "pv_field: PV=\"$1\", field=\"$2\", actual=\"$actual\", expected=\"$3\""
 }
 
 vg_field() {
 	local actual
 	actual=$(get vg_field "$1" "$2" "${@:4}")
-	test "$actual" = "$3" || \
+	[[ "$actual" = "$3" ]] || \
 		die "vg_field: vg=$1, field=\"$2\", actual=\"$actual\", expected=\"$3\""
 }
 
@@ -321,35 +321,35 @@ vg_attr_bit() {
 	  alloc*) offset=4 ;;
 	  cluster*) offset=5 ;;
 	esac
-	test "${actual:$offset:1}" = "$3" || \
+	[[ "${actual:$offset:1}" = "$3" ]] || \
 		die "vg_attr_bit: vg=$2, ${offset} bit of \"$actual\" is \"${actual:$offset:1}\", but expected \"$3\""
 }
 
 lv_field() {
 	local actual
 	actual=$(get lv_field "$1" "$2" "${@:4}")
-	test "$actual" = "$3" || \
+	[[ "$actual" = "$3" ]] || \
 		die "lv_field: lv=$1, field=\"$2\", actual=\"$actual\", expected=\"$3\""
 }
 
 lv_first_seg_field() {
 	local actual
 	actual=$(get lv_first_seg_field "$1" "$2" "${@:4}")
-	test "$actual" = "$3" || \
+	[[ "$actual" = "$3" ]] || \
 		die "lv_field: lv=$1, field=\"$2\", actual=\"$actual\", expected=\"$3\""
 }
 
 lvh_field() {
 	local actual
 	actual=$(get lvh_field "$1" "$2" "${@:4}")
-	test "$actual" = "$3" || \
+	[[ "$actual" = "$3" ]] || \
 		die "lvh_field: lv=$1, field=\"$2\", actual=\"$actual\", expected=\"$3\""
 }
 
 lva_field() {
 	local actual
 	actual=$(get lva_field "$1" "$2" "${@:4}")
-	test "$actual" = "$3" || \
+	[[ "$actual" = "$3" ]] || \
 		die "lva_field: lv=$1, field=\"$2\", actual=\"$actual\", expected=\"$3\""
 }
 
@@ -369,7 +369,7 @@ lv_attr_bit() {
 	  health) offset=8 ;;
 	  skip) offset=9 ;;
 	esac
-	test "${actual:$offset:1}" = "$3" || \
+	[[ "${actual:$offset:1}" = "$3" ]] || \
 		die "lv_attr_bit: lv=$2, ${offset} bit of \"$actual\" is \"${actual:$offset:1}\", but expected \"$3\""
 }
 
@@ -384,7 +384,7 @@ compare_fields() {
 	local val2
 	val1=$("$cmd1" --noheadings -o "$field1" "$obj1")
 	val2=$("$cmd2" --noheadings -o "$field2" "$obj2")
-	test "$val1" = "$val2" || \
+	[[ "$val1" = "$val2" ]] || \
 		die "compare_fields $obj1($field1): $val1 $obj2($field2): $val2"
 }
 
@@ -396,7 +396,7 @@ compare_vg_field() {
 	local val2
 	val1=$(vgs --noheadings -o "$field" "$vg1")
 	val2=$(vgs --noheadings -o "$field" "$vg2")
-	test "$val1" = "$val2" || \
+	[[ "$val1" = "$val2" ]] || \
 		die "compare_vg_field: $vg1: $val1, $vg2: $val2"
 }
 
@@ -406,9 +406,9 @@ pvlv_counts() {
 	local num_lvs=$3
 	local num_snaps=$4
 	eval "$(vgs --noheadings --nameprefixes -o pv_count,lv_count,snap_count "$local_vg")"
-	if [ "$LVM2_PV_COUNT" != "$num_pvs" ] || \
-	   [ "$LVM2_LV_COUNT" != "$num_lvs" ] || \
-	   [ "$LVM2_SNAP_COUNT" != "$num_snaps" ]; then
+	if [[ "$LVM2_PV_COUNT" != "$num_pvs" || \
+	   "$LVM2_LV_COUNT" != "$num_lvs" || \
+	   "$LVM2_SNAP_COUNT" != "$num_snaps" ]]; then
 		die "vg_fields: vg=\"$local_vg\", field=\"pv_count,lv_count,snap_count\","\
 			"actual=\"$LVM2_PV_COUNT $LVM2_LV_COUNT $LVM2_SNAP_COUNT\", "\
 			"expected=\"$num_pvs $num_lvs $num_snaps\""
@@ -432,7 +432,7 @@ sysfs() {
 	min=$(($(stat -L --printf=0x%T "$1")))
 	P="/sys/dev/block/$maj:$min/$2"
 	val=$(< "$P") || return 0 # no sysfs ?
-	test "$val" -eq "$3" || \
+	[[ "$val" -eq "$3" ]] || \
 		die "$1: $P = $val differs from expected value $3!"
 }
 
@@ -448,7 +448,7 @@ raid_leg_status() {
 			"resync"|"recover") [ "${st[5]}" = "$3" ] && return 0 ;;
 		esac
 		[ "${st[6]%%/*}" = "0" ] || {
-			test "${st[5]}" = "$3" || break
+			[[ "${st[5]}" = "$3" ]] || break
 			return 0
 		}
 		sleep .1
