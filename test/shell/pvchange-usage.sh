@@ -113,7 +113,7 @@ vgremove -f $vg1
 fail pvchange "$dev1" --addtag test
 fail pvchange "$dev1" --deltag test
 
-if test -n "$LVM_TEST_LVM1" ; then
+if [[ "${LVM_TEST_LVM1:-0}" != 0 ]] ; then
 # cannot add PV tag to lvm1 format
 pvcreate -M1 "$dev1"
 vgcreate $SHARED -M1 $vg1 "$dev1"

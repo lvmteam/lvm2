@@ -144,7 +144,7 @@ grep "Redundant" err
 check lv_field $vg/$lv1 segtype "linear"
 lvremove -ff $vg
 
-if test -n "$LVM_TEST_LVMLOCKD"; then
+if [[ "${LVM_TEST_LVMLOCKD:-0}" != 0 ]]; then
 echo "skip snapshot without origin"
 else
 

@@ -17,7 +17,7 @@
 aux prepare_devs 4
 get_devs
 
-if test -n "$LVM_TEST_LVM1" ; then
+if [[ "${LVM_TEST_LVM1:-0}" != 0 ]] ; then
 mdatypes='1 2'
 else
 mdatypes='2'

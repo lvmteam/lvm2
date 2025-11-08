@@ -54,7 +54,7 @@ test ! -b "$DM_DEV_DIR/$vg2/$lv2"
 
 vgchange --ignorelockingfailure -ay $vg2
 
-if test -n "$LVM_TEST_LVMLOCKD"; then
+if [[ "${LVM_TEST_LVMLOCKD:-0}" != 0 ]]; then
 vgremove --config 'global{locking_type=0}' -ff $vg2
 else
 # TODO maybe also support --ignorelockingfailure ??

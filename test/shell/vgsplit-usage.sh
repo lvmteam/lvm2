@@ -18,7 +18,7 @@
 aux prepare_devs 5
 get_devs
 
-if test -n "$LVM_TEST_LVM1" ; then
+if [[ "${LVM_TEST_LVM1:-0}" != 0 ]] ; then
 mdatypes='1 2'
 else
 mdatypes='2'
@@ -160,7 +160,7 @@ fi
 
 done
 
-if test -z "$LVM_TEST_LVM1" ; then
+if [[ "${LVM_TEST_LVM1:-0}" = 0 ]] ; then
 # ONLY LVM2 metadata
 # setup PVs" '
 pvcreate --metadatacopies 0 "$dev5"
@@ -175,7 +175,7 @@ check pvlv_counts $vg1 2 1 0
 vgremove -f $vg1
 
 # vgsplit rejects split because metadata types differ
-if test -n "$LVM_TEST_LVM1" ; then
+if [[ "${LVM_TEST_LVM1:-0}" != 0 ]] ; then
 pvcreate -ff -M1 "$dev3" "$dev4"
 pvcreate -ff "$dev1" "$dev2"
 vgcreate -M1 $vg1 "$dev3" "$dev4"

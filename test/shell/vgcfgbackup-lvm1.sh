@@ -17,7 +17,7 @@
 aux prepare_pvs 4
 get_devs
 
-if test -n "$LVM_TEST_LVM1" ; then
+if [[ "${LVM_TEST_LVM1:-0}" != 0 ]] ; then
 
 pvcreate --metadatacopies 0 "$dev4"
 

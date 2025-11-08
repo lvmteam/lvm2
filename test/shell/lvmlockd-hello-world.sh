@@ -15,7 +15,7 @@ test_description='Hello world for vgcreate $SHARED with lvmlockd and sanlock'
 
 . lib/inittest --skip-with-lvmpolld
 
-[ -z "$LVM_TEST_LVMLOCKD" ] && skip
+[[ "${LVM_TEST_LVMLOCKD:-0}" = 0 ]] && skip
 
 aux prepare_pvs 1
 

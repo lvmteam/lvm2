@@ -184,7 +184,7 @@ for mdacp in 1 2; do
 	vgremove -f $vg
 done
 
-if test -n "$LVM_TEST_LVMLOCKD"; then
+if [[ "${LVM_TEST_LVMLOCKD:-0}" != 0 ]]; then
 echo skip vgsplit and vgmerge with lvmlockd
 else
 

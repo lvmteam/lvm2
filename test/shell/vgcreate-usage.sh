@@ -87,7 +87,7 @@ check vg_field $vg max_lv 0
 check vg_field $vg max_pv 0
 ATTRS="wz--n---"
 test -e LOCAL_CLVMD && ATTRS="wz--nc-"
-if test -n "$LVM_TEST_LVMLOCKD"; then
+if [[ "${LVM_TEST_LVMLOCKD:-0}" != 0 ]]; then
 ATTRS="wz--ns--"
 fi
 check vg_field $vg vg_attr $ATTRS
@@ -141,7 +141,7 @@ check pv_field "$dev1" pe_start ${pv_align}B --units b
 vgremove -f $vg
 pvremove -f "$dev1"
 
-if test -n "$LVM_TEST_LVM1" ; then
+if [[ "${LVM_TEST_LVM1:-0}" != 0 ]] ; then
 mdatypes='1 2'
 else
 mdatypes='2'

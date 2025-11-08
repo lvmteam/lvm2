@@ -15,27 +15,27 @@ test_description='Check lvmlockd lock_args for different LV types'
 
 . lib/inittest --skip-with-lvmpolld
 
-[ -z "$LVM_TEST_LVMLOCKD" ] && skip;
+[[ "${LVM_TEST_LVMLOCKD:-0}" = 0 ]] && skip;
 
-if test -n "$LVM_TEST_LOCK_TYPE_SANLOCK" ; then
+if [[ "${LVM_TEST_LOCK_TYPE_SANLOCK:-0}" != 0 ]] ; then
 LOCKARGS1="1.0.0:70254592"
 LOCKARGS2="1.0.0:71303168"
 LOCKARGS3="1.0.0:72351744"
 fi
 
-if test -n "$LVM_TEST_LOCK_TYPE_DLM" ; then
+if [[ "${LVM_TEST_LOCK_TYPE_DLM:-0}" != 0 ]] ; then
 LOCKARGS1="dlm"
 LOCKARGS2="dlm"
 LOCKARGS3="dlm"
 fi
 
-if test -n "$LVM_TEST_LVMLOCKD_TEST" ; then
+if [[ "${LVM_TEST_LVMLOCKD_TEST:-0}" != 0 ]] ; then
 LOCKARGS1="dlm"
 LOCKARGS2="dlm"
 LOCKARGS3="dlm"
 fi
 
-if test -n "$LVM_TEST_LOCK_TYPE_IDM" ; then
+if [[ "${LVM_TEST_LOCK_TYPE_IDM:-0}" != 0 ]] ; then
 LOCKARGS1="idm"
 LOCKARGS2="idm"
 LOCKARGS3="idm"

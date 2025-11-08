@@ -245,7 +245,7 @@ vgremove -ff $vg
 #
 
 # autoactivation not done on shared VGs
-if test -n "$LVM_TEST_LVMLOCKD"; then
+if [[ "${LVM_TEST_LVMLOCKD:-0}" != 0 ]]; then
 exit 0
 fi
 

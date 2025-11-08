@@ -387,7 +387,7 @@ aux clear_devs "$dev3" "$dev4"
 # The previous steps prevent us from nicely cleaning up
 # the vg lockspace in lvmlockd, so just restart it;
 # what follows could also just be split into a separate test.
-if test -n "$LVM_TEST_LVMLOCKD_TEST" ; then
+if [[ "${LVM_TEST_LVMLOCKD_TEST:-0}" != 0 ]] ; then
 	killall -9 lvmlockd
 	sleep 2
 	aux prepare_lvmlockd

@@ -10,16 +10,16 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 initskip() {
-	test $# -eq 0 || echo "TEST SKIPPED:" "$@"
+	[[ $# -eq 0 ]] || echo "TEST SKIPPED:" "$@"
 	exit 200
 }
 
 # Parse command line options
-SKIP_ROOT_DM_CHECK=${SKIP_ROOT_DM_CHECK-}
-SKIP_WITH_DEVICES_FILE=${SKIP_WITH_DEVICES_FILE-}
-SKIP_WITH_LVMLOCKD=${SKIP_WITH_LVMLOCKD-}
-SKIP_WITH_LVMPOLLD=${SKIP_WITH_LVMPOLLD-}
-while [ "$#" -gt 0 ]; do
+SKIP_ROOT_DM_CHECK=${SKIP_ROOT_DM_CHECK:-0}
+SKIP_WITH_DEVICES_FILE=${SKIP_WITH_DEVICES_FILE:-0}
+SKIP_WITH_LVMLOCKD=${SKIP_WITH_LVMLOCKD:-0}
+SKIP_WITH_LVMPOLLD=${SKIP_WITH_LVMPOLLD:-0}
+while [[ "$#" -gt 0 ]]; do
 	case "$1" in
 		--skip-root-dm-check)
 			SKIP_ROOT_DM_CHECK=1
@@ -56,41 +56,41 @@ LVM_TEST_FLAVOUR=${LVM_TEST_FLAVOUR-ndev-vanilla}
 
 LVM_TEST_BACKING_DEVICE=${LVM_TEST_BACKING_DEVICE-}
 LVM_TEST_DEVDIR=${LVM_TEST_DEVDIR-}
-LVM_TEST_NODEBUG=${LVM_TEST_NODEBUG-}
-LVM_TEST_LVM1=${LVM_TEST_LVM1-}
-LVM_TEST_FAILURE=${LVM_TEST_FAILURE-}
-LVM_TEST_MULTI_HOST=${LVM_TEST_MULTI_HOST-}
+LVM_TEST_NODEBUG=${LVM_TEST_NODEBUG:-0}
+LVM_TEST_LVM1=${LVM_TEST_LVM1:-0}
+LVM_TEST_FAILURE=${LVM_TEST_FAILURE:-0}
+LVM_TEST_MULTI_HOST=${LVM_TEST_MULTI_HOST:-0}
 # TODO: LVM_TEST_SHARED
 SHARED=${SHARED-}
 
-LVM_TEST_LVMLOCKD=${LVM_TEST_LVMLOCKD-}
-LVM_TEST_LVMLOCKD_TEST=${LVM_TEST_LVMLOCKD_TEST-}
-LVM_TEST_LVMPOLLD=${LVM_TEST_LVMPOLLD-}
-LVM_TEST_DEVICES_FILE=${LVM_TEST_DEVICES_FILE-}
-LVM_TEST_LOCK_TYPE_DLM=${LVM_TEST_LOCK_TYPE_DLM-}
-LVM_TEST_LOCK_TYPE_SANLOCK=${LVM_TEST_LOCK_TYPE_SANLOCK-}
-LVM_TEST_LOCK_TYPE_IDM=${LVM_TEST_LOCK_TYPE_IDM-}
+LVM_TEST_LVMLOCKD=${LVM_TEST_LVMLOCKD:-0}
+LVM_TEST_LVMLOCKD_TEST=${LVM_TEST_LVMLOCKD_TEST:-0}
+LVM_TEST_LVMPOLLD=${LVM_TEST_LVMPOLLD:-0}
+LVM_TEST_DEVICES_FILE=${LVM_TEST_DEVICES_FILE:-0}
+LVM_TEST_LOCK_TYPE_DLM=${LVM_TEST_LOCK_TYPE_DLM:-0}
+LVM_TEST_LOCK_TYPE_SANLOCK=${LVM_TEST_LOCK_TYPE_SANLOCK:-0}
+LVM_TEST_LOCK_TYPE_IDM=${LVM_TEST_LOCK_TYPE_IDM:-0}
 
-SKIP_WITHOUT_CLVMD=${SKIP_WITHOUT_CLVMD-}
-SKIP_WITH_CLVMD=${SKIP_WITH_CLVMD-}
+SKIP_WITHOUT_CLVMD=${SKIP_WITHOUT_CLVMD:-0}
+SKIP_WITH_CLVMD=${SKIP_WITH_CLVMD:-0}
 
 SKIP_WITH_LOW_SPACE=${SKIP_WITH_LOW_SPACE-50}
 
-test -n "$LVM_TEST_FLAVOUR" || { echo "NOTE: Empty flavour">&2; initskip; }
-test -f "lib/flavour-$LVM_TEST_FLAVOUR" || { echo "NOTE: Flavour '$LVM_TEST_FLAVOUR' does not exist">&2; initskip; }
+[[ -n "$LVM_TEST_FLAVOUR" ]] || { echo "NOTE: Empty flavour">&2; initskip; }
+[[ -f "lib/flavour-$LVM_TEST_FLAVOUR" ]] || { echo "NOTE: Flavour '$LVM_TEST_FLAVOUR' does not exist">&2; initskip; }
 . "lib/flavour-$LVM_TEST_FLAVOUR"
 
-test -n "$SKIP_WITHOUT_CLVMD" && test "$LVM_TEST_LOCKING" -ne 3 && initskip
-test -n "$SKIP_WITH_CLVMD" && test "$LVM_TEST_LOCKING" = 3 && initskip
+[[ "$SKIP_WITHOUT_CLVMD" != 0 && "$LVM_TEST_LOCKING" -ne 3 ]] && initskip
+[[ "$SKIP_WITH_CLVMD" != 0 && "$LVM_TEST_LOCKING" = 3 ]] && initskip
 
 # When requested testing LVMLOCKD & LVMPOLLD - ignore skipping of marked test for lvmpolld
-test -n "$LVM_TEST_LVMLOCKD" && test -n "$LVM_TEST_LVMPOLLD" && SKIP_WITH_LVMPOLLD=
+[[ "$LVM_TEST_LVMLOCKD" != 0 && "$LVM_TEST_LVMPOLLD" != 0 ]] && SKIP_WITH_LVMPOLLD=0
 
-test -n "$SKIP_WITH_LVMPOLLD" && test -n "$LVM_TEST_LVMPOLLD" && initskip
+[[ "$SKIP_WITH_LVMPOLLD" != 0 && "$LVM_TEST_LVMPOLLD" != 0 ]] && initskip
 
-test -n "$SKIP_WITH_LVMLOCKD" && test -n "$LVM_TEST_LVMLOCKD" && initskip
+[[ "$SKIP_WITH_LVMLOCKD" != 0 && "$LVM_TEST_LVMLOCKD" != 0 ]] && initskip
 
-test -n "$SKIP_WITH_DEVICES_FILE" && test -n "$LVM_TEST_DEVICES_FILE" && initskip
+[[ "$SKIP_WITH_DEVICES_FILE" != 0 && "$LVM_TEST_DEVICES_FILE" != 0 ]] && initskip
 
 unset CDPATH
 
@@ -107,7 +107,7 @@ COMMON_PREFIX="LVMTEST"
 PREFIX="${COMMON_PREFIX}$$"
 
 # Check we are not conflicting with some exiting setup
-if test -z "$SKIP_ROOT_DM_CHECK" ; then
+if [[ "$SKIP_ROOT_DM_CHECK" -eq 0 ]]; then
 	d=$(dmsetup info -c -o name --noheadings --rows -S "suspended=Suspended||name=~${PREFIX}[^0-9]")
 	case "$d" in
 	"No devices found") ;;
@@ -116,8 +116,8 @@ if test -z "$SKIP_ROOT_DM_CHECK" ; then
 	esac
 fi
 
-test -n "$LVM_TEST_DIR" || LVM_TEST_DIR=${TMPDIR:-/tmp}
-test "$LVM_TEST_DIR" = "/dev" && die "Setting LVM_TEST_DIR=/dev is not supported!"
+[[ -n "$LVM_TEST_DIR" ]] || LVM_TEST_DIR=${TMPDIR:-/tmp}
+[[ "$LVM_TEST_DIR" = "/dev" ]] && die "Setting LVM_TEST_DIR=/dev is not supported!"
 
 TESTDIR=$(mkdtemp "$LVM_TEST_DIR" "$PREFIX.XXXXXXXXXX") || \
 	die "failed to create temporary directory in \"$LVM_TEST_DIR\""
@@ -129,9 +129,9 @@ LVM_LOG_FILE_MAX_LINES=${LVM_LOG_FILE_MAX_LINES-1000000}
 LVM_EXPECTED_EXIT_STATUS=1
 export LVM_LOG_FILE_EPOCH LVM_LOG_FILE_MAX_LINES LVM_EXPECTED_EXIT_STATUS
 
-if test -z "$SKIP_ROOT_DM_CHECK" ; then
+if [[ "$SKIP_ROOT_DM_CHECK" -eq 0 ]]; then
 	# Teardown only with root
-	test -n "$BASH" && trap 'set +vx; STACKTRACE; set -vx' ERR
+	[[ -n "$BASH" ]] && trap 'set +vx; STACKTRACE; set -vx' ERR
 	trap 'aux teardown' EXIT # don't forget to clean up
 else
 	trap 'cd $TESTOLDPWD; rm -rf "${TESTDIR:?}"' EXIT
@@ -142,7 +142,7 @@ mkdir lib tmp
 
 # Setting up symlink from $i to $TESTDIR/lib
 # library libdevmapper-event-lvm2.so.2.03 is needed with name
-test -n "${abs_top_builddir+varset}" && \
+[[ -n "${abs_top_builddir+varset}" ]] && \
     find "$abs_top_builddir/daemons/dmeventd/plugins/" -name '*.so*' \
     -exec ln -s -t lib "{}" +
 find "$TESTOLDPWD/lib" ! \( -name '*.sh' -o -name '*.[cdo]' \
@@ -161,10 +161,10 @@ export DM_DEFAULT_NAME_MANGLING_MODE DM_DEV_DIR LVM_SYSTEM_DIR DM_ABORT_ON_INTER
 mkdir "$LVM_SYSTEM_DIR" "$DM_DEV_DIR"
 MACHINEID=$(uuidgen 2>/dev/null || echo "abcdefabcdefabcdefabcdefabcdefab")
 echo "${MACHINEID//-/}" > "$LVM_SYSTEM_DIR/machine-id"   # remove all '-'
-if test -n "$LVM_TEST_DEVDIR" ; then
-	test -d "$LVM_TEST_DEVDIR" || die "Test device directory LVM_TEST_DEVDIR=\"$LVM_TEST_DEVDIR\" is not valid."
+if [[ -n "$LVM_TEST_DEVDIR" ]]; then
+	[[ -d "$LVM_TEST_DEVDIR" ]] || die "Test device directory LVM_TEST_DEVDIR=\"$LVM_TEST_DEVDIR\" is not valid."
 	DM_DEV_DIR=$LVM_TEST_DEVDIR
-elif test -z "$SKIP_ROOT_DM_CHECK" ; then
+elif [[ "$SKIP_ROOT_DM_CHECK" -eq 0 ]]; then
 	mknod "$DM_DEV_DIR/testnull" c 1 3 || die "mknod failed"
 	echo >"$DM_DEV_DIR/testnull" || \
 		die "Filesystem does support devices in $DM_DEV_DIR (mounted with nodev?)"
@@ -175,7 +175,7 @@ fi
 
 echo "$TESTNAME" >TESTNAME
 # Require 50M of free space in testdir
-test "$(df -k -P . | awk '/\// {print $4}')" -gt $(( SKIP_WITH_LOW_SPACE * 1024 )) || \
+[[ "$(df -k -P . | awk '/\// {print $4}')" -gt $(( SKIP_WITH_LOW_SPACE * 1024 )) ]] || \
 	skip "Testing requires more than ${SKIP_WITH_LOW_SPACE}M of free space in directory $TESTDIR!\\n$(df -H | sed -e 's,^,## DF:   ,')"
 
 echo "Kernel is $(uname -a)"
@@ -190,7 +190,7 @@ prepare_test_vars
 
 # Set strict shell mode
 # see: http://redsymbol.net/articles/unofficial-bash-strict-mode
-test -n "$BASH" && set -euE -o pipefail
+[[ -n "$BASH" ]] && set -euE -o pipefail
 
 # Vars for harness
 echo "@TESTDIR=$TESTDIR"
@@ -204,23 +204,18 @@ HOSTNAME=$(hostname -I 2>/dev/null) || HOSTNAME=
 HOSTNAME="$(hostname 2>/dev/null) ${HOSTNAME}" || true
 echo "## HOST: $HOSTNAME"
 
-if test -z "$SKIP_ROOT_DM_CHECK" ; then
-	aux lvmconf
-fi
+[[ "$SKIP_ROOT_DM_CHECK" -eq 0 ]] && aux lvmconf
 
-test -n "$LVM_TEST_LVMPOLLD" && {
+if [[ "$LVM_TEST_LVMPOLLD" != 0 ]]; then
 	export LVM_LVMPOLLD_SOCKET="$TESTDIR/lvmpolld.socket"
 	export LVM_LVMPOLLD_PIDFILE="$TESTDIR/lvmpolld.pid"
 	aux prepare_lvmpolld
-}
+fi
 
 export SHARED=""
 
-if test -n "$LVM_TEST_LVMLOCKD" ; then
-	if test -n "$LVM_TEST_LOCK_TYPE_SANLOCK" ; then
-		aux lvmconf 'local/host_id = 1'
-	fi
-
+if [[ "$LVM_TEST_LVMLOCKD" != 0 ]]; then
+	[[ "$LVM_TEST_LOCK_TYPE_SANLOCK" != 0 ]] && aux lvmconf 'local/host_id = 1'
 	export SHARED="--shared"
 fi
 
@@ -228,9 +223,7 @@ fi
 # for check_lvmlockd_{sanlock,dlm}, lvmlockd is started once by
 # aa-lvmlockd-{sanlock,dlm}-prepare.sh and left running for all shell tests.
 
-if test -n "$LVM_TEST_LVMLOCKD_TEST" ; then
-	aux prepare_lvmlockd
-fi
+[[ "$LVM_TEST_LVMLOCKD_TEST" != 0 ]] && aux prepare_lvmlockd
 
 echo "<======== Processing test: \"$TESTNAME\" ========>"
 

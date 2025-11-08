@@ -18,7 +18,7 @@ aux lvmconf 'devices/md_component_detection = 1'
 
 aux prepare_devs 4
 
-if test -n "$LVM_TEST_LVM1" ; then
+if [[ "${LVM_TEST_LVM1:-0}" != 0 ]] ; then
 mdatypes='1 2'
 else
 mdatypes='2'
