@@ -956,12 +956,13 @@ void dm_event_log(const char *subsys, int level, const char *file,
 		prio = LOG_CRIT;
 	}
 
-	/* Serialize to keep lines readable */
-	pthread_mutex_lock(&_log_mutex);
-
 	if (_use_syslog) {
+		/* vsyslog() is thread-safe per POSIX, no mutex needed */
 		vsyslog(prio, format, ap);
 	} else {
+		/* Serialize to keep lines readable */
+		pthread_mutex_lock(&_log_mutex);
+
 		if (_debug_level) {
 #define _NSEC_PER_SEC (1000000000LL)
 #ifdef HAVE_REALTIME
@@ -989,9 +990,9 @@ void dm_event_log(const char *subsys, int level, const char *file,
 		vfprintf(stream, _(format), ap);
 		fputc('\n', stream);
 		(void) fflush(stream);
+		pthread_mutex_unlock(&_log_mutex);
 	}
 
-	pthread_mutex_unlock(&_log_mutex);
 
 	if (_abort_on_internal_errors < 0)
 		/* Set when env DM_ABORT_ON_INTERNAL_ERRORS is not "0" */
