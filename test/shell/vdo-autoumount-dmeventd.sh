@@ -112,8 +112,8 @@ lvs -a $vg
 
 # Kill device holding process - umount should work now
 kill "$PID_SLEEP"
+wait "$PID_SLEEP" || true
 PID_SLEEP=
-wait
 
 # Could loop here for a few secs so dmeventd can do some work
 # In the worst case check only happens every 10 seconds :(
