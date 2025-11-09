@@ -161,8 +161,8 @@ export LVM_LOG_FILE_EPOCH LVM_LOG_FILE_MAX_LINES LVM_EXPECTED_EXIT_STATUS
 
 if [[ "$SKIP_ROOT_DM_CHECK" -eq 0 ]]; then
 	# Teardown only with root
-	[[ -n "$BASH" ]] && trap 'set +vx; STACKTRACE; set -vx' ERR
-	trap 'aux teardown' EXIT # don't forget to clean up
+	[[ -n "$BASH" ]] && trap 'set +vx; STACKTRACE; exit 1' ERR
+	trap 'set +vx; aux teardown' EXIT # don't forget to clean up
 else
 	trap 'cd $TESTOLDPWD; rm -rf "${TESTDIR:?}"' EXIT
 fi
