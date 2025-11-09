@@ -12,9 +12,7 @@
 
 
 
-. lib/inittest --skip-with-lvmpolld
-
-[ -z "$LVM_TEST_LOCK_TYPE_IDM" ] && skip;
+. lib/inittest --skip-with-lvmpolld --with-lock-type-idm
 
 aux prepare_devs 8
 get_devs

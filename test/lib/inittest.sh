@@ -19,6 +19,11 @@ SKIP_ROOT_DM_CHECK=${SKIP_ROOT_DM_CHECK:-0}
 SKIP_WITH_DEVICES_FILE=${SKIP_WITH_DEVICES_FILE:-0}
 SKIP_WITH_LVMLOCKD=${SKIP_WITH_LVMLOCKD:-0}
 SKIP_WITH_LVMPOLLD=${SKIP_WITH_LVMPOLLD:-0}
+REQUIRE_MULTI_HOST=1
+REQUIRE_IDM_FAILURE=1
+REQUIRE_LOCK_TYPE_IDM=1
+REQUIRE_LOCK_TYPE_DLM=1
+REQUIRE_LOCK_TYPE_SANLOCK=1
 while [[ "$#" -gt 0 ]]; do
 	case "$1" in
 		--skip-root-dm-check)
@@ -32,6 +37,21 @@ while [[ "$#" -gt 0 ]]; do
 			;;
 		--skip-with-lvmlockd)
 			SKIP_WITH_LVMLOCKD=1
+			;;
+		--with-multi-host)
+			REQUIRE_MULTI_HOST=${LVM_TEST_MULTI_HOST:-0}
+			;;
+		--with-idm-failure)
+			REQUIRE_IDM_FAILURE=${LVM_TEST_FAILURE:-0}
+			;;
+		--with-lock-type-idm)
+			REQUIRE_LOCK_TYPE_IDM=${LVM_TEST_LOCK_TYPE_IDM:-0}
+			;;
+		--with-lock-type-dlm)
+			REQUIRE_LOCK_TYPE_DLM=${LVM_TEST_LOCK_TYPE_DLM:-0}
+			;;
+		--with-lock-type-sanlock)
+			REQUIRE_LOCK_TYPE_SANLOCK=${LVM_TEST_LOCK_TYPE_SANLOCK:-0}
 			;;
 		*)
 			echo "Unknown option: $1"
@@ -91,6 +111,16 @@ SKIP_WITH_LOW_SPACE=${SKIP_WITH_LOW_SPACE-50}
 [[ "$SKIP_WITH_LVMLOCKD" != 0 && "$LVM_TEST_LVMLOCKD" != 0 ]] && initskip
 
 [[ "$SKIP_WITH_DEVICES_FILE" != 0 && "$LVM_TEST_DEVICES_FILE" != 0 ]] && initskip
+
+[[ "$REQUIRE_MULTI_HOST" = 0 ]] && initskip
+
+[[ "$REQUIRE_IDM_FAILURE" = 0 ]] && initskip
+
+[[ "$REQUIRE_LOCK_TYPE_IDM" = 0 ]] && initskip
+
+[[ "$REQUIRE_LOCK_TYPE_DLM" = 0 ]] && initskip
+
+[[ "$REQUIRE_LOCK_TYPE_SANLOCK" = 0 ]] && initskip
 
 unset CDPATH
 

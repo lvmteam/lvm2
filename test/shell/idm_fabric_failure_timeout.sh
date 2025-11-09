@@ -12,10 +12,7 @@
 
 
 
-. lib/inittest --skip-with-lvmpolld
-
-[ -z "$LVM_TEST_LOCK_TYPE_IDM" ] && skip
-[ -z "$LVM_TEST_FAILURE" ] && skip
+. lib/inittest --skip-with-lvmpolld --with-idm-failure --with-lock-type-idm
 
 aux prepare_devs 1
 aux extend_filter_LVMTEST

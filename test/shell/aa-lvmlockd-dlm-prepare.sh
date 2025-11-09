@@ -13,9 +13,7 @@
 test_description='Set up things to run tests with dlm'
 
 
-. lib/inittest --skip-with-lvmpolld
-
-[ -z "$LVM_TEST_LOCK_TYPE_DLM" ] && skip;
+. lib/inittest --skip-with-lvmpolld --with-lock-type-dlm
 
 aux prepare_dlm
 aux prepare_lvmlockd

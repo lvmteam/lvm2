@@ -12,9 +12,7 @@
 
 test_description='persistent reservations'
 
-. lib/inittest
-
-[ -z "$LVM_TEST_LOCK_TYPE_SANLOCK" ] && skip;
+. lib/inittest --with-lock-type-sanlock
 
 # Create a device and a VG that are both outside the scope of
 # the standard lvm test suite so that they will not be removed

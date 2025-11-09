@@ -21,10 +21,8 @@
 #     LVM_TEST_BACKING_DEVICE=/dev/sdj3,/dev/sdk3,/dev/sdl3 \
 #     LVM_TEST_MULTI_HOST=1 T=multi_hosts_lv_ex_timeout_hostb.sh
 
+. lib/inittest --skip-with-lvmpolld --with-multi-host
 
-. lib/inittest --skip-with-lvmpolld
-
-[ -z "$LVM_TEST_MULTI_HOST" ] && skip;
 
 IFS=',' read -r -a BLKDEVS <<< "$LVM_TEST_BACKING_DEVICE"
 

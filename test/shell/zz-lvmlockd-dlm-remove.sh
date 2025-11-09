@@ -12,9 +12,7 @@
 
 test_description='Remove the dlm test setup'
 
-. lib/inittest
-
-[ -z "$LVM_TEST_LOCK_TYPE_DLM" ] && skip;
+. lib/inittest --with-lock-type-dlm
 
 # FIXME: collect debug logs (only if a test failed?)
 # lvmlockctl -d > lvmlockd-debug.txt

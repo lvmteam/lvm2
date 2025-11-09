@@ -22,9 +22,8 @@
 #     LVM_TEST_MULTI_HOST=1 T=multi_hosts_lv_sh_timeout_hostb.sh
 
 
-. lib/inittest --skip-with-lvmpolld
+. lib/inittest --skip-with-lvmpolld --with-multi-host
 
-[ -z "$LVM_TEST_MULTI_HOST" ] && skip;
 
 IFS=',' read -r -a BLKDEVS <<< "$LVM_TEST_BACKING_DEVICE"
 

@@ -13,9 +13,7 @@
 test_description='Set up things to run tests with idm'
 
 
-. lib/inittest --skip-with-lvmpolld
-
-[ -z "$LVM_TEST_LOCK_TYPE_IDM" ] && skip;
+. lib/inittest --skip-with-lvmpolld --with-lock-type-idm
 
 aux prepare_idm
 aux prepare_lvmlockd

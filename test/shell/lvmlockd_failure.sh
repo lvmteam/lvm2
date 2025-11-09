@@ -11,9 +11,7 @@
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
 
-. lib/inittest --skip-with-lvmpolld
-
-[ -z "$LVM_TEST_FAILURE" ] && skip
+. lib/inittest --skip-with-lvmpolld --with-idm-failure
 
 aux prepare_vg 3
 
