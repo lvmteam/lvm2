@@ -125,7 +125,7 @@ _reshape_layout raid5_ls 3 4 $vg $lv1 --stripesize 256K
 check lv_first_seg_field $vg/$lv1 stripesize "256.00k"
 
 # Convert raid5(_n) -> striped testing raid5_ls gets rejected
-not _lvconvert striped striped 3 3 $vg $lv1 512k
+not _lvconvert striped striped 3 3 $vg $lv1 "512.00k"
 _reshape_layout raid5_n 3 4 $vg $lv1
 _lvconvert striped striped 3 3 $vg $lv1
 
