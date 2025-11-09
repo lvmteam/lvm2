@@ -1235,17 +1235,13 @@ delay_dev() {
 
 disable_dev() {
 	local dev
-	local silent=""
 	local error=""
 	local notify=""
 	local maj
 	local min
 
 	while [[ -n "$1" ]]; do
-	    if [[ "$1" = "--silent" ]]; then
-		silent=1
-		shift
-	    elif [[ "$1" = "--error" ]]; then
+	    if [[ "$1" = "--error" ]]; then
 		error=1
 		shift
 	    else
@@ -1270,12 +1266,6 @@ disable_dev() {
 
 enable_dev() {
 	local dev
-	local silent=""
-
-	if [[ "$1" = "--silent" ]]; then
-	    silent=1
-	    shift
-	fi
 
 	rm -f debug.log strace.log
 	init_udev_transaction
@@ -1347,12 +1337,6 @@ restore_dm_mirror() {
 # this is a quick way to restore to this table entry
 restore_from_devtable() {
 	local dev
-	local silent=""
-
-	if [[ "$1" = "--silent" ]]; then
-	    silent=1
-	    shift
-	fi
 
 	rm -f debug.log strace.log
 	init_udev_transaction
