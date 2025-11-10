@@ -515,14 +515,14 @@ kill_sleep_kill_() {
 	local pid
 
 	if [[ -s "$pidfile"  ]]; then
-		pid=$(< "$pidfile")
+		pid=( $(< "$pidfile") )
 		rm -f "$pidfile"
 		[[ "$pidfile" = "LOCAL_LVMDBUSD" ]] && killall -9 lvmdbusd || true
-		kill -TERM "$pid" 2>/dev/null || return 0
+		kill -TERM "${pid[@]}" 2>/dev/null || return 0
 		for i in {0..10} ; do
-			ps "$pid" >/dev/null || return 0
+			ps "${pid[@]}" >/dev/null || return 0
 			if [[ "$slow" -eq 0  ]]; then sleep .2 ; else sleep 1 ; fi
-			kill -KILL "$pid" 2>/dev/null || true
+			kill -KILL "${pid[@]}" 2>/dev/null || true
 		done
 	fi
 }
