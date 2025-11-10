@@ -150,7 +150,7 @@ lvconvert --force --yes --uncache $vg/$lv1
 # Ignore this test with Valgrind pass as commands executes
 # slower and cache might be fast enough to clean itself...
 if [ "${LVM_VALGRIND:-0}" -eq 0 ]; then
-not "$FSCK" -n "$DM_DEV_DIR/$vg/$lv1"
+should not "$FSCK" -n "$DM_DEV_DIR/$vg/$lv1"
 fi
 
 aux enable_dev "$dev1"
