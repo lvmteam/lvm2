@@ -982,14 +982,26 @@ int lvmdevices(struct cmd_context *cmd, int argc, char **argv)
 	}
 
 	/*
-	 * By itself, --deldev <devname> specifies a device name to remove.
-	 * With an id type specified, --deldev specifies a device id to remove:
-	 * --deldev <idname> --deviceidtype <idtype>
+	 * --delid <idname> --deviceidtype <idtype> removes an entry by idname.
+	 *
+	 * --deldev <idname> --deviceidtype <idtype> is an old way to remove by idname.
+	 *
+	 * (--deldev and --adddev normally accept <devname>, but an old special case
+	 * allowed deldev to replace <devname> with <idname> only when --deviceidtype
+	 * was set.)
 	 */
-	if (arg_is_set(cmd, deldev_ARG) && arg_is_set(cmd, deviceidtype_ARG)) {
+	if (arg_is_set(cmd, delid_ARG) ||
+	    (arg_is_set(cmd, deldev_ARG) && arg_is_set(cmd, deviceidtype_ARG))) {
 		const char *idtype_str = arg_str_value(cmd, deviceidtype_ARG, NULL);
-		const char *idname = arg_str_value(cmd, deldev_ARG, NULL);
+		const char *idname;
 		int idtype;
+
+		if (arg_is_set(cmd, delid_ARG) && idtype_str)
+			idname = arg_str_value(cmd, delid_ARG, NULL);
+		else if (arg_is_set(cmd, deldev_ARG) && idtype_str)
+			idname = arg_str_value(cmd, deldev_ARG, NULL);
+		else
+			goto_bad;
 
 		if (!idtype_str || !idname || !strlen(idname) || !strlen(idtype_str))
 			goto_bad;
@@ -1000,7 +1012,7 @@ int lvmdevices(struct cmd_context *cmd, int argc, char **argv)
 		}
 
 		if (!strncmp(idname, "/dev/", 5))
-			log_warn("WARNING: To remove a device by name, do not include --deviceidtype.");
+			log_warn("WARNING: To remove a device by name, use --deldev without --deviceidtype.");
 
 		if (!(du = get_du_for_device_id(cmd, idtype, idname))) {
 			log_error("No devices file entry with device id %s %s.", idtype_str, idname);

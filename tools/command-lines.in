@@ -1504,6 +1504,10 @@ lvmdevices --addid String --deviceidtype String
 ID: lvmdevices_edit
 DESC: Find the device with the given device_id and add it to the devices file.
 
+lvmdevices --delid String --deviceidtype String
+ID: lvmdevices_edit
+DESC: Remove the devices file entry with the given device_id.
+
 ---
 
 lvreduce --size NSizeMB LV

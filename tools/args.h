@@ -216,6 +216,9 @@ arg(deldev_ARG, '\0', "deldev", string_VAL, 0, 0,
     "When used alone, --deldev specifies a device name.\n"
     "When used with --deviceidtype, --deldev specifies a device id.\n")
 
+arg(delid_ARG, '\0', "delid", string_VAL, 0, 0,
+    "Remove the device with the specified device ID from the devices file.\n")
+
 arg(delnotfound_ARG, '\0', "delnotfound", 0, 0, 0,
     "Remove devices file entries with no matching device.\n")
 
