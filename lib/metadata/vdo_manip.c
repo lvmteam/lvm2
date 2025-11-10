@@ -429,6 +429,8 @@ int convert_vdo_pool_lv(struct logical_volume *data_lv,
 		return 0;
 	}
 
+	sync_local_dev_names(cmd);
+
 	vdo_logical_size -= 2 * vdo_pool_header_size;
 
 	if (vdo_logical_size < extent_size) {
