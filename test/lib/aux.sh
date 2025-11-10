@@ -113,6 +113,7 @@ prepare_sanlock() {
 }
 
 prepare_idm() {
+	which seagate_ilm >/dev/null || skip "seagate_ilm command not found"
 	pgrep seagate_ilm && skip "Cannot run while existing seagate_ilm process exists."
 
 	seagate_ilm -D 0 -l 0 -L 7 -E 7 -S 7
