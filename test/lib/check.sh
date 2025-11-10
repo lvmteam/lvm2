@@ -188,7 +188,7 @@ linear() {
 			"$(lvl "$lv" -o+devices)"
 }
 
-# in_sync <VG> <LV> <ignore 'a'>
+# check in_sync <VG> <LV> <ignore 'a'>
 # Works for "mirror" and "raid*"
 in_sync() {
 	local a

@@ -563,6 +563,7 @@ kill_tagged_processes() {
 }
 
 teardown() {
+	local cfg
 	local TEST_LEAKED_DEVICES=""
 	echo -n "## teardown..."
 	unset LVM_LOG_FILE_EPOCH
@@ -578,8 +579,7 @@ teardown() {
 	fi
 
 	kill_tagged_processes
-
-	if [[ -n "$LVM_TEST_LVMLOCKD_TEST"  ]]; then
+	if [[ "${LVM_TEST_LVMLOCKD_TEST:-0}" != 0 ]]; then
 		echo ""
 		echo "## stopping lvmlockd in teardown"
 		kill_sleep_kill_ LOCAL_LVMLOCKD 0
@@ -752,7 +752,7 @@ prepare_real_devs() {
 	printf "%s\\n" "${REAL_DEVICES[@]}" > REAL_DEVICES
 }
 
-# A drop-in replacement for prepare_loop() that uses scsi_debug to create
+# A drop-in replacement for 'aux prepare_loop()' that uses scsi_debug to create
 # a ramdisk-based SCSI device upon which all LVM devices will be created
 # - scripts must take care not to use a DEV_SIZE that will induce OOM-killer
 prepare_scsi_debug_dev() {
@@ -787,7 +787,7 @@ prepare_scsi_debug_dev() {
 	SCSI_DEBUG_DEV="$DM_DEV_DIR/$(basename "$DEBUG_DEV")"
 	echo "$SCSI_DEBUG_DEV" > SCSI_DEBUG_DEV
 	echo "$SCSI_DEBUG_DEV" > BACKING_DEV
-	# Setting $LOOP provides means for prepare_devs() override
+	# Setting $LOOP provides means for 'aux prepare_devs()' override
 	[[ "$DEBUG_DEV" = "$SCSI_DEBUG_DEV" ]] || ln -snf "$DEBUG_DEV" "$SCSI_DEBUG_DEV"
 }
 
@@ -1225,7 +1225,7 @@ common_dev_() {
 # Parameters: {device path} [read delay ms] [write delay ms] [offset[:[size]]]...
 # Original device is restored when both delay params are 0 (or missing).
 # If the size is missing, the remaining portion of device is taken
-# i.e.  delay_dev "$dev1" 0 200 256:
+# i.e. aux delay_dev "$dev1" 0 200 256:
 delay_dev() {
 	if [[ ! -f HAVE_DM_DELAY  ]]; then
 		target_at_least dm-delay 1 1 0 || return 0
@@ -1822,6 +1822,7 @@ wait_for_sync() {
 }
 
 wait_recalc() {
+	local sync
 	local checklv=$1
 
 	for i in {1..100} ; do
