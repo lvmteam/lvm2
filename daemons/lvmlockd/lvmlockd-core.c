@@ -4183,7 +4183,7 @@ static void work_fence(struct action *act, int *retry)
 	struct action *ah;
 	struct owner ah_owner;
 	uint32_t new_msg_id;
-	int ah_result;
+	int ah_result = 0;
 	int found_busy = 0;
 	int found_done = 0;
 	int rv;
