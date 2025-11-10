@@ -319,7 +319,7 @@ function _remove_stripes
 	_skip_or_fsck "$DM_DEV_DIR/$vg/$lv"
 
 	# Have to remove freed legs before another restriping conversion. Will fail while reshaping is ongoing as stripes are still in use
-	not _reshape_layout "$raid_type" $(( data_stripes + 1 )) 0 1 $vg $lv --force
+	not _reshape_layout "$raid_type" $(( data_stripes + 1 )) $vg $lv 0 1 --force
 	aux wait_for_sync $vg $lv 1
 
 	# Remove freed legs as they are now idle has to succeed without --force
