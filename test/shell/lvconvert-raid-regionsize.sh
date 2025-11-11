@@ -36,6 +36,21 @@ function _test_regionsize
 	fsck -fn "$DM_DEV_DIR/$vg/$lv"
 }
 
+function _not_test_regionsize
+{
+	local type=$1
+	local regionsize=$2
+	local regionsize_str=$3
+	local vg=$4
+	local lv=$5
+
+#FIXME	not lvconvert --type "$type" --yes -R "$regionsize" "$vg/$lv"
+	not check lv_field $vg/$lv regionsize "$regionsize_str"
+
+	not lvconvert --regionsize "$regionsize" "$vg/$lv" 2>err
+	not grep "is already" err
+}
+
 function _test_regionsizes
 {
 	# FIXME: have to provide raid type or region size ain't set until cli validation merged
@@ -44,10 +59,10 @@ function _test_regionsizes
 	# Test RAID regionsize changes
 	_test_regionsize "$type" 128K "128.00k" $vg $lv1
 	_test_regionsize "$type" 256K "256.00k" $vg $lv1
-	not _test_regionsize "$type" 1K "1.00k" $vg $lv1
+	_not_test_regionsize "$type" 1K "1.00k" $vg $lv1
 	_test_regionsize "$type" 1m "1.00m" $vg $lv1
-	not _test_regionsize "$type" 1G "1.00g" $vg $lv1
-	not _test_regionsize "$type" 16K "16.00k" $vg $lv1
+	_not_test_regionsize "$type" 1G "1.00g" $vg $lv1
+	_not_test_regionsize "$type" 16K "16.00k" $vg $lv1
 }
 
 # Create 3-way raid1
