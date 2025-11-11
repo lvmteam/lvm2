@@ -3471,7 +3471,7 @@ static int add_lockspace_thread(const char *ls_name,
 	int rv;
 
 	log_debug("add_lockspace_thread %s %s version %u vg_args %s",
-		  lm_str(lm_type), ls_name, act ? act->version : 0, vg_args);
+		  lm_str(lm_type), ls_name, act ? act->version : 0, vg_args ?: "");
 
 	if (!(ls = alloc_lockspace()))
 		return -ENOMEM;
@@ -3479,7 +3479,8 @@ static int add_lockspace_thread(const char *ls_name,
 	strncpy(ls->name, ls_name, MAX_NAME);
 	ls->lm_type = lm_type;
 
-	if (lockd_lockargs_get_meta_flags(vg_args, &ls->lock_args_flags) < 0) {
+	if (vg_args && strlen(vg_args) &&
+	    lockd_lockargs_get_meta_flags(vg_args, &ls->lock_args_flags) < 0) {
 		log_error("add_lockspace_thread %s lock_args invalid %s", ls->name, vg_args);
 		free(ls);
 		return -EARGS;
