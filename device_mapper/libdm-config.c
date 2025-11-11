@@ -1069,9 +1069,6 @@ static const char *_find_config_str(const void *start, node_lookup_fn find_fn,
 			log_warn("WARNING: Ignoring unsupported value for %s.", path);
 	}
 
-	if (fail)
-		log_very_verbose("%s not found in config: defaulting to \"%s\"",
-				 path, fail);
 	return fail;
 }
 
@@ -1097,8 +1094,6 @@ static int64_t _find_config_int64(const void *start, node_lookup_fn find,
 		return n->v->v.i;
 	}
 
-	log_very_verbose("%s not found in config: defaulting to %" PRId64,
-			 path, fail);
 	return fail;
 }
 
@@ -1111,9 +1106,6 @@ static float _find_config_float(const void *start, node_lookup_fn find,
 		/* log_very_verbose("Setting %s to %f", path, n->v->v.f); */
 		return n->v->v.f;
 	}
-
-	log_very_verbose("%s not found in config: defaulting to %f",
-			 path, fail);
 
 	return fail;
 
@@ -1168,9 +1160,6 @@ static int _find_config_bool(const void *start, node_lookup_fn find,
 			;
 		}
 	}
-
-	log_very_verbose("%s not found in config: defaulting to %d",
-			 path, fail);
 
 	return fail;
 }
