@@ -3479,7 +3479,7 @@ static int add_lockspace_thread(const char *ls_name,
 	strncpy(ls->name, ls_name, MAX_NAME);
 	ls->lm_type = lm_type;
 
-	if (vg_args && strlen(vg_args) &&
+	if (vg_args && strlen(vg_args) && (lm_type == LD_LM_SANLOCK) &&
 	    lockd_lockargs_get_meta_flags(vg_args, &ls->lock_args_flags) < 0) {
 		log_error("add_lockspace_thread %s lock_args invalid %s", ls->name, vg_args);
 		free(ls);
