@@ -118,10 +118,18 @@ is_lv_opened_ "$vg/$lv2" || \
 	die "$mntusedir is not mounted here (sleep already expired??)"
 
 # Kill device holding process
-kill $PID_SLEEP
-wait
+kill "$PID_SLEEP"
+wait "$PID_SLEEP" || true
 
-not is_lv_opened_ "$vg/$lv2" || {
-	mount
+for i in $(seq 1 12) ; do
+	is_lv_opened_ "$vg/$lv2" || break
+	sleep 1
+	echo $i
+done
+
+is_lv_opened_ "$vg/$lv2" && {
+	mount | grep "$lv2"
 	die "$mntusedir should have been unmounted by dmeventd!"
 }
+
+exit 0  # -> cleanup_mounted_and_teardown
