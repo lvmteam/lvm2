@@ -106,7 +106,7 @@ sel pv 'tags=["pv_tag3" && "pv_tag2" && "pv_tag1"]' "$dev1"
 sel pv 'tags=["pv_tag4" || "pv_tag3" || "pv_tag1" || "pv_tag2"]' "$dev1" "$dev6"
 sel pv 'tags!=["pv_tag1"]' "$dev1" "$dev2" "$dev3" "$dev4" "$dev5" "$dev6"
 # check mixture of && and || - this is not allowed
-not sel pv 'tags=["pv_tag1" && "pv_tag2" || "pv_tag3"]'
+sel pv 'tags=["pv_tag1" && "pv_tag2" || "pv_tag3"]' && die "Mixture of && and || shall not pass."
 # check selection with blank value
 sel lv 'tags=""' xyz orig snap
 sel lv 'tags={}' xyz orig snap
@@ -177,7 +177,7 @@ sel lv 'snap_percent=100' snap
 # % char is accepted as suffix for percent values
 sel lv 'snap_percent=100%' snap
 # percent values over 100% are not accepted
-not sel lv 'snap_percent=101%'
+sel lv 'snap_percent=101%' && die "Percent values over 100% shall not pass."
 
 #########################
 # REGEX FIELD SELECTION #
@@ -201,7 +201,7 @@ sel vg 'vg_mda_copies=2' $vg1
 # when comparing ranges - unmanaged is mapped onto 2^64 - 1 internally,
 # so we need to skip this internal value if it matches with selection criteria!
 sel vg 'vg_mda_copies>=2' $vg1
-not sel vg 'vg_mda_copies=18446744073709551615'
+sel vg 'vg_mda_copies=18446744073709551615' && die "vg_mda_copies over 2^64 - 1 shall not pass."
 
 sel lv 'lv_read_ahead=auto' vol1 vol2 orig snap
 sel lv 'lv_read_ahead=256k' abc xyz
