@@ -31,6 +31,10 @@
 .OPA adddev
 \fIPV\fP
 ..
+.de O_addid
+.OPA addid
+\fIString\fP
+..
 .de O_addpvid
 .OPA addpvid
 \fIString\fP
@@ -52,6 +56,10 @@
 ..
 .de O_deldev
 .OPA deldev
+\fIString\fP
+..
+.de O_delid
+.OPA delid
 \fIString\fP
 ..
 .de O_delnotfound
@@ -77,12 +85,20 @@
 .OPA driverloaded
 \fBy\fP|\fBn\fP
 ..
+.de O_force
+.OPA f force
+\&\.\|.\|.\&
+..
 .de O_help
 .OPS h help
 ..
 .de O_journal
 .OPA journal
 \fIString\fP
+..
+.de O_listids
+.OPA listids
+\fIPV\fP
 ..
 .de O_lockopt
 .OPA lockopt
@@ -142,6 +158,8 @@ lvmdevices \(em Manage the devices file
 .PD 0
 .O_adddev
 .br
+.O_addid
+.br
 .O_addpvid
 .br
 .O_check
@@ -153,6 +171,8 @@ lvmdevices \(em Manage the devices file
 .O_debug
 .br
 .O_deldev
+.br
+.O_delid
 .br
 .O_delnotfound
 .br
@@ -166,9 +186,13 @@ lvmdevices \(em Manage the devices file
 .br
 .O_driverloaded
 .br
+.O_force
+.br
 .O_help
 .br
 .O_journal
+.br
+.O_listids
 .br
 .O_lockopt
 .br
@@ -205,75 +229,126 @@ lvmdevices \(em Manage the devices file
 .
 .SH DESCRIPTION
 .
-The LVM devices file lists devices that lvm can use.  The default file is
-\fI#DEFAULT_SYS_DIR#/devices/system.devices\fP, and the \fBlvmdevices\fP(8) command is used to
-add or remove device entries.  If the file does not exist, or if lvm.conf
-includes use_devicesfile=0, then lvm will not use a devices file.
+The LVM devices file is the list of devices that lvm commands will use.
+It is located at \fI#DEFAULT_SYS_DIR#/devices/system.devices\fP.
+The \fBlvmdevices\fP(8) command manages the file, and is used to
+add, remove and list devices.
 .P
-To use a device with lvm, add it to the devices file with the command
-lvmdevices --adddev, and to prevent lvm from seeing or using a device,
-remove it from the devices file with lvmdevices --deldev.  The
-vgimportdevices(8) command adds all PVs from a VG to the devices file,
-and updates the VG metadata to include device IDs of the PVs.
+.SS Listing devices
+.
+Run the lvmdevices command with no options or arguments to display the
+entries in system.devices:
+.br
+.B lvmdevices
 .P
-Commands that add new devices to the devices file necessarily look outside
-the existing devices file to find the devices being added.  pvcreate,
-vgcreate, and vgextend also look outside the devices file to create new
-PVs and add those PVs to the devices file.
+Each line begins with a current device name from the system, followed by
+its device ID from the devices file, followed by other device details used by lvm.
+A line begins with "Device none" if no device on the system matches the device ID.
+(Viewing the system.devices file directly does not indicate if a device is present
+on the system.)
 .P
-LVM records devices in the devices file using hardware-specific IDs, such
-as the WWID, and attempts to use subsystem-specific IDs for virtual device
-types (which also aim to be as unique and stable as possible.) These
-device IDs are also written in the VG metadata.  When no hardware or
-virtual ID is available, lvm falls back using the unstable device name as
-the device ID.  When devnames are used as IDs, lvm performs extra scanning
-to find devices if their devname changes, e.g. after reboot.
+.SS Adding devices
+.
+To use a device with lvm, add it to the devices file with one of the
+following commands.
 .P
-When proper device IDs are used, an lvm command will not look at devices
-outside the devices file, but when devnames are used as a fallback, lvm
-will scan devices outside the devices file to locate PVs on renamed
-devices.  A config setting search_for_devnames can be used to control the
-scanning for renamed devname entries.
+Add a device by referencing its device path:
+.br
+.B lvmdevices --adddev
+.I device
 .P
-Related to the devices file, the command option --devices <devnames>
-allows a list of devices to be specified for the command to use,
-overriding the devices file.  The listed devices act as a sort of devices
-file in terms of limiting which devices lvm will see and use.  Devices
-that are not listed will appear to be missing to the lvm command.
+Add a device by referencing its PVID:
+.br
+.B lvmdevices --addpvid
+.I PVID
 .P
-Multiple devices files can be kept in \fI#DEFAULT_SYS_DIR#/devices\fP, which
-allows lvm to be used with different sets of devices.  For example, system
-devices do not need to be exposed to a specific application, and the
-application can use lvm on its own devices that are not exposed to the
-system.  The option --devicesfile <filename> is used to select the devices
-file to use with the command.  Without the option set, the default system
-devices file is used.
+Add a device by referencing its device ID:
+.br
+.B lvmdevices --addid
+.I IDNAME
+.B --deviceidtype
+.I IDTYPE
 .P
-Setting --devicesfile "" causes lvm to not use a devices file.
+Add all of the PVs in a VG:
+.br
+.B vgimportdevices
+.I VG
 .P
-With no devices file, lvm will use any device on the system, and applies
-the filter to limit the full set of system devices.  With a devices file,
-the regex filter is not used, and the filter settings in lvm.conf or the
-command line are ignored.  The vgimportdevices command is one exception
-which does apply the regex filter when looking for a VG to import.
+Add all of the PVs in all visible VGs:
+.br
+.B vgimportdevices -a
 .P
-If a devices file exists, lvm will use it, even if it's empty.  An empty
-devices file means lvm will see no devices.
+.B pvcreate,
+.B vgcreate,
+and
+.B vgextend
+also look outside of the existing devices file to find the target device,
+and automatically add it to the devices file.
 .P
-If the system devices file does not yet exist, the pvcreate or vgcreate
-commands will create it if they see no existing VGs on the system.
-lvmdevices --addev and vgimportdevices will always create a new devices file
-if it does not yet exist.
+.SS Removing devices
+.
+Removing a device from the devices file will prevent lvm from
+seeing or using that device.  Remove a device with one of the
+following commands.
 .P
-It is recommended to use lvm commands to make changes to the devices file to
-ensure proper updates.
+Remove a device by referencing its device path:
+.br
+.B lvmdevices --deldev
+.I device
 .P
-The device ID and device ID type are included in the VG metadata and can
-be reported with pvs -o deviceid,deviceidtype.  (Note that the lvmdevices
-command does not update VG metadata, but subsequent lvm commands modifying
-the metadata will include the device ID.)
+Remove a device by referencing its PVID:
+.br
+.B lvmdevices --delpvid
+.I PVID
 .P
-Possible device ID types are:
+Remove a device by referencing its device ID:
+.br
+.B lvmdevices --delid
+.I IDNAME
+.B --deviceidtype
+.I IDTYPE
+.P
+.SS device IDs
+.
+LVM identifies devices in the devices file using hardware-specific IDs,
+such as the WWID or serial number.  Subsystem-specific IDs are used for
+virtual device types, which also aim to be unique and stable.
+When no hardware or subsystem ID is available, lvm falls back using the
+device name as the device ID.  Using device names as IDs is not optimal
+because they are not stable, and will often change after reboot.  When
+device names are used as IDs, lvm must perform extra device scanning
+to locate devices if the device name changes.
+.P
+When stable device IDs are used, lvm will not access devices outside of
+those listed in the devices file.  When device names are used as IDs, lvm
+will scan devices outside the devices file to locate PVs on devices that
+changed names.  The config setting search_for_devnames can be used to
+control lvm's behavior in locating renamed devname entries.
+.P
+A device ID has two parts: an IDTYPE and an IDNAME.
+.P
+The IDTYPE specifies the origin of the ID, and the IDNAME is the
+actual identifier.  There is a predefined set of IDTYPEs listed
+in the next section.  A devices file entry must have one of these
+ID types.  When adding a device to the devices file, lvm automatically
+chooses the best IDTYPE, which can be overridden with the --deviceidtype
+option (this is not generally recommended.)
+.P
+To display all of the possible device IDs for a device, or the value
+of one specific type, use the commands:
+.P
+.br
+.B lvmdevices --listids
+.I device
+.br
+.B lvmdevices --listids
+.I device
+.B --deviceidtype
+.I IDTYPE
+.P
+.SS device ID types
+.
+The available device ID types are:
 .br
 .IP \[bu] 2
 .B sys_wwid
@@ -309,28 +384,82 @@ is used for loop devices, the backing file name reported by sysfs.
 .IP \[bu]
 .B devname
 the device name is used if no other type applies.
+.IP \[bu]
+.B nvme_uuid, nvme_nguid, nvme_eui64
+are not generally used, but may appear for nvme devices that report
+invalid wwid values.
 .P
-The default choice for device ID type can be overridden using lvmdevices
---addev --deviceidtype <type>.  If the specified type is available for the
-device it will be used, otherwise the device will be added using the type
-that would otherwise be chosen.
+.SS sysfs files
+Most of the device ID types read the device ID value from sysfs.
+Those sysfs values can also be read directly from the following paths:
 .P
-LVM commands run by dmeventd will use the devices file
-\fI#DEFAULT_SYS_DIR#/devices/dmeventd.devices\fP if it exists,
-otherwise system.devices is used.  VGs that require the dmeventd
-service should be included in system.devices, even if they are
-included in dmeventd.devices.
+.nf
+/sys/dev/block/\fImajor\fP:\fIminor\fP/device/wwid
+/sys/dev/block/\fImajor\fP:\fIminor\fP/device/serial
+/sys/dev/block/\fImajor\fP:\fIminor\fP/wwid
+/sys/dev/block/\fImajor\fP:\fIminor\fP/device/vpd_pg83 (binary)
+/sys/dev/block/\fImajor\fP:\fIminor\fP/device/vpd_pg80 (binary)
+/sys/dev/block/\fImajor\fP:\fIminor\fP/dm/uuid (lvm reads via ioctl)
+/sys/dev/block/\fImajor\fP:\fIminor\fP/md/uuid
+/sys/dev/block/\fImajor\fP:\fIminor\fP/loop/backing_file
+.fi
+.P
+(Some sysfs values are modified before being used as the device ID,
+e.g. spaces omitted or replaced with underscores.)
+.P
+.SS devices file contents
 .
-.SS Device ID refresh
+LVM writes some additional information to the devices file in addition to
+the device IDs.  LVM commands automatically update this information if it
+changes.  This includes the last known device name, and the PV UUID (PVID)
+from the LVM disk header.
+.P
+To check if devices file content needs to be updated, run:
+.br
+.B lvmdevices --check
+.P
+To update devices file fields that may be outdated, run:
+.br
+.B lvmdevices --update
+.P
+The devices file is meant to be edited by lvm commands, not by the user.
+The devices file contains a HASH value which lvm uses to detect if the
+file has been modified since lvm last wrote it.
+When lvm updates the devices file, the previous version is moved to
+/etc/lvm/devices/backup/.
+.P
+The following fields can be found in the devices file:
+.br
+VERSION: incremented for each file update.
+.br
+PRODUCT_UUID: a unique machine ID used to detect if the system.devices
+file has been moved to a new machine, and may require updating.
+When not available, HOSTNAME is used.
+.P
+Device entry fields:
+.br
+IDTYPE: indicates the source of the device ID value in IDNAME.
+.br
+IDNAME: the unique device ID value.
+.br
+DEVNAME: the most recent device name associated with the device ID.
+.br
+PVID: the LVM PV UUID from the LVM disk header.
+.br
+PART: the partition number if a PV exists on a partition.
+.P
+.SS device ID refresh
 .
-A machine identifier is saved in the devices file, and is used to detect
-when the devices file has been created by a different machine. If the
-devices file was created by a different machine, it indicates that PVs may
-have been copied or restored onto new devices on a new machine. In this
-case, lvm will search for the PVs listed in system.devices on new devices.
-If found, the device IDs will be updated in system.devices for the
-existing PVIDs (assuming the original device IDs are also no longer
-found.)
+When LVM writes system.devices, it includes an ID of the machine running
+the command (see PRODUCT_UUID or HOSTNAME above.)  When LVM reads
+system.devices, it compares the saved value to the current machine's value
+to detect if system.devices has been copied from another machine.  When the
+saved and current values differ, it indicates that PVs may have been copied or
+restored onto new devices on a new machine.  When this happens, lvm will
+search for new devices that hold the PVIDs listed in system.devices.  If a
+PVID is found on a new device, lvm updates the device ID in system.devices
+to match the new location for the PV.  The command lvmdevices --check
+--refresh can also be used to do this manually.
 .P
 The machine identifier used in system.devices will be either the DMI
 product_uuid from
@@ -341,6 +470,85 @@ See
 .BR lvm.conf (5)
 .B device_ids_refresh_checks to
 configure this.
+.P
+.SS custom devices files
+.
+Multiple devices files can be kept in #DEFAULT_SYS_DIR#/devices, which
+allows lvm to be used with different sets of devices.  For example, a
+given application may not need to access the system's devices, and the
+system may not need to access the application's devices.  In this case,
+system.devices could list only the system's devices and
+<application>.devices file could list only the application's devices.  The
+option --devicesfile <filename> is used to select the devices file to use
+with the command.  Without the option set, the default system.devices file
+is used.
+.P
+If the special devices file \fI#DEFAULT_SYS_DIR#/devices/dmeventd.devices\fP
+exists, then dmeventd uses dmeventd.devices instead of system.devices.
+Using dmeventd.devices is necessary if VGs from separate devices files
+require the services of dmeventd.  In this case, dmeventd.devices should
+list devices from all of the VGs that require dmeventd.
+.P
+.SS disabling and overriding
+.
+There are multiple ways that the devices file feature can be disabled
+or overridden:
+.P
+.IP \[bu] 2
+no system.devices
+.br
+If the system.devices file does not exist, then the devices file feature
+is disabled.
+.IP \[bu] 2
+.B use_devicesfile=0
+.br
+If lvm.conf use_devicesfile is set to 0, then the devices file feature
+is disabled, even if the system.devices file exists.
+.br
+.IP \[bu] 2
+.B --devicesfile\ ""
+.br
+If an empty devices file name is specified on the command line, then
+that command will not use a devices file.
+.br
+.IP \[bu] 2
+.B --devices
+.I device
+.br
+If specific devices are named on the command line with --devices,
+then the command will not use a devices file, and will only access
+the named devices.
+.IP \[bu] 2
+.B pvs -A
+.br
+If given the -A or --allpvs option, the \fBpvs\fP(8) command will
+not use a devices file.
+.P
+When the devices file is disabled, lvm commands revert to using the
+lvm.conf filter.
+When the devices file is used, lvm commands ignore the lvm.conf
+filter setting, except for vgimportdevices which does apply the
+regex filter to the set of devices on the system when looking for
+VGs to import to the devices file.
+.P
+.SS VG metadata
+.
+LVM commands that write VG metadata will include the device ID of each
+PV in the VG metadata.  The device ID can be displayed with the options:
+.P
+.B pvs -o deviceidtype,deviceid
+.P
+(Note that the lvmdevices command does not update VG metadata, but
+subsequent lvm commands modifying the metadata will include the device
+ID.)
+.P
+.SS creating the devices file
+.P
+If the system.devices file does not yet exist, the pvcreate or vgcreate
+commands will create it only if they see no existing VGs on the system.
+lvmdevices --adddev and vgimportdevices will always create a new devices file
+if it does not yet exist.
+.P
 .
 .SH USAGE
 .
@@ -378,6 +586,10 @@ Update the devices file to fix incorrect values.
 .B lvmdevices
 .O_update
 .RS
+[
+.O_force
+]
+.br
 [
 .O_delnotfound
 ]
@@ -446,6 +658,48 @@ Remove the devices file entry for the given PVID.
 .B lvmdevices
 .O_delpvid
 .RS
+[ COMMON_OPTIONS ]
+.RE
+.
+.P
+\(em
+.P
+.
+Find the device with the given device_id and add it to the devices file.
+.P
+.B lvmdevices
+.O_addid
+.O_deviceidtype
+.RS
+[ COMMON_OPTIONS ]
+.RE
+.
+.P
+\(em
+.P
+.
+Remove the devices file entry with the given device_id.
+.P
+.B lvmdevices
+.O_delid
+.O_deviceidtype
+.RS
+[ COMMON_OPTIONS ]
+.RE
+.
+.P
+\(em
+.P
+.
+Print device_id types and values available for the device.
+.P
+.B lvmdevices
+.O_listids
+.RS
+[
+.O_deviceidtype
+]
+.br
 [ COMMON_OPTIONS ]
 .RE
 .P
@@ -535,6 +789,10 @@ Common options for lvm:
 Add a device to the devices file.
 .
 .TP
+.O_addid
+Find the device with the given device_id and add it to the devices file.
+.
+.TP
 .O_addpvid
 Find a device with the PVID and add the device to the devices file.
 .
@@ -565,6 +823,10 @@ messages sent to the log file and/or syslog (if configured).
 Remove a device from the devices file.
 When used alone, --deldev specifies a device name.
 When used with --deviceidtype, --deldev specifies a device id.
+.
+.TP
+.O_delid
+Remove the device with the specified device ID from the devices file.
 .
 .TP
 .O_delnotfound
@@ -601,6 +863,11 @@ If set to no, the command will not attempt to use device-mapper.
 For testing and debugging.
 .
 .TP
+.O_force
+Override various checks, confirmations and protections.
+Use with extreme caution.
+.
+.TP
 .O_help
 Display help text.
 .
@@ -612,6 +879,10 @@ enabled by the lvm.conf log/journal setting.
 command: record information about the command.
 output: record the default command output.
 debug: record full command debugging.
+.
+.TP
+.O_listids
+Print a list of device IDs available for the device.
 .
 .TP
 .O_lockopt
