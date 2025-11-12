@@ -16,18 +16,30 @@
 
 . lib/inittest --skip-with-lvmpolld
 
-init_lv_() {
+_init_lv() {
 	mkswap "$DM_DEV_DIR/$vg/$lv1"
 }
 
-test_blkid_() {
+_is_swap() {
 	local type
-	type=$(blkid -s TYPE -o value -c /dev/null "$DM_DEV_DIR/$vg/$lv1")
+	# for empty devices without any types blkid exits with return code 2
+	type=$(blkid -s TYPE -o value -c /dev/null "$DM_DEV_DIR/$vg/$lv1") || true
 	test "$type" = "swap"
 }
 
-test_msg_() {
+_is_not_swap() {
+	local type
+	# for empty devices without any types blkid exits with return code 2
+	type=$(blkid -s TYPE -o value -c /dev/null "$DM_DEV_DIR/$vg/$lv1") || true
+	[[ "$type" != "swap" ]]
+}
+
+_was_wiping() {
 	grep "Wiping swap signature" out
+}
+
+_was_not_wiping() {
+	not grep "Wiping swap signature" out
 }
 
 aux prepare_vg
@@ -36,9 +48,9 @@ aux prepare_vg
 # Test all combinations with -Z{y|n} and -W{y|n} and related lvm.conf settings.
 
 lvcreate -l1 -n $lv1 $vg
-init_lv_
+_init_lv
 # This system has unusable blkid (does not recognize small swap, needs fix...)
-test_blkid_ || skip
+_is_swap || skip
 lvremove -f $vg/$lv1
 
 # Zeroing stops the command when there is a failure (write error in this case)
@@ -51,74 +63,79 @@ aux enable_dev "$dev1"
 aux lvmconf "allocation/wipe_signatures_when_zeroing_new_lvs = 0"
 
 lvcreate -y -Zn -l1 -n $lv1 $vg 2>&1 | tee out
-not test_msg_
-test_blkid_
+_was_not_wiping
+_is_swap
 lvremove -f $vg/$lv1
 
 lvcreate -y -Zn -Wn -l1 -n $lv1 $vg 2>&1 | tee out
-not test_msg_
-test_blkid_
+_was_not_wiping
+_is_swap
 lvremove -f $vg/$lv1
 
 lvcreate -y -Zn -Wy -l1 -n $lv1 $vg 2>&1 | tee out
-test_msg_
-not test_blkid_
-init_lv_
+_was_wiping
+_is_not_swap
+_init_lv
 lvremove -f $vg/$lv1
 
 lvcreate -y -Zy -l1 -n $lv1 $vg 2>&1 | tee out
-not test_msg_
-not test_blkid_
-init_lv_
+_was_not_wiping
+_is_not_swap
+_init_lv
 lvremove -f $vg/$lv1
 
 lvcreate -y -Zy -Wn -l1 -n $lv1 $vg 2>&1 | tee out
-not test_msg_
-not test_blkid_
-init_lv_
+_was_not_wiping
+_is_not_swap
+_init_lv
 lvremove -f $vg/$lv1
 
 lvcreate -y -Zy -Wy -l1 -n $lv1 $vg 2>&1 | tee out
-test_msg_
-not test_blkid_
-init_lv_
+_was_wiping
+_is_not_swap
+_init_lv
 lvremove -f $vg/$lv1
-
 
 aux lvmconf "allocation/wipe_signatures_when_zeroing_new_lvs = 1"
 
 lvcreate -y -Zn -l1 -n $lv1 $vg 2>&1 | tee out
-not test_msg_
-test_blkid_
+_was_not_wiping
+_is_swap
 lvremove -f $vg/$lv1
 
 lvcreate -y -Zn -Wn -l1 -n $lv1 $vg 2>&1 | tee out
-not test_msg_
-test_blkid_
+_was_not_wiping
+_is_swap
 lvremove -f $vg/$lv1
 
 lvcreate -y -Zn -Wy -l1 -n $lv1 $vg 2>&1 | tee out
-test_msg_
-not test_blkid_
-init_lv_
+_was_wiping
+_is_not_swap
+_init_lv
 lvremove -f $vg/$lv1
 
 lvcreate -y -Zy -l1 -n $lv1 $vg 2>&1 | tee out
-test_msg_
-not test_blkid_
-init_lv_
+_was_wiping
+_is_not_swap
+_init_lv
 lvremove -f $vg/$lv1
 
 lvcreate -y -Zy -Wn -l1 -n $lv1 $vg 2>&1 | tee out
-not test_msg_
-not test_blkid_
-init_lv_
+_was_not_wiping
+_is_not_swap
+_init_lv
 lvremove -f $vg/$lv1
 
 lvcreate -y -Zy -Wy -l1 -n $lv1 $vg 2>&1 | tee out
-test_msg_
-not test_blkid_
-init_lv_
+_was_wiping
+_is_not_swap
+_init_lv
 lvremove -f $vg/$lv1
 
 vgremove -f $vg
+
+aux udev_wait
+
+aux udev_wait
+
+aux udev_wait
