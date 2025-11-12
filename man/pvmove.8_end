@@ -35,6 +35,19 @@ Note that this new process cannot support the original LVM1
 type of on-disk metadata.  Metadata can be converted using
 \fBvgconvert\fP(8).
 .P
+By default, pvmove will mirror an entire LV segment at once. If the process
+is interrupted (e.g. by a system crash or power failure) before the segment
+is fully mirrored, the entire segment must be mirrored again when pvmove is
+restarted. For very large segments, this can result in significant rework.
+The \fBallocation/pvmove_max_segment_size_mb\fP setting in \fBlvm.conf\fP(5)
+can be used to limit the maximum size of data mirrored in a single operation.
+When set to a non-zero value, pvmove will split large segments into smaller
+chunks of the specified size (in MiB), mirror each chunk, and update metadata
+between chunks. This ensures that at most one chunk needs to be re-mirrored
+after an interruption. For example, setting this to 10240 will limit each
+mirroring operation to 10 GiB. The default value of 0 means no limit - entire
+segments are mirrored at once.
+.P
 If the \fB--atomic\fP option is used, a slightly different approach is
 used for the move.  Again, a temporary 'pvmove' LV is created to store the
 details of all the data movements required.  This temporary LV contains
