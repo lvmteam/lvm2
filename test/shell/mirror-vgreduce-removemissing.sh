@@ -337,11 +337,13 @@ test_2way_mirror_plus_2_fail_3_()
 
 	aux disable_dev "${list_pvs[@]}"
 	vgreduce --removemissing --force $vg
-	lvs -a -o+devices $vg
+	lvs -a -o+devices,segtype $vg
 	eval dev=\$dev$n
-	not mimages_are_on_ $lv1 "$dev"
+	mimages_are_on_ $lv1 "$dev" && die "Mimages of $lv1 is using $dev"
 	lv_is_on_ $lv1 "$dev"
-	not mirrorlog_is_on_ $lv1 "$dev5"
+	if [[ $(get lv_field $vg/$lv1 "segtype") = "mirror" ]]; then
+		mirrorlog_is_on_ $lv1 "$dev5" && die "Mirror log of $lv1 is still using $dev5"
+	fi
 }
 
 for n in $(seq 1 4); do
@@ -367,7 +369,7 @@ mirrorlog_is_on_ $lv1 "$dev5"
 aux disable_dev "$dev5"
 vgreduce --removemissing --force $vg
 mimages_are_on_ $lv1 "$dev1" "$dev2"
-not mirrorlog_is_on_ $lv1 "$dev5"
+mirrorlog_is_on_ $lv1 "$dev5" && die "Mirror log of $lv1 is using $dev5"
 recover_vg_ "$dev5"
 
 #COMM "fail mirror log of 3-way (1 converting) mirrored LV"
@@ -379,7 +381,7 @@ mirrorlog_is_on_ $lv1 "$dev5"
 aux disable_dev "$dev5"
 vgreduce --removemissing --force $vg
 mimages_are_on_ $lv1 "$dev1" "$dev2" "$dev3"
-not mirrorlog_is_on_ $lv1 "$dev5"
+mirrorlog_is_on_ $lv1 "$dev5" && die "Mirror log of $lv1 is using $dev5"
 recover_vg_ "$dev5"
 
 # ---------------------------------------------------------------------
