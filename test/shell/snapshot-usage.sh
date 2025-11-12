@@ -100,7 +100,7 @@ lvcreate -s -l 25%ORIGIN -n snap25 $vg1/$lv
 fill 32k $vg1/snap25
 
 # Check we do not provide too much extra space
-not fill 33k $vg1/snap25
+fill 33k $vg1/snap25 && die "Snapshot should not be able to fit 33k!"
 
 lvs -a $vg1
 lvremove -f $vg1
