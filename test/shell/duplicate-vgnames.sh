@@ -366,7 +366,7 @@ vgs -o+uuid |tee out
 grep $vg1 out
 grep $UUID1 out
 grep $UUID2 out
-not group $UUID3 out
+not grep $UUID3 out
 vgs --foreign -o+uuid |tee out
 grep $vg1 out
 grep $UUID1 out
@@ -443,8 +443,8 @@ vgs -o+uuid |tee out
 grep $vg1 out
 grep $UUID1 out
 grep $UUID2 out
-not group $UUID3 out
-not group $UUID4 out
+not grep $UUID3 out
+not grep $UUID4 out
 vgs --foreign -o+uuid |tee out
 grep $vg1 out
 grep $UUID1 out
@@ -527,9 +527,9 @@ grep $vg1 out
 grep $UUID1 out
 grep $UUID2 out
 grep $UUID3 out
-not group $UUID4 out
-not group $UUID5 out
-not group $UUID6 out
+not grep $UUID4 out
+not grep $UUID5 out
+not grep $UUID6 out
 vgs --foreign -o+uuid |tee out
 grep $vg1 out
 grep $UUID1 out
