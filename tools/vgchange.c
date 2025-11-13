@@ -733,7 +733,7 @@ static int _vgchange_lock_stop(struct cmd_context *cmd, struct volume_group *vg)
 		return_0;
 
 	/* stop is the only --persist value that's accepted */
-	if (arg_is_set(cmd, persist_ARG) && !persist_stop(cmd, vg))
+	if (arg_is_set(cmd, persist_ARG) && (vg->pr & VG_PR_REQUIRE) && !persist_stop(cmd, vg))
 		log_warn("WARNING: PR stop failed, see lvmpersist stop.");
 
 	return 1;
