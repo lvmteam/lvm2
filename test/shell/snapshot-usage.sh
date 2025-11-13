@@ -99,8 +99,11 @@ fill 64k $vg1/snap50
 lvcreate -s -l 25%ORIGIN -n snap25 $vg1/$lv
 fill 32k $vg1/snap25
 
-# Check we do not provide too much extra space
-fill 33k $vg1/snap25 && die "Snapshot should not be able to fit 33k!"
+# This feature works properly only with newer targets
+if aux target_at_least dm-snapshot 1 10 0 ; then
+	# Check we do not provide too much extra space
+	fill 33k $vg1/snap25 && die "Snapshot should not be able to fit 33k!"
+fi
 
 lvs -a $vg1
 lvremove -f $vg1
