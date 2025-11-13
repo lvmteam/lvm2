@@ -2725,11 +2725,11 @@ bad:
 static void _usage(char *prog, FILE *file)
 {
 	fprintf(file, "Usage:\n"
-		"%s [-d [-d [-d]]] [-e path] [-g seconds] [-f] [-h] [i] [-l] [-R] [-V] [-?]\n\n"
+		"%s [-d [-d [-d]]] [-e path] [-f] [-g seconds] [-h] [i] [-l] [-R] [-V] [-?]\n\n"
 		"   -d       Log debug messages to syslog (-d, -dd, -ddd)\n"
 		"   -e       Select a file path checked on exit\n"
-		"   -g       Grace period for thread cleanup (0-300 seconds, default: %d)\n"
 		"   -f       Don't fork, run in the foreground\n"
+		"   -g       Grace period for thread cleanup (0-300 seconds, default: %d)\n"
 		"   -h       Show this help information\n"
 		"   -i       Query running instance of dmeventd for info\n"
 		"   -l       Log to stdout,stderr instead of syslog\n"
@@ -2758,17 +2758,8 @@ int main(int argc, char *argv[])
 	optarg = (char*) "";
 	while ((opt = getopt(argc, argv, ":?e:g:fhiVdlR")) != EOF) {
 		switch (opt) {
-		case 'h':
-			_usage(argv[0], stdout);
-			return EXIT_SUCCESS;
-		case '?':
-			_usage(argv[0], stderr);
-			return EXIT_SUCCESS;
-		case 'i':
-			info++;
-			break;
-		case 'R':
-			restart++;
+		case 'd':
+			debug_level++;
 			break;
 		case 'e':
 			if (strchr(optarg, '"')) {
@@ -2777,6 +2768,9 @@ int main(int argc, char *argv[])
 			}
 			_exit_on=optarg;
 			break;
+		case 'f':
+			_foreground++;
+			break;
 		case 'g':
 			_grace_period = atoi(optarg);
 			if (_grace_period < 0 || _grace_period > 300) {
@@ -2784,14 +2778,21 @@ int main(int argc, char *argv[])
 				return EXIT_FAILURE;
 			}
 			break;
-		case 'f':
-			_foreground++;
-			break;
-		case 'd':
-			debug_level++;
+		case 'h':
+			_usage(argv[0], stdout);
+			return EXIT_SUCCESS;
+		case 'i':
+			info++;
 			break;
 		case 'l':
 			use_syslog = 0;
+			break;
+		case '?':
+			/* getopt() returns '?' for unknown option */
+			_usage(argv[0], stderr);
+			return EXIT_SUCCESS;
+		case 'R':
+			restart++;
 			break;
 		case 'V':
 			printf("dmeventd version: %s\n", DM_LIB_VERSION);
