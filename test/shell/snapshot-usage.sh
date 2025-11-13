@@ -118,19 +118,6 @@ lvchange -an $vg1
 # On cluster snapshot gets exclusive activation
 lvchange -ay $vg1
 check lv_field $vg1/$lv1 lv_active "$CHECK_ACTIVE"
-
-# Test removal of opened (but unmounted) snapshot (device busy) for a while
-SLEEP_PID=$(aux hold_device_open $vg1 $lv1 60)
-
-# Opened virtual snapshot device is not removable
-# it should retry device removal for a few seconds
-not lvremove -f $vg1/$lv1
-
-kill $SLEEP_PID
-SLEEP_PID=
-# Wait for killed task, so there is no device holder
-wait
-
 lvremove -f $vg1/$lv1
 check lv_not_exists $vg1 $lv1
 
@@ -186,7 +173,15 @@ lvcreate -aey -L4 -n $lv $vg1
 lvcreate -c 8 -s -L1 -n snap $vg1/$lv
 # Populate snapshot
 #dd if=/dev/urandom of="$DM_DEV_DIR/$vg1/$lv" bs=4096 count=10
-$MKFS "$DM_DEV_DIR/$vg1/$lv"
+$MKFS "$DM_DEV_DIR/$vg1/snap"
+
+mkdir mnt
+mount "$DM_DEV_DIR/$vg1/snap" mnt
+# Opened virtual snapshot device is not removable
+# it should retry device removal for a few seconds
+not lvremove -f $vg1/snap
+umount mnt
+
 lvremove -f $vg1/snap
 
 # Undeleted header would trigger attempt to access
