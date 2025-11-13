@@ -93,6 +93,11 @@ static struct dm_list *_get_allocatable_pvs(struct cmd_context *cmd, int argc,
 	struct dm_list *allocatable_pvs, *pvht, *pvh;
 	struct pv_list *pvl;
 
+	if (!vg) {
+		log_error(INTERNAL_ERROR "Missing volume group.");
+		return NULL;
+	}
+
 	if (argc)
 		allocatable_pvs = create_pv_list(cmd->mem, vg, argc, argv, 1);
 	else
@@ -313,6 +318,11 @@ static struct logical_volume *_set_up_pvmove_lv(struct cmd_context *cmd,
 	int needs_exclusive = *exclusive;
 	const struct logical_volume *holder;
 	const char *new_lv_name;
+
+	if (!vg) {
+		log_error(INTERNAL_ERROR "Missing volume group.");
+		return NULL;
+	}
 
 	/* FIXME Cope with non-contiguous => splitting existing segments */
 	if (!(lv_mirr = lv_create_empty("pvmove%d", NULL,
