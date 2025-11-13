@@ -25,8 +25,10 @@ expect_failure() {
 
 check_daemon_in_builddir() {
 	# skip if we don't have our own daemon...
-	[[ -z "${installed_testsuite+varset}" ]] && \
-		(which "$1" 2>/dev/null | grep "$abs_builddir" >/dev/null ) || skip "$1 is not in executed path."
+	if [[ -z "${installed_testsuite+varset}" ]]; then
+		(which "$1" 2>/dev/null | grep -q "$abs_builddir") || \
+			skip "$1 is not in executed path."
+	fi
 	rm -f debug.log strace.log
 }
 
@@ -203,7 +205,7 @@ prepare_clvmd() {
 }
 
 prepare_dmeventd() {
-	[[ -n "$RUNNING_DMEVENTD" ]] && skip "Cannot test dmeventd with real dmeventd ($RUNNING_DMEVENTD) running."
+	[[ -n "${RUNNING_DMEVENTD-}" ]] && skip "Cannot test dmeventd with real dmeventd ($RUNNING_DMEVENTD) running."
 
 	check_daemon_in_builddir dmeventd
 	lvmconf "activation/monitoring = 1"
@@ -263,7 +265,7 @@ lvmpolld_talk() {
 }
 
 lvmpolld_dump() {
-	(echo 'request="dump"'; echo '##') | lvmpolld_talk "$@"
+	(echo 'request="dump"'; echo '##') | lvmpolld_talk "${@-}"
 }
 
 prepare_lvmdbusd() {
@@ -477,7 +479,7 @@ teardown_devs() {
 	fi
 
 	# NOTE: SCSI_DEBUG_DEV test must come before the LOOP test because
-	# prepare_scsi_debug_dev() also sets LOOP to short-circuit prepare_loop()
+	# aux prepare_scsi_debug_dev() also sets LOOP to short-circuit aux prepare_loop()
 	if [[ -f SCSI_DEBUG_DEV ]]; then
 		udev_wait
 		if [[ "${LVM_TEST_PARALLEL:-0}" -ne 1 ]]; then
@@ -515,7 +517,7 @@ kill_sleep_kill_() {
 	local pid
 
 	if [[ -s "$pidfile"  ]]; then
-		pid=( $(< "$pidfile") )
+		pid=( $(< "$pidfile") ) || true
 		rm -f "$pidfile"
 		[[ "$pidfile" = "LOCAL_LVMDBUSD" ]] && killall -9 lvmdbusd || true
 		kill -TERM "${pid[@]}" 2>/dev/null || return 0
@@ -547,7 +549,7 @@ kill_tagged_processes() {
 			kill -TERM "$pid" 2>/dev/null || true
 		fi
 		pids+=( "$pid" )
-	done < <(print_procs_by_tag_ "$@")
+	done < <(print_procs_by_tag_ "${@-}")
 
 	[[ ${#pids[@]} -eq 0 ]] && return
 
@@ -644,7 +646,7 @@ teardown() {
 
 	# Check if this test is leaking some 'symlinks' with our name (udev)
 	LEAKED_LINKS=( $(find /dev -path "/dev/mapper/${PREFIX}*" -type l -exec test ! -e {} \; -print -o \
-		-path "/dev/${PREFIX}*/" -type l -exec test ! -e {} \; -print  2>/dev/null || true) )
+		-path "/dev/${PREFIX}*/" -type l -exec test ! -e {} \; -print  2>/dev/null) ) || true
 
 	[[ "${#LEAKED_LINKS[@]}" -eq 0 ]] || echo "## removing stray symlinks the names beginning with ${PREFIX}"
 
@@ -662,7 +664,7 @@ teardown() {
 	find /dev -type d -name "${LEAKED_PREFIX}*" -empty -delete 2>/dev/null || true
 
 	# Fail test with leaked links as most likely somewhere is missing synchronization...
-	[[ "${#LEAKED_LINKS[@]}" -eq 0 ]] || die "Test leaked these symlinks ${LEAKED_LINKS[@]}"
+	[[ "${#LEAKED_LINKS[@]}" -eq 0 ]] || die "Test leaked these symlinks ${LEAKED_LINKS[*]}"
 }
 
 prepare_loop() {
@@ -741,7 +743,7 @@ prepare_real_devs() {
 
 	if [[ -n "${LVM_TEST_DEVICE_LIST-}" ]]; then
 		local count=0
-		while read path; do
+		while read -r path; do
 			REAL_DEVICES[count]=$path
 			count=$((  count + 1 ))
 			extend_filter "a|$path|"
@@ -1798,7 +1800,7 @@ thin_restore_needs_more_volumes() {
 
 udev_wait() {
 	local arg="--timeout=15"
-	[[ -n "${1-}" ]] && arg="--exit-if-exists=$1"
+	[[ -n "${1-}" ]] && arg="--exit-if-exists=${1-}"
 
 	if [[ ! -f UDEV_PID ]]; then
 		pgrep udev >UDEV_PID 2>/dev/null || return 0

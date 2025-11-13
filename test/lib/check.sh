@@ -201,7 +201,7 @@ in_sync() {
 	local ignore_a=${3:-0}
 	local dm_name="$1-$2"
 
-	a=( $(dmsetup status "$dm_name") )  || \
+	a=( $(dmsetup status "$dm_name") ) || \
 		die "Unable to get sync status of $1"
 
 	if [[ "${a[2]}" = "snapshot-origin" ]]; then
@@ -443,7 +443,8 @@ raid_leg_status() {
 
 	# Ignore inconsistent raid status 0/xxxxx idle
 	for i in {100..0} ; do
-		st=( $(dmsetup status --noflush "$1-$2") ) || die "Unable to get status of $vg/$lv1"
+		st=( $(dmsetup status --noflush "$1-$2") ) || \
+			die "Unable to get status of $vg/$lv1"
 		case "${st[7]}" in
 			"resync"|"recover") [ "${st[5]}" = "$3" ] && return 0 ;;
 		esac
