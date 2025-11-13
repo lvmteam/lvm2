@@ -58,6 +58,16 @@ sel() {
 		return 1
 	}
 
+	grep "out of supported range" "$ERR_LOG_FILE" >/dev/null && {
+		echo "  >>> Selection out of supported range hit!"
+		return 1
+	}
+
+	grep "found in selection is reserved" "$ERR_LOG_FILE" > /dev/null && {
+		echo "  >>> Use of reserved selection value hit!"
+		return 1
+	}
+
 	items_found=$(wc -l < "$OUT_LOG_FILE")
 
 	# the number of lines on output must match
