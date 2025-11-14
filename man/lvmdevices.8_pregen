@@ -414,11 +414,11 @@ the device IDs.  LVM commands automatically update this information if it
 changes.  This includes the last known device name, and the PV UUID (PVID)
 from the LVM disk header.
 .P
-To check if devices file content needs to be updated, run:
+Check if the devices file content needs to be updated:
 .br
 .B lvmdevices --check
 .P
-To update devices file fields that may be outdated, run:
+Update devices file fields that are outdated:
 .br
 .B lvmdevices --update
 .P
@@ -450,26 +450,36 @@ PART: the partition number if a PV exists on a partition.
 .P
 .SS device ID refresh
 .
-When LVM writes system.devices, it includes an ID of the machine running
-the command (see PRODUCT_UUID or HOSTNAME above.)  When LVM reads
-system.devices, it compares the saved value to the current machine's value
-to detect if system.devices has been copied from another machine.  When the
-saved and current values differ, it indicates that PVs may have been copied or
-restored onto new devices on a new machine.  When this happens, lvm will
-search for new devices that hold the PVIDs listed in system.devices.  If a
-PVID is found on a new device, lvm updates the device ID in system.devices
-to match the new location for the PV.  The command lvmdevices --check
---refresh can also be used to do this manually.
+When LVM writes system.devices, it includes a local machine ID in the
+system.devices file (as PRODUCT_UUID or HOSTNAME.) When LVM reads
+system.devices, it compares this saved machine ID value to the current
+machine. This allows lvm to detect when system.devices has been copied
+or restored onto a different machine. When this happens, lvm switches
+its method for locating the PVs in system.devices, and locates PVs based
+on their PVID rather than the device ID (this involves scanning all devices
+on the system.) If a PVID is found on a device with a different device ID,
+then the device ID in system.devices is automatically updated to the new
+device ID.
 .P
-The machine identifier used in system.devices will be either the DMI
-product_uuid from
+While this refresh process is triggered automatically by a new machine
+ID, it can also be performed manually with the following commands:
+.P
+Check if system.devices would be updated with new device IDs:
+.br
+.B lvmdevices --check --refresh
+.P
+Update system.devices with new device IDs if PVs are found on new devices:
+.br
+.B lvmdevices --update --refresh
+.P
+The machine ID used in system.devices will be either the DMI product_uuid from
 .IR /sys/devices/virtual/dmi/id/product_uuid ,
 or the hostname from
 .BR uname (2).
 See
 .BR lvm.conf (5)
-.B device_ids_refresh_checks to
-configure this.
+.B device_ids_refresh_checks
+to configure this.
 .P
 .SS custom devices files
 .
