@@ -109,11 +109,6 @@ int dumpconfig(struct cmd_context *cmd, int argc, char **argv)
 		return EINVALID_CMD_LINE;
 	}
 
-	if (arg_is_set(cmd, configtype_ARG) && arg_is_set(cmd, list_ARG)) {
-		log_error("Only one of --type and --list permitted.");
-		return EINVALID_CMD_LINE;
-	}
-
 	if (arg_is_set(cmd, atversion_ARG)) {
 		if (arg_is_set(cmd, sinceversion_ARG)) {
 			log_error("Only one of --atversion and --sinceversion permitted.");
@@ -228,24 +223,9 @@ int dumpconfig(struct cmd_context *cmd, int argc, char **argv)
 		}
 	}
 
-	if (!strcmp(type, "list") || arg_is_set(cmd, list_ARG)) {
+	if (!strcmp(type, "list")) {
+		tree_spec.listmode = 1;
 		tree_spec.type = CFG_DEF_TREE_LIST;
-		if (arg_is_set(cmd, withcomments_ARG)) {
-			log_error("--withcomments has no effect with --type list");
-			return EINVALID_CMD_LINE;
-		}
-		if (arg_is_set(cmd, withlocalpreamble_ARG)) {
-			log_error("--withlocalpreamble has no effect with --type list");
-			return EINVALID_CMD_LINE;
-		}
-		if (arg_is_set(cmd, withgeneralpreamble_ARG)) {
-			log_error("--withgeneralpreamble has no effect with --type list");
-			return EINVALID_CMD_LINE;
-		}
-		if (arg_is_set(cmd, valuesonly_ARG)) {
-			log_err("--valuesonly has no effect with --type list");
-			return EINVALID_CMD_LINE;
-		}
 		/* list type does not require status check */
 	} else if (!strcmp(type, "full")) {
 		tree_spec.type = CFG_DEF_TREE_FULL;
@@ -303,7 +283,14 @@ int dumpconfig(struct cmd_context *cmd, int argc, char **argv)
 		goto out;
 	}
 
-	if (arg_is_set(cmd, withsummary_ARG) || arg_is_set(cmd, list_ARG))
+	if (arg_is_set(cmd, withsummary_ARG))
+		tree_spec.withsummary = 1;
+
+	/*
+	 *  This is for backwards compatibility with the original prehistoric
+	 *  'dumpcofig --list' when the --typeconfig was not supported yet.
+	 */
+	if (arg_is_set(cmd, list_ARG) && !arg_is_set(cmd, configtype_ARG))
 		tree_spec.withsummary = 1;
 
 	if (arg_is_set(cmd, withcomments_ARG))
@@ -326,6 +313,28 @@ int dumpconfig(struct cmd_context *cmd, int argc, char **argv)
 
 	if (arg_is_set(cmd, valuesonly_ARG))
 		tree_spec.valuesonly = 1;
+
+	if (arg_is_set(cmd, list_ARG))
+		tree_spec.listmode = 1;
+
+	if (tree_spec.listmode) {
+		if (arg_is_set(cmd, withcomments_ARG)) {
+			log_error("--withcomments has no effect with --type list or --list");
+			return EINVALID_CMD_LINE;
+		}
+		if (arg_is_set(cmd, withlocalpreamble_ARG)) {
+			log_error("--withlocalpreamble has no effect with --type list or --list");
+			return EINVALID_CMD_LINE;
+		}
+		if (arg_is_set(cmd, withgeneralpreamble_ARG)) {
+			log_error("--withgeneralpreamble has no effect with --type list or --list");
+			return EINVALID_CMD_LINE;
+		}
+		if (arg_is_set(cmd, valuesonly_ARG)) {
+			log_err("--valuesonly has no effect with --type list or --list");
+			return EINVALID_CMD_LINE;
+		}
+	}
 
 	if (cft_check_handle)
 		tree_spec.check_status = cft_check_handle->status;
