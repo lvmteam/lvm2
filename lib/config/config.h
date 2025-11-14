@@ -177,6 +177,7 @@ struct config_def_tree_spec {
 	unsigned withgeneralpreamble:1;		/* include preamble for a general config file */
 	unsigned withlocalpreamble:1;		/* include preamble for a local config file */
 	unsigned valuesonly:1;                  /* print only values without keys */
+	unsigned listmode:1;                    /* print in list mode instead of structured tree mode */
 	uint8_t *check_status;			/* status of last tree check (currently needed for CFG_DEF_TREE_MISSING only) */
 };
 
