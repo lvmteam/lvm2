@@ -1644,11 +1644,14 @@ generate_config() {
 	declare -A CONF 2>/dev/null || {
 		# Associative arrays is not available
 		local s
-		for s in $(cut -f1 -d/ "$config_values" | sort | uniq); do
+		for s in $(cut -f1 -d/ "$config_values" | sort -u); do
 			echo "$s {"
 			local k
-			for k in $(grep ^"$s"/ "$config_values" | cut -f1 -d= | sed -e 's, *$,,' | sort | uniq); do
-				grep "^${k}[ \t=]" "$config_values" | tail -n 1 | sed -e "s,^$s/,	 ," || true
+			# $(grep ^"$s"/ "$config_values" | cut -f1 -d= | sed -e 's, *$,,' | sort | uniq)
+			for k in $(awk -F= -v s="$s" '$0 ~ "^" s "/" {sub(/ *$/, "", $1); print $1}' "$config_values" | sort -u); do
+				# grep "^${k}[ \t=]" "$config_values" | tail -n 1 | sed -e "s,^$s/,	 ," || true
+				# single command with '|' as delimiter
+				sed -n "\|^${k}[ \t=]|h;\${g;s|^$s/|	|p}" "$config_values" || true
 			done
 			echo "}"
 			echo
