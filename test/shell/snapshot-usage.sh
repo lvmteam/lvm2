@@ -170,10 +170,11 @@ lvremove -f $vg1
 # This test expects extent size 1K
 aux lvmconf "allocation/wipe_signatures_when_zeroing_new_lvs = 1"
 lvcreate -aey -L4 -n $lv $vg1
+$MKFS "$DM_DEV_DIR/$vg1/$lv"
+
 lvcreate -c 8 -s -L1 -n snap $vg1/$lv
 # Populate snapshot
 #dd if=/dev/urandom of="$DM_DEV_DIR/$vg1/$lv" bs=4096 count=10
-$MKFS "$DM_DEV_DIR/$vg1/snap"
 
 mkdir mnt
 mount "$DM_DEV_DIR/$vg1/snap" mnt
