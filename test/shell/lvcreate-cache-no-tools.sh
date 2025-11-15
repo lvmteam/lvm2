@@ -16,13 +16,7 @@
 
 . lib/inittest --skip-with-lvmpolld
 
-if test -e LOCAL_CLVMD ; then
-# In cluster, the error from activation is logged in clvmd
-# so we can only check resulting state of activation
-	GREP="echo"
-else
-	GREP="grep"
-fi
+GREP="grep"
 
 make_fake_() {
 	cat <<- EOF >fake-tool.sh

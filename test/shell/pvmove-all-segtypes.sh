@@ -67,11 +67,6 @@ check lv_tree_on $vg ${lv1}_foo "$dev5"
 check dev_md5sum $vg $lv1
 lvremove -ff $vg
 
-if test -e LOCAL_CLVMD ; then
-#FIXME these tests currently fail end require cmirrord
-echo "$(should false)FIXME!!! pvmove in clustered VG not fully supported!"
-else
-
 # Testing pvmove of mirror LV
 lvcreate -aey -l 2 -n ${lv1}_foo $vg "$dev1"
 lvcreate -aey -l 2 --type mirror -m 1 -n $lv1 $vg "$dev1" "$dev2"
@@ -105,6 +100,5 @@ check lv_tree_on $vg snap "$dev4"
 check lv_tree_on $vg ${lv1}_foo "$dev5"
 check dev_md5sum $vg snap
 lvremove -ff $vg
-fi
 
 vgremove -ff $vg

@@ -27,7 +27,6 @@ lvcreate -an -Zn --type mirror -m 1 -l 1 -n mirror $vg
 aux disable_dev "$dev1"
 # FIXME:
 # for the .cache use case we need to run pvscan
-# to keep clvmd in sync.
 pvscan
 vgreduce --removemissing --force $vg
 aux enable_dev "$dev1"

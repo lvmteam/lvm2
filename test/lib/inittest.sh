@@ -91,17 +91,11 @@ LVM_TEST_LOCK_TYPE_DLM=${LVM_TEST_LOCK_TYPE_DLM:-0}
 LVM_TEST_LOCK_TYPE_SANLOCK=${LVM_TEST_LOCK_TYPE_SANLOCK:-0}
 LVM_TEST_LOCK_TYPE_IDM=${LVM_TEST_LOCK_TYPE_IDM:-0}
 
-SKIP_WITHOUT_CLVMD=${SKIP_WITHOUT_CLVMD:-0}
-SKIP_WITH_CLVMD=${SKIP_WITH_CLVMD:-0}
-
 SKIP_WITH_LOW_SPACE=${SKIP_WITH_LOW_SPACE-50}
 
 [[ -n "$LVM_TEST_FLAVOUR" ]] || { echo "NOTE: Empty flavour">&2; initskip; }
 [[ -f "lib/flavour-$LVM_TEST_FLAVOUR" ]] || { echo "NOTE: Flavour '$LVM_TEST_FLAVOUR' does not exist">&2; initskip; }
 . "lib/flavour-$LVM_TEST_FLAVOUR"
-
-[[ "$SKIP_WITHOUT_CLVMD" != 0 && "$LVM_TEST_LOCKING" -ne 3 ]] && initskip
-[[ "$SKIP_WITH_CLVMD" != 0 && "$LVM_TEST_LOCKING" = 3 ]] && initskip
 
 # When requested testing LVMLOCKD & LVMPOLLD - ignore skipping of marked test for lvmpolld
 [[ "$LVM_TEST_LVMLOCKD" != 0 && "$LVM_TEST_LVMPOLLD" != 0 ]] && SKIP_WITH_LVMPOLLD=0

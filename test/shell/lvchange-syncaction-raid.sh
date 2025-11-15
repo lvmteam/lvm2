@@ -18,7 +18,6 @@
 # Current support for syncaction in cluster is broken
 # might get fixed one day though
 # meanwhile skipped
-SKIP_WITH_CLVMD=1
 
 . lib/inittest --skip-with-lvmpolld
 

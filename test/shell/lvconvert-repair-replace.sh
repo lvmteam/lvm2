@@ -56,9 +56,6 @@ check mirror $vg 2way
 aux enable_dev "$dev1" "$dev2"
 vgremove -ff $vg
 
-# FIXME  - exclusive activation for mirrors should work here
-# conversion of inactive cluster logs is also unsupported
-test -e LOCAL_CLVMD && exit 0
 
 
 # Test repair of inactive mirror with log failure

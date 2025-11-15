@@ -245,19 +245,10 @@ lvremove -ff $vg
 
 # Linear to mirror with mirrored log using --alloc anywhere
 lvcreate -aey -l2 -n $lv1 $vg "$dev1"
-if test -e LOCAL_CLVMD; then
-# This is not supposed to work in cluster
-not lvconvert --type mirror -m +1 --mirrorlog mirrored --alloc anywhere $vg/$lv1 "$dev1" "$dev2"
-else
 lvconvert --type mirror -m +1 --mirrorlog mirrored --alloc anywhere $vg/$lv1 "$dev1" "$dev2"
 check mirror $vg $lv1
-fi
 lvremove -ff $vg
 
-
-if test -e LOCAL_CLVMD; then
-: # FIXME - cases which needs to be fixed to work in cluster
-else
 # Should not be able to add images to --nosync mirror
 # but should be able to after 'lvchange --resync'
 lvcreate -aey --type mirror -m 1 -l1 -n $lv1 $vg --nosync
@@ -303,7 +294,6 @@ lvcreate -l2 -n $lv1 $vg
 lvconvert --type mirror -i1 -m1 $vg/$lv1 | tee out
 grep -e "$vg/$lv1: Converted:" out || die "Missing sync info in foreground mode"
 lvremove -ff $vg
-fi
 
 
 #########################################################################

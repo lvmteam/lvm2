@@ -53,23 +53,6 @@ test_pvmove_resume() {
 	check lv_attr_bit type $vg/pvmove0 "p"
 	check lv_attr_bit type $vg/pvmove1 "p"
 
-	if test -e LOCAL_CLVMD ; then
-		# giveup all clvmd locks (faster then restarting clvmd)
-		# no deactivation happen, nodes are already removed
-		#vgchange -an $vg
-		# FIXME: However above solution has one big problem
-		# as clvmd starts to abort on internal errors on various
-		# errors, based on the fact pvmove is killed -9
-		# Restart clvmd
-		kill "$(< LOCAL_CLVMD)"
-		for i in $(seq 1 100) ; do
-			test $i -eq 100 && die "Shutdown of clvmd is too slow."
-			test -e "$CLVMD_PIDFILE" || break
-			sleep .1
-		done # wait for the pid removal
-		aux prepare_clvmd
-	fi
-
 	# call resume function (see below)
 	# with expected number of spawned
 	# bg polling as parameter

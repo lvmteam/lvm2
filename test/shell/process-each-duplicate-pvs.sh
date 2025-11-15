@@ -8,7 +8,6 @@
 
 test_description='Test duplicate PVs'
 
-SKIP_WITH_CLVMD=1
 
 # This test should work with real device ids (not devnames).
 # When PVs are being overwritten by the test, the devices file is

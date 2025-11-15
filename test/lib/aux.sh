@@ -171,39 +171,6 @@ prepare_lvmlockd() {
 	fi
 }
 
-prepare_clvmd() {
-	[[ "${LVM_TEST_LOCKING:-0}" -ne 3 ]] && return # not needed
-
-	if pgrep clvmd ; then
-		skip "Cannot use fake cluster locking with real clvmd ($(pgrep clvmd)) running."
-	fi
-
-	check_daemon_in_builddir clvmd
-
-	[[ -e "$DM_DEV_DIR/control" ]] || dmsetup table >/dev/null # create control node
-	# skip if singlenode is not compiled in
-	(clvmd --help 2>&1 | grep "Available cluster managers" | grep "singlenode" >/dev/null) || \
-		skip "Compiled clvmd does not support singlenode for testing."
-
-#	lvmconf "activation/monitoring = 1"
-	local run_valgrind=""
-	[[ "${LVM_VALGRIND_CLVMD:-0}" -eq 0 ]] || run_valgrind="run_valgrind"
-	rm -f "$CLVMD_PIDFILE"
-	echo "<======== Starting CLVMD ========>"
-	echo -n "## preparing clvmd..."
-	# lvs is executed from clvmd - use our version
-	LVM_LOG_FILE_EPOCH=CLVMD LVM_LOG_FILE_MAX_LINES=1000000 $run_valgrind clvmd -Isinglenode -d 1 -f &
-	echo $! > LOCAL_CLVMD
-
-	for i in {200..0} ; do
-		[[ "$i" -eq 0 ]] && die "Startup of clvmd is too slow."
-		[[ -e "$CLVMD_PIDFILE" && -e "${CLVMD_PIDFILE%/*}/lvm/clvmd.sock" ]] && break
-		echo -n .
-		sleep .1
-	done
-	echo ok
-}
-
 prepare_dmeventd() {
 	[[ -n "${RUNNING_DMEVENTD-}" ]] && skip "Cannot test dmeventd with real dmeventd ($RUNNING_DMEVENTD) running."
 
@@ -604,10 +571,6 @@ teardown() {
 	echo -n .
 
 	kill_sleep_kill_ LOCAL_LVMPOLLD "${LVM_VALGRIND_LVMPOLLD:-0}"
-
-	echo -n .
-
-	kill_sleep_kill_ LOCAL_CLVMD "${LVM_VALGRIND_CLVMD:-0}"
 
 	echo -n .
 

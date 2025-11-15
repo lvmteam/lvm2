@@ -203,16 +203,6 @@ lvs --noheadings -o attr $vg/$lv1 | grep '^[[:space:]]*r'
 lvremove -ff $vg
 
 ###########################################
-# Must not be able to convert non-EX LVs in a cluster
-###########################################
-if [ -e LOCAL_CLVMD ]; then
-	lvcreate -l 2 -n $lv1 $vg
-	not lvconvert -y --type raid1 -m 1 $vg/$lv1 \
-		--config 'global { mirror_segtype_default = "mirror" }'
-	lvremove -ff $vg
-fi
-
-###########################################
 # Mirror to RAID1 conversion
 ###########################################
 for i in 1 2 3 ; do

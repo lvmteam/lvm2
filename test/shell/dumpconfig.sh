@@ -21,8 +21,6 @@ flatten() {
 	done
 }
 
-# clvmd might not be started fast enough and
-# lvm still activates locking for all commands.
 # FIXME: Either make longer start delay,
 #  or even better do not initialize
 #  locking for commands like 'dumpconfig'

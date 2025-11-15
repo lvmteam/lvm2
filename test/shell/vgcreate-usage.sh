@@ -86,7 +86,6 @@ check vg_field $vg vg_extent_size 4.00m
 check vg_field $vg max_lv 0
 check vg_field $vg max_pv 0
 ATTRS="wz--n--"
-test -e LOCAL_CLVMD && ATTRS="wz--nc-"
 if [[ "${LVM_TEST_LVMLOCKD:-0}" != 0 ]]; then
 ATTRS="wz--ns-"
 fi

@@ -111,7 +111,7 @@ lvremove -f $vg1
 # Test virtual snapshot over /dev/zero
 lvcreate --type snapshot -V50 -L10 -n $lv1 -s $vg1
 CHECK_ACTIVE="active"
-test ! -e LOCAL_CLVMD || CHECK_ACTIVE="local exclusive"
+CHECK_ACTIVE="local exclusive"
 check lv_field $vg1/$lv1 lv_active "$CHECK_ACTIVE"
 lvchange -an $vg1
 

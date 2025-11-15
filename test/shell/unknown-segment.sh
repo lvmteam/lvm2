@@ -28,7 +28,6 @@ vgcfgrestore -f bak0 $vg
 not lvchange -aey $vg/$lv1 # check that activation is refused
 
 # try once more to catch invalid memory access with valgrind
-# when clvmd flushes cmd mem pool
 not lvchange -aey $vg/$lv2 # check that activation is refused
 
 not lvchange -aey $vg/$lv3 # check that activation is refused

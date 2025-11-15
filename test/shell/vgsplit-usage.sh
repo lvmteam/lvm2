@@ -146,18 +146,6 @@ vgchange -an $vg1
 not vgsplit $vg1 $vg2 "$dev3" 2>err;
 vgremove -f $vg2 $vg1
 
-# Restart clvm because using the same
-# devs as lvm1 and then lvm2 causes problems.
-if test -e LOCAL_CLVMD ; then
-	kill "$(< LOCAL_CLVMD)"
-	for i in $(seq 1 100) ; do
-		test $i -eq 100 && die "Shutdown of clvmd is too slow."
-		pgrep clvmd || break
-		sleep .1
-	done # wait for the pid removal
-	aux prepare_clvmd
-fi
-
 done
 
 if [[ "${LVM_TEST_LVM1:-0}" = 0 ]] ; then

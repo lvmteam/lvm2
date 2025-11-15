@@ -12,7 +12,6 @@
 
 test_description='test some blocking / non-blocking multi-vg operations'
 
-SKIP_WITH_CLVMD=1
 
 . lib/inittest --skip-with-lvmpolld
 

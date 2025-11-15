@@ -120,8 +120,6 @@ aux prepare_vg 5 5
 get_devs
 
 MIRRORED="mirrored"
-# FIXME: Cluster is not supporting exclusive activation of mirrored log
-test -e LOCAL_CLVMD && MIRRORED=
 
 test_many() {
 	i=$1
