@@ -263,6 +263,7 @@ skip() {
 }
 
 get_real_devs() {
+	local IFS=$IFS_NL
 	REAL_DEVICES=( $(< REAL_DEVICES) ) || true
 	export REAL_DEVICES
 }

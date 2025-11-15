@@ -862,7 +862,7 @@ mdadm_create() {
 }
 
 mdadm_assemble() {
-	STRACE=
+	local STRACE=
 	mdadm -V 2>&1 | grep " v3.2" && {
 		# use this 'trick' to slow down mdadm which otherwise
 		# is racing with udev rule since mdadm internally
@@ -993,7 +993,7 @@ clear_devs() {
 				touch NO_BLKDISCARD_Z
 			fi
 
-			dd if=/dev/zero of="$1" bs=512K oflag=direct $seek $count || true
+			dd if=/dev/zero of="$1" bs=512K oflag=direct $seek $count 2>/dev/null/|| true
 			;;
 		esac
 		shift
@@ -1006,17 +1006,15 @@ clear_devs() {
 # $2  string/pattern search for corruption
 # $3  string/pattern replacing/corrupting
 corrupt_dev() {
-	local a
+	local position
 
-	# search for string on a file
-	# Note: returned string may possibly start with other ASCII chars
-	# a[0] is position in file,  a[1] is the actual string
-	a=( $(strings -t d -n 64 "$1" | grep -m 1 "$2") ) || true
+	# Find byte offset of the pattern in file
+	position=$(grep -oba -m 1 -F "$2" "$1" | head -n 1 | cut -d: -f1) || true
 
-	[[ -n "${a[0]-}" ]] || return 0
+	[[ -n "$position" ]] || return 0
 
-	# Seek for the sequence and replace it with corruption pattern
-	echo -n "${a[1]/$2/$3}" | LANG=C dd of="$1" bs=1 seek="${a[0]}" conv=fdatasync
+	# Seek to the position and replace with corruption pattern
+	echo -n "$3" | LANG=C dd of="$1" bs=1 seek="$position" conv=notrunc,fdatasync 2>/dev/null
 }
 
 prepare_backing_dev() {
