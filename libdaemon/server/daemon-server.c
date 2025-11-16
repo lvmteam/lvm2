@@ -446,7 +446,8 @@ static void *_client_thread(void *state)
 
 	buffer_init(&req.buffer);
 
-	while (1) {
+	/* Exit early if shutdown is requested */
+	while (!_shutdown_requested) {
 		if (!buffer_read(ts->client.socket_fd, &req.buffer))
 			goto fail;
 
@@ -559,6 +560,50 @@ static void _reap(daemon_state s, int waiting)
 	}
 }
 
+static void _shutdown_sockets(daemon_state *s)
+{
+	thread_state *ts;
+
+	/*
+	 * Close the listening socket BEFORE shutting down client sockets.
+	 * This prevents new connections during shutdown.
+	 */
+	if (s->socket_fd >= 0) {
+		INFO(s, "%s closing listening socket", s->name);
+		if (!_systemd_activation && s->socket_path && unlink(s->socket_path))
+			perror("unlink error");
+		if (close(s->socket_fd))
+			perror("socket close");
+		s->socket_fd = -1;
+	}
+
+	/*
+	 * Shutdown all client sockets to interrupt any blocking read() calls.
+	 * This allows client threads to exit quickly instead of waiting
+	 * for data that will never arrive.
+	 */
+	for (ts = s->threads->next; ts; ts = ts->next)
+		if (ts->client.socket_fd >= 0) {
+			INFO(s, "%s closing client socket fd %d", s->name, ts->client.socket_fd);
+			shutdown(ts->client.socket_fd, SHUT_RDWR);
+		}
+}
+
+static void _daemon_cleanup(daemon_state s, int failed)
+{
+	if (s.daemon_fini)
+		if (!s.daemon_fini(&s))
+			failed = 1;
+
+	INFO(&s, "%s shutting down", s.name);
+
+	closelog(); /* FIXME */
+	if (s.pidfile)
+		_remove_lockfile(s.pidfile);
+	if (failed)
+		exit(1);
+}
+
 void daemon_start(daemon_state s)
 {
 	int failed = 0;
@@ -635,14 +680,17 @@ void daemon_start(daemon_state s)
 	if (!s.foreground)
 		kill(getppid(), SIGTERM);
 
-	/*                                                                               	 * Use daemon_main for daemon-specific init and polling, or
+	/*
+	 * Use daemon_main for daemon-specific init and polling, or
 	 * use daemon_init for daemon-specific init and generic lib polling.
 	 */
 
 	if (s.daemon_main) {
 		if (!s.daemon_main(&s))
 			failed = 1;
-		goto out;
+		_shutdown_sockets(&s);
+		_daemon_cleanup(s, failed);
+		return;
 	}
 
 	if (s.daemon_init)
@@ -693,27 +741,10 @@ void daemon_start(daemon_state s)
 	if (_shutdown_requested)
 		INFO(&s, "%s shutdown requested", s.name);
 
+	_shutdown_sockets(&s);
+
 	INFO(&s, "%s waiting for client threads to finish", s.name);
 	_reap(s, 1);
-out:
-	/* If activated by systemd, do not unlink the socket - systemd takes care of that! */
-	if (!_systemd_activation && s.socket_fd >= 0)
-		if (s.socket_path && unlink(s.socket_path))
-			perror("unlink error");
 
-	if (s.socket_fd >= 0)
-		if (close(s.socket_fd))
-			perror("socket close");
-
-	if (s.daemon_fini)
-		if (!s.daemon_fini(&s))
-			failed = 1;
-
-	INFO(&s, "%s shutting down", s.name);
-
-	closelog(); /* FIXME */
-	if (s.pidfile)
-		_remove_lockfile(s.pidfile);
-	if (failed)
-		exit(1);
+	_daemon_cleanup(s, failed);
 }
