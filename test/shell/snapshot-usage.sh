@@ -25,8 +25,10 @@ fill() {
 
 cleanup_tail()
 {
-	test -z "${SLEEP_PID-}" || kill $SLEEP_PID || true
-	wait
+	if test -n "${SLEEP_PID-}"; then
+		kill $SLEEP_PID || true
+		wait "$SLEEP_PID" || true
+	fi
 	vgremove -ff $vg1 || true
 	vgremove -ff $vg
 	aux teardown

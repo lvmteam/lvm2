@@ -44,7 +44,7 @@ if test -e LOCAL_LVMPOLLD; then
 	aux prepare_lvmpolld
 fi
 
-wait
+wait "$PVMOVE" || true
 
 # Simulate reboot - forcibly remove related devices
 

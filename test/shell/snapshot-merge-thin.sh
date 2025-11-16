@@ -34,7 +34,7 @@ PID_SLEEP=$!
 lvconvert --config 'activation/retry_deactivation=0' --merge $vg/$lv2
 
 kill $PID_SLEEP
-wait
+wait "$PID_SLEEP" || true
 
 # Remove everything
 lvremove --yes $vg

@@ -65,7 +65,7 @@ test "$i" -ge 49 && die "Waited for cleaner policy on $vg/$lv1 too long!"
 # cause abortion of flushing
 kill -INT $PID_CONVERT
 aux enable_dev "$dev2"
-wait
+wait "$PID_CONVERT" || true
 #cat logconvert || true
 
 # Problem of this test is, in older kernels, even the initial change to cleaner

@@ -58,6 +58,7 @@ echo 3 >/proc/sys/vm/drop_caches
 cp -r /usr/bin "$mount_dir/1" &>/dev/null &
 cp -r /usr/bin "$mount_dir/2" &>/dev/null &
 sync &
+SYNC_PID=$!
 
 aux wait_for_sync $vg $lv1
 aux delay_dev "$dev2" 0 100
@@ -71,8 +72,8 @@ check lv_first_seg_field $vg/$lv1 stripesize "64.00k"
 check lv_first_seg_field $vg/$lv1 data_stripes 15
 check lv_first_seg_field $vg/$lv1 stripes 16
 
-kill -9 %%
-wait
+kill -9 $CP1_PID $CP2_PID $SYNC_PID 2>/dev/null || true
+wait "$CP1_PID" "$CP2_PID" "$SYNC_PID" || true
 rm -fr "$mount_dir/[12]"
 
 sync

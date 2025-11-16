@@ -42,12 +42,14 @@ SLEEP=2
 test "${LVM_VALGRIND:-0}" -eq 0 || SLEEP=8
 
 sleep "$SLEEP" < "$DM_DEV_DIR/mapper/${vg}-${lv1}_mimage_0" &
+SLEEP_PID1=$!
 sleep "$SLEEP" < "$DM_DEV_DIR/mapper/${vg}-${lv1}_mlog" &
+SLEEP_PID2=$!
 
 # do not waste 'testing' time on 'retry deactivation' loops
-not lvconvert --splitmirrors 1 -n $lv2 -v $vg/$lv1 --config 'activation/retry_deactivation = 0' 
+not lvconvert --splitmirrors 1 -n $lv2 -v $vg/$lv1 --config 'activation/retry_deactivation = 0'
 
-wait
+wait "$SLEEP_PID1" "$SLEEP_PID2"
 
 check lv_field $vg/${lv1}_mimage_0 layout "error"
 check lv_field $vg/${lv1}_mlog layout "error"

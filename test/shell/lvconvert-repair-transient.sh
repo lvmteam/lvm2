@@ -33,6 +33,5 @@ not grep unknown out
 vgreduce --removemissing $vg
 check mirror $vg 4way
 lvchange -a n $vg/4way
-wait
 
 vgremove -f $vg

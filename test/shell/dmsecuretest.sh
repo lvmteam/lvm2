@@ -42,6 +42,7 @@ for j in empty existing ; do
 rm -f cmdout
 "$i" "$dev1" "$DMTEST" "TEST-${PREFIX}-secure" >cmdout 2>&1 &
 PID=$!
+SECURE_TEST_PID=$PID
 for k in $(seq 1 20); do
 	sleep .1
 	lines=$(wc -l < cmdout 2>/dev/null || true)
@@ -60,7 +61,7 @@ gcore "$PID" | tee out || skip
 # check we capture core while  dmsecuretest was already sleeping
 grep -e "nanosleep\|kernel_vsyscall\|internal_syscall_cancel" out
 kill "$PID" || true
-wait
+wait "$SECURE_TEST_PID" || true
 
 cat cmdout
 

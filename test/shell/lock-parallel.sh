@@ -32,6 +32,7 @@ aux delay_dev "$dev1" 50 50 "$(get first_extent_sector "$dev1"):"
 test -f HAVE_DM_DELAY || skip "delay_dev is missing"
 
 lvresize -L-5 -r $vg/$lv1 &
+LVRESIZE_PID=$!
 
 # Let's wait till resize starts
 for i in $(seq 1 300); do
@@ -41,7 +42,7 @@ done
 
 lvremove -f $vg/$lv2
 
-wait
+wait "$LVRESIZE_PID" || true
 
 aux enable_dev "$dev1"
 

@@ -56,16 +56,19 @@ aux delay_dev "$dev2" 0 100
 
 echo 3 >/proc/sys/vm/drop_caches
 cp -r /usr/bin $mount_dir/1 >/dev/null 2>/dev/null &
+CP1_PID=$!
 cp -r /usr/bin $mount_dir/2 >/dev/null 2>/dev/null &
+CP2_PID=$!
 sync &
+SYNC_PID=$!
 
 # Reshape it to 256K stripe size
 lvconvert --yes --stripesize 256 $vg/$lv1
 aux delay_dev "$dev2" 0 0
 check lv_first_seg_field $vg/$lv1 stripesize "256.00k"
 
-kill -9 %%
-wait
+kill -9 $CP1_PID $CP2_PID $SYNC_PID 2>/dev/null || true
+wait "$CP1_PID" "$CP2_PID" "$SYNC_PID" || true
 
 umount $mount_dir
 

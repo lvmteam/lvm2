@@ -26,6 +26,12 @@ vgextend $vg "$dev4" "$dev5"
 
 # $1 resume fn
 test_pvmove_resume() {
+	# Clean up any leftover processes from previous test iterations
+	aux kill_tagged_processes
+
+	# Restart lvmpolld at the start of each test iteration to ensure clean state
+	test -e LOCAL_LVMPOLLD && aux prepare_lvmpolld
+
 	# Create multisegment LV
 	lvcreate -an -Zn -l50 -n $lv1 $vg "$dev1"
 	lvextend -l+50 $vg/$lv1 "$dev2"
@@ -36,19 +42,24 @@ test_pvmove_resume() {
 	test -e HAVE_DM_DELAY || { lvremove -f $vg; return 0; }
 	aux delay_dev "$dev5" 0 30 "$(get first_extent_sector "$dev5"):"
 
-	pvmove -i5 "$dev1" "$dev4" &
-	PVMOVE=$!
+	LVM_TEST_TAG="kill_me_$PREFIX" pvmove -i5 "$dev1" "$dev4" &
+	PVMOVE1_PID=$!
 	aux wait_pvmove_lv_ready "$vg-pvmove0"
-	kill $PVMOVE
+	kill $PVMOVE1_PID
 
-	pvmove -i5 -n $vg/$lv2 "$dev3" "$dev5" &
-	PVMOVE=$!
+	LVM_TEST_TAG="kill_me_$PREFIX" pvmove -i5 -n $vg/$lv2 "$dev3" "$dev5" &
+	PVMOVE2_PID=$!
 	aux wait_pvmove_lv_ready "$vg-pvmove1"
-	kill $PVMOVE
+	kill $PVMOVE2_PID
 
-	test -e LOCAL_LVMPOLLD && aux prepare_lvmpolld
-	wait
+	wait "$PVMOVE1_PID" "$PVMOVE2_PID" || true
+	# Remove dm devices first - this will cause any polling to fail
 	aux remove_dm_devs "$vg-$lv1" "$vg-$lv2" "$vg-pvmove0" "$vg-pvmove1"
+	# Kill tagged processes (main pvmove commands)
+	aux kill_tagged_processes
+
+	# Restart lvmpolld (which will signal its children during shutdown)
+	test -e LOCAL_LVMPOLLD && aux prepare_lvmpolld
 
 	check lv_attr_bit type $vg/pvmove0 "p"
 	check lv_attr_bit type $vg/pvmove1 "p"

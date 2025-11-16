@@ -68,12 +68,13 @@ test -f HAVE_DM_DELAY || { aux throttle_dm_mirror || skip ; }
 
 _create_lv
 _keep_open pvmove0_mimage_0 &
+KEEP_OPEN_PID=$!
 
 # pvmove fails in such case
 not pvmove -i0 --atomic "$dev1" "$dev3" -vvvv |& tee out
 
 aux kill_tagged_processes
-wait
+wait "$KEEP_OPEN_PID" || true
 
 _check_msg "ABORTING: Failed" out
 
@@ -94,6 +95,7 @@ lvremove -f $vg/pvmove0_mimage_0
 
 _create_lv
 _keep_open pvmove0_mimage_1 &
+KEEP_OPEN_PID=$!
 
 # with background mode - it's forking polling
 pvmove -b -i1 --atomic -vvvv "$dev1" "$dev3"
@@ -102,7 +104,7 @@ aux wait_pvmove_lv_ready "$vg-pvmove0"
 not pvmove -i0 --abort -vvvv |& tee out
 
 aux kill_tagged_processes
-wait
+wait "$KEEP_OPEN_PID" || true
 # FIXME: here we are waiting to let the 'original'
 # 'pvmove -b' to catch the knowledge about aborted pvmove
 # So 'pvmove --abort' itself does NOT abort potentially number
@@ -132,11 +134,12 @@ lvremove -f $vg/pvmove0_mimage_1
 
 _create_lv
 _keep_open pvmove0 &
+KEEP_OPEN_PID=$!
 
 not pvmove -i0 --atomic "$dev1" "$dev3" |& tee out
 
 aux kill_tagged_processes
-wait
+wait "$KEEP_OPEN_PID" || true
 
 _check_msg "ABORTING: Unable to deactivate" out
 
@@ -151,13 +154,16 @@ lvremove -f $vg/pvmove0
 
 _create_lv
 _keep_open pvmove0_mimage_0 &
+KEEP_OPEN_PID1=$!
 _keep_open pvmove0_mimage_1 &
+KEEP_OPEN_PID2=$!
 _keep_open pvmove0 &
+KEEP_OPEN_PID3=$!
 
 not pvmove -i0 --atomic -vvvv "$dev1" "$dev3" |& tee out
 
 aux kill_tagged_processes
-wait
+wait "$KEEP_OPEN_PID1" "$KEEP_OPEN_PID2" "$KEEP_OPEN_PID3" || true
 
 _check_msg "ABORTING: Unable to deactivate" out
 

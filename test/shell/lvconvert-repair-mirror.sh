@@ -50,6 +50,7 @@ mount "$DM_DEV_DIR/$vg/$lv1" "$MOUNT_DIR"
 # run 'dd' operation during failure of 'mlog/mimage' device
 
 dd if=/dev/zero of=mnt/zero bs=4K count=100 conv=fdatasync 2>err &
+DD_PID=$!
 
 PERCENT=$(get lv_field $vg/$lv1 copy_percent)
 PERCENT=${PERCENT%%\.*}  # cut decimal
@@ -64,7 +65,7 @@ lvconvert --yes --repair $vg/$lv1
 aux enable_dev "$i"
 vgck --updatemetadata $vg
 
-wait
+wait "$DD_PID" || true
 # dd MAY NOT HAVE produced any error message
 not grep error err
 

@@ -37,17 +37,17 @@ test_pvmove_resume() {
 	aux delay_dev "$dev4" 0 30 "$(get first_extent_sector "$dev4"):"
 
 	pvmove -i5 "$dev1" &
-	PVMOVE=$!
+	PVMOVE1_PID=$!
 	aux wait_pvmove_lv_ready "$vg-pvmove0"
-	kill $PVMOVE
+	kill $PVMOVE1_PID
 	test -e LOCAL_LVMPOLLD && aux prepare_lvmpolld
 
 	pvmove -i5 "$dev2" &
-	PVMOVE=$!
+	PVMOVE2_PID=$!
 	aux wait_pvmove_lv_ready "$vg1-pvmove0"
-	kill $PVMOVE
+	kill $PVMOVE2_PID
 	test -e LOCAL_LVMPOLLD && aux prepare_lvmpolld
-	wait
+	wait "$PVMOVE1_PID" "$PVMOVE2_PID" || true
 
 	aux remove_dm_devs "$vg-$lv1" "$vg1-$lv1" "$vg-pvmove0" "$vg1-pvmove0"
 

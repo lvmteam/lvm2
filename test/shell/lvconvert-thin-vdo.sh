@@ -45,7 +45,7 @@ fail lvconvert -y --type thin-pool $vg/$lv1 --pooldatavdo y
 
 kill "$SLEEP_PID" || true
 # Wait for sleep to not use LV anymore
-wait
+wait "$SLEEP_PID" || true
 
 # No extra volume should appear in VG after failure
 test "$(get vg_field $vg lv_count)" -eq "1"

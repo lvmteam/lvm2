@@ -32,12 +32,12 @@ test_pvmove_resume() {
 	aux delay_dev "$dev2" 0 30 "$(get first_extent_sector "$dev2"):"
 
 	pvmove -i5 "$dev1" &
-	PVMOVE=$!
+	PVMOVE_PID=$!
 	aux wait_pvmove_lv_ready "$vg-pvmove0"
-	kill $PVMOVE
+	kill $PVMOVE_PID
 
 	test -e LOCAL_LVMPOLLD && aux prepare_lvmpolld
-	wait
+	wait "$PVMOVE_PID" || true
 	aux remove_dm_devs "$vg-$lv1" "$vg-$lv2" "$vg-pvmove0"
 
 	check lv_attr_bit type $vg/pvmove0 "p"

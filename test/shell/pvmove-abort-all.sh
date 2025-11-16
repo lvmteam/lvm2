@@ -56,9 +56,12 @@ cmd3=(pvmove -i1 $backgroundarg $mode -n $vg1/$lv1 "$dev4" "$dev6")
 
 if test -z "$backgroundarg" ; then
 	"${cmd1[@]}" &
+	PVMOVE1_PID=$!
 	aux wait_pvmove_lv_ready "$vg-pvmove0"
 	"${cmd2[@]}" &
+	PVMOVE2_PID=$!
 	"${cmd3[@]}" &
+	PVMOVE3_PID=$!
 	aux wait_pvmove_lv_ready "$vg-pvmove1" "$vg1-pvmove0"
 else
 	LVM_TEST_TAG="kill_me_$PREFIX" "${cmd1[@]}"
@@ -77,7 +80,7 @@ not grep "^\[pvmove" out
 
 lvremove -ff $vg $vg1
 
-wait
+test -z "$backgroundarg" && wait "$PVMOVE1_PID" "$PVMOVE2_PID" "$PVMOVE3_PID" || true
 aux kill_tagged_processes
 done
 done
