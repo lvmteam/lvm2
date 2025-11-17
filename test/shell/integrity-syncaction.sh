@@ -37,7 +37,7 @@ _prepare_vg() {
 }
 
 _test1() {
-	mkfs.ext4 "$DM_DEV_DIR/$vg/$lv1"
+	mkfs.ext4 -b 4096 "$DM_DEV_DIR/$vg/$lv1"
 
 	mount "$DM_DEV_DIR/$vg/$lv1" "$mnt"
 
@@ -82,7 +82,7 @@ _test1() {
 }
 
 _test2() {
-	mkfs.ext4 "$DM_DEV_DIR/$vg/$lv1"
+	mkfs.ext4 -b 4096 "$DM_DEV_DIR/$vg/$lv1"
 
 	mount "$DM_DEV_DIR/$vg/$lv1" "$mnt"
 
