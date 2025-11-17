@@ -56,7 +56,9 @@ mkdir -p "$mount_dir/1" "$mount_dir/2"
 
 echo 3 >/proc/sys/vm/drop_caches
 cp -r /usr/bin "$mount_dir/1" &>/dev/null &
+CP1_PID=$!
 cp -r /usr/bin "$mount_dir/2" &>/dev/null &
+CP2_PID=$!
 sync &
 SYNC_PID=$!
 
@@ -72,7 +74,7 @@ check lv_first_seg_field $vg/$lv1 stripesize "64.00k"
 check lv_first_seg_field $vg/$lv1 data_stripes 15
 check lv_first_seg_field $vg/$lv1 stripes 16
 
-kill -9 $CP1_PID $CP2_PID $SYNC_PID 2>/dev/null || true
+kill "$CP1_PID" "$CP2_PID" "$SYNC_PID" 2>/dev/null || true
 wait "$CP1_PID" "$CP2_PID" "$SYNC_PID" || true
 rm -fr "$mount_dir/[12]"
 

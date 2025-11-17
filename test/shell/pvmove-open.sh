@@ -74,6 +74,7 @@ KEEP_OPEN_PID=$!
 not pvmove -i0 --atomic "$dev1" "$dev3" -vvvv |& tee out
 
 aux kill_tagged_processes
+kill "$KEEP_OPEN_PID" 2>/dev/null || true
 wait "$KEEP_OPEN_PID" || true
 
 _check_msg "ABORTING: Failed" out

@@ -86,9 +86,6 @@ esac
 
 aux delay_dev "$dev2" 0
 
-kill -9 %% || true
-wait "$CP1_PID" "$CP2_PID" "$SYNC_PID" || true
-
 checksum_ "$mount_dir/random" >MD5_new
 
 umount "$mount_dir"
