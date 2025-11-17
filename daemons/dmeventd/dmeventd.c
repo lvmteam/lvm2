@@ -2934,12 +2934,15 @@ int main(int argc, char *argv[])
 	}
 
 	/* Terminate timeout thread if it exists */
-	if (_timeout_thread_id) {
+	pthread_mutex_lock(&_timeout_mutex);
+	if (!_timeout_thread_id)
+		pthread_mutex_unlock(&_timeout_mutex);
+	else {
+		pthread_t thread_id = _timeout_thread_id;
 		_exit_now = DM_EXITING;
-		pthread_mutex_lock(&_timeout_mutex);
 		pthread_cond_signal(&_timeout_cond);  /* Wake it up to check exit */
 		pthread_mutex_unlock(&_timeout_mutex);
-		if (pthread_join(_timeout_thread_id, NULL))
+		if (pthread_join(thread_id, NULL))
 			log_sys_debug("pthread_join", "timeout thread");
 	}
 
