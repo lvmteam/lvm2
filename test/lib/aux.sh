@@ -527,13 +527,14 @@ kill_tagged_processes() {
 	[[ ${#pids[@]} -eq 0 ]] && return
 
 	# wait if process exited and eventually -KILL
-	wait=0
+	local wait_count=0
 	for pid in "${pids[@]}" ; do
-		while ps "$pid" > /dev/null && "$wait" -le 10; do
+		wait_count=0
+		while ps "$pid" > /dev/null && [[ "$wait_count" -le 10 ]]; do
 			sleep .2
-			wait=$(( wait + 1 ))
+			wait_count=$(( wait_count + 1 ))
 		done
-		[[ "$wait" -le 10 ]] || kill -KILL "$pid" 2>/dev/null || true
+		[[ "$wait_count" -le 10 ]] || kill -KILL "$pid" 2>/dev/null || true
 	done
 }
 
