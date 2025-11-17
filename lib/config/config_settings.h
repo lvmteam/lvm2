@@ -324,13 +324,19 @@ cfg(devices_search_for_devnames_CFG, "search_for_devnames", devices_CFG_SECTION,
 	"at other devices, but only those that are likely to have the PV.\n"
 	"If \"all\", lvm will look at all devices on the system.\n")
 
-cfg(devices_device_ids_refresh_CFG, "device_ids_refresh", devices_CFG_SECTION, CFG_DEFAULT_COMMENTED, CFG_TYPE_BOOL, 1, vsn(2, 3, 23), NULL, 0, NULL,
+cfg(devices_device_ids_refresh_CFG, "device_ids_refresh", devices_CFG_SECTION, CFG_DEFAULT_COMMENTED, CFG_TYPE_INT, DEFAULT_DEVICE_IDS_REFRESH, vsn(2, 3, 23), NULL, 0, NULL,
 	"Find PVs on new devices and update the device IDs in the devices file.\n"
 	"If PVs are restored or moved to a new system with new devices, but\n"
 	"an old system.devices remains with old device IDs, then search for\n"
 	"the PVIDs on new devices and update the device IDs in system.devices.\n"
-	"The original device IDs must also not be found on the new system.\n"
-	"See device_ids_refresh_check for conditions that trigger the refresh.\n")
+	"See device_ids_refresh_check for conditions that trigger the refresh.\n"
+	"Set to 1 to enable a single automatic refresh attempt when a trigger\n"
+	"condition is detected. Set to 0 to disable automatic refresh.\n"
+	"Set to a value between 10 and 600 (in seconds) to enable an extended\n"
+	"refresh period during which missing PVs will be located using the PVID,\n"
+	"and the system.devices device ID updated if the PV is found on a new device.\n"
+	"An extended refresh period may be useful if devices require refresh,\n"
+	"but are attached to the system some time the initial refresh.\n")
 
 cfg_array(devices_device_ids_refresh_checks_CFG, "device_ids_refresh_checks", devices_CFG_SECTION, CFG_ALLOW_EMPTY | CFG_DEFAULT_COMMENTED, CFG_TYPE_STRING, "#Sproduct_uuid#Shostname", vsn(2, 3, 23), NULL, 0, NULL,
 	"Conditions that trigger device_ids_refresh to locate PVIDs on new devices.\n"

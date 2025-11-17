@@ -54,6 +54,50 @@ static const char _searched_file_dir[] = DEFAULT_RUN_DIR;
 char devices_file_hostname_orig[PATH_MAX]; 
 char devices_file_product_uuid_orig[PATH_MAX]; 
 
+static uint64_t _get_refresh_timestamp(unsigned int add_seconds)
+{
+	time_t now;
+	struct tm *tm;
+	uint64_t timestamp;
+
+	time(&now);
+	now += add_seconds;
+	tm = gmtime(&now);
+
+	/* YYYYMMDDHHMMSS as a uint64_t */
+	timestamp = (uint64_t)tm->tm_year + 1900;
+	timestamp = timestamp * 100 + (tm->tm_mon + 1);
+	timestamp = timestamp * 100 + tm->tm_mday;
+	timestamp = timestamp * 100 + tm->tm_hour;
+	timestamp = timestamp * 100 + tm->tm_min;
+	timestamp = timestamp * 100 + tm->tm_sec;
+
+	return timestamp;
+}
+
+static uint64_t _new_refresh_timestamp(struct cmd_context *cmd)
+{
+	unsigned int val;
+
+	/*
+	 * val:
+	 * 0: refresh trigger disabled (this function will not be called)
+	 * 1: single refresh enabled, no extended period (return 0)
+	 * 10-600: refresh period enabled for the specified number of seconds
+	 *         (return a new refresh_until timestamp: the current time
+	 *         plus the configured number of seconds for the refresh period)
+	 * other values: treated like 1 (return 0)
+	 */
+
+	if (!(val = find_config_tree_int(cmd, devices_device_ids_refresh_CFG, NULL)))
+		return_0;
+
+	if (val >= 10 && val <= 600)
+		return _get_refresh_timestamp(val);
+
+	return 0;
+}
+
 /*
  * The input string pvid may be of any length, it's often
  * read from system.devices, which can be edited.
@@ -1311,6 +1355,8 @@ int device_ids_read(struct cmd_context *cmd)
 				log_debug("Devices file hostname %s vs local %s.",
 					  check_id[0] ? check_id : "none", cmd->hostname ?: "none");
 				cmd->device_ids_refresh_trigger = 1;
+				cmd->device_ids_refresh_until = _new_refresh_timestamp(cmd);
+				log_debug("Devices file refresh until %llu new", (unsigned long long)cmd->device_ids_refresh_until);
 			}
 			continue;
 		}
@@ -1332,7 +1378,28 @@ int device_ids_read(struct cmd_context *cmd)
 				log_debug("Devices file product_uuid %s vs local %s.",
 					  check_id[0] ? check_id : "none", cmd->product_uuid ?: "none");
 				cmd->device_ids_refresh_trigger = 1;
+				cmd->device_ids_refresh_until = _new_refresh_timestamp(cmd);
+				log_debug("Devices file refresh until %llu new", (unsigned long long)cmd->device_ids_refresh_until);
 			}
+			continue;
+		}
+
+		if (!strncmp(line, "REFRESH_UNTIL", 13)) {
+			uint64_t refresh_until = 0;
+
+			_copy_idline_str(line, check_id, sizeof(check_id));
+			log_debug("read devices file refresh_until %s", check_id);
+			if (check_id[0] && find_config_tree_int(cmd, devices_device_ids_refresh_CFG, NULL))
+				refresh_until = strtoull(check_id, NULL, 0);
+			if (refresh_until == ULLONG_MAX)
+				refresh_until = 0;
+			/* device_ids_read_refresh=1 means system.devices contains a REFRESH_UNTIL line */
+			cmd->device_ids_read_refresh = 1;
+			cmd->device_ids_refresh_until = refresh_until;
+			if (refresh_until && (_get_refresh_timestamp(0) < refresh_until))
+				cmd->device_ids_refresh_trigger = 1;
+			log_debug("Devices file refresh until %llu old trigger %d",
+				  (unsigned long long)cmd->device_ids_refresh_until, cmd->device_ids_refresh_trigger);
 			continue;
 		}
 
@@ -1770,6 +1837,15 @@ int device_ids_write(struct cmd_context *cmd)
 
 	if (dm_snprintf(version_buf, VERSION_LINE_MAX, "VERSION=%u.%u.%u", DEVICES_FILE_MAJOR, DEVICES_FILE_MINOR, df_counter+1) < 0)
 		goto_out;
+
+	if (cmd->device_ids_refresh_until && cmd->device_ids_refresh_trigger) {
+		num = snprintf(fb + pos, len - pos, "REFRESH_UNTIL=%llu\n", (unsigned long long)cmd->device_ids_refresh_until);
+		if (num >= len - pos) {
+			log_warn("Failed to write buffer for devices file content.");
+			goto out;
+		}
+		pos += num;
+	}
 
 	num = snprintf(fb + pos, len - pos, "%s\n", version_buf);
 	if (num >= len - pos) {
@@ -3612,6 +3688,20 @@ void device_ids_validate(struct cmd_context *cmd, struct dm_list *scanned_devs, 
 	}
 
 	/*
+	 * If device_ids_search() will be called (device_ids_invalid is set,
+	 * or device_ids_refresh_trigger is set), then let that function
+	 * decide about updating the devices file refresh_until.
+	 *
+	 * If search will not be called, refresh_until is set in the file,
+	 * but refresh_until is not active, then remove it from the file.
+	 */
+	if (!cmd->device_ids_invalid && !cmd->device_ids_refresh_trigger && cmd->device_ids_read_refresh) {
+		log_debug("Validate device ids: update to remove refresh_until");
+		cmd->device_ids_refresh_until = 0;
+		update_file = 1;
+	}
+
+	/*
 	 * When info in the devices file has become incorrect,
 	 * try another search for PVIDs on renamed devices.
 	 */
@@ -4308,6 +4398,30 @@ void device_ids_search(struct cmd_context *cmd, struct dm_list *new_devs,
 
  out:
 	/*
+	 * Remove REFRESH_UNTIL if it was set in the file,
+	 * and all devices have been found.
+	 * Add REFRESH_UNTIL if it was not set in the file,
+	 * and all devices have not been found, and the
+	 * refresh_until interval is active.
+	 */
+	if (cmd->device_ids_read_refresh && !not_found) {
+		log_debug("Search for PVIDs remove refresh_until");
+		cmd->device_ids_refresh_until = 0;
+		update_file = 1;
+	}
+	if (!cmd->device_ids_read_refresh && not_found && cmd->device_ids_refresh_until) {
+		log_debug("Search for PVIDs add refresh_until not_found %d", not_found);
+		update_file = 1;
+	}
+
+	/*
+	 * If the devices file is already being updated, don't include
+	 * REFRESH_UNTIL if all devices are found.
+	 */
+	if (!not_found)
+		cmd->device_ids_refresh_until = 0;
+
+	/*
 	 * try lock and device_ids_write(), the update is not required and will
 	 * be done by a subsequent command if it's not done here.
 	 *
@@ -4360,8 +4474,8 @@ void device_ids_search(struct cmd_context *cmd, struct dm_list *new_devs,
 	 * It does not suppress searches for missing PVIDs when done for
 	 * refresh, where PVIDs of any idtype are searched for.
 	 */
-	if (!cmd->device_ids_refresh_trigger && !all_ids && not_found && !found &&
-	     strcmp(cmd->name, "lvmdevices"))
+	if (!cmd->device_ids_refresh_trigger && !cmd->device_ids_refresh_until &&
+	    !all_ids && not_found && !found && strcmp(cmd->name, "lvmdevices"))
 		_searched_devnames_create(cmd, search_pvids_count, search_pvids_hash,
 					  search_devs_count, search_devs_hash);
 }

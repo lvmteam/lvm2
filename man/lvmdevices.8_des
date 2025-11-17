@@ -219,19 +219,43 @@ PART: the partition number if a PV exists on a partition.
 .P
 .SS device ID refresh
 .
-When LVM writes system.devices, it includes a local machine ID in the
-system.devices file (as PRODUCT_UUID or HOSTNAME.) When LVM reads
-system.devices, it compares this saved machine ID value to the current
-machine. This allows lvm to detect when system.devices has been copied
-or restored onto a different machine. When this happens, lvm switches
-its method for locating the PVs in system.devices, and locates PVs based
-on their PVID rather than the device ID (this involves scanning all devices
-on the system.) If a PVID is found on a device with a different device ID,
-then the device ID in system.devices is automatically updated to the new
-device ID.
+When lvm writes system.devices, it includes a local machine ID in the
+system.devices file (as PRODUCT_UUID or HOSTNAME.)  When lvm reads
+system.devices, it compares this saved machine ID to the current machine,
+which allows lvm to detect when system.devices has been copied or restored
+onto a different machine.  When a machine change is detected, lvm enables
+a "device ID refresh" mode (configured by lvm.conf device_ids_refresh and
+device_ids_refresh_checks.)
 .P
-While this refresh process is triggered automatically by a new machine
-ID, it can also be performed manually with the following commands:
+In refresh mode, a device in system.devices that is not found by its device ID
+will be located using its PVID.  LVM will scan all devices on the system to
+search for the missing PVIDs in system.devices.  If a PVID is found on a
+new device, the system.devices entry is updated with a new device ID matching
+the new device on which the PVID was found.  The refresh mode can be configured
+to run once, when the machine change is first detected, or can be enabled
+for period of time following the first refresh, or can be disabled
+entirely.
+.P
+.B device_ids_refresh = 0
+.br
+Disables refresh mode.
+.P
+.B device_ids_refresh = 1
+.br
+Enables one attempt to refresh device IDs when a machine
+change is first detected.
+.P
+.B device_ids_refresh =
+.I seconds
+.br
+The refresh mode is enabled for this number of seconds
+following the initial refresh attempt, or until all PVs
+in system.devices are found.  During this period, a
+REFRESH_UNTIL line appears in system.devices.  Accepted
+values are 10-600 seconds.
+.P
+In addition to the automated device ID refresh mode, refresh
+can be performed manually:
 .P
 Check if system.devices would be updated with new device IDs:
 .br

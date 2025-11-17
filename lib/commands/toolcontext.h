@@ -224,6 +224,7 @@ struct cmd_context {
 	unsigned device_ids_refresh_trigger:1;
 	unsigned device_ids_invalid:1;
 	unsigned device_ids_auto_import:1;
+	unsigned device_ids_read_refresh:1;	/* device_ids_read found REFRESH_UNTIL */
 	unsigned get_vgname_from_options:1;     /* used by lvconvert */
 	unsigned vg_write_validates_vg:1;
 	unsigned disable_pr_required:1;
@@ -236,6 +237,7 @@ struct cmd_context {
 	const char *md_component_checks;
 	const char *search_for_devnames;	/* config file setting */
 	struct dm_list device_ids_check_serial;
+	uint64_t device_ids_refresh_until;	/* timestamp of YYYYMMDDHHMMSS */
 	const char *devicesfile;                /* from --devicesfile option */
 	struct dm_list deviceslist;             /* from --devices option, struct dm_str_list */
 

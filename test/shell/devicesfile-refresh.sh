@@ -23,6 +23,7 @@ test "$DM_DEV_DIR" = "/dev" || skip "Only works with /dev access -> make check L
 SYS_DIR="$PWD/test/sys"
 aux lvmconf "devices/use_devicesfile = 1" \
 	"devices/device_id_sysfs_dir = \"$SYS_DIR/\"" \
+	"devices/device_ids_refresh = 1" \
 	'devices/global_filter = [ "a|.*|" ]' \
 	"global/event_activation = 1"
 
