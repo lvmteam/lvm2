@@ -136,7 +136,7 @@ if [[ "$SKIP_ROOT_DM_CHECK" -eq 0 ]]; then
 	case "$d" in
 	"No devices found") ;;
 	"") ;;
-	*) die "DM table already has either suspended or $PREFIX prefixed devices: $d" ;;
+	*) skip "DM table already has either suspended or $PREFIX prefixed devices: $d" ;;
 	esac
 fi
 
