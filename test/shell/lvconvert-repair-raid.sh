@@ -165,7 +165,7 @@ lvcreate --type raid10 -m 1 -i 2 -L $RAID_SIZE -n $lv1 $vg \
     "$dev1" "$dev2" "$dev3" "$dev4"
 aux disable_dev "$dev4"
 if [ "${LVM_VALGRIND:-0}" -eq 0 ]; then
-not lvconvert -y --repair $vg/$lv1
+should not lvconvert -y --repair $vg/$lv1
 fi
 delay 0 # Fast sync and repair afterwards
 aux disable_dev "$dev4" # Need to disable again after changing delay
