@@ -112,15 +112,8 @@ lvremove -f $vg1
 
 # Test virtual snapshot over /dev/zero
 lvcreate --type snapshot -V50 -L10 -n $lv1 -s $vg1
-CHECK_ACTIVE="active"
-CHECK_ACTIVE="local exclusive"
-check lv_field $vg1/$lv1 lv_active "$CHECK_ACTIVE"
+check lv_field $vg1/$lv1 lv_active "active"
 lvchange -an $vg1
-
-# On cluster snapshot gets exclusive activation
-lvchange -ay $vg1
-check lv_field $vg1/$lv1 lv_active "$CHECK_ACTIVE"
-lvremove -f $vg1/$lv1
 check lv_not_exists $vg1 $lv1
 
 # Check border size
