@@ -307,10 +307,16 @@ void pdst_locked_send_cancel(const struct lvmpolld_store *pdst)
 	struct lvmpolld_lv *pdlv;
 	struct dm_hash_node *n;
 
+	/* Signal child processes and cancel monitoring threads */
 	dm_hash_iterate(n, pdst->store) {
 		pdlv = dm_hash_get_data(pdst->store, n);
-		if (!pdlv_locked_polling_finished(pdlv))
+		if (!pdlv_locked_polling_finished(pdlv)) {
+			/* Signal child lvpoll process to terminate */
+			if (pdlv->cmd_pid > 0)
+				kill(pdlv->cmd_pid, SIGTERM);
+			/* Cancel monitoring thread (which will reap the child) */
 			pthread_cancel(pdlv->tid);
+		}
 	}
 }
 
