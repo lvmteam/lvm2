@@ -3155,6 +3155,7 @@ int device_id_system_list(struct cmd_context *cmd, struct device *dev, uint16_t 
 				log_print("%s", idname);
 			else
 				log_print("%-16s %s", idtype_to_str(idtype), idname);
+			free(idname);
 			found++;
 		}
 	}
