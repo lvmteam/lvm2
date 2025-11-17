@@ -963,7 +963,7 @@ clear_devs() {
 				touch NO_BLKDISCARD_Z
 			fi
 
-			dd if=/dev/zero of="$1" bs=512K oflag=direct $seek $count 2>/dev/null/|| true
+			dd if=/dev/zero of="$1" bs=512K oflag=direct $seek $count 2>/dev/null || true
 			;;
 		esac
 		shift
