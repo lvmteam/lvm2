@@ -228,15 +228,14 @@ static void daemonize(void)
 
 	umask(0);
 
-	if (close(0) || close(1) || close(2)) {
-		LOG_ERROR("Failed to close terminal FDs");
+	if (((devnull != STDIN_FILENO) && (dup2(devnull, STDIN_FILENO) == -1)) ||
+	    ((devnull != STDOUT_FILENO) && (dup2(devnull, STDOUT_FILENO) == -1)) ||
+	    ((devnull != STDERR_FILENO) && (dup2(devnull, STDERR_FILENO) == -1))) {
+		if (devnull > STDERR_FILENO)
+			(void) close(devnull);
+		/* coverity[leaked_handle] devnull is stdin/stdout/stderr */
 		exit(EXIT_FAILURE);
 	}
-
-	if ((dup2(devnull, 0) < 0) || /* reopen stdin */
-	    (dup2(devnull, 1) < 0) || /* reopen stdout */
-	    (dup2(devnull, 2) < 0))   /* reopen stderr */
-		exit(EXIT_FAILURE);
 
 	if ((devnull > STDERR_FILENO) && close(devnull)) {
 		LOG_ERROR("Failed to close descriptor %d: %s",
@@ -245,7 +244,7 @@ static void daemonize(void)
 	}
 
 	LOG_OPEN("cmirrord", LOG_PID, LOG_DAEMON);
-	/* coverity[leaked_handle] devnull cannot leak here */
+	/* coverity[leaked_handle] devnull is stdin/stdout/stderr */
 }
 
 /*

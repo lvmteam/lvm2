@@ -343,6 +343,7 @@ static void _daemonize(daemon_state s)
 	sigemptyset(&my_sigset);
 	if (sigprocmask(SIG_SETMASK, &my_sigset, NULL) < 0) {
 		fprintf(stderr, "Unable to restore signals.\n");
+		(void) close(fd);
 		exit(EXIT_FAILURE);
 	}
 	signal(SIGTERM, &_exit_handler);
@@ -350,6 +351,7 @@ static void _daemonize(daemon_state s)
 	switch (pid = fork()) {
 	case -1:
 		perror("fork failed:");
+		(void) close(fd);
 		exit(EXIT_FAILURE);
 
 	case 0:		/* Child */
@@ -380,13 +382,17 @@ static void _daemonize(daemon_state s)
 
 	if (chdir("/")) {
 		perror("Cannot chdir to /");
+		(void) close(fd);
 		exit(1);
 	}
 
-	if ((dup2(fd, STDIN_FILENO) == -1) ||
-	    (dup2(fd, STDOUT_FILENO) == -1) ||
-	    (dup2(fd, STDERR_FILENO) == -1)) {
+	if (((fd != STDIN_FILENO) && (dup2(fd, STDIN_FILENO) == -1)) ||
+	    ((fd != STDOUT_FILENO) && (dup2(fd, STDOUT_FILENO) == -1)) ||
+	    ((fd != STDERR_FILENO) && (dup2(fd, STDERR_FILENO) == -1))) {
 		perror("Error setting terminal FDs to /dev/null");
+		if (fd > STDERR_FILENO)
+			(void) close(fd);
+		/* coverity[leaked_handle] fd is stdin/stdout/stderr */
 		exit(2);
 	}
 
@@ -399,7 +405,7 @@ static void _daemonize(daemon_state s)
 
 	setsid();
 
-	/* coverity[leaked_handle] 'fd' handle is not leaking */
+	/* coverity[leaked_handle] 'fd' is stdin/stdout/stderr */
 }
 
 response daemon_reply_simple(const char *id, ...)

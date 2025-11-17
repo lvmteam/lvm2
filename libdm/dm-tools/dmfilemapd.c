@@ -658,13 +658,13 @@ static int _daemonize(struct filemap_monitor *fm)
 			return 0;
 		}
 
-		if ((dup2(fd, STDIN_FILENO) == -1) ||
-		    (dup2(fd, STDOUT_FILENO) == -1) ||
-		    (dup2(fd, STDERR_FILENO) == -1)) {
+		if (((fd != STDIN_FILENO) && (dup2(fd, STDIN_FILENO) == -1)) ||
+		    ((fd != STDOUT_FILENO) && (dup2(fd, STDOUT_FILENO) == -1)) ||
+		    ((fd != STDERR_FILENO) && (dup2(fd, STDERR_FILENO) == -1))) {
 			if (fd > STDERR_FILENO)
 				(void) close(fd);
 			_early_log("Error redirecting stdin/out/err to null.");
-			/* coverity[leaked_handle] no leak */
+			/* coverity[leaked_handle] fd is stdin/stdout/stderr */
 			return 0;
 		}
 		if (fd > STDERR_FILENO)
@@ -675,7 +675,7 @@ static int _daemonize(struct filemap_monitor *fm)
 		if (ffd != fm->fd)
 			(void) close(ffd);
 
-	/* coverity[leaked_handle] no leak */
+	/* coverity[leaked_handle] fd is stdin/stdout/stderr */
 	return 1;
 }
 

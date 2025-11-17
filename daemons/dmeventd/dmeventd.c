@@ -2478,17 +2478,21 @@ static void _daemonize(void)
 	if ((null_fd = open("/dev/null", O_RDWR)) < 0)
 		exit(EXIT_DESC_OPEN_FAILURE);
 
-	if ((dup2(null_fd, STDIN_FILENO) == -1) ||
-	    (dup2(null_fd, STDOUT_FILENO) == -1) ||
-	    (dup2(null_fd, STDERR_FILENO) == -1))
+	if (((null_fd != STDIN_FILENO) && (dup2(null_fd, STDIN_FILENO) == -1)) ||
+	    ((null_fd != STDOUT_FILENO) && (dup2(null_fd, STDOUT_FILENO) == -1)) ||
+	    ((null_fd != STDERR_FILENO) && (dup2(null_fd, STDERR_FILENO) == -1))) {
+		if (null_fd > STDERR_FILENO)
+			(void) close(null_fd);
+		/* coverity[leaked_handle] null_fd is stdin/stdout/stderr */
 		exit(EXIT_DESC_OPEN_FAILURE);
+	}
 
 	if ((null_fd > STDERR_FILENO) && close(null_fd))
 		exit(EXIT_DESC_CLOSE_FAILURE);
 
 	setsid();
 
-	/* coverity[leaked_handle] 'null_fd' handle is not leaking */
+	/* coverity[leaked_handle] 'null_fd' is stdin/stdout/stderr */
 }
 
 static int _reinstate_registrations(struct dm_event_fifos *fifos)
