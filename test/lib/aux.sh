@@ -479,21 +479,27 @@ teardown_devs() {
 }
 
 kill_sleep_kill_() {
+	local pid=()
 	local pidfile=$1
-	local slow=$2
-	local pid
+	local sleep_time="0.05"
 
-	if [[ -s "$pidfile"  ]]; then
-		pid=( $(< "$pidfile") ) || true
-		rm -f "$pidfile"
-		[[ "$pidfile" = "LOCAL_LVMDBUSD" ]] && killall -9 lvmdbusd || true
-		kill -TERM "${pid[@]}" 2>/dev/null || return 0
-		for i in {0..10} ; do
-			ps "${pid[@]}" >/dev/null || return 0
-			if [[ "$slow" -eq 0  ]]; then sleep .2 ; else sleep 1 ; fi
-			kill -KILL "${pid[@]}" 2>/dev/null || true
-		done
-	fi
+	[[ ! -s "$pidfile"  ]] && return 0
+
+	# Normal: 40 * 0.05 = 2 seconds, Valgrind 40 x 0.2s = 8 seconds
+	[[ "$2" -eq 0  ]] || sleep_time="0.2"
+
+	pid=( $(< "$pidfile") ) || true
+	rm -f "$pidfile" || true
+	[[ "$pidfile" = "LOCAL_LVMDBUSD" ]] && killall -9 lvmdbusd || true
+	kill -TERM "${pid[@]}" 2>/dev/null || return 0
+	# Give process time to shut down gracefully
+	for i in {0..40} ; do
+		ps "${pid[@]}" >/dev/null || return 0
+		sleep "$sleep_time"
+	done
+
+	# After timeout, use SIGKILL as last resort
+	kill -KILL "${pid[@]}" 2>/dev/null || true
 }
 
 print_procs_by_tag_() {
