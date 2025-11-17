@@ -630,7 +630,7 @@ check_unlinked:
 static int _daemonize(struct filemap_monitor *fm)
 {
 	pid_t pid = 0;
-	int fd, ffd;
+	int fd;
 	/* Close stray file descriptors, preserving fm->fd */
 	struct custom_fds custom_fds = { .out = fm->fd };
 
