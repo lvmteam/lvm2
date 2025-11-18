@@ -1,5 +1,6 @@
 Version 2.03.37 - 
 ==================
+  Support output in list mode for all lvmconfig --typeconfig types with --list.
   Enhance shutdown performance of daemons using libdaemon.
   Add missing synchronization while converting cachevols.
   Warn on classic snapshot on raid creation and error on activation + test.
