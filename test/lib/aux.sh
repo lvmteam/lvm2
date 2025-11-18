@@ -216,19 +216,41 @@ prepare_lvmpolld() {
 
 lvmpolld_talk() {
 	local use=nc
+	local socket="$TESTDIR/lvmpolld.socket"
+	local cmd
+	local result
+	local rc
+
+	# Determine which tool to use
 	if type -p socat >& /dev/null; then
 		use=socat
-	elif echo | not nc -U "$TESTDIR/lvmpolld.socket" ; then
-		echo "WARNING: Neither socat nor nc -U seems to be available." 1>&2
+		cmd=(socat "unix-connect:$socket" -)
+	elif type -p nc >& /dev/null; then
+		cmd=(nc -U "$socket")
+	else
+		echo "WARNING: Neither socat nor nc seems to be available." 1>&2
 		echo "## failed to contact lvmpolld."
 		return 1
 	fi
 
-	if [[ "$use" = nc  ]]; then
-		nc -U "$TESTDIR/lvmpolld.socket"
-	else
-		socat "unix-connect:$TESTDIR/lvmpolld.socket" -
-	fi | tee -a lvmpolld-talk.txt
+	# Try to connect with unified error handling
+	if ! result=$("${cmd[@]}" 2>&1); then
+		rc=$?
+		# Check what kind of failure
+		if [[ ! -S "$socket" ]]; then
+			echo "WARNING: lvmpolld socket does not exist at $socket" 1>&2
+			echo "## lvmpolld may have shut down or not started properly." 1>&2
+		elif [[ "$result" == *"No such file"* ]]; then
+			echo "WARNING: lvmpolld socket disappeared during connection attempt" 1>&2
+			echo "## lvmpolld shut down while trying to connect." 1>&2
+		else
+			echo "WARNING: Failed to connect to lvmpolld (rc=$rc): $result" 1>&2
+		fi
+		echo "## failed to contact lvmpolld."
+		return 1
+	fi
+
+	echo "$result" | tee -a lvmpolld-talk.txt
 }
 
 lvmpolld_dump() {
