@@ -163,19 +163,14 @@ function _check_size
 	local vg=$1
 	local lv=$2
 	local data_stripes=$3
+	local lv_size
+	local calc_size
+
+	lv_size=$(blockdev --getsz "$DM_DEV_DIR/$vg/$lv")
+	calc_size=$(_get_size $vg $lv "$data_stripes")
 
 	# Compare size of LV with calculated one
-	test "$(blockdev --getsz "/dev/$vg/$lv")" -eq "$(_get_size $vg $lv "$data_stripes")"
-}
-
-function _not_check_size
-{
-	local vg=$1
-	local lv=$2
-	local data_stripes=$3
-
-	# Compare size of LV with calculated one
-	[[ "$(blockdev --getsz "/dev/$vg/$lv")" -ne "$(_get_size $vg $lv "$data_stripes")" ]]
+	[[ lv_size -eq calc_size ]]
 }
 
 function _check_size_timeout
@@ -184,21 +179,8 @@ function _check_size_timeout
 
 	for i in $(seq 0 $((CHECK_SIZE_TIMEOUT * 20)))
 	do
-		sleep .05
 		_check_size "$@" && return
-	done
-
-	return 1
-}
-
-function _not_check_size_timeout
-{
-	local i
-
-	for i in $(seq 0 $((CHECK_SIZE_TIMEOUT * 20)))
-	do
 		sleep .05
-		_not_check_size "$@"
 	done
 
 	return 1
@@ -300,7 +282,7 @@ function _add_stripes
 	_reshape_layout "$raid_type" "$data_stripes" $vg $lv 0 1 --stripesize "$stripesize"
 
 	# Size has to be inconsistent until reshape finishes
-	_not_check_size $vg $lv "$data_stripes" || die "LV size should be small"
+	_check_size $vg $lv "$data_stripes" && die "LV size should be small"
 
 	_restore_dev "$dev1"
 
@@ -312,7 +294,7 @@ function _add_stripes
 	aux wait_for_sync $vg $lv 0
 
 	# Now size consistency has to be fine
-	# FIXME _not_check_size_timeout $vg $lv "$data_stripes" || die "LV size should be grown"
+	_check_size_timeout $vg $lv "$data_stripes" || die "LV size should be grown"
 
 	# Check, use grown capacity for the filesystem and check again
 	if [ "$SKIP_RESIZE" -eq 0 ]
@@ -351,7 +333,7 @@ function _remove_stripes
 	_reshape_layout "$raid_type" "$data_stripes" $vg $lv 0 1 --force --stripesize "$stripesize"
 
 	# Size has to be inconsistent, as to be removed legs still exist
-	_not_check_size $vg $lv "$cur_data_stripes" || die "LV size should be reduced but not rimage count"
+	_check_size $vg $lv "$cur_data_stripes" && die "LV size should be reduced but not rimage count"
 
 	_restore_dev "$dev1"
 
