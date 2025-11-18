@@ -48,7 +48,10 @@ test "$(get lv_field $vg/$lv1 cache_dirty_blocks)" -gt 0 || {
 	skip "Cannot make a dirty writeback cache LV."
 }
 
-LVM_TEST_TAG="kill_me_$PREFIX" lvconvert -vvvv --splitcache $vg/$lv1 >logconvert 2>&1 &
+# to be able to trace our command - let's prepare descriptor 3 and reroute output there
+# 'tee'  will mix-in on stdout result with our 'for 0..50' loop
+exec 3> >(tee logconvert)
+LVM_TEST_TAG="kill_me_$PREFIX" lvconvert -vvvv --splitcache $vg/$lv1 >&3 2>&1 &
 PID_CONVERT=$!
 for i in {1..50}; do
 	out=$(dmsetup status --noflush "$vg-$lv1")
@@ -66,6 +69,9 @@ test "$i" -ge 49 && die "Waited for cleaner policy on $vg/$lv1 too long!"
 kill -INT $PID_CONVERT
 aux enable_dev "$dev2"
 wait "$PID_CONVERT" || true
+# close 'tee' descritor
+exec 3>$-
+
 #cat logconvert || true
 
 # Problem of this test is, in older kernels, even the initial change to cleaner
