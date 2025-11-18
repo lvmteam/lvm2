@@ -27,9 +27,8 @@ void sigint_allow(void);
 int sigint_caught(void);
 void sigint_restore(void);
 void sigint_clear(void);
+int sigint_usleep(useconds_t usec);
 
 void block_signals(uint32_t flags);
 void unblock_signals(void);
-
-int interruptible_usleep(useconds_t usec);
 #endif

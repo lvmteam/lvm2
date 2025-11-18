@@ -421,7 +421,7 @@ static int _raid_in_sync(const struct logical_volume *lv)
 		if (retries == _RAID_IN_SYNC_RETRIES)
 			log_warn("WARNING: Sync status for %s is inconsistent.",
 				 display_lvname(lv));
-		if (interruptible_usleep(500000))
+		if (!sigint_usleep(500000))
 			return_0;
 	} while (--retries);
 

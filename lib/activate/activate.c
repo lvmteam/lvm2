@@ -984,7 +984,7 @@ int lv_check_not_in_use(const struct logical_volume *lv, int error_if_used)
 
 	open_count_check_retries = retry_deactivation() ? OPEN_COUNT_CHECK_RETRIES : 1;
 	while (open_count_check_retries--) {
-		if (interruptible_usleep(OPEN_COUNT_CHECK_USLEEP_DELAY))
+		if (!sigint_usleep(OPEN_COUNT_CHECK_USLEEP_DELAY))
 			break;  /* interrupted */
 
 		log_debug_activation("Retrying open_count check for %s.",
@@ -2089,7 +2089,7 @@ int monitor_dev_for_events(struct cmd_context *cmd, const struct logical_volume 
 				break;
 			log_very_verbose("%s %smonitoring still pending: waiting...",
 					 display_lvname(lv), monitor ? "" : "un");
-			if (interruptible_usleep(10000 * i)) {
+			if (!sigint_usleep(10000 * i)) {
 				stack;
 				r = 0;
 				break;

@@ -136,6 +136,19 @@ void sigint_restore(void)
 			log_sys_debug("sigaction", _ar_sigs[i].name);
 }
 
+/* usleep for specified microseconds with SIGINT handling enabled.
+ * Returns 1 if sleep completed, 0 if interrupted by signal. */
+int sigint_usleep(useconds_t usec)
+{
+	int r;
+
+	sigint_allow();
+	r = usleep(usec);
+	sigint_restore();
+
+	return (sigint_caught() || r) ? 0 : 1;
+}
+
 void block_signals(uint32_t flags __attribute__((unused)))
 {
 	sigset_t set;
@@ -174,17 +187,4 @@ void unblock_signals(void)
 	}
 
 	_signals_blocked = 0;
-}
-
-/* usleep with enabled signal handler.
- * Returns 1 when there was interruption */
-int interruptible_usleep(useconds_t usec)
-{
-	int r;
-
-	sigint_allow();
-	r = usleep(usec);
-	sigint_restore();
-
-	return (sigint_caught() || r) ? 1 : 0;
 }
