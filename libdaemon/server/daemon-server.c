@@ -48,9 +48,9 @@ static int _pthread_create(pthread_t *t, void *(*fun)(void *), void *arg, int st
 static volatile sig_atomic_t _shutdown_requested = 0;
 static int _systemd_activation = 0;
 
-static void _exit_handler(int sig __attribute__((unused)))
+static void _exit_handler(int sig)
 {
-	_shutdown_requested = 1;
+	_shutdown_requested = sig;
 }
 
 #define EXIT_ALREADYRUNNING 13
@@ -745,7 +745,7 @@ void daemon_start(daemon_state s)
 	}
 
 	if (_shutdown_requested)
-		INFO(&s, "%s shutdown requested", s.name);
+		INFO(&s, "%s shutdown requested by signal %d.", s.name, (int)_shutdown_requested);
 
 	_shutdown_sockets(&s);
 
