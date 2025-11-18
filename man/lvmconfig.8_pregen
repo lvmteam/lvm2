@@ -456,8 +456,8 @@ debug: record full command debugging.
 .
 .TP
 .O_list
-List config settings with summarizing comment. This is the same as using
-options --typeconfig list --withsummary.
+Print a list of config settings instead of structured config settings tree.
+If used without other options, this is the same as --typeconfig list --withsummary.
 .
 .TP
 .O_lockopt
