@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright (C) 2019 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2019-2025 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,
 # modify, copy, or redistribute it subject to the terms and conditions
@@ -13,23 +13,22 @@
 # no automatic extensions, just umount
 
 
-
 . lib/inittest --skip-with-lvmpolld
 
 mntdir="${PREFIX}mnt with space"
 PERCENT=70
 
-cleanup_mounted_and_teardown()
+_cleanup_mounted_and_teardown()
 {
-	test -z "$PID_SLEEP" || { kill "$PID_SLEEP" || true ; }
+	[[ -z "${PID_SLEEP=}" ]] || { kill "$PID_SLEEP" || true ; }
 	umount "$mntdir" 2>/dev/null || true
 	vgremove -ff $vg
 	aux teardown
 }
 
-is_lv_opened_()
+_is_lv_opened()
 {
-	test "$(get lv_field "$1" lv_device_open --binary)" = 1
+	[[ $(get lv_field "$1" lv_device_open --binary) = 1 ]]
 }
 
 #
@@ -46,16 +45,19 @@ aux have_vdo 6 2 0 || skip
 cat <<- EOF >testcmd.sh
 #!/bin/sh
 
-echo "VDO Pool: \$DMEVENTD_VDO_POOL"
+echo "VDO Pool: \${DMEVENTD_VDO_POOL-raised_event}"
 
-"$TESTDIR/lib/lvextend" --use-policies \$1 || {
+"$LVM_BINARY" lvextend --use-policies "\$1" || {
 	umount "$mntdir" && exit 0
-	touch $PWD/TRIED_UMOUNT
+	touch "$PWD/TRIED_UMOUNT"
 }
-test "\$($TESTDIR/lib/lvs -o selected -S "data_percent>=$PERCENT" --noheadings \$1)" -eq 0 || {
-	echo "Percentage still above $PERCENT"
-}
-exit 1
+
+p=\$("$LVM_BINARY" lvs -o selected -S "data_percent>=$PERCENT" --noheadings "\$1")
+
+test "\$p" -eq 0 || exit 1
+
+echo "No volume with percentage above $PERCENT%."
+exit 0
 EOF
 chmod +x testcmd.sh
 # Show prepared script
@@ -78,11 +80,11 @@ mkfs.ext4 -E nodiscard "$DM_DEV_DIR/$vg/$lv1"
 lvchange --monitor y $vg/vpool
 
 mkdir "$mntdir"
-trap 'cleanup_mounted_and_teardown' EXIT
+trap '_cleanup_mounted_and_teardown' EXIT
 mount "$DM_DEV_DIR/$vg/$lv1" "$mntdir"
 
 # Check both LV is opened (~mounted)
-is_lv_opened_ "$vg/$lv1"
+_is_lv_opened "$vg/$lv1"
 
 touch "$mntdir/file$$"
 sync
@@ -99,14 +101,15 @@ lvs -a $vg
 
 # Could loop here for a few secs so dmeventd can do some work
 # In the worst case check only happens every 10 seconds :(
-for i in $(seq 1 12) ; do
-	is_lv_opened_ "$vg/$lv1" || break
-	test ! -f "TRIED_UMOUNT" || continue  # finish loop quickly
+for i in {1..12}; do
+	_is_lv_opened "$vg/$lv1" || break
+	test -f "TRIED_UMOUNT" && break # finish loop quickly
 	sleep 1
+	echo "$i"
 done
 
 rm -f "TRIED_UMOUNT"
-test "$i" -eq 12 || die "$mntdir should NOT have been unmounted by dmeventd!"
+[[ $i -lt 12 ]] || die "$mntdir should NOT have been unmounted by dmeventd!"
 
 lvs -a $vg
 
@@ -117,10 +120,13 @@ PID_SLEEP=
 
 # Could loop here for a few secs so dmeventd can do some work
 # In the worst case check only happens every 10 seconds :(
-for i in $(seq 1 12) ; do
-	is_lv_opened_ "$vg/$lv1" || break
-	test "$i" -lt 12 || die "$mntdir should have been unmounted by dmeventd!"
+for i in {1..12} ; do
+	_is_lv_opened "$vg/$lv1" || break
 	sleep 1
+	echo "$i"
 done
 
-# vgremove is managed through cleanup_mounted_and_teardown()
+[[ $i -lt 12 ]] || die "$mntdir should have been unmounted by dmeventd!"
+
+# vgremove is managed through _cleanup_mounted_and_teardown()
+exit 0
