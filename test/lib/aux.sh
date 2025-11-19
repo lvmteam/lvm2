@@ -254,7 +254,7 @@ lvmpolld_talk() {
 }
 
 lvmpolld_dump() {
-	(echo 'request="dump"'; echo '##') | lvmpolld_talk "${@-}"
+	(echo 'request="dump"'; echo '##') | lvmpolld_talk
 }
 
 prepare_lvmdbusd() {
@@ -417,7 +417,7 @@ teardown_devs_prefixed() {
 
 			for dm in $(dm_info name,open --separator ';'  --nameprefixes --unquoted --sort open,"$sortby" -S "name=~$prefix || uuid=~$prefix" --mangle none || true) ; do
 				[[ "$dm" != "No devices found" ]] || break 2
-				eval "$dm"
+				eval "$dm" 2>/dev/null
 				local force="-f"
 				if [[ "$i" = 0 ]]; then
 					if [[ "$once" = 1  ]]; then
