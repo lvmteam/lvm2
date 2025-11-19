@@ -493,8 +493,10 @@ int lv_cache_wait_for_clean(struct logical_volume *cache_lv, int *is_clean)
 		dm_pool_destroy(status->mem);
 
 		/* Only clear when policy is Clear or mode != writeback */
-		if (!dirty_blocks && (cleaner_policy || !writeback))
+		if (!dirty_blocks && (cleaner_policy || !writeback)) {
+			log_debug("Flush complete.");
 			break;
+		}
 
 		log_print_unless_silent("Flushing " FMTu64 " blocks for cache %s.",
 					dirty_blocks, display_lvname(cache_lv));
