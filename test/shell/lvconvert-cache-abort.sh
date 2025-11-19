@@ -36,7 +36,7 @@ dd if=/dev/zero of="$DM_DEV_DIR/$vg/$lv1" bs=1M count=$SIZE_MB oflag=direct || t
 dd if="$DM_DEV_DIR/$vg/$lv1" of=/dev/null bs=1M count=$SIZE_MB iflag=direct || true
 done
 
-aux delay_dev "$dev1" 0 200 "$(get first_extent_sector "$dev1"):"
+aux delay_dev "$dev1" 0 100 "$(get first_extent_sector "$dev1"):"
 dd if=/dev/zero of="$DM_DEV_DIR/$vg/$lv1" bs=1M count=$SIZE_MB
 
 lvdisplay --maps $vg
@@ -67,6 +67,8 @@ test "$i" -ge 49 && die "Waited for cleaner policy on $vg/$lv1 too long!"
 # should be running in 'Flushing' loop and just 1 KILL should
 # cause abortion of flushing
 kill -INT $PID_CONVERT
+# extra time in case we are in some slow 'flushing' suspend
+sleep 0.5
 aux enable_dev "$dev2"
 wait "$PID_CONVERT" || true
 # close 'tee' descritor
