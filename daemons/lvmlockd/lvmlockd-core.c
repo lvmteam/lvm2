@@ -3353,7 +3353,9 @@ out_act:
 	pthread_mutex_unlock(&client_mutex);
 
 	pthread_mutex_lock(&lockspaces_mutex);
+	pthread_mutex_lock(&ls->mutex);
 	ls->thread_done = 1;
+	pthread_mutex_unlock(&ls->mutex);
 
 	if (ls->lm_type == LD_LM_DLM && !strcmp(ls->name, gl_lsname_dlm))
 		global_dlm_lockspace_exists = 0;
@@ -3858,6 +3860,41 @@ static int count_lockspace_starting(uint32_t client_id)
  * returns sum of the previous two
  */
 
+/*
+ * Wait briefly for lockspace threads to finish after being signaled to stop.
+ * lockspaces_mutex must be held by caller.
+ * Returns number of milliseconds waited.
+ */
+static void wait_for_lockspace_threads(void)
+{
+	const struct timespec ts = { .tv_sec = 0, .tv_nsec = 1000000 }; /* 1ms */
+	struct lockspace *ls;
+	int all_done, waited;
+
+	/* wait up to 100ms for threads to finish */
+	for (waited = 0; waited < 100; waited++) {
+		all_done = 1;
+		list_for_each_entry(ls, &lockspaces, list) {
+			pthread_mutex_lock(&ls->mutex);
+
+			if (ls->thread_stop && !ls->thread_done)
+				all_done = 0;
+
+			pthread_mutex_unlock(&ls->mutex);
+		}
+
+		if (all_done)
+			break;
+
+		pthread_mutex_unlock(&lockspaces_mutex);
+		nanosleep(&ts, NULL);
+		pthread_mutex_lock(&lockspaces_mutex);
+	}
+
+	if (waited)
+		log_debug("waited %d ms for lockspace threads to finish", waited);
+}
+
 static int for_each_lockspace(int do_stop, int do_free, int do_force)
 {
 	struct lockspace *ls, *safe;
@@ -3892,6 +3929,15 @@ static int for_each_lockspace(int do_stop, int do_free, int do_force)
 			pthread_mutex_unlock(&ls->mutex);
 		}
 	}
+
+	/*
+	 * If we signaled threads to stop during daemon shutdown, give them
+	 * a brief time to finish to avoid the race where daemon_quit is reset
+	 * because threads haven't finished yet. During normal operations, the
+	 * caller handles async lockspace cleanup appropriately.
+	 */
+	if (daemon_quit && do_stop && do_free && stop_count)
+		wait_for_lockspace_threads();
 
 	if (do_free) {
 		list_for_each_entry_safe(ls, safe, &lockspaces, list) {
