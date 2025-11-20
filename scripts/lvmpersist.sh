@@ -595,7 +595,7 @@ undo_register() {
 		else
 			$cmd $cmdopts --out --register --param-rk="$OURKEY" "$dev" >/dev/null 2>&1
 		fi
-		test $? -eq 0 || logmsg "$cmd unregister error on $dev"
+		# test $? -eq 0 || logmsg "$cmd unregister error on $dev"
 	done
 }
 
@@ -797,7 +797,7 @@ do_stop() {
 			$cmd $cmdopts --out --register --param-rk="$OURKEY" "$dev" >/dev/null 2>&1
 		fi
 
-		test $? -eq 0 || logmsg "$cmd unregister error on $dev"
+		# test $? -eq 0 || logmsg "$cmd unregister error on $dev"
 
 		if key_is_on_device "$dev" "$OURKEY" ; then
 			logmsg "stop $GROUP failed to unregister our key $OURKEY from $dev."
