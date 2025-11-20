@@ -147,7 +147,7 @@ prepare_lvmlockd() {
 	elif [[ "${LVM_TEST_LVMLOCKD_TEST_DLM:-0}" != 0 ]]; then
 		# make check_lvmlockd_test
 		echo "Starting lvmlockd --test (dlm)."
-		lvmlockd --test -g dlm
+		lvmlockd --test -D -g dlm &
 
 	elif [[ "${LVM_TEST_LVMLOCKD_TEST_SANLOCK:-0}" != 0 ]]; then
 		# FIXME: add option for this combination of --test and sanlock
