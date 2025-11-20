@@ -179,10 +179,16 @@ devices {
 	# If PVs are restored or moved to a new system with new devices, but
 	# an old system.devices remains with old device IDs, then search for
 	# the PVIDs on new devices and update the device IDs in system.devices.
-	# The original device IDs must also not be found on the new system.
 	# See device_ids_refresh_check for conditions that trigger the refresh.
+	# Set to 1 to enable a single automatic refresh attempt when a trigger
+	# condition is detected. Set to 0 to disable automatic refresh.
+	# Set to a value between 10 and 600 (in seconds) to enable an extended
+	# refresh period during which missing PVs will be located using the PVID,
+	# and the system.devices device ID updated if the PV is found on a new device.
+	# An extended refresh period may be useful if devices require refresh,
+	# but are attached to the system some time the initial refresh.
 	# This configuration option has an automatic default value.
-	# device_ids_refresh = 1
+	# device_ids_refresh = 10
 
 	# Configuration option devices/device_ids_refresh_checks.
 	# Conditions that trigger device_ids_refresh to locate PVIDs on new devices.
