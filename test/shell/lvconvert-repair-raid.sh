@@ -49,6 +49,7 @@ aux wait_for_sync $vg $lv1
 dmsetup remove -f $vg-${lv1}_rimage_1 || true
 # let it notice there is problem
 echo a > "$DM_DEV_DIR/$vg/$lv1"
+sync
 check grep_dmsetup status $vg-$lv1 AD
 lvconvert -y --repair $vg/$lv1 "$dev3"
 lvs -a -o+devices $vg
