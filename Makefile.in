@@ -116,6 +116,7 @@ rpm: dist
 	    -e "s,^\(Version:[^0-9%]*\)[0-9.]*$$,\1 $(LVM_VER)," \
 	    -e "s,^\(Release:[^0-9%]*\)[0-9.]\+,\1 $$GIT_VER," \
 	    $(top_srcdir)/spec/source.inc >$(rpmbuilddir)/SOURCES/source.inc
+	LC_ALL=C date '+* %a %b %d %Y LVM Development Team <linux-lvm@lists.linux.dev>' >$(rpmbuilddir)/SOURCES/changelog.inc
 	V=$(V) rpmbuild -v --define "_topdir $(rpmbuilddir)" -ba $(top_srcdir)/spec/lvm2.spec
 
 generate: conf.generate man.generate
