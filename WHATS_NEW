@@ -1,5 +1,5 @@
-Version 2.03.37 - 
-==================
+Version 2.03.37 - 21st November 2025
+====================================
   Remove unsupported --blockdevice option from lvscan.
   Support output in list mode for all lvmconfig --typeconfig types with --list.
   Enhance shutdown performance of daemons using libdaemon.

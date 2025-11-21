@@ -1,0 +1,45 @@
+<!-- Page title -->
+[[!meta title="Version 2.03.37 - Feature and Bug Fix Release"]]
+
+Version 2.03.37
+===============
+
+* Improvements in dmeventd thread safety, shutdown times and more.
+* Many fixes and improvements for persistent reservations.
+* Support output in list mode for all lvmconfig --typeconfig types with --list.
+* Fix deadlock in lvmdbusd on SIGINT in lvm shell mode.
+* And [[!toggle text="more"]]
+
+[[!toggleable text="""
+
+Other Changes
+-------------
+
+* Remove unsupported `--blockdevice` option from lvscan.
+* Add missing synchronization while converting cachevols.
+* Add missing synchronization for vdopool.
+* Warn on classic snapshot on raid creation and error on activation if missing.
+* Use `source='udev'` in lvmdbusd to monitor processed udev events.
+* Improve lvmdbusd matching of udevd reported device paths.
+* Add `--setlockargs` option to vgchange. See vgchange(8).
+* lvmdevices:
+  * Add `--force` option for `lvmdevices --update`.
+  * Add `--listids`, `--delid`, `--addid` options for manipulation by `device_id`.
+  * Major update of lvmdevices(8) man page.
+* Persistent Reservations(PR):
+  * Use PR for recovery with sanlock in lvmlockd - see lvmlockd(8) and
+    lvmpersist(8) man pages.
+  * Add VG attr character and `pr` field for PR status to vgs.
+  * Fix PR setting handling in vgmerge, vgsplit and vgimportclone.
+* Enhance shutdown performance of daemons using libdaemon.
+* Lot of cleanups, test improvements, static analysis fixes.
+
+<!-- remove the pending tag on release, remove draft tag once editing is complete -->
+[[!tag]]
+<!--
+For old releases add Release Timestamp like this, date from git show $COMMIT is fine.
+[!meta date="Fri Nov 21 20:07:00 2025 +0100"]]
+-->
+
+"""]]
+
