@@ -1,3 +1,6 @@
+Version 1.02.212 - 
+===================
+
 Version 1.02.211 - 21st November 2025
 =====================================
   Dmeventd starts to use mutex per thread.
