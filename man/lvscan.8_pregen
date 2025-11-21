@@ -30,9 +30,6 @@
 .de O_all
 .OPS a all
 ..
-.de O_blockdevice
-.OPS b blockdevice
-..
 .de O_commandprofile
 .OPA commandprofile
 \fIString\fP
@@ -146,10 +143,6 @@ comprehensive information about LVs.
 ]
 .br
 [
-.O_blockdevice
-]
-.br
-[
 .O_ignorelockingfailure
 ]
 .br
@@ -250,10 +243,6 @@ Common options for lvm:
 Show information about internal LVs.
 These are components of normal LVs, such as mirrors,
 which are not independently accessible, e.g. not mountable.
-.
-.TP
-.O_blockdevice
-No longer used.
 .
 .TP
 .O_commandprofile
