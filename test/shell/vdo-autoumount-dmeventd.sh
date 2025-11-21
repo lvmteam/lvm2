@@ -47,12 +47,12 @@ cat <<- EOF >testcmd.sh
 
 echo "VDO Pool: \${DMEVENTD_VDO_POOL-raised_event}"
 
-"$LVM_BINARY" lvextend --use-policies "\$1" || {
+lvm lvextend --use-policies "\$1" || {
 	umount "$mntdir" && exit 0
 	touch "$PWD/TRIED_UMOUNT"
 }
 
-p=\$("$LVM_BINARY" lvs -o selected -S "data_percent>=$PERCENT" --noheadings "\$1")
+p=\$(lvm lvs -o selected -S "data_percent>=$PERCENT" --noheadings "\$1")
 
 test "\$p" -eq 0 || exit 1
 

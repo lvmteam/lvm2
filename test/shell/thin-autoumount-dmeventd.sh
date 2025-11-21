@@ -57,12 +57,12 @@ cat <<- EOF >testcmd.sh
 echo "Data: \${DMEVENTD_THIN_POOL_DATA-raised_event}"
 echo "Metadata: \${DMEVENTD_THIN_POOL_METADATA-raised_event}"
 
-"$LVM_BINARY" lvextend --use-policies "\$1" || {
+lvm lvextend --use-policies "\$1" || {
 	umount "$mntdir" || true
 	umount "$mntusedir" || true
 }
 
-p=\$("$LVM_BINARY" lvs -o selected -S "data_percent>95||metadata_percent>95" --noheadings "\$1")
+p=\$(lvm lvs -o selected -S "data_percent>95||metadata_percent>95" --noheadings "\$1")
 
 test "\$p" -eq 0 || exit 1
 
