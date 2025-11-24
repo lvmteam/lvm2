@@ -38,7 +38,7 @@ Other Changes
 [[!tag]]
 <!--
 For old releases add Release Timestamp like this, date from git show $COMMIT is fine.
-[!meta date="Fri Nov 21 20:07:00 2025 +0100"]]
+[[!meta date="Fri Nov 21 20:07:00 2025 +0100"]]
 -->
 
 """]]
