@@ -113,19 +113,24 @@ wait "$KEEP_OPEN_PID" || true
 # Temporarily resolve the issue with following sleep
 # that last longer then  1s interval used with '-b'
 sleep 1.5
-not pgrep -u root -lx lvm || {
-	ps aux
-	die "Some 'lvm' process keeps running!"
-	# Bad luck, if admin runs parallel lvm2 command with our testsuite
-}
+if pgrep lvmdbusd; then
+        echo "Skipping check for lvm processes, since lvmdbusd is running!"
+else
+	not pgrep -u root -lx lvm || {
+		ps aux
+		die "Some 'lvm' process keeps running!"
+		# Bad luck, if admin runs parallel lvm2 command with our testsuite
+	}
 
-_check_msg "ABORTING: Failed" out
+	_check_msg "ABORTING: Failed" out
 
-# hopefully we managed to abort before pvmove finished
-check lv_on $vg $lv1 "$dev1"
+	# hopefully we managed to abort before pvmove finished
+	check lv_on $vg $lv1 "$dev1"
 
-check lv_field $vg/pvmove0_mimage_1 layout "error"
-check lv_field $vg/pvmove0_mimage_1 role "public"
+	check lv_field $vg/pvmove0_mimage_1 layout "error"
+	check lv_field $vg/pvmove0_mimage_1 role "public"
+fi
+
 lvremove -f $vg/pvmove0_mimage_1
 
 
