@@ -26,10 +26,10 @@ lv_is_on_ ()
 
 	echo "Check if $lv is exactly on PVs" "${list_pvs[@]}"
 	rm -f out1 out2
-	printf "%s\n" "${list_pvs[@]}" | sort | uniq > out1
+	printf "%s\n" "${list_pvs[@]}" | sort -u > out1
 
 	lvs -a -o+devices $lv
-	get lv_devices "$lv" | sort | uniq > out2
+	get lv_devices "$lv" | sort -u > out2
 
 	diff --ignore-blank-lines out1 out2
 }
@@ -43,7 +43,7 @@ mimages_are_on_ ()
 	local i
 
 	echo "Check if mirror images of $lv are on PVs" "${list_pvs[@]}"
-	printf "%s\n" "${list_pvs[@]}" | sort | uniq | tee out1
+	printf "%s\n" "${list_pvs[@]}" | sort -u | tee out1
 
 	get lv_field_lv_ "$vg" lv_name -a | grep "${lv}_mimage_" | tee lvs_log
 	test -s lvs_log || return 1
@@ -54,7 +54,7 @@ mimages_are_on_ ()
 
 	for i in "${mimages[@]}"; do
 		get lv_devices "$vg/$i"
-	done | sort | uniq | tee out2
+	done | sort -u | tee out2
 
 	diff --ignore-blank-lines out1 out2
 }

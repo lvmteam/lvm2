@@ -43,7 +43,7 @@ mirror_images_redundant() {
 	local lv="$vg/$2"
 	for i in $(lvdevices "$lv"); do
 		echo "# $i:"
-		lvdevices "$vg/$i" | sort | uniq
+		lvdevices "$vg/$i" | sort -u
 	done > check.tmp.all
 
 	(grep -v ^# check.tmp.all || true) | sort | uniq -d > check.tmp
@@ -64,7 +64,7 @@ lv_on_diff_() {
 	local diff_e
 
 	# Find diff between 2 shell arrays, print them as stdin files
-	printf "%s\\n" "${expect[@]}" | sort | uniq >_lv_on_diff1
+	printf "%s\\n" "${expect[@]}" | sort -u >_lv_on_diff1
 	printf "%s\\n" "${xdevs[@]}" >_lv_on_diff2
 	diff_e=$(diff _lv_on_diff1 _lv_on_diff2) ||
 		die "LV $2/$3 $(lv_err_list_ "^>" "${diff_e}" found)$(lv_err_list_ "^<" "${diff_e}" "not found")."
@@ -74,7 +74,7 @@ lv_on_diff_() {
 lv_on() {
 	local devs
 
-	devs=( $(lvdevices "$1/$2" | sort | uniq ) )
+	devs=( $(lvdevices "$1/$2" | sort -u ) )
 
 	lv_on_diff_ devs[@] "$@"
 }
@@ -129,9 +129,9 @@ lv_is_contiguous() {
 
 lv_is_clung() {
 	local lv="$1/$2"
-	[[ "$(lvdevices "$lv" | sort | uniq | wc -l)" -eq 1 ]] || \
+	[[ "$(lvdevices "$lv" | sort -u | wc -l)" -eq 1 ]] || \
 		die "LV $lv expected to be clung, but is not:" \
-			"$(lvdevices "$lv" | sort | uniq)"
+			"$(lvdevices "$lv" | sort -u)"
 }
 
 mirror_images_contiguous() {
@@ -289,7 +289,7 @@ lv_not_exists() {
 	else
 		while [ $# -gt 1 ]; do
 			shift
-			not lvl "$vg/$1" &>/dev/null || die "$vg/$1 expected to not exist but it does!"
+			lvl "$vg/$1" &>/dev/null && die "$vg/$1 expected to not exist but it does!"
 		done
 	fi
 	rm -f debug.log

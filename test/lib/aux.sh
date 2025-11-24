@@ -441,7 +441,6 @@ teardown_devs_prefixed() {
 
 			[[ "$progress" = 1 ]] || break
 
-			sleep .1
 			udev_wait
 			wait
 			progress=0
@@ -1637,7 +1636,7 @@ generate_config() {
 		for s in $(cut -f1 -d/ "$config_values" | sort -u); do
 			echo "$s {"
 			local k
-			# $(grep ^"$s"/ "$config_values" | cut -f1 -d= | sed -e 's, *$,,' | sort | uniq)
+			# $(grep ^"$s"/ "$config_values" | cut -f1 -d= | sed -e 's, *$,,' | sort -u)
 			for k in $(awk -F= -v s="$s" '$0 ~ "^" s "/" {sub(/ *$/, "", $1); print $1}' "$config_values" | sort -u); do
 				# grep "^${k}[ \t=]" "$config_values" | tail -n 1 | sed -e "s,^$s/,	 ," || true
 				# single command with '|' as delimiter
@@ -2028,7 +2027,7 @@ have_cache() {
 # if passed 'skip' keyword - print
 have_fsinfo() {
 	local r
-	r=$(not lvresize --fs checksize -L+1 $vg/unknownlvname 2>&1) || die "lvresize must fail!"
+	r=$(lvresize --fs checksize -L+1 $vg/unknownlvname 2>&1) && die "lvresize must fail!"
 
 	case "$r" in
 	*"Unknown --fs value"*) return 1 ;;
