@@ -156,6 +156,7 @@ test/lib/lvmlockd
 test/lib/lvmpolld
 test/lib/lvm_import_vdo
 test/lib/lvm_vdo_wrapper
+test/lib/lvresize_fs_helper
 test/lib/not
 test/lib/paths
 test/lib/paths-common
