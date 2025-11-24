@@ -29,7 +29,7 @@ lvcreate -H -L10 $vg/pool
 
 lvextend -l+2 $vg/pool
 
-check lv_first_seg_field $vg/pool seg_size_pe "3"
+check lv_field $vg/pool seg_size_pe "3"
 
 lvextend -L10G $vg/pool
 
