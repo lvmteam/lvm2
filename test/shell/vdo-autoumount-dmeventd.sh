@@ -120,13 +120,14 @@ PID_SLEEP=
 
 # Could loop here for a few secs so dmeventd can do some work
 # In the worst case check only happens every 10 seconds :(
-for i in {1..12} ; do
+# We may wait upto 2 rounds.
+for i in {1..22} ; do
 	_is_lv_opened "$vg/$lv1" || break
 	sleep 1
 	echo "$i"
 done
 
-[[ $i -lt 12 ]] || die "$mntdir should have been unmounted by dmeventd!"
+[[ $i -lt 22 ]] || die "$mntdir should have been unmounted by dmeventd!"
 
 # vgremove is managed through _cleanup_mounted_and_teardown()
 exit 0

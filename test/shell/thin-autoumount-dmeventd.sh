@@ -133,13 +133,15 @@ kill "$PID_SLEEP"
 wait "$PID_SLEEP" || true
 PID_SLEEP=
 
-for i in {1..12} ; do
+# Here we may need to wait upto 2 x 10s as dmeventd may postpone some checks
+# when it recieves failing exit code
+for i in {1..22} ; do
 	_is_lv_opened "$vg/$lv2" || break
 	sleep 1
 	echo "$i"
 done
 
-[[ $i -lt 12 ]] || {
+[[ $i -lt 22 ]] || {
 	mount | grep "$lv2"
 	die "$mntusedir should have been unmounted by dmeventd!"
 }
