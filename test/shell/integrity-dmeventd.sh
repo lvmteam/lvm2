@@ -102,6 +102,7 @@ _verify_data_on_lv() {
 # Usage: _wait_for_repair dev1 [dev2 ...]
 _wait_for_repair() {
 	local dev
+	touch "$mnt/touch"
 	sync
 	for i in {1..11}; do
 		sleep 1
