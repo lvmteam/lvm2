@@ -62,7 +62,7 @@ if test -z "$backgroundarg" ; then
 	PVMOVE2_PID=$!
 	"${cmd3[@]}" &
 	PVMOVE3_PID=$!
-	aux wait_pvmove_lv_ready "$vg-pvmove1" "$vg1-pvmove0"
+	LVM_TEST_AUX_TRACE=1 aux wait_pvmove_lv_ready "$vg-pvmove1" "$vg1-pvmove0"
 else
 	LVM_TEST_TAG="kill_me_$PREFIX" "${cmd1[@]}"
 	LVM_TEST_TAG="kill_me_$PREFIX" "${cmd2[@]}"
