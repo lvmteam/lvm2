@@ -1995,8 +1995,14 @@ static int _client_read(struct dm_event_fifos *fifos,
 		/* Watch client read FIFO for input. */
 		FD_ZERO(&fds);
 		FD_SET(fifos->client, &fds);
-		t.tv_sec = 1;
-		t.tv_usec = 0;
+		if (_exit_now > DM_SIGNALED_EXIT) {
+			/* Use shorter timeout when exiting to cleanup threads quickly */
+			t.tv_sec = 0;
+			t.tv_usec = 10000;  /* 10ms */
+		} else {
+			t.tv_sec = 1;
+			t.tv_usec = 0;
+		}
 		ret = select(fifos->client + 1, &fds, NULL, NULL, &t);
 
 		if (!ret && bytes)
