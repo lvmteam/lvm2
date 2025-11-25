@@ -74,7 +74,7 @@ fsck -n "$DM_DEV_DIR/$vg/$lv1"
 # vpool itself is NOT usable filesystem
 not fsck -n "$DM_DEV_DIR/mapper/$vg-${lv2}"
 # not usable even when there is no linear mapping on top of it
-dmsetup remove ${vg}-$lv1
+aux dmsetup remove ${vg}-$lv1
 not fsck -n "$DM_DEV_DIR/mapper/$vg-${lv2}"
 
 lvremove -ff $vg
