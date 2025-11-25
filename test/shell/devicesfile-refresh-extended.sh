@@ -140,6 +140,7 @@ cleanup_and_teardown()
 
 use_12() {
 	losetup -D
+	aux udev_wait
 	losetup "$LOOP1" "$FILE1"
 	losetup "$LOOP2" "$FILE2"
 	losetup "$LOOP3" "$FILE3"
@@ -158,6 +159,7 @@ use_12() {
 
 use_34() {
 	losetup -D
+	aux udev_wait
 	losetup "$LOOP1" "$FILE1"
 	losetup "$LOOP2" "$FILE2"
 	losetup "$LOOP3" "$FILE3"
