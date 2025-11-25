@@ -666,7 +666,7 @@ static int _dm_task_set_name_from_path(struct dm_task *dmt, const char *path,
 
 int dm_task_set_name(struct dm_task *dmt, const char *name)
 {
-	char *pos;
+	const char *pos;
 
 	/* Path supplied for existing device? */
 	if ((pos = strrchr(name, '/')))
@@ -1811,7 +1811,7 @@ static int _mountinfo_parse_line(const char *line, unsigned *maj, unsigned *min,
 {
 	char root[PATH_MAX + 1]; /* sscanf needs extra '\0' */
 	char target[PATH_MAX + 1];
-	char *devmapper;
+	const char *devmapper;
 	struct dm_task *dmt;
 	struct dm_info info;
 	unsigned i;

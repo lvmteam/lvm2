@@ -834,7 +834,7 @@ bad:
  */
 static int _stats_parse_histogram_spec(struct dm_stats *dms,
 				       struct dm_stats_region *region,
-				       const char *histogram)
+				       char *histogram)
 {
 	const char valid_chars[] = "0123456789,";
 	uint64_t scale = region->timescale, this_val = 0;

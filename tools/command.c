@@ -674,7 +674,7 @@ static void _add_oo_definition_line(const char *name, const char *line)
 {
 	struct oo_line *oo;
 	char *colon;
-	char *start;
+	const char *start;
 
 	oo = &_oo_lines[_oo_line_count++];
 

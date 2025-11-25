@@ -56,7 +56,7 @@ int is_reserved_lvname(const char *name);
  * strstr() to search str for each in turn and return a pointer to the
  * first match or else NULL.
  */
-char *first_substring(const char *str, ...);
+char *first_substring(char *str, ...);
 int drop_lvname_suffix(char *new_name, const char *name, const char *suffix);
 
 void split_line(char *buf, int *argc, char **argv, int max_args, char sep);

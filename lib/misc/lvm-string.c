@@ -292,7 +292,7 @@ char *build_dm_uuid(struct dm_pool *mem, const struct logical_volume *lv,
 	return dlid;
 }
 
-char *first_substring(const char *str, ...)
+char *first_substring(char *str, ...)
 {
 	char *substr, *r = NULL;
 	va_list ap;

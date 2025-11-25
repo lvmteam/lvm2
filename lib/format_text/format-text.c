@@ -1297,7 +1297,7 @@ static int _vg_write_file(struct format_instance *fid __attribute__((unused)),
 
 	FILE *fp;
 	int fd;
-	char *slash;
+	const char *slash;
 	char temp_file[PATH_MAX], temp_dir[PATH_MAX];
 
 	slash = strrchr(tc->path_edit, '/');
@@ -2078,7 +2078,8 @@ static void *_create_text_context(struct dm_pool *mem, struct text_context *tc)
 {
 	struct text_context *new_tc;
 	const char *path;
-	char *tmp;
+	const char *tmp;
+	char *tmp_path;
 	size_t len;
 
 	if (!tc)
@@ -2101,10 +2102,10 @@ static void *_create_text_context(struct dm_pool *mem, struct text_context *tc)
 	/* If path_edit not defined, create one from path_live with .tmp suffix. */
 	if (!tc->path_edit) {
 		len = strlen(path) + 5;
-		if (!(tmp = dm_pool_alloc(mem, len)))
+		if (!(tmp_path = dm_pool_alloc(mem, len)))
 			goto_bad;
-		(void)dm_snprintf(tmp, len, "%s.tmp", path);
-		new_tc->path_edit = tmp;
+		(void)dm_snprintf(tmp_path, len, "%s.tmp", path);
+		new_tc->path_edit = tmp_path;
 	}
 	else if (!(new_tc->path_edit = dm_pool_strdup(mem, tc->path_edit)))
 		goto_bad;

@@ -505,7 +505,7 @@ bad:
 
 static char *_extract_uuid_prefix(const char *uuid, const int separator)
 {
-	char *ptr = NULL;
+	const char *ptr = NULL;
 	char *uuid_prefix = NULL;
 	size_t len;
 

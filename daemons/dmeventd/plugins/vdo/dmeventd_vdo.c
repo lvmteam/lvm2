@@ -49,7 +49,7 @@ struct dso_state {
 	int restore_sigset;
 	sigset_t old_sigset;
 	pid_t pid;
-	char *argv[3];
+	const char *argv[3];
 	const char *cmd_str;
 	const char *name;
 };
@@ -86,7 +86,7 @@ static int _run_command(struct dso_state *state)
 		/* child */
 		(void) close(0);
 		for (i = 3; i < 255; ++i) (void) close(i);
-		execvp(state->argv[0], state->argv);
+		execvp(state->argv[0], (char **)state->argv);
 		_exit(errno);
 	} else if (state->pid == -1) {
 		log_error("Can't fork command %s.", state->cmd_str);
@@ -314,7 +314,7 @@ int register_device(const char *device,
 {
 	struct dso_state *state;
 	const char *cmd;
-	char *str;
+	const char *str;
 	char cmd_str[PATH_MAX + 128 + 2]; /* cmd ' ' vg/lv \0 */
         const char *name = "pool";
 

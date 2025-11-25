@@ -1842,7 +1842,7 @@ static int _out_line_list(const struct dm_config_node *cn, const char *line, str
 	char version[9];
 	const struct cfg_def_item *cfg_def;
 	int pos = 0;
-	char *val = NULL;
+	const char *val = NULL;
 
 	cfg_def = cfg_def_get_item_p(cn->id);
 

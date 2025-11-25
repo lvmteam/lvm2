@@ -168,7 +168,7 @@ static void _check_and_adjust_region_size(struct logical_volume *lv)
 }
 
 /* Drop @suffix from *str by writing '\0' to the beginning of @suffix */
-static int _drop_suffix(const char *str, const char *suffix)
+static int _drop_suffix(char *str, const char *suffix)
 {
 	char *p;
 
@@ -4079,7 +4079,7 @@ static int _adjust_data_lvs(struct logical_volume *lv, enum mirror_raid_conv dir
 	for (s = 0; s < seg->area_count; ++s) {
 		dlv = seg_lv(seg, s);
 
-		if (!(sublv_name_suffix = first_substring(dlv->name, "_mimage_", "_rimage_", NULL))) {
+		if (!(sublv_name_suffix = first_substring((char*)dlv->name, "_mimage_", "_rimage_", NULL))) {
 			log_error(INTERNAL_ERROR "Name %s lags image part.", dlv->name);
 			return 0;
 		}
@@ -5617,8 +5617,8 @@ static int _takeover_upconvert_wrapper(TAKEOVER_FN_ARGS)
 						       1 /* data_copies */, 0, 0, 0, allocate_pvs))
 				return_0;
 
-			if (!_drop_suffix(meta_lv->name, "_extracted") ||
-			    !_drop_suffix(data_lv->name, "_extracted"))
+			if (!_drop_suffix((char*)meta_lv->name, "_extracted") ||
+			    !_drop_suffix((char*)data_lv->name, "_extracted"))
 				return_0;
 
 			data_lv->status |= RAID_IMAGE;

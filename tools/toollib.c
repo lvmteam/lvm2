@@ -398,7 +398,7 @@ static const char *_extract_vgname(struct cmd_context *cmd, const char *lv_name,
 				   const char **after)
 {
 	const char *vg_name = lv_name;
-	char *st, *pos;
+	const char *st, *pos;
 
 	/* Strip dev_dir (optional) */
 	if (!(vg_name = skip_dev_dir(cmd, vg_name, NULL)))
