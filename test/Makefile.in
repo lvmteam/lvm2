@@ -288,6 +288,11 @@ lib/%: $(srcdir)/lib/%.sh .lib-dir-stamp
 	$(Q) cp $< $@
 	$(Q) $(CHMOD) +x $@
 
+lib/%: $(srcdir)/lib/%_t.sh .lib-dir-stamp
+	$(SHOW) "    [CP] $@"
+	$(Q) cp $< $@
+	$(Q) $(CHMOD) +x $@
+
 lib/%: $(top_srcdir)/scripts/%.sh .lib-dir-stamp
 	$(SHOW) "    [CP] $@"
 	$(Q) cp $< $@
