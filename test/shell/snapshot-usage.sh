@@ -113,7 +113,7 @@ lvremove -f $vg1
 # Test virtual snapshot over /dev/zero
 lvcreate --type snapshot -V50 -L10 -n $lv1 -s $vg1
 check lv_field $vg1/$lv1 lv_active "active"
-lvchange -an $vg1
+lvremove -f $vg1/$lv1
 check lv_not_exists $vg1 $lv1
 
 # Check border size
