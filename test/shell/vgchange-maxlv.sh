@@ -26,6 +26,8 @@ vgremove -ff $vg
 
 vgcreate $SHARED -l 3 "$vg" "${DEVICES[@]}"
 lvcreate -aey -n one -l 1 $vg
+# to better understand weird race on some old system
+ls -Rla /dev/dm* "$DM_DEV_DIR"
 lvcreate -n snap -s -l 1 $vg/one
 lvcreate -n two -l 1 $vg
 not lvcreate -n three -l 1 $vg
