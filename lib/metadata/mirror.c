@@ -1354,25 +1354,39 @@ const char *get_pvmove_pvname_from_lv_mirr(const struct logical_volume *lv_mirr)
 
 /*
  * Find first pvmove LV referenced by a segment of an LV.
+ * Recursively searches sub-LVs (e.g., for RAID rimages).
  */
+/*
+ * Callback for for_each_sub_lv to find pvmove LV
+ */
+static int _find_pvmove_lv_cb(struct logical_volume *lv, void *data)
+{
+	const struct logical_volume **pvmove_lv_ptr = data;
+
+	if (lv_is_pvmove(lv)) {
+		log_debug("Found pvmove LV %s.", display_lvname(lv));
+		*pvmove_lv_ptr = lv;
+		return 0; /* Stop iteration */
+	}
+
+	return 1; /* Continue iteration */
+}
+
 const struct logical_volume *find_pvmove_lv_in_lv(const struct logical_volume *lv)
 {
-	const struct lv_segment *seg;
-	uint32_t s;
+	const struct logical_volume *pvmove_lv = NULL;
 
 	if (lv_is_pvmove(lv))
 		return lv;
 
-	dm_list_iterate_items(seg, &lv->segments) {
-		for (s = 0; s < seg->area_count; s++) {
-			if (seg_type(seg, s) != AREA_LV)
-				continue;
-			if (lv_is_pvmove(seg_lv(seg, s)))
-				return seg_lv(seg, s);
-		}
-	}
+	/*
+	 * Use for_each_sub_lv to recursively search ALL sub-LVs.
+	 * This is more thorough than manually iterating seg->area_count
+	 * because it also checks pool_lv, metadata_lv, external_lv, etc.
+	 */
+	(void) for_each_sub_lv((struct logical_volume *)lv, _find_pvmove_lv_cb, (void *)&pvmove_lv);
 
-	return NULL;
+	return pvmove_lv;
 }
 
 const char *get_pvmove_pvname_from_lv(const struct logical_volume *lv)
