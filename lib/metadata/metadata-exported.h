@@ -219,7 +219,7 @@
 
 #define vg_is_archived(vg)	(((vg)->status & ARCHIVED_VG) ? 1 : 0)
 
-#define lv_is_locked(lv)	(((lv)->status & LOCKED) ? 1 : 0)
+/* lv_is_locked() is now a function in lv.c to check sub-LVs too */
 #define lv_is_partial(lv)	(((lv)->status & PARTIAL_LV) ? 1 : 0)
 #define lv_is_virtual(lv)	(((lv)->status & VIRTUAL) ? 1 : 0)
 #define lv_is_writable(lv)	(((lv)->status & LVM_WRITE) ? 1 : 0)
@@ -280,9 +280,6 @@
 
 #define lv_is_removed(lv)	(((lv)->status & LV_REMOVED) ? 1 : 0)
 
-#define lv_is_zero(lv) 		((dm_list_size(&lv->segments) == 1) && seg_is_zero(first_seg(lv)))
-#define lv_is_error(lv)		((dm_list_size(&lv->segments) == 1) && seg_is_error(first_seg(lv)))
-
 /* Recognize component LV (matching lib/misc/lvm-string.c _lvname_has_reserved_component_string()) */
 #define lv_is_component(lv) (lv_is_cache_origin(lv) || \
 			     lv_is_writecache_origin(lv) || \
@@ -305,6 +302,10 @@ int lv_layout_and_role(struct dm_pool *mem, const struct logical_volume *lv,
 
 int lv_is_linear(const struct logical_volume *lv);
 int lv_is_striped(const struct logical_volume *lv);
+int lv_is_locked(const struct logical_volume *lv);
+int lv_is_error(const struct logical_volume *lv);
+int lv_is_zero(const struct logical_volume *lv);
+int lv_is_orphan_pvmove(const struct logical_volume *lv);
 
 /* Ordered list - see lv_manip.c */
 typedef enum {

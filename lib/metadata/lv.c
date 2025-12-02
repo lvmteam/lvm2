@@ -34,6 +34,83 @@ int lv_is_historical(const struct logical_volume *lv)
 	return lv->this_glv && lv->this_glv->is_historical;
 }
 
+/*
+ * Callback for for_each_sub_lv to find any locked LV
+ */
+static int _find_locked_lv_cb(struct logical_volume *lv, void *data)
+{
+	int *found_locked = data;
+
+	if (lv->status & LOCKED) {
+		*found_locked = 1;
+		return 0; /* Stop iteration */
+	}
+
+	return 1; /* Continue iteration */
+}
+
+/*
+ * Check if LV or any of its sub-LVs have LOCKED flag set.
+ * This is necessary for RAID and other complex LVs where LOCKED
+ * may be set on sub-LVs (e.g., rimages) rather than top-level LV.
+ *
+ * Replaces the old macro: #define lv_is_locked(lv) (((lv)->status & LOCKED) ? 1 : 0)
+ */
+int lv_is_locked(const struct logical_volume *lv)
+{
+	int found_locked = 0;
+
+	/* First check the LV itself */
+	if (lv->status & LOCKED)
+		return 1;
+
+	/* Then check all sub-LVs recursively */
+	(void) for_each_sub_lv((struct logical_volume *)lv, _find_locked_lv_cb, &found_locked);
+
+	return found_locked;
+}
+
+
+/* Check if LV is composed from a single segment of given seg_type */
+static int _lv_is_single_seg(const struct logical_volume *lv, const char *segtype_name)
+{
+	struct lv_segment *seg;
+	unsigned cnt = 0;
+
+	dm_list_iterate_items(seg, &lv->segments) {
+		if (cnt++)
+			return 0; /* More then 1 segment */
+		if (strcmp(seg->segtype->name, segtype_name))
+			return 0; /* Other then expected */
+	}
+
+	return 1;
+}
+
+/* LV is 'error' if it's using single error segment */
+int lv_is_error(const struct logical_volume *lv)
+{
+        return _lv_is_single_seg(lv, SEG_TYPE_NAME_ERROR);
+}
+
+/* LV is 'zero' if it's using single zero segment */
+int lv_is_zero(const struct logical_volume *lv)
+{
+        return _lv_is_single_seg(lv, SEG_TYPE_NAME_ZERO);
+}
+
+/* Orphan pvmove is left public 'pvmoveXXX' named LV with single error target */
+int lv_is_orphan_pvmove(const struct logical_volume *lv)
+{
+	if (lv_is_visible(lv) &&
+	    lv_is_error(lv) &&
+	    !strncmp(lv->name, "pvmove", 6) &&
+	    !strchr(lv->name, '_'))
+		return 1;
+
+	return 0;
+}
+
 static struct dm_list *_format_pvsegs(struct dm_pool *mem, const struct lv_segment *seg,
 				      int range_format, int metadata_areas_only,
 				      int mark_hidden)
