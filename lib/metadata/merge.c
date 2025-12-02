@@ -357,6 +357,7 @@ static void _check_raid_seg(struct lv_segment *seg, int *error_count)
 static void _check_lv_segment(struct logical_volume *lv, struct lv_segment *seg,
 			      unsigned seg_count, int *error_count)
 {
+	struct seg_list *sl;
 	struct lv_segment *seg2;
 	struct lv_segment *cache_setting_seg = NULL;
 	int no_metadata_format = 0;
@@ -613,6 +614,16 @@ static void _check_lv_segment(struct logical_volume *lv, struct lv_segment *seg,
 	    !seg_is_thin_volume(seg)) {
 		if (seg->transaction_id)
 			seg_error("sets transaction_id");
+	}
+
+	if (seg_is_error(seg) &&
+	    !strncmp(seg->lv->name, "pvmove", 6)) {
+		dm_list_iterate_items(sl, &lv->segs_using_this_lv) {
+			seg_error("empty pvmove with error segment still in use");
+			log_error("pvmove is used by %s.", display_lvname(sl->seg->lv));
+		}
+		if (dm_list_size(&seg->lv->segments) != 1)
+			seg_error("empty pvmove must use single error segment");
 	}
 
 	if (!seg_unknown(seg)) {

@@ -2552,6 +2552,8 @@ int vg_validate(struct volume_group *vg)
 		if (!lv_is_pvmove(lvl->lv))
 			continue;
 		dm_list_iterate_items(seg, &lvl->lv->segments) {
+			if (seg_is_error(seg))
+				continue;
 			if (seg_is_mirrored(seg)) {
 				if (seg->area_count != 2) {
 					log_error(INTERNAL_ERROR
