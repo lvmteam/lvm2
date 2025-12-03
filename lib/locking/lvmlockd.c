@@ -3003,7 +3003,7 @@ int lockd_query_lv(struct cmd_context *cmd, struct logical_volume *lv, int *ex, 
  */
 
 int lockd_lv_name(struct cmd_context *cmd, struct volume_group *vg,
-		  const char *lv_name, struct id *lv_id,
+		  const char *lv_name, const struct id *lv_id,
 		  const char *lock_args, const char *def_mode, uint32_t flags)
 {
 	struct owner owner = { 0 };

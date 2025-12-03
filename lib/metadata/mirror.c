@@ -381,7 +381,7 @@ revert_new_lv:
 /*
  * Activate an LV similarly (i.e. SH or EX) to a given "model" LV
  */
-static int _activate_lv_like_model(struct logical_volume *model,
+static int _activate_lv_like_model(const struct logical_volume *model,
 				   struct logical_volume *lv)
 {
 	/* FIXME: run all cases through lv_active_change when clvm variants are gone. */
