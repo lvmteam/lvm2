@@ -1269,6 +1269,9 @@ int reconfigure_mirror_images(struct lv_segment *mirrored_seg, uint32_t num_mirr
 #endif
 int collapse_mirrored_lv(struct logical_volume *lv);
 
+const struct logical_volume *find_active_pvmoved_lv(const struct logical_volume *pvmoved_lv);
+int activate_pvmoved_lvs(const struct dm_list *lvs);
+
 /* ++  metadata/raid_manip.c */
 struct lv_status_raid {
 	struct dm_pool *mem;

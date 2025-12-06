@@ -349,6 +349,39 @@ revert_new_lv:
 	return 0;
 }
 
+const struct logical_volume *find_active_pvmoved_lv(const struct logical_volume *pvmoved_lv)
+{
+	const struct logical_volume *lv;
+
+	lv = lv_lock_holder(pvmoved_lv);
+	if (lv_is_active(lv))
+		return lv;
+
+	if ((pvmoved_lv != lv) && lv_is_active(pvmoved_lv))
+		return pvmoved_lv;
+
+	return NULL;
+}
+
+int activate_pvmoved_lvs(const struct dm_list *lvs)
+{
+	const struct logical_volume *lv;
+	struct lv_list *lvl;
+	int r = 1;
+
+	dm_list_iterate_items(lvl, lvs) {
+		if (!(lv = find_active_pvmoved_lv(lvl->lv)))
+			continue;
+
+		if (!activate_lv(lv->vg->cmd, lv)) {
+			log_error("Failed to activate %s.", display_lvname(lv));
+			r = 0;
+		}
+	}
+
+	return r;
+}
+
 /*
  * Activate an LV similarly (i.e. SH or EX) to a given "model" LV
  */
