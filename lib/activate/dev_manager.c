@@ -2325,123 +2325,6 @@ static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 				const struct logical_volume *lv,
 				struct lv_activate_opts *laopts,
 				const char *layer);
-/*
- * Check for device holders (ATM used only for removed pvmove targets)
- * and add them into dtree structures.
- * When 'laopts != NULL' add them as new nodes - which also corrects READ_AHEAD.
- * Note: correct table are already explicitly PRELOADED.
- */
-static int _check_holder(struct dev_manager *dm, struct dm_tree *dtree,
-			 const struct logical_volume *lv,
-			 struct lv_activate_opts *laopts,
-			 uint32_t major, const char *d_name)
-{
-	const char *default_uuid_prefix = dm_uuid_prefix();
-	const size_t default_uuid_prefix_len = strlen(default_uuid_prefix);
-	const char *name;
-	const char *uuid;
-	struct dm_info info;
-	struct dm_task *dmt;
-	struct logical_volume *lv_det;
-	union lvid id;
-	int dev, r = 0;
-
-	errno = 0;
-	dev = strtoll(d_name + 3, NULL, 10);
-	if (errno) {
-		log_error("Failed to parse dm device minor number from %s.", d_name);
-		return 0;
-	}
-
-	if (!(dmt = _setup_task_run(DM_DEVICE_INFO, &info, NULL, NULL, NULL,
-				    major, dev, 0, 0, 0)))
-		return_0;
-
-	if (info.exists) {
-		uuid = dm_task_get_uuid(dmt);
-		name = dm_task_get_name(dmt);
-
-		log_debug_activation("Checking holder of %s  %s (" FMTu32 ":" FMTu32 ") %s.",
-				     display_lvname(lv), uuid, info.major, info.minor,
-				     name);
-
-		/* Skip common uuid prefix */
-		if (!strncmp(default_uuid_prefix, uuid, default_uuid_prefix_len))
-			uuid += default_uuid_prefix_len;
-
-		if (!memcmp(uuid, &lv->vg->id, ID_LEN) &&
-		    !dm_tree_find_node_by_uuid(dtree, uuid)) {
-			/* trims any UUID suffix (i.e. -cow) */
-			dm_strncpy((char*)&id, uuid, 2 * sizeof(struct id) + 1);
-
-			/* If UUID is not yet in dtree, look for matching LV */
-			if (!(lv_det = find_lv_in_vg_by_lvid(lv->vg, &id))) {
-				log_error("Cannot find holder with device name %s in VG %s.",
-					  name, lv->vg->name);
-				goto out;
-			}
-
-			if (lv_is_cow(lv_det))
-				lv_det = origin_from_cow(lv_det);
-			log_debug_activation("Found holder %s of %s.",
-					     display_lvname(lv_det),
-					     display_lvname(lv));
-			if (!laopts) {
-				if (!_add_lv_to_dtree(dm, dtree, lv_det, 0))
-					goto_out;
-			} else if (!_add_new_lv_to_dtree(dm, dtree, lv_det, laopts, 0))
-					goto_out;
-		}
-	}
-
-        r = 1;
-out:
-	dm_task_destroy(dmt);
-
-	return r;
-}
-
-/*
- * Add exiting devices which holds given LV device open.
- * This is used in case when metadata already do not contain information
- * i.e. PVMOVE is being finished and final table is going to be resumed.
- */
-static int _add_holders_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
-				 const struct logical_volume *lv,
-				 struct lv_activate_opts *laopts,
-				 const struct dm_info *info)
-{
-	const char *sysfs_dir = dm_sysfs_dir();
-	char sysfs_path[PATH_MAX];
-	struct dirent *dirent;
-	DIR *d;
-	int r = 0;
-
-	/* Sysfs path of holders */
-	if (dm_snprintf(sysfs_path, sizeof(sysfs_path), "%sblock/dm-" FMTu32
-			"/holders", sysfs_dir, info->minor) < 0) {
-		log_error("sysfs_path dm_snprintf failed.");
-		return 0;
-	}
-
-	if (!(d = opendir(sysfs_path))) {
-		log_sys_error("opendir", sysfs_path);
-		return 0;
-	}
-
-	while ((dirent = readdir(d)))
-		/* Expects minor is added to 'dm-' prefix */
-		if (!strncmp(dirent->d_name, "dm-", 3) &&
-		    !_check_holder(dm, dtree, lv, laopts, info->major, dirent->d_name))
-			goto_out;
-
-	r = 1;
-out:
-	if (closedir(d))
-		log_sys_debug("closedir", "holders");
-
-	return r;
-}
 
 static int _add_dev_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 			     const struct logical_volume *lv, const char *layer)
@@ -2509,15 +2392,6 @@ static int _add_dev_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 		if (!str_list_add(dm->cmd->pending_delete_mem, &dm->cmd->pending_delete, dlid))
 			return_0;
 	}
-
-	/*
-	 * Find holders of existing active LV where name starts with 'pvmove',
-	 * but it's not anymore PVMOVE LV and also it's not PVMOVE _mimage
-	 */
-	if (info.exists && !lv_is_pvmove(lv) &&
-	    !strchr(lv->name, '_') && !strncmp(lv->name, "pvmove", 6))
-		if (!_add_holders_to_dtree(dm, dtree, lv, NULL, &info))
-			return_0;
 
 	return 1;
 }
@@ -3864,17 +3738,6 @@ static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 	    !_cached_dm_info(dm->mem, dtree, first_seg(lv)->pool_lv, NULL) &&
 	    !_pool_register_callback(dm, dnode, lv))
 		return_0;
-
-	/*
-	 * Update tables for ANY PVMOVE holders for active LV where the name starts with 'pvmove',
-	 * but it's not anymore PVMOVE LV and also it's not a PVMOVE _mimage LV.
-	 * When resume happens, tables MUST be already preloaded with correct entries!
-	 * (since we can't preload different table while devices are suspended)
-	 */
-	if (!lv_is_pvmove(lv) && !strncmp(lv->name, "pvmove", 6) && !strchr(lv->name, '_') &&
-	    (dinfo = _cached_dm_info(dm->mem, dtree, lv, NULL)))
-		if (!_add_holders_to_dtree(dm, dtree, lv, laopts, dinfo))
-			return_0;
 
 	if (read_ahead == DM_READ_AHEAD_AUTO) {
 		/* we need RA at least twice a whole stripe - see the comment in md/raid0.c */
