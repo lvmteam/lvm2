@@ -294,6 +294,7 @@ pvmove $mode -i0 "$dev2" "$dev5"
 check lv_on $vg $lv1 "$dev1" "$dev5" "$dev3"
 check lv_on $vg $lv2 "$dev5" "$dev3" "$dev4"
 check lv_on $vg $lv3 "$dev5"
+lvchange -ay $vg
 check_and_cleanup_lvs_
 
 # ---
