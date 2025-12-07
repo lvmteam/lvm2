@@ -2139,16 +2139,12 @@ static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
 	               const struct logical_volume *lv, const struct logical_volume *lv_pre)
 {
 	const struct logical_volume *pvmove_lv = NULL;
-	struct logical_volume *lv_pre_tmp, *lv_tmp;
+	const struct logical_volume *lv_pre_tmp, *lv_tmp;
 	struct seg_list *sl;
 	struct lv_segment *snap_seg;
 	struct lvinfo info;
 	int r = 0, lockfs = 0, flush_required = 0;
 	struct detached_lv_data detached;
-	struct dm_pool *mem = NULL;
-	struct dm_list suspend_lvs;
-	struct lv_list *lvl;
-	int found;
 
 	if (!activation())
 		return 1;
@@ -2156,8 +2152,7 @@ static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
 	if (test_mode()) {
 		_skip("Suspending %s%s.", display_lvname(lv),
 		      laopts->origin_only ? " origin without snapshots" : "");
-		r = 1;
-		goto out;
+		return 1;
 	}
 
 	if (!lv_info(cmd, lv, laopts->origin_only, &info, 0, 0))
@@ -2184,41 +2179,71 @@ static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
 		laopts->origin_only = 0;
 	}
 
-	/*
-	 * Preload devices for the LV.
-	 * If the PVMOVE LV is being removed, it's only present in the old
-	 * metadata and not the new, so we must explicitly add the new
-	 * tables for all the changed LVs here, as the relationships
-	 * are not found by walking the new metadata.
-	 */
+	/* Preload devices for the LV. */
 	if (lv_is_locked(lv) && !lv_is_locked(lv_pre) &&
 	    (pvmove_lv = find_pvmove_lv_in_lv(lv))) {
-		/* Preload all the LVs above the PVMOVE LV */
+		/*
+		 * When the PVMOVE LV is being removed, it's only present
+		 * in the committed metadata and not in the new precommmitted.
+		 * Preloading all changed LVs here before suspending any of it,
+		 * as the relationships are not found by walking the
+		 * precommitted metadata.
+		 *
+		 * Note:
+		 *   When there is suspended LV, lvm shall not preload tables!
+		 *
+		 *   Suspend of PVMOVE LV does NOT trace pvmove dependencies
+		 *   thus we need to use active pvmoved LV if there is one.
+		 */
+
+		lv = pvmove_lv; /* Suspend PVMOVE LV if no other pvmoved LV is active */
+
 		dm_list_iterate_items(sl, &pvmove_lv->segs_using_this_lv) {
-			if (!(lv_pre_tmp = find_lv(lv_pre->vg, sl->seg->lv->name))) {
-				log_error(INTERNAL_ERROR "LV %s missing from preload metadata.",
-					  display_lvname(sl->seg->lv));
+			if (!(lv_tmp = find_active_pvmoved_lv(sl->seg->lv)))
+				continue;
+
+			/* Preload this LV from precommitted metadata */
+			if (!(lv_pre_tmp = find_lv(lv_pre->vg, lv_tmp->name))) {
+				log_error(INTERNAL_ERROR "LV %s is missing from precommitted metadata.",
+					  display_lvname(lv_tmp));
 				goto out;
 			}
+
+			log_debug_activation("Preloading pvmoved LV %s for pvmove removal.",
+					     display_lvname(lv_tmp));
+
 			if (!_lv_preload(lv_pre_tmp, laopts, &flush_required))
 				goto_out;
+
+			lv = lv_tmp; /* Prefer to suspend active pvmoved LV */
 		}
+
 		/* Now preload the PVMOVE LV itself */
 		if (!(lv_pre_tmp = find_lv(lv_pre->vg, pvmove_lv->name))) {
 			log_error(INTERNAL_ERROR "LV %s missing from preload metadata.",
 				  display_lvname(pvmove_lv));
 			goto out;
 		}
+
+		log_debug_activation("Preloading PVMOVE LV %s for pvmove removal.",
+				     display_lvname(lv_pre_tmp));
+
 		if (!_lv_preload(lv_pre_tmp, laopts, &flush_required))
 			goto_out;
-
-		/* Suspending 1st. LV above PVMOVE suspends whole tree */
-		/* coverity[unreachable] intentional single iteration to get first item */
-		dm_list_iterate_items(sl, &pvmove_lv->segs_using_this_lv) {
-			lv = sl->seg->lv;
-			break;
-		}
 	} else {
+		/*
+		 * PVMOVE operation requires different activation paths:
+		 *
+		 * Active LVs path:
+		 *   Suspend all active participating LVs and preload them from
+		 *   precommitted metadata, which inserts pvmove segments into
+		 *   the live device-mapper tree.
+		 *
+		 * Inactive LVs path:
+		 *   Simply activate the pvmove LV. Participating LVs will be
+		 *   activated with pvmove segments when accessed later.
+		 */
+
 		if (!_lv_preload(lv_pre, laopts, &flush_required))
 			/* FIXME Revert preloading */
 			goto_out;
@@ -2287,70 +2312,15 @@ static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
 			   &first_seg(lv)->external_lv->lvid.id[1], ID_LEN) != 0))))
 		lockfs = 1;
 
-	if (!lv_is_locked(lv) && lv_is_locked(lv_pre) &&
-	    (pvmove_lv = find_pvmove_lv_in_lv(lv_pre))) {
-		/*
-		 * When starting PVMOVE, suspend participating LVs first
-		 * with committed metadata by looking at precommitted pvmove list.
-		 * In committed metadata these LVs are not connected in any way.
-		 *
-		 * TODO: prepare list of LVs needed to be suspended and pass them
-		 *       via 'struct laopts' directly to _lv_suspend_lv() and handle this
-		 *       with a single 'dmtree' call.
-		 */
-		if (!(mem = dm_pool_create("suspend_lvs", 128)))
-			goto_out;
+	critical_section_inc(cmd, "suspending");
 
-		/* Prepare list of all LVs for suspend ahead */
-		dm_list_init(&suspend_lvs);
-		dm_list_iterate_items(sl, &pvmove_lv->segs_using_this_lv) {
-			lv_tmp = sl->seg->lv;
-			if (lv_is_cow(lv_tmp))
-				/* Never suspend COW, always has to be origin */
-				lv_tmp = origin_from_cow(lv_tmp);
-			found = 0;
-			dm_list_iterate_items(lvl, &suspend_lvs)
-				if (strcmp(lvl->lv->name, lv_tmp->name) == 0) {
-					found = 1;
-					break;
-				}
-			if (found)
-				continue; /* LV is already in the list */
-			if (!(lvl = dm_pool_alloc(mem, sizeof(*lvl)))) {
-				log_error("lv_list alloc failed.");
-				goto out;
-			}
-			/* Look for precommitted LV name in committed VG */
-			if (!(lvl->lv = find_lv(lv->vg, lv_tmp->name))) {
-				log_error(INTERNAL_ERROR "LV %s missing from preload metadata.",
-					  display_lvname(lv_tmp));
-				goto out;
-			}
-			dm_list_add(&suspend_lvs, &lvl->list);
-		}
-
-		critical_section_inc(cmd, "suspending");
-
-		dm_list_iterate_items(lvl, &suspend_lvs)
-			if (!_lv_suspend_lv(lvl->lv, laopts, lockfs, 1)) {
-				critical_section_dec(cmd, "failed suspend");
-				goto_out; /* FIXME: resume on recovery path? */
-			}
-
-	} else { /* Standard suspend */
-		critical_section_inc(cmd, "suspending");
-
-		if (!_lv_suspend_lv(lv, laopts, lockfs, flush_required)) {
-			critical_section_dec(cmd, "failed suspend");
-			goto_out;
-		}
+	if (!_lv_suspend_lv(lv, laopts, lockfs, flush_required)) {
+		critical_section_dec(cmd, "failed suspend");
+		goto_out;
 	}
 
 	r = 1;
 out:
-	if (mem)
-		dm_pool_destroy(mem);
-
 	return r;
 }
 

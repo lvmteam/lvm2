@@ -874,6 +874,49 @@ static int _split_mirror_images(struct logical_volume *lv,
 	return 1;
 }
 
+static int _remove_pvmove_layer(struct logical_volume *lv, struct dm_list *parent_lvs)
+{
+	struct seg_list *sl, *sl2;
+	struct lv_segment *pvmove_seg;
+	struct logical_volume *parent_lv;
+
+	log_debug_metadata("Removing pvmove layer for %s.", display_lvname(lv));
+
+	/* Iterate through a copy of the list since we'll be modifying it */
+	dm_list_iterate_items_safe(sl, sl2, &lv->segs_using_this_lv) {
+		parent_lv = sl->seg->lv;
+
+		/*
+		 * Redirect all segments in this parent LV that point to the pvmove LV.
+		 * This will move the segments to point to the underlying device instead.
+		 */
+		if (!remove_layers_for_segments(lv->vg->cmd, parent_lv, lv,
+						PVMOVE, parent_lvs)) {
+			log_error("Failed to redirect segments from %s.",
+				  display_lvname(parent_lv));
+			return 0;
+		}
+	}
+
+	/*
+	 * After remove_layer_from_lv(), the pvmove LV has been stripped to underlying segments
+	 * (error segments with 0 areas). All parents have been redirected.
+	 * Clear the PVMOVE status - this LV is no longer functioning as a pvmove, it's just
+	 * orphan error segments waiting to be cleaned up in pvmove_finish().
+	 */
+	lv->status &= ~(PVMOVE | LOCKED);
+	dm_list_iterate_items(pvmove_seg, &lv->segments)
+		pvmove_seg->status &= ~PVMOVE;
+
+	/* Merge all 'error' segments into one */
+	if (!lv_merge_segments(lv))
+		return_0;
+
+	lv_set_visible(lv);
+
+	return 1;
+}
+
 /*
  * Remove num_removed images from mirrored_seg
  *
@@ -917,6 +960,7 @@ static int _remove_mirror_images(struct logical_volume *lv,
 	struct lv_list *lvl;
 	struct dm_list tmp_orphan_lvs;
 	uint32_t orig_removed = num_removed;
+	DM_LIST_INIT(lvs_changed);
 
 	if (removed)
 		*removed = 0;
@@ -1063,11 +1107,22 @@ static int _remove_mirror_images(struct logical_volume *lv,
 		return_0;
 
 	/*
+	 * For pvmove with incrementally redirect parent segments
+	 * away from the pvmove LV to maintain consistent metadata at each commit.
+	 */
+	if (lv_is_pvmove(lv) &&
+	    !_remove_pvmove_layer(lv, &lvs_changed))
+		return_0;
+
+	/*
 	 * To successfully remove these unwanted LVs we need to
 	 * remove the LVs from the mirror set, commit that metadata
 	 * then deactivate and remove them fully.
 	 */
 	if (!lv_update_and_reload_origin(mirrored_seg->lv))
+		return_0;
+
+	if (!activate_pvmoved_lvs(&lvs_changed))
 		return_0;
 
 	/* Save or delete the 'orphan' LVs */
@@ -1085,9 +1140,9 @@ static int _remove_mirror_images(struct logical_volume *lv,
 		if (detached_log_lv &&
 		    !_activate_lv_like_model(lv, detached_log_lv))
 			return_0;
-
-		sync_local_dev_names(lv->vg->cmd);
 	}
+
+	sync_local_dev_names(lv->vg->cmd);
 
 	if (!collapse) {
 		dm_list_iterate_items(lvl, &tmp_orphan_lvs)
@@ -1333,6 +1388,7 @@ static int _validate_mirror_segments(struct logical_volume *lv,
 static int _remove_mirrors_from_segments(struct logical_volume *lv,
 					 uint32_t new_mirrors, uint64_t status_mask)
 {
+	DM_LIST_INIT(lvs_changed);
 	struct lv_segment *seg;
 	uint32_t s;
 
@@ -1356,6 +1412,10 @@ static int _remove_mirrors_from_segments(struct logical_volume *lv,
 		if (!new_mirrors)
 			seg->segtype = get_segtype_from_string(lv->vg->cmd, SEG_TYPE_NAME_STRIPED);
 	}
+
+	if (lv_is_pvmove(lv) &&
+	    !_remove_pvmove_layer(lv, &lvs_changed))
+		return_0;
 
 	return 1;
 }

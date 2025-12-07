@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2003-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2015 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2025 Red Hat, Inc. All rights reserved.
  *
  * This file is part of LVM2.
  *
@@ -51,20 +51,14 @@ static int _detach_pvmove_mirror(struct cmd_context *cmd,
 				 struct logical_volume *lv_mirr)
 {
 	uint32_t mimage_to_remove = 0;
-	struct dm_list lvs_completed;
-
-	/* Update metadata to remove mirror segments and break dependencies */
-	dm_list_init(&lvs_completed);
 
 	if (arg_is_set(cmd, abort_ARG) &&
 	    (seg_type(first_seg(lv_mirr), 0) == AREA_LV))
 		mimage_to_remove = 1; /* remove the second mirror leg */
 
-	if (!lv_remove_mirrors(cmd, lv_mirr, 1, 0, _is_pvmove_image_removable, &mimage_to_remove, PVMOVE) ||
-	    !remove_layers_for_segments_all(cmd, lv_mirr, PVMOVE,
-					    &lvs_completed)) {
+	if (!lv_remove_mirrors(cmd, lv_mirr, 1, 0, _is_pvmove_image_removable,
+			       &mimage_to_remove, PVMOVE))
 		return_0;
-	}
 
 	return 1;
 }
@@ -88,19 +82,61 @@ int pvmove_finish(struct cmd_context *cmd, struct volume_group *vg,
 		  struct logical_volume *lv_mirr, struct dm_list *lvs_changed)
 {
 	uint32_t visible = vg_visible_lvs(lv_mirr->vg);
+	struct lv_list *lvl;
+	struct lvinfo info;
 
 	if (!dm_list_empty(lvs_changed) &&
-	    (!_detach_pvmove_mirror(cmd, lv_mirr) ||
-	    !replace_lv_with_error_segment(lv_mirr))) {
+	    !_detach_pvmove_mirror(cmd, lv_mirr)) {
 		log_error("ABORTING: Removal of temporary pvmove mirror %s failed.",
 			  display_lvname(lv_mirr));
 		return 0;
 	}
 
-	lv_set_visible(lv_mirr);
+	if (!lv_is_error(lv_mirr)) {
+		log_error(INTERNAL_ERROR "ABORTING: Failed to replace %s with error segment.",
+			  display_lvname(lv_mirr));
+		return 0;
+	}
 
 	if (!lv_update_and_reload(lv_mirr))
 		return_0;
+	/*
+	 * Process all LVs that were changed during pvmove.
+	 *
+	 * First pass: refresh ALL LVs to ensure they are properly resumed.
+	 */
+	if (!activate_pvmoved_lvs(lvs_changed))
+                return_0;
+
+	sync_local_dev_names(cmd);
+
+	/*
+	 * Second pass: Deactivate component LVs that were activated specifically
+	 * for pvmove and are no longer needed.
+	 */
+	dm_list_iterate_items(lvl, lvs_changed) {
+		/* Deactivate invisible component LVs that are not in use (open_count == 0).
+		 * These were activated specifically for pvmove and are no longer needed. */
+		if (!lv_is_visible(lvl->lv) && lv_is_component(lvl->lv)) {
+			if (!lv_info(cmd, lvl->lv, 0, &info, 1, 0))
+				log_debug_activation("  Cannot get info for %s, skipping deactivation.",
+						     display_lvname(lvl->lv));
+			else if (!info.exists)
+				log_debug_activation("  Component %s already inactive.",
+						     display_lvname(lvl->lv));
+			else if (info.open_count != 0)
+				log_debug_activation("  Component %s still in use (open_count=%u), not deactivating.",
+						     display_lvname(lvl->lv), info.open_count);
+			else {
+				log_debug_activation("  Deactivating unused component: %s",
+						     display_lvname(lvl->lv));
+				if (!deactivate_lv(cmd, lvl->lv)) {
+					log_error("Failed to deactivate component %s.", display_lvname(lvl->lv));
+					return 0;
+				}
+			}
+		}
+	}
 
 	sync_local_dev_names(cmd);
 

@@ -2943,9 +2943,10 @@ static int _add_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 	if ((dm->track_pvmove_deps == 1) && lv_is_pvmove(lv)) {
 		dm->track_pvmove_deps = 2; /* Mark as already seen */
 		dm_list_iterate_items(sl, &lv->segs_using_this_lv) {
-			/* If LV is snapshot COW - whole snapshot needs reload */
-			plv = lv_is_cow(sl->seg->lv) ? origin_from_cow(sl->seg->lv) : sl->seg->lv;
-			if (!_add_lv_to_dtree(dm, dtree, plv, 0))
+			/* Check for lock holding LV to reload its whole device tree */
+			plv = lv_lock_holder(sl->seg->lv);
+			if (!_cached_dm_tree_node(dm->mem, dtree, plv, lv_layer(plv)) &&
+			    !_add_lv_to_dtree(dm, dtree, plv, 0))
 				return_0;
 		}
 		dm->track_pvmove_deps = 1;
@@ -3636,6 +3637,7 @@ static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 	uint32_t read_ahead_flags = UINT32_C(0);
 	int save_pending_delete = dm->track_pending_delete;
 	int merge_in_progress = 0;
+	const struct logical_volume *lock_lv;
 
 	if (!(lvlayer = dm_pool_alloc(dm->mem, sizeof(*lvlayer)))) {
 		log_error("_add_new_lv_to_dtree: pool alloc failed for %s %s.",
@@ -3887,9 +3889,16 @@ static int _add_new_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 
 	/* Add any LVs referencing a PVMOVE LV unless told not to */
 	if (dm->track_pvmove_deps && lv_is_pvmove(lv))
-		dm_list_iterate_items(sl, &lv->segs_using_this_lv)
-			if (!_add_new_lv_to_dtree(dm, dtree, sl->seg->lv, laopts, NULL))
+		dm_list_iterate_items(sl, &lv->segs_using_this_lv) {
+			lock_lv = lv_lock_holder(sl->seg->lv);
+			if ((lock_lv != sl->seg->lv) &&
+			    _cached_dm_tree_node(dm->mem, dtree, lock_lv, NULL)) {
+				if (!_add_new_lv_to_dtree(dm, dtree, lock_lv, laopts, NULL))
+					return_0;
+			} else if (_cached_dm_tree_node(dm->mem, dtree, sl->seg->lv, NULL) &&
+				   !_add_new_lv_to_dtree(dm, dtree, sl->seg->lv, laopts, NULL))
 				return_0;
+		}
 
 	dm->track_pending_delete = save_pending_delete; /* restore */
 

@@ -8192,8 +8192,8 @@ int remove_layers_for_segments(struct cmd_context *cmd,
 	int lv_changed = 0;
 	struct lv_list *lvl;
 
-	log_very_verbose("Removing layer %s for segments of %s",
-			 layer_lv->name, lv->name);
+	log_very_verbose("Removing layer %s for segments of %s.",
+			 display_lvname(layer_lv), display_lvname(lv));
 
 	/* Find all segments that point at the temporary mirror */
 	dm_list_iterate_items(seg, &lv->segments) {
@@ -8254,6 +8254,7 @@ int remove_layers_for_segments(struct cmd_context *cmd,
 				lvl->lv = lv;
 				dm_list_add(lvs_changed, &lvl->list);
 				lv_changed = 1;
+				lv->status &= ~LOCKED;
 			}
 		}
 	}
