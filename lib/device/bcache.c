@@ -152,9 +152,12 @@ static void _async_destroy(struct io_engine *ioe)
 	 */
 	if (e->aio_context) {
 		if (e->aio_context_pid != getpid())
-			log_debug("Skipping io_destroy() for different pid.");
-		else if (io_destroy(e->aio_context)) // really slow
-			log_sys_warn("io_destroy");
+			log_debug_devs("Skipping AIO context destroy for different pid.");
+		else {
+			log_debug_devs("Destroy AIO context.");
+			if (io_destroy(e->aio_context)) // really slow (~40ms)
+				log_sys_warn("io_destroy");
+		}
 	}
 
 	free(e);
