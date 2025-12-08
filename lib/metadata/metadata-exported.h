@@ -1252,8 +1252,6 @@ uint32_t adjusted_mirror_region_size(struct cmd_context *cmd,
 				     uint32_t extent_size, uint32_t extents,
 				     uint32_t region_size, int internal, int clustered);
 
-int remove_mirrors_from_segments(struct logical_volume *lv,
-				 uint32_t new_mirrors, uint64_t status_mask);
 int add_mirrors_to_segments(struct cmd_context *cmd, struct logical_volume *lv,
 			    uint32_t mirrors, uint32_t region_size,
 			    struct dm_list *allocatable_pvs, alloc_policy_t alloc);

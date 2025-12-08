@@ -1326,8 +1326,8 @@ static int _validate_mirror_segments(struct logical_volume *lv,
  * If 'status_mask' is non-zero, the removal happens only when all segments
  * has the status bits on.
  */
-int remove_mirrors_from_segments(struct logical_volume *lv,
-				 uint32_t new_mirrors, uint64_t status_mask)
+static int _remove_mirrors_from_segments(struct logical_volume *lv,
+					 uint32_t new_mirrors, uint64_t status_mask)
 {
 	struct lv_segment *seg;
 	uint32_t s;
@@ -2117,7 +2117,7 @@ int lv_remove_mirrors(struct cmd_context *cmd __attribute__((unused)),
 			  "segment-by-segment mirroring.");
 		return 0;
 	}
-	return remove_mirrors_from_segments(lv, new_mirrors, status_mask);
+	return _remove_mirrors_from_segments(lv, new_mirrors, status_mask);
 }
 
 int set_mirror_log_count(int *log_count, const char *mirrorlog)
