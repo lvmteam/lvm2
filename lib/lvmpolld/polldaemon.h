@@ -65,13 +65,13 @@ struct daemon_parms {
 
 int poll_daemon(struct cmd_context *cmd, unsigned background,
 		uint64_t lv_type, const struct poll_functions *poll_fns,
-		const char *progress_title, struct poll_operation_id *id);
+		const char *progress_title, const struct poll_operation_id *id);
 
 progress_t poll_mirror_progress(struct cmd_context *cmd,
 				struct logical_volume *lv, const char *name,
 				struct daemon_parms *parms);
 
-int wait_for_single_lv(struct cmd_context *cmd, struct poll_operation_id *id,
+int wait_for_single_lv(struct cmd_context *cmd, const struct poll_operation_id *id,
 		       struct daemon_parms *parms);
 
 #endif

@@ -764,46 +764,23 @@ static const struct poll_functions _pvmove_fns = {
 	.finish_copy = pvmove_finish,
 };
 
-static struct poll_operation_id *_pvmove_create_id(struct cmd_context *cmd,
-						   const char *pv_name,
-						   const char *vg_name,
-						   const char *lv_name,
-						   const char *uuid)
-{
-	struct poll_operation_id *id;
-
-	if (!vg_name || !lv_name || !pv_name || !uuid) {
-		log_error(INTERNAL_ERROR "Wrong params for _pvmove_create_id.");
-		return NULL;
-	}
-
-	if (!(id = dm_pool_alloc(cmd->mem, sizeof(*id)))) {
-		log_error("Poll operation ID allocation failed.");
-		return NULL;
-	}
-
-	if (!(id->vg_name = dm_pool_strdup(cmd->mem, vg_name)) ||
-	    !(id->lv_name = dm_pool_strdup(cmd->mem, lv_name)) ||
-	    !(id->display_name = dm_pool_strdup(cmd->mem, pv_name)) ||
-	    !(id->uuid = dm_pool_strdup(cmd->mem, uuid))) {
-		log_error("Failed to copy one or more poll operation ID members.");
-		dm_pool_free(cmd->mem, id);
-		return NULL;
-	}
-
-	return id;
-}
-
 int pvmove_poll(struct cmd_context *cmd, const char *pv_name,
 		const char *uuid, const char *vg_name,
 		const char *lv_name, unsigned background)
 {
-	struct poll_operation_id *id = NULL;
+	const struct poll_operation_id *id = NULL, create_id = {
+		.vg_name = vg_name,
+		.lv_name = lv_name,
+		.display_name = pv_name,
+		.uuid = uuid
+	};
 
-	if (uuid &&
-	    !(id = _pvmove_create_id(cmd, pv_name, vg_name, lv_name, uuid))) {
-		log_error("Failed to allocate poll identifier for pvmove.");
-		return ECMD_FAILED;
+	if (uuid) {
+		if (!vg_name || !lv_name || !pv_name) {
+			log_error(INTERNAL_ERROR "Wrong params for creation of pvmove id.");
+			return ECMD_FAILED;
+		}
+		id = &create_id;
 	}
 
 	if (test_mode())

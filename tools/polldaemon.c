@@ -149,7 +149,7 @@ static int _sleep_and_rescan_devices(struct cmd_context *cmd, struct daemon_parm
 	return 1;
 }
 
-int wait_for_single_lv(struct cmd_context *cmd, struct poll_operation_id *id,
+int wait_for_single_lv(struct cmd_context *cmd, const struct poll_operation_id *id,
 		       struct daemon_parms *parms)
 {
 	struct volume_group *vg = NULL;
@@ -412,7 +412,7 @@ typedef struct {
 	struct dm_list idls;
 } lvmpolld_parms_t;
 
-static int _report_progress(struct cmd_context *cmd, struct poll_operation_id *id,
+static int _report_progress(struct cmd_context *cmd, const struct poll_operation_id *id,
 			    struct daemon_parms *parms)
 {
 	struct volume_group *vg;
@@ -567,7 +567,7 @@ static int _lvmpolld_poll_for_all_vgs(struct cmd_context *cmd,
 	return 1;
 }
 
-static int _lvmpoll_daemon_id(struct cmd_context *cmd, struct poll_operation_id *id,
+static int _lvmpoll_daemon_id(struct cmd_context *cmd, const struct poll_operation_id *id,
 			      struct daemon_parms *parms)
 {
 	unsigned finished = 0;
@@ -593,7 +593,7 @@ static int _lvmpoll_daemon_id(struct cmd_context *cmd, struct poll_operation_id 
 	return ECMD_PROCESSED;
 }
 
-static int _lvmpoll_daemon(struct cmd_context *cmd, struct poll_operation_id *id,
+static int _lvmpoll_daemon(struct cmd_context *cmd, const struct poll_operation_id *id,
 			   struct daemon_parms *parms)
 {
 	struct processing_handle *handle;
@@ -628,7 +628,7 @@ static int _lvmpoll_daemon(struct cmd_context *cmd, struct poll_operation_id *id
  * - 'background' is advisory so a child polldaemon may not be used even
  *   if it was requested.
  */
-static int _poll_daemon(struct cmd_context *cmd, struct poll_operation_id *id,
+static int _poll_daemon(struct cmd_context *cmd, const struct poll_operation_id *id,
 			struct daemon_parms *parms)
 {
 	struct processing_handle *handle = NULL;
@@ -729,7 +729,7 @@ static int _daemon_parms_init(struct cmd_context *cmd, struct daemon_parms *parm
 
 int poll_daemon(struct cmd_context *cmd, unsigned background,
 		uint64_t lv_type, const struct poll_functions *poll_fns,
-		const char *progress_title, struct poll_operation_id *id)
+		const char *progress_title, const struct poll_operation_id *id)
 {
 	struct daemon_parms parms;
 
