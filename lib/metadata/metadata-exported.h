@@ -1110,10 +1110,6 @@ int remove_layers_for_segments(struct cmd_context *cmd,
 			       struct logical_volume *lv,
 			       struct logical_volume *layer_lv,
 			       uint64_t status_mask, struct dm_list *lvs_changed);
-int remove_layers_for_segments_all(struct cmd_context *cmd,
-				   struct logical_volume *layer_lv,
-				   uint64_t status_mask,
-				   struct dm_list *lvs_changed);
 int split_parent_segments_for_layer(struct cmd_context *cmd,
 				    struct logical_volume *layer_lv);
 int remove_layer_from_lv(struct logical_volume *lv,

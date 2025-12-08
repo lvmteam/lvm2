@@ -8263,40 +8263,6 @@ int remove_layers_for_segments(struct cmd_context *cmd,
 	return 1;
 }
 
-/* Remove a layer */
-int remove_layers_for_segments_all(struct cmd_context *cmd,
-				   struct logical_volume *layer_lv,
-				   uint64_t status_mask,
-				   struct dm_list *lvs_changed)
-{
-	struct lv_list *lvl;
-	struct logical_volume *lv1;
-
-	/* Loop through all LVs except the temporary mirror */
-	dm_list_iterate_items(lvl, &layer_lv->vg->lvs) {
-		lv1 = lvl->lv;
-		if (lv1 == layer_lv)
-			continue;
-
-		if (!remove_layers_for_segments(cmd, lv1, layer_lv,
-						status_mask, lvs_changed))
-			return_0;
-	}
-
-	if (!lv_empty(layer_lv))
-		return_0;
-
-	/* Assumes only used by PVMOVE ATM when unlocking LVs */
-	dm_list_iterate_items(lvl, lvs_changed) {
-		/* FIXME Assumes only one pvmove at a time! */
-		lvl->lv->status &= ~LOCKED;
-		if (!lv_merge_segments(lvl->lv))
-			return_0;
-	}
-
-	return 1;
-}
-
 int move_lv_segments(struct logical_volume *lv_to,
 		     struct logical_volume *lv_from,
 		     uint64_t set_status, uint64_t reset_status)
