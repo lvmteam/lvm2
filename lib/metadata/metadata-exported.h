@@ -949,7 +949,6 @@ int add_metadata_to_pool(struct lv_segment *pool_seg,
 			 struct logical_volume *metadata_lv);
 int handle_pool_metadata_spare(struct volume_group *vg, uint32_t extents,
 			       struct dm_list *pvh, int poolmetadataspare);
-int vg_set_pool_metadata_spare(struct logical_volume *lv);
 int vg_remove_pool_metadata_spare(struct volume_group *vg);
 
 struct logical_volume *data_lv_from_thin_pool(struct logical_volume *pool_lv);
