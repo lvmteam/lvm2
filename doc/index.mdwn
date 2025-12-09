@@ -99,9 +99,9 @@ incorrectly!
 
 Good start is to **avoid using `{--force|-f}` and `{--yes|-y}` options** which are
 often seen on internet discussions.
-there is a possibility of data loss, LVM tools usually ask, so read the prompts
-carefully!  Using `--yes` removes these safety.
-Also in some cases where it is too dangerous to proceed, e.g. device is used,
+When there is a possibility of data loss, LVM tools usually ask, so read the
+prompts carefully!  Using `--yes` removes these measures.
+Also in cases where it is too dangerous to proceed, e.g. device is used,
 LVM refuses to do so, which can be overridden by `--force`.
 
 Second, when **resizing** and especially when shrinking LVs it is always a good
