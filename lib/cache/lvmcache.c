@@ -3287,27 +3287,6 @@ int lvmcache_verify_info_in_vg(struct volume_group *vg, struct lvmcache_info *in
 	return 1;
 }
 
-
-int lvmcache_verify_pv_in_vg(struct volume_group *vg, struct physical_volume *pv)
-{
-	struct lvmcache_info *info;
-	char pvid[ID_LEN + 1] __attribute__((aligned(8))) = { 0 };
-
-	memcpy(&pvid, &pv->id.uuid, ID_LEN);
-
-	if (!(info = lvmcache_info_from_pvid(pvid, NULL, 0))) {
-		log_debug("Verify PV %s in %s: skip, no info", pvid, vg->name);
-		return 1;
-	}
-
-	if (pv->dev != info->dev) {
-		log_debug("Verify PV %s in %s: skip, different devs", info->dev->pvid, vg->name);
-		return 1;
-	}
-
-	return lvmcache_verify_info_in_vg(vg, info);
-}
-
 const char *dev_filtered_reason(struct device *dev)
 {
 	if (dev->filtered_flags & DEV_FILTERED_REGEX)

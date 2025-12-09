@@ -1018,28 +1018,6 @@ static int _info(struct cmd_context *cmd,
 	return 1;
 }
 
-int dev_manager_remove_dm_major_minor(uint32_t major, uint32_t minor)
-{
-	struct dm_task *dmt;
-	int r = 0;
-
-	log_verbose("Removing dm dev %u:%u", major, minor);
-
-	if (!(dmt = dm_task_create(DM_DEVICE_REMOVE)))
-		return_0;
-
-	if (!dm_task_set_major(dmt, major) || !dm_task_set_minor(dmt, minor)) {
-		log_error("Failed to set device number for remove %u:%u", major, minor);
-		goto out;
-	}
-
-	r = dm_task_run(dmt);
-out:
-	dm_task_destroy(dmt);
-
-	return r;
-}
-
 static int _info_by_dev(uint32_t major, uint32_t minor, struct dm_info *info)
 {
 	return _info_run(NULL, info, NULL, NULL, NULL, 0, 0, major, minor);

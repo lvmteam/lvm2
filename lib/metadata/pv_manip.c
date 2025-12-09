@@ -61,23 +61,6 @@ int alloc_pv_segment_whole_pv(struct dm_pool *mem, struct physical_volume *pv)
 	return 1;
 }
 
-int peg_dup(struct dm_pool *mem, struct dm_list *peg_new, struct dm_list *peg_old)
-{
-	struct pv_segment *peg, *pego;
-
-	dm_list_init(peg_new);
-
-	dm_list_iterate_items(pego, peg_old) {
-		if (!(peg = _alloc_pv_segment(mem, pego->pv, pego->pe,
-					      pego->len, pego->lvseg,
-					      pego->lv_area)))
-			return_0;
-		dm_list_add(peg_new, &peg->list);
-	}
-
-	return 1;
-}
-
 /* Find segment at a given physical extent in a PV */
 static struct pv_segment *_find_peg_by_pe(const struct physical_volume *pv,
 					  uint32_t pe)

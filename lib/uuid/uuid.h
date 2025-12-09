@@ -35,8 +35,6 @@ union lvid {
 	char s[2 * sizeof(struct id) + 1 + 7];
 };
 
-int lvid_in_restricted_range(union lvid *lvid);
-
 int lvid_create(union lvid *lvid, struct id *vgid);
 int id_create(struct id *id);
 int id_valid(struct id *id);
