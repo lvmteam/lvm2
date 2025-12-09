@@ -1250,10 +1250,6 @@ uint32_t adjusted_mirror_region_size(struct cmd_context *cmd,
 int remove_mirror_images(struct logical_volume *lv, uint32_t num_mirrors,
 			 int (*is_removable)(struct logical_volume *, void *),
 			 void *removable_baton, unsigned remove_log);
-int add_mirror_images(struct cmd_context *cmd, struct logical_volume *lv,
-		      uint32_t mirrors, uint32_t stripes, uint32_t stripe_size, uint32_t region_size,
-		      struct dm_list *allocatable_pvs, alloc_policy_t alloc,
-		      uint32_t log_count);
 struct logical_volume *detach_mirror_log(struct lv_segment *mirrored_seg);
 int attach_mirror_log(struct lv_segment *seg, struct logical_volume *log_lv);
 int remove_mirror_log(struct cmd_context *cmd, struct logical_volume *lv,
@@ -1272,7 +1268,6 @@ int reconfigure_mirror_images(struct lv_segment *mirrored_seg, uint32_t num_mirr
 			      struct dm_list *removable_pvs, unsigned remove_log);
 #endif
 int collapse_mirrored_lv(struct logical_volume *lv);
-int shift_mirror_images(struct lv_segment *mirrored_seg, unsigned mimage);
 
 /* ++  metadata/raid_manip.c */
 struct lv_status_raid {

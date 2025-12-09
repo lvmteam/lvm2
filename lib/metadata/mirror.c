@@ -173,7 +173,7 @@ uint32_t adjusted_mirror_region_size(struct cmd_context *cmd,
  * So, any time we want to move areas to the end to be removed, use
  * this function.
  */
-int shift_mirror_images(struct lv_segment *mirrored_seg, unsigned mimage)
+static int _shift_mirror_images(struct lv_segment *mirrored_seg, unsigned mimage)
 {
 	unsigned i;
 	struct lv_segment_area area;
@@ -596,7 +596,7 @@ static int _move_removable_mimages_to_end(struct logical_volume *lv,
 
 		if (!is_temporary_mirror_layer(sub_lv) &&
 		    is_mirror_image_removable(sub_lv, removable_pvs)) {
-			if (!shift_mirror_images(mirrored_seg, i))
+			if (!_shift_mirror_images(mirrored_seg, i))
 				return_0;
 			count--;
 		}
@@ -923,7 +923,7 @@ static int _remove_mirror_images(struct logical_volume *lv,
 					  "%s is not in-sync.", display_lvname(lv));
 				return 0;
 			}
-			if (!shift_mirror_images(mirrored_seg, s))
+			if (!_shift_mirror_images(mirrored_seg, s))
 				return_0;
 			--new_area_count;
 			++num_removed;
@@ -1859,11 +1859,11 @@ out:
 /*
  * Convert "linear" LV to "mirror".
  */
-int add_mirror_images(struct cmd_context *cmd, struct logical_volume *lv,
-		      uint32_t mirrors, uint32_t stripes,
-		      uint32_t stripe_size, uint32_t region_size,
-		      struct dm_list *allocatable_pvs, alloc_policy_t alloc,
-		      uint32_t log_count)
+static int _add_mirror_images(struct cmd_context *cmd, struct logical_volume *lv,
+			      uint32_t mirrors, uint32_t stripes,
+			      uint32_t stripe_size, uint32_t region_size,
+			      struct dm_list *allocatable_pvs, alloc_policy_t alloc,
+			      uint32_t log_count)
 {
 	struct alloc_handle *ah;
 	const struct segment_type *segtype;
@@ -1985,9 +1985,9 @@ int lv_add_mirrors(struct cmd_context *cmd, struct logical_volume *lv,
 		if (!mirrors)
 			return add_mirror_log(cmd, lv, log_count,
 					      region_size, pvs, alloc);
-		return add_mirror_images(cmd, lv, mirrors,
-					 stripes, stripe_size, region_size,
-					 pvs, alloc, log_count);
+		return _add_mirror_images(cmd, lv, mirrors,
+					  stripes, stripe_size, region_size,
+					  pvs, alloc, log_count);
 	}
 
 	log_error("Unsupported mirror conversion type.");
