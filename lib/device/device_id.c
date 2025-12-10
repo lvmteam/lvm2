@@ -62,15 +62,16 @@ static uint64_t _get_refresh_timestamp(unsigned int add_seconds)
 
 	time(&now);
 	now += add_seconds;
-	tm = gmtime(&now);
-
-	/* YYYYMMDDHHMMSS as a uint64_t */
-	timestamp = (uint64_t)tm->tm_year + 1900;
-	timestamp = timestamp * 100 + (tm->tm_mon + 1);
-	timestamp = timestamp * 100 + tm->tm_mday;
-	timestamp = timestamp * 100 + tm->tm_hour;
-	timestamp = timestamp * 100 + tm->tm_min;
-	timestamp = timestamp * 100 + tm->tm_sec;
+	if ((tm = gmtime(&now))) {
+		/* YYYYMMDDHHMMSS as a uint64_t */
+		timestamp = (uint64_t)tm->tm_year + 1900;
+		timestamp = timestamp * 100 + (tm->tm_mon + 1);
+		timestamp = timestamp * 100 + tm->tm_mday;
+		timestamp = timestamp * 100 + tm->tm_hour;
+		timestamp = timestamp * 100 + tm->tm_min;
+		timestamp = timestamp * 100 + tm->tm_sec;
+	} else
+		timestamp = now;
 
 	return timestamp;
 }
