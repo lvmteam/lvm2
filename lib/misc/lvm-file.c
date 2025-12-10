@@ -140,7 +140,7 @@ int dir_exists(const char *path)
 	return 1;
 }
 
-int dir_create(const char *path, int mode)
+static int _dir_create(const char *path, int mode)
 {
 	int r;
 
@@ -177,12 +177,12 @@ int dir_create_recursive(const char *path, int mode)
 
 	while ((s = strchr(s, '/')) != NULL) {
 		*s = '\0';
-		if (*orig && !dir_exists(orig) && !dir_create(orig, mode))
+		if (*orig && !dir_exists(orig) && !_dir_create(orig, mode))
 			goto_out;
 		*s++ = '/';
 	}
 
-	if (!dir_exists(path) && !dir_create(path, mode))
+	if (!dir_exists(path) && !_dir_create(path, mode))
 		goto_out;
 	r = 1;
 out:

@@ -45,7 +45,6 @@ int lvm_rename(const char *old, const char *new);
  */
 int path_exists(const char *path);
 int dir_exists(const char *path);
-int dir_create(const char *path, int mode);
 int dir_create_recursive(const char *path, int mode);
 
 /* Sync directory changes */
