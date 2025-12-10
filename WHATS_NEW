@@ -1,5 +1,7 @@
 Version 2.03.38 - 
 ==================
+  Enhance pvmove activation and deactivation.
+  LV locks whole device tree using such locked LV.
 
 Version 2.03.37 - 21st November 2025
 ====================================
