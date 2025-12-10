@@ -1239,7 +1239,6 @@ int lv_remove_mirrors(struct cmd_context *cmd, struct logical_volume *lv,
 const char *get_mirror_log_name(int log_count);
 int set_mirror_log_count(int *log_count, const char *mirrorlog);
 
-int cluster_mirror_is_available(struct cmd_context *cmd);
 int is_temporary_mirror_layer(const struct logical_volume *lv);
 struct logical_volume * find_temporary_mirror(const struct logical_volume *lv);
 uint32_t lv_mirror_count(const struct logical_volume *lv);
@@ -1247,10 +1246,6 @@ uint32_t lv_mirror_count(const struct logical_volume *lv);
 uint32_t adjusted_mirror_region_size(struct cmd_context *cmd,
 				     uint32_t extent_size, uint32_t extents,
 				     uint32_t region_size, int internal, int clustered);
-
-int add_mirrors_to_segments(struct cmd_context *cmd, struct logical_volume *lv,
-			    uint32_t mirrors, uint32_t region_size,
-			    struct dm_list *allocatable_pvs, alloc_policy_t alloc);
 
 int remove_mirror_images(struct logical_volume *lv, uint32_t num_mirrors,
 			 int (*is_removable)(struct logical_volume *, void *),

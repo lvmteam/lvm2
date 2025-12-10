@@ -70,35 +70,6 @@ struct logical_volume *find_temporary_mirror(const struct logical_volume *lv)
 }
 
 /*
- * cluster_mirror_is_available
- *
- * Check if the proper kernel module and log daemon are running.
- * Caller should check for 'vg_is_clustered(lv->vg)' before making
- * this call.
- *
- * Returns: 1 if available, 0 otherwise
- */
-int cluster_mirror_is_available(struct cmd_context *cmd)
-{
-       unsigned attr = 0;
-       const struct segment_type *segtype;
-
-       if (!(segtype = get_segtype_from_string(cmd, SEG_TYPE_NAME_MIRROR)))
-               return_0;
-
-       if (!segtype->ops->target_present)
-               return_0;
-
-       if (!segtype->ops->target_present(cmd, NULL, &attr))
-               return_0;
-
-       if (!(attr & MIRROR_LOG_CLUSTERED))
-               return 0;
-
-       return 1;
-}
-
-/*
  * Returns the number of mirrors of the LV
  */
 uint32_t lv_mirror_count(const struct logical_volume *lv)
@@ -1560,18 +1531,6 @@ static int _add_mirrors_that_preserve_segments(struct logical_volume *lv,
 	}
 	alloc_destroy(ah);
 	return r;
-}
-
-/*
- * Add mirrors to "linear" or "mirror" segments
- */
-int add_mirrors_to_segments(struct cmd_context *cmd, struct logical_volume *lv,
-			    uint32_t mirrors, uint32_t region_size,
-			    struct dm_list *allocatable_pvs, alloc_policy_t alloc)
-{
-	return _add_mirrors_that_preserve_segments(lv, MIRROR_BY_SEG,
-						   mirrors, region_size,
-						   allocatable_pvs, alloc);
 }
 
 /*
