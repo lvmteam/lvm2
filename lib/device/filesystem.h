@@ -45,8 +45,7 @@ struct fs_info {
 	unsigned needs_crypt:1;
 };
 
-int fs_get_info(struct cmd_context *cmd, struct logical_volume *lv,
-                struct fs_info *fsi, int include_mount);
+int fs_get_info(struct cmd_context *cmd, struct logical_volume *lv, struct fs_info *fsi);
 
 int fs_extend_script(struct cmd_context *cmd, struct logical_volume *lv, struct fs_info *fsi, char *fsmode);
 int fs_reduce_script(struct cmd_context *cmd, struct logical_volume *lv, struct fs_info *fsi, char *fsmode);

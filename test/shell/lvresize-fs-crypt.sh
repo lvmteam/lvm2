@@ -107,6 +107,24 @@ umount "$mount_dir"
 cryptsetup close $cr
 lvremove -f $vg/$lv
 
+# lvextend+lvreduce xfs on LUKS1
+lvcreate -n $lv -L 320M $vg
+echo 93R4P4pIqAH8 | cryptsetup luksFormat -i1 --type luks1 "$DM_DEV_DIR/$vg/$lv"
+echo 93R4P4pIqAH8 | cryptsetup luksOpen "$DM_DEV_DIR/$vg/$lv" $cr
+mkfs.xfs /dev/mapper/$cr
+mount /dev/mapper/$cr "$mount_dir"
+dd if=/dev/zero of="$mount_dir/zeros1" bs=1M count=20 oflag=direct
+df --output=size "$mount_dir" |tee df1
+lvextend -L+136M --fs resize $vg/$lv
+check lv_field $vg/$lv lv_size "456.00m"
+df --output=size "$mount_dir" |tee df2
+not diff df1 df2
+not lvresize -L 320M $vg/$lv
+not lvresize -r -L 320M $vg/$lv
+umount "$mount_dir"
+cryptsetup close $cr
+lvremove -f $vg/$lv
+
 # lvextend ext4 on plain crypt (no header)
 lvcreate -n $lv -L 256M $vg
 echo 93R4P4pIqAH8 | cryptsetup create $cr "$DM_DEV_DIR/$vg/$lv"

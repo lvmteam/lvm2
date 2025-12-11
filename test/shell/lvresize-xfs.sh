@@ -19,7 +19,7 @@ which xfs_growfs || skip
 
 aux have_fsinfo || skip "Test needs --fs checksize support"
 
-aux prepare_vg 1 500
+aux prepare_vg 1 600
 
 mount_dir="mnt_lvresize_fs"
 mkdir -p "$mount_dir"
@@ -254,6 +254,71 @@ umount "$mount_dir"
 
 lvremove -f $vg/$lv
 
+###############################
+#
+# lvextend followed by lvreduce
+#
+###############################
+
+# mounted, fs resized
+lvcreate -n $lv -L 400M $vg
+mkfs.xfs "$DM_DEV_DIR/$vg/$lv"
+mount "$DM_DEV_DIR/$vg/$lv" "$mount_dir"
+dd if=/dev/zero of="$mount_dir/zeros1" bs=1M count=20 oflag=direct
+lvresize --yes -r -L 500M $vg/$lv
+not lvresize --yes -r -L 400M $vg/$lv
+not lvresize --yes -L 400M $vg/$lv
+umount "$mount_dir"
+lvchange -an $vg/$lv
+lvremove $vg/$lv
+
+# unmounted, fs resized
+lvcreate -n $lv -L 400M $vg
+mkfs.xfs "$DM_DEV_DIR/$vg/$lv"
+mount "$DM_DEV_DIR/$vg/$lv" "$mount_dir"
+dd if=/dev/zero of="$mount_dir/zeros1" bs=1M count=20 oflag=direct
+umount "$mount_dir"
+lvresize --yes -r -L 500M $vg/$lv
+not lvresize --yes -r -L 400M $vg/$lv
+not lvresize --yes -L 400M $vg/$lv
+lvchange -an $vg/$lv
+lvremove $vg/$lv
+
+# mounted, fs not resized
+lvcreate -n $lv -L 400M $vg
+mkfs.xfs "$DM_DEV_DIR/$vg/$lv"
+mount "$DM_DEV_DIR/$vg/$lv" "$mount_dir"
+dd if=/dev/zero of="$mount_dir/zeros1" bs=1M count=20 oflag=direct
+df --output=size "$mount_dir" |tee df1
+lvresize --yes -L 500M $vg/$lv
+check lv_field $vg/$lv lv_size "500.00m"
+lvresize --yes -L 400M $vg/$lv
+check lv_field $vg/$lv lv_size "400.00m"
+df --output=size "$mount_dir" |tee df2
+# fs size unchanged
+diff df1 df2
+umount "$mount_dir"
+lvchange -an $vg/$lv
+lvremove $vg/$lv
+
+# unmounted, fs not resized
+lvcreate -n $lv -L 400M $vg
+mkfs.xfs "$DM_DEV_DIR/$vg/$lv"
+mount "$DM_DEV_DIR/$vg/$lv" "$mount_dir"
+dd if=/dev/zero of="$mount_dir/zeros1" bs=1M count=20 oflag=direct
+df --output=size "$mount_dir" |tee df1
+umount "$mount_dir"
+lvresize --yes -L 500M $vg/$lv
+check lv_field $vg/$lv lv_size "500.00m"
+lvresize --yes -L 400M $vg/$lv
+check lv_field $vg/$lv lv_size "400.00m"
+# fs size unchanged
+mount "$DM_DEV_DIR/$vg/$lv" "$mount_dir"
+df --output=size "$mount_dir" |tee df2
+diff df1 df2
+umount "$mount_dir"
+lvchange -an $vg/$lv
+lvremove $vg/$lv
 
 ##########################################################
 #

@@ -22,7 +22,21 @@
 
 #include <dirent.h>
 #include <mntent.h>
+#include <uuid/uuid.h>
 #include <sys/ioctl.h>
+#include <linux/types.h>
+/* including xfs/linux.h causes uuid_t conflicts, so define some types that are needed */
+/* #include <xfs/linux.h> */
+typedef off_t xfs_off_t;
+typedef uint64_t xfs_ino_t;
+typedef uint32_t xfs_dev_t;
+typedef int64_t xfs_daddr_t;
+typedef __u32 xfs_nlink_t;
+#include <xfs/xfs_types.h>
+#ifndef __user
+#define __user
+#endif
+#include <xfs/xfs_fs.h>
 
 static const char *_get_lvresize_fs_helper_path(struct cmd_context *cmd)
 {
@@ -253,8 +267,36 @@ static int _btrfs_get_mnt(struct fs_info *fsi, dev_t lv_devt)
 	return ret;
 }
 
-int fs_get_info(struct cmd_context *cmd, struct logical_volume *lv,
-		struct fs_info *fsi, int include_mount)
+static int _xfs_update_size_mounted(struct cmd_context *cmd, struct logical_volume *lv,
+				    char *lv_path, struct fs_info *fsi)
+{
+	struct xfs_fsop_geom geo = { 0 }; 
+	int fd;
+	int ret = 0;
+
+	if ((fd = open(fsi->mount_dir, O_RDONLY)) < 0) {
+		log_error("XFS geometry open error %d for %s %s", errno, lv_path, fsi->mount_dir);
+		return 0;
+	}
+
+	if (ioctl(fd, XFS_IOC_FSGEOMETRY, &geo)) {
+		log_error("XFS geometry ioctl error %d for %s %s", errno, lv_path, fsi->mount_dir);
+		goto out;
+	}
+
+	/* replace the potentially wrong value from blkid_probe_lookup_value FSLASTBLOCK */
+	fsi->fs_last_byte = geo.blocksize * geo.datablocks;
+	ret = 1;
+
+	log_debug("xfs geometry blocksize %llu datablocks %llu fs_last_byte %llu from %s %s",
+		  (unsigned long long)geo.blocksize, (unsigned long long)geo.datablocks,
+		  (unsigned long long)fsi->fs_last_byte, lv_path, fsi->mount_dir);
+out:
+	(void)close(fd);
+	return ret;
+}
+
+int fs_get_info(struct cmd_context *cmd, struct logical_volume *lv, struct fs_info *fsi)
 {
 	char lv_path[PATH_MAX];
 	char crypt_path[PATH_MAX] = { 0 };
@@ -340,13 +382,14 @@ int fs_get_info(struct cmd_context *cmd, struct logical_volume *lv,
 		st_top = st_lv;
 	}
 
-	if (!include_mount)
-		return 1;
-
 	if (!strcmp(fsi->fstype, "btrfs"))
 		ret = _btrfs_get_mnt(fsi, st_lv.st_rdev);
 	else
 		ret = _fs_get_mnt(fsi, st_top.st_rdev);
+
+	/* blkid FSLASTBLOCK may be incorrect for mounted xfs */
+	if (fsi->mounted && !strcmp(fsi->fstype, "xfs"))
+		ret = _xfs_update_size_mounted(cmd, lv, lv_path, fsi);
 
 	fsi->unmounted = !fsi->mounted;
 	return ret;

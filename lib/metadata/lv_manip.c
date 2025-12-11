@@ -6476,7 +6476,7 @@ static int _fs_reduce(struct cmd_context *cmd, struct logical_volume *lv,
 	memset(&fsinfo, 0, sizeof(fsinfo));
 	memset(&fsinfo2, 0, sizeof(fsinfo));
 
-	if (!fs_get_info(cmd, lv, &fsinfo, 1))
+	if (!fs_get_info(cmd, lv, &fsinfo))
 		goto_out;
 
 	if (fsinfo.nofs) {
@@ -6595,7 +6595,7 @@ static int _fs_reduce(struct cmd_context *cmd, struct logical_volume *lv,
 	 * Re-check the fs last block which should now be less than the
 	 * requested (reduced) LV size.
 	 */
-	if (!fs_get_info(cmd, lv, &fsinfo2, 0))
+	if (!fs_get_info(cmd, lv, &fsinfo2))
 		goto_out;
 
 	if (fsinfo.fs_last_byte && (fsinfo2.fs_last_byte > fsinfo.new_size_bytes)) {
@@ -6617,7 +6617,7 @@ static int _fs_extend_check_fsinfo(struct cmd_context *cmd, struct logical_volum
 
 	memset(fsinfo, 0, sizeof(*fsinfo));
 
-	if (!fs_get_info(cmd, lv, fsinfo, 1))
+	if (!fs_get_info(cmd, lv, fsinfo))
 		return 0;
 
 	if (fsinfo->nofs)
