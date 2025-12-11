@@ -827,6 +827,54 @@ int vg_is_registered(struct cmd_context *cmd, struct volume_group *vg, uint64_t 
 	}
 }
 
+int persist_is_started_by_other_hosts(struct cmd_context *cmd, struct volume_group *vg, int *is_started_other)
+{
+	char our_key_buf[PR_KEY_BUF_SIZE] = { 0 };
+	uint64_t our_key_val = 0;
+	char *local_key = (char *)find_config_tree_str(cmd, local_pr_key_CFG, NULL);
+	int local_host_id = find_config_tree_int(cmd, local_host_id_CFG, NULL);
+	struct pv_list *pvl;
+	struct device *dev;
+	uint64_t *found_keys;
+	int found_local, found_count;
+	int errors = 0;
+
+	if (!get_our_key(cmd, vg, local_key, local_host_id, our_key_buf, &our_key_val))
+		return_0;
+
+	dm_list_iterate_items(pvl, &vg->pvs) {
+		if (!(dev = pvl->pv->dev))
+			continue;
+		if (dm_list_empty(&dev->aliases))
+			continue;
+
+		found_local = 0;
+		found_count = 0;
+		found_keys = NULL;
+
+		if (!dev_find_key(cmd, dev, 1, our_key_val, &found_local, 0, NULL, 1, &found_count, &found_keys)) {
+			log_error("Failed to read persistent reservation key on %s", dev_name(dev));
+			errors++;
+			continue;
+		}
+
+		if (found_keys)
+			dm_pool_free(cmd->mem, found_keys);
+
+		if (found_local && (found_count > 1))
+			*is_started_other = 1;
+
+		if (!found_local && found_count)
+			*is_started_other = 1;
+
+		if (*is_started_other)
+			break;
+	}
+	if (errors)
+		return 0;
+	return 1;
+}
+
 static int _is_started(struct cmd_context *cmd, struct volume_group *vg, int *is_error, int may_fail, uint64_t *our_key_ret)
 {
 	struct pv_list *pvl;

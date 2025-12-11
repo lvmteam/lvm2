@@ -1910,6 +1910,14 @@ static int _vgchange_setpersist_single(struct cmd_context *cmd, const char *vg_n
 		start_done = 1;
 	}
 
+	if (!vg_is_shared(vg) && !start_done) {
+		int yes = 0;
+		if (!persist_is_started_by_other_hosts(cmd, vg, &yes) || yes) {
+			log_error("Cannot change settings while other hosts have PR started.");
+			return ECMD_FAILED;
+		}
+	}
+
 	if (set_flags & SETPR_Y)
 		vg->pr = VG_PR_AUTOSTART | VG_PR_REQUIRE;
 	else if (set_flags & SETPR_N)
