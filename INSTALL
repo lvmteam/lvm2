@@ -5,11 +5,15 @@ Installation
 
    Run the 'configure' script from the top directory.
 
-   If you don't want to include the LVM1 backwards-compatibility code use:
-     ./configure --with-lvm1=none 
+   On system with udevd use: --enable-udev_sync
 
-   To separate the LVM1 support into a shared library loaded by lvm.conf use:
-     ./configure --with-lvm1=shared
+   To build with dmeventd: --enable-cmdlib --enable-dmeventd
+
+   For DBus support: --enable-dbus-service --enable-notify-dbus
+
+   For lvmpolld usage: --enable-lvmpolld
+
+   For lvmlockd support: --enable-lvmlockd-sanlock --enable-lvmlockd-dlm --enable-lvmlockd-dlmcontrol
 
    Use ./configure --help to see other options.
 
@@ -24,8 +28,7 @@ Installation
 3) If using LVM2, create a configuration file.
 
    The tools will work fine without a configuration file being
-   present, but you ought to review the example file in doc/example.conf.
+   present, but you ought to review the example file in conf/example.conf.
 
-Please also refer to the WHATS_NEW file and the manual pages for the 
+Please also refer to the WHATS_NEW file and the manual pages for the
 individual commands.
-
