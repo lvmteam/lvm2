@@ -1,5 +1,8 @@
 Version 2.03.38 - 
 ==================
+  Synchronize with udev after creating pool metadata spare volume.
+  Conversion to thin-pool removes activation skipping from converted LVs.
+  Configure now checks for xfs/xfs.h.
   Enhance pvmove activation and deactivation.
   LV locks whole device tree using such locked LV.
 
