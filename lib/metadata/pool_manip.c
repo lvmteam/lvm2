@@ -38,6 +38,7 @@ int attach_pool_metadata_lv(struct lv_segment *pool_seg,
 		return 0;
 	}
 	pool_seg->metadata_lv = metadata_lv;
+	metadata_lv->status &= ~LV_ACTIVATION_SKIP; /* Internal volume does not use skip */
 	metadata_lv->status |= seg_is_thin_pool(pool_seg) ?
 		THIN_POOL_METADATA : CACHE_POOL_METADATA;
 	lv_set_hidden(metadata_lv);
@@ -80,6 +81,8 @@ int attach_pool_data_lv(struct lv_segment *pool_seg,
 				    THIN_POOL_DATA : CACHE_POOL_DATA))
 		return_0;
 
+	pool_data_lv->status &= ~LV_ACTIVATION_SKIP;
+	pool_seg->lv->status &= ~LV_ACTIVATION_SKIP;
 	pool_seg->lv->status |= seg_is_thin_pool(pool_seg) ?
 		THIN_POOL : CACHE_POOL;
 	lv_set_hidden(pool_data_lv);

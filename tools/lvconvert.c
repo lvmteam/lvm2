@@ -3439,6 +3439,12 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 		pool_lv = lv;
 	}
 
+	/* For pool skipping activation has slightly different meaning
+	 * so by default we create a regular pool with standard activation
+	 * User may use 'lvchange --setactivationskip' to use pool
+	 * with skipped activation */
+	pool_lv->status &= ~LV_ACTIVATION_SKIP;
+
 	/*
 	 * starts with pool_lv foo (not a pool yet)
 	 * creates new data_lv foo_tdata
