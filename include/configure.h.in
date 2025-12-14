@@ -549,6 +549,9 @@
 /* Define to 1 if 'vfork' works. */
 #undef HAVE_WORKING_VFORK
 
+/* Define to 1 if you have the <xfs/xfs.h> header file. */
+#undef HAVE_XFS_XFS_H
+
 /* Define to 1 if the system has the type '_Bool'. */
 #undef HAVE__BOOL
 

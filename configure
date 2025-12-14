@@ -6921,6 +6921,20 @@ then :
 
 fi
 
+       for ac_header in xfs/xfs.h
+do :
+  ac_fn_c_check_header_compile "$LINENO" "xfs/xfs.h" "ac_cv_header_xfs_xfs_h" "#define _GNU_SOURCE 1
+"
+if test "x$ac_cv_header_xfs_xfs_h" = xyes
+then :
+  printf "%s\n" "#define HAVE_XFS_XFS_H 1" >>confdefs.h
+ LVM_NO_XFS_WARN=
+else case e in #(
+  e) LVM_NO_XFS_WARN=y ;;
+esac
+fi
+
+done
        for ac_header in libaio.h
 do :
   ac_fn_c_check_header_compile "$LINENO" "libaio.h" "ac_cv_header_libaio_h" "$ac_includes_default"
@@ -18243,6 +18257,12 @@ if test -n "$LVM_NEEDS_LIBAIO_WARN"
 then :
   { printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: Only libdm part can be build without libaio:  make [install_]device-mapper" >&5
 printf "%s\n" "$as_me: WARNING: Only libdm part can be build without libaio:  make [install_]device-mapper" >&2;}
+fi
+
+if test -n "$LVM_NO_XFS_WARN"
+then :
+  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: 'lvextend --resizefs' is less capable without xfs/xfs.h (see package: xfsprogs devel)" >&5
+printf "%s\n" "$as_me: WARNING: 'lvextend --resizefs' is less capable without xfs/xfs.h (see package: xfsprogs devel)" >&2;}
 fi
 
 if test "$ODIRECT" != "yes"
