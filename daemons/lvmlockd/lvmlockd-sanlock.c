@@ -2803,11 +2803,11 @@ int lm_is_running_sanlock(void)
 
 static void update_info_file(char *vg_name, int no_timeout_new)
 {
-	uint32_t host_id;
-	uint64_t generation;
-	int sector_size;
-	int align_size;
-	int no_timeout;
+	uint32_t host_id = 0;
+	uint64_t generation = 0;
+	int sector_size = 0;
+	int align_size = 0;
+	int no_timeout = 0;
 	int rv;
 
 	rv = read_info_file(vg_name, &host_id, &generation, &sector_size, &align_size, &no_timeout);
@@ -2835,7 +2835,7 @@ void lm_set_host_dead_sanlock(struct lockspace *ls, struct owner *owner)
 
 int lm_setlockargs_supported_sanlock(struct lockspace *ls, struct action *act)
 {
-	uint32_t daemon_version;
+	uint32_t daemon_version = 0;
 	uint32_t daemon_proto;
 	uint32_t lock_args_flags = 0;
 	uint32_t ver_major, ver_minor;
