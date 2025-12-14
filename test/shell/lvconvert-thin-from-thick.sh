@@ -66,6 +66,12 @@ fi
 lvcreate -L10 -n $lv1 $vg
 _convert_to_thin
 
+# activation skipped volume to thin - preserves skip
+lvcreate -L10M --setactivationskip y -n $lv1 $vg
+lvconvert --yes --type thin  $vg/$lv1
+check lv_field $vg/$lv1 lv_skip_activation "skip activation"
+lvremove -f $vg
+
 # raid1 -> thin
 if aux have_raid 1 7 0 ; then
 	lvcreate --type raid1 -L10 -n $lv1 $vg
