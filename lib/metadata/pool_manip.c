@@ -740,6 +740,8 @@ static struct logical_volume *_alloc_pool_metadata_spare(struct volume_group *vg
 		return 0;
 	}
 
+	sync_local_dev_names(vg->cmd);
+
 	if (!_vg_set_pool_metadata_spare(lv))
 		return_0;
 

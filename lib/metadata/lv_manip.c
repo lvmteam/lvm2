@@ -9969,7 +9969,7 @@ static struct logical_volume *_lv_create_an_lv(struct volume_group *vg,
 		}
 
 		/* Get in sync with deactivation, before reusing LV as snapshot */
-		sync_local_dev_names(lv->vg->cmd);
+		sync_local_dev_names(cmd);
 
 		/* Create zero origin volume for spare snapshot */
 		if (lp->virtual_extents &&
