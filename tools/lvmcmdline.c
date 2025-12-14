@@ -3104,7 +3104,7 @@ int lvm_run_command(struct cmd_context *cmd, int argc, char **argv)
 
 	set_cmd_name(cmd->name);
 
-	init_log_command(find_config_tree_bool(cmd, log_command_names_CFG, NULL), 0);
+	init_log_command(find_config_tree_bool(cmd, log_command_names_CFG, NULL) ? 1 : 0, 0);
 
 	/* eliminate '-' from all options starting with -- */
 	for (i = 1; i < argc; i++) {

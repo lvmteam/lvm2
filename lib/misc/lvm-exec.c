@@ -74,7 +74,7 @@ int exec_cmd(struct cmd_context *cmd, const char *const argv[],
 
 	if (!pid) {
 		/* Child */
-		init_log_command(find_config_tree_bool(cmd, log_command_names_CFG, NULL), 0);
+		init_log_command(find_config_tree_bool(cmd, log_command_names_CFG, NULL) ? 1 : 0, 0);
 		reset_locking();
 		/* FIXME Fix effect of reset_locking on cache then include this */
 		/* destroy_toolcontext(cmd); */
