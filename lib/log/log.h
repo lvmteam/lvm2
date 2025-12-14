@@ -38,6 +38,7 @@
  */
 
 #include <errno.h>
+#include <string.h>
 
 #define EUNCLASSIFIED -1	/* Generic error code */
 
