@@ -952,7 +952,7 @@ int lv_info_with_seg_status(struct cmd_context *cmd,
 int lv_check_not_in_use(const struct logical_volume *lv, int error_if_used)
 {
 	struct lvinfo info;
-	unsigned int open_count_check_retries;
+	int open_count_check_retries;
 
 	if (!lv_info(lv->vg->cmd, lv, 0, &info, 1, 0) || !info.exists)
 		return 2;
@@ -983,7 +983,7 @@ int lv_check_not_in_use(const struct logical_volume *lv, int error_if_used)
 	}
 
 	open_count_check_retries = retry_deactivation() ? OPEN_COUNT_CHECK_RETRIES : 1;
-	while (open_count_check_retries--) {
+	while (open_count_check_retries-- > 0) {
 		if (!sigint_usleep(OPEN_COUNT_CHECK_USLEEP_DELAY))
 			break;  /* interrupted */
 
