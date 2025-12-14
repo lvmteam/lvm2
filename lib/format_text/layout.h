@@ -20,7 +20,7 @@
 #include "lib/metadata/metadata.h"
 #include "lib/format_text/format-text.h"
 #include "lib/cache/lvmcache.h"
-#include "lib/uuid/uuid.h"
+#include "lib/id/id.h"
 
 /*
  * PV header extension versions:

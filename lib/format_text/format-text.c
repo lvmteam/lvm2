@@ -23,7 +23,7 @@
 #include "lib/display/display.h"
 #include "lib/commands/toolcontext.h"
 #include "lib/misc/lvm-string.h"
-#include "lib/uuid/uuid.h"
+#include "lib/id/id.h"
 #include "lib/misc/crc.h"
 #include "lib/mm/xlate.h"
 #include "lib/label/label.h"

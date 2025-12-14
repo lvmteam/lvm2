@@ -21,7 +21,7 @@
 #ifndef _LVM_METADATA_EXPORTED_H
 #define _LVM_METADATA_EXPORTED_H
 
-#include "lib/uuid/uuid.h"
+#include "lib/id/id.h"
 #include "lib/metadata/pv.h"
 #include "lib/metadata/vg.h"
 #include "lib/metadata/lv.h"

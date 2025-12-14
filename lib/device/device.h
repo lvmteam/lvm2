@@ -17,7 +17,7 @@
 #define _LVM_DEVICE_H
 
 #include "base/data-struct/list.h"
-#include "lib/uuid/uuid.h"
+#include "lib/id/id.h"
 
 #include <stdint.h>
 #include <fcntl.h>

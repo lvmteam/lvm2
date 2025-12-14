@@ -16,7 +16,7 @@
 #ifndef _LVM_LABEL_H
 #define _LVM_LABEL_H
 
-#include "lib/uuid/uuid.h"
+#include "lib/id/id.h"
 #include "lib/device/device.h"
 #include "lib/device/bcache.h"
 

@@ -18,7 +18,7 @@
 
 #include "lib/device/dev-cache.h"
 #include "lib/device/dev-type.h"
-#include "lib/uuid/uuid.h"
+#include "lib/id/id.h"
 #include "lib/label/label.h"
 #include "lib/locking/locking.h"
 

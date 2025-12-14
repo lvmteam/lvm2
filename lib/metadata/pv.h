@@ -15,7 +15,7 @@
 #ifndef _LVM_PV_H
 #define _LVM_PV_H
 
-#include "lib/uuid/uuid.h"
+#include "lib/id/id.h"
 #include "device_mapper/all.h"
 
 struct device;

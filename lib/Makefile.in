@@ -70,6 +70,7 @@ SOURCES =\
 	format_text/import_vsn1.c \
 	format_text/text_label.c \
 	freeseg/freeseg.c \
+	id/id.c \
 	label/label.c \
 	label/hints.c \
 	locking/file_locking.c \
@@ -115,7 +116,6 @@ SOURCES =\
 	snapshot/snapshot.c \
 	striped/striped.c \
 	thin/thin.c \
-	uuid/uuid.c \
 	zero/zero.c
 
 ifeq ("@DEVMAPPER@", "yes")

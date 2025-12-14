@@ -16,7 +16,7 @@
 #ifndef _LVM_LOCKING_H
 #define _LVM_LOCKING_H
 
-#include "lib/uuid/uuid.h"
+#include "lib/id/id.h"
 #include "lib/config/config.h"
 
 struct logical_volume;
