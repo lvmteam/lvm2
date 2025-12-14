@@ -6618,7 +6618,7 @@ static int _fs_extend_check_fsinfo(struct cmd_context *cmd, struct logical_volum
 	memset(fsinfo, 0, sizeof(*fsinfo));
 
 	if (!fs_get_info(cmd, lv, fsinfo))
-		return 0;
+		return_0;
 
 	if (fsinfo->nofs)
 		return 1;
@@ -6644,7 +6644,7 @@ static int _fs_extend_check_fsinfo(struct cmd_context *cmd, struct logical_volum
 	 * the fs type and the mount state.
 	 */
 	if (!_fs_extend_allow(cmd, lv, lp, fsinfo))
-		return 0;
+		return_0;
 
 	return 1;
 }
