@@ -495,6 +495,13 @@ int thin_pool_prepare_metadata(struct logical_volume *metadata_lv,
 		return 1;
 	}
 
+	if (!activate_lv(cmd, metadata_lv)) {
+		log_error("Cannot create temporary file to prepare metadata.");
+		return_0;
+	}
+
+	sync_local_dev_names(cmd);
+
 	/* coverity[secure_temp] until better solution */
 	if (!(f = tmpfile())) {
 		log_error("Cannot create temporary file to prepare metadata.");
