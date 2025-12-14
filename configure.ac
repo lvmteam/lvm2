@@ -101,6 +101,7 @@ AC_CHECK_HEADERS([assert.h ctype.h dirent.h errno.h fcntl.h float.h \
   unistd.h], , [AC_MSG_ERROR(bailing out)])
 
 AC_CHECK_HEADERS(termios.h sys/statvfs.h sys/timerfd.h sys/vfs.h linux/magic.h linux/fiemap.h)
+AC_CHECK_HEADERS(xfs/xfs.h, LVM_NO_XFS_WARN=, LVM_NO_XFS_WARN=y, [#define _GNU_SOURCE 1])
 AC_CHECK_HEADERS(libaio.h,LVM_NEEDS_LIBAIO_WARN=,LVM_NEEDS_LIBAIO_WARN=y)
 AS_CASE(["$host_os"],
 	[linux*], [AC_CHECK_HEADERS([asm/byteorder.h linux/fs.h malloc.h], [], [AC_MSG_ERROR(bailing out)])],
@@ -2129,6 +2130,9 @@ AS_IF([test -n "$VDO_CONFIGURE_WARN"],
 
 AS_IF([test -n "$LVM_NEEDS_LIBAIO_WARN"],
       [AC_MSG_WARN([Only libdm part can be build without libaio:  make [[install_]]device-mapper])])
+
+AS_IF([test -n "$LVM_NO_XFS_WARN"],
+      [AC_MSG_WARN(['lvextend --resizefs' is less capable without xfs/xfs.h (see package: xfsprogs devel)])])
 
 AS_IF([test "$ODIRECT" != "yes"],
       [AC_MSG_WARN([O_DIRECT disabled: low-memory pvmove may lock up])])
