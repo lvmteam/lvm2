@@ -15,7 +15,6 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/inotify.h>
-#include <uuid/uuid.h>
 #include <unistd.h>
 #include <sys/stat.h>
 #include <sys/types.h>
