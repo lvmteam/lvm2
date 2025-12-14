@@ -38,6 +38,9 @@ struct cmd_context;
 struct profile;
 struct dm_pool;
 struct dm_list;
+struct lvinfo;
+struct dminfo;
+struct lv_seg_status;
 
 /* Partial definition of segment_type - only fields we need for modeling */
 struct segment_type {
@@ -356,5 +359,81 @@ int lvm_register_segtype(struct segtype_library *seglib,
 
 	/* On success, segtype is added to the list and ownership transfers */
 	__coverity_escape__(segtype);
+	return 1;
+}
+
+/*
+ * lv_info - get logical volume information
+ * Returns 1 if info structure has been populated, else 0 on failure.
+ * When lvinfo* is NULL, it returns 1 if the device is locally active, 0 otherwise.
+ */
+int lv_info(struct cmd_context *cmd, const struct logical_volume *lv, int use_layer,
+	    struct lvinfo *info, int with_open_count, int with_read_ahead)
+{
+	int success;
+
+	if (!cmd || !lv) {
+		__coverity_panic__();
+	}
+
+	__coverity_read_pointee__(cmd);
+	__coverity_read_pointee__(lv);
+
+	if (!success) {
+		/* On failure, info may not be initialized */
+		return 0;
+	}
+
+	/* On success, info structure is fully populated (if info is not NULL) */
+	if (info) {
+		__coverity_writeall__(info);
+	}
+
+	return 1;
+}
+
+/*
+ * lv_info - get logical volume information
+ * Returns 1 if info structure has been populated, else 0 on failure.
+ * When lvinfo* is NULL, it returns 1 if the device is locally active, 0 otherwise.
+ */
+int _info(struct cmd_context *cmd,
+	  const char *name, const char *dlid,
+	  int with_open_count, int with_read_ahead, int with_name_check,
+	  struct dm_info *dminfo, unsigned *read_ahead,
+	  struct lv_seg_status *seg_status)
+{
+	int success;
+
+	if (!cmd ||  (!name && !dlid)) {
+		__coverity_panic__();
+	}
+
+	__coverity_read_pointee__(cmd);
+
+	if (name)
+		__coverity_read_pointee__(name);
+
+	if (dlid)
+		__coverity_read_pointee__(dlid);
+
+	if (!success) {
+		/* On failure, dminfo may not be initialized */
+		return 0;
+	}
+
+	/* On success, info structure is fully populated (if info is not NULL) */
+	if (dminfo) {
+		__coverity_writeall__(dminfo);
+	}
+
+	if (seg_status) {
+		__coverity_writeall__(seg_status);
+	}
+
+	if (read_ahead) {
+		__coverity_writeall__(read_ahead);
+	}
+
 	return 1;
 }
