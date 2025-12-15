@@ -19,6 +19,31 @@
 
 #include <xfs/xfs.h>
 
+#else /* !HAVE_XFS_XFS_H */
+
+#include <sys/ioctl.h>
+#include <stdio.h>
+#include <unistd.h>
+
+/* #IOCTL to obtain geometry info */
+#define XFS_IOC_FSGEOMETRY 0x8100587e
+
+/* Copy of some basic and hopefully unchangable XFS header data variables */
+struct xfs_fsop_geom {
+	uint32_t blocksize;	/* filesystem (data) block size */
+	uint32_t rtextsize;
+	uint32_t agblocks;
+	uint32_t agcount;
+	uint32_t logblocks;
+	uint32_t sectsize;
+	uint32_t inodesize;
+	uint32_t imaxpct;
+	uint64_t datablocks;	/* fsblocks in data subvolume */
+	uint32_t reserved[128];	/* whatever size whole structure may have */
+};
+
+#endif
+
 int fs_xfs_update_size_mounted(struct cmd_context *cmd, struct logical_volume *lv,
 			       char *lv_path, struct fs_info *fsi)
 {
@@ -40,7 +65,7 @@ int fs_xfs_update_size_mounted(struct cmd_context *cmd, struct logical_volume *l
 	fsi->fs_last_byte = geo.blocksize * geo.datablocks;
 	ret = 1;
 
-	log_debug("xfs geometry blocksize %llu datablocks %llu fs_last_byte %llu from %s %s",
+	log_debug("XFS geometry blocksize %llu datablocks %llu fs_last_byte %llu from %s %s.",
 		  (unsigned long long)geo.blocksize, (unsigned long long)geo.datablocks,
 		  (unsigned long long)fsi->fs_last_byte, lv_path, fsi->mount_dir);
 out:
@@ -48,14 +73,3 @@ out:
 
 	return ret;
 }
-
-#else /* !HAVE_XFS_XFS_H */
-
-int fs_xfs_update_size_mounted(struct cmd_context *cmd, struct logical_volume *lv,
-			       char *lv_path, struct fs_info *fsi)
-{
-	log_debug("No XFS support, continuing WITHOUT reading XFS geometry.");
-	return 1;
-}
-
-#endif
