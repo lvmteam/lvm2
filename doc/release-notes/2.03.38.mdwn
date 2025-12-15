@@ -1,0 +1,26 @@
+<!-- Page title -->
+[[!meta title="Version 2.03.38 - Bug Fix Release"]]
+
+Version 2.03.38
+===============
+
+* **IMPORTANT:** Workaround for **libblkid returning old `FSLASTBLOCK`** immediately after resize.
+  This may cause data loss on lvextend followed by lvreduce to original size.
+* Fix tree manipulation when activating LV with pvmove in progress.
+* Conversion to thin-pool removes activation skipping from converted LVs.
+* And [[!toggle text="more"]]
+
+[[!toggleable text="""
+
+* Synchronize with udev after creating pool metadata spare volume.
+* Configure now checks for `xfs/xfs.h`.
+* LV locks whole device tree using such locked LV.
+
+"""]]
+
+<!-- remove the pending tag on release, remove draft tag once editing is complete -->
+[[!tag]]
+<!--
+For old releases add Release Timestamp like this, date from git show $COMMIT is fine.
+[[!meta date="Mon Dec 15 15:15:00 2025 +0100"]]
+-->

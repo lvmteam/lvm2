@@ -1,8 +1,9 @@
-Version 2.03.38 - 
-==================
+Version 2.03.38 - 15th December 2025
+====================================
   Synchronize with udev after creating pool metadata spare volume.
   Conversion to thin-pool removes activation skipping from converted LVs.
   Configure now checks for xfs/xfs.h.
+  Workaround for libblkid returning old FSLASTBLOCK immediately after resize.
   Enhance pvmove activation and deactivation.
   LV locks whole device tree using such locked LV.
 
