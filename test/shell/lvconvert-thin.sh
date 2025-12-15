@@ -99,6 +99,7 @@ lvcreate -L2M --setactivationskip y -n $lv2 $vg
 
 lvconvert -y --type thin-pool --poolmetadata $vg/$lv2 $vg/$lv1
 check lv_field $vg/$lv1 lv_skip_activation ""
+lvremove -f $vg
 
 # test with bigger sizes
 lvcreate -L1T -n $lv1 $vg
