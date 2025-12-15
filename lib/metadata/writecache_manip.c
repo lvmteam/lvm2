@@ -371,6 +371,8 @@ static int _lv_detach_writecache_cachevol_active(struct logical_volume *lv, int 
 		return 0;
 	}
 
+	sync_local_dev_names(cmd);
+
 	log_debug("Deactivating previous cachevol %s", display_lvname(lv_fast));
 
 	if (!deactivate_lv(cmd, lv_fast))
@@ -501,4 +503,3 @@ int writecache_settings_to_str_list(struct writecache_settings *settings, struct
 
 	return 1;
 }
-

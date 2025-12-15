@@ -549,6 +549,7 @@ int lv_cache_wait_for_clean(struct logical_volume *cache_lv, int *is_clean)
  */
 int lv_cache_remove(struct logical_volume *cache_lv)
 {
+	struct cmd_context *cmd = cache_lv->vg->cmd;
 	struct lv_segment *cache_seg = first_seg(cache_lv);
 	struct logical_volume *corigin_lv;
 	struct logical_volume *cache_pool_lv;
@@ -556,7 +557,7 @@ int lv_cache_remove(struct logical_volume *cache_lv)
 	uint64_t data_len, metadata_len;
 	cache_mode_t cache_mode;
 	int temp_activated = 0;
-	int is_clear;
+	int r, is_clear;
 
 	if (!lv_is_cache(cache_lv)) {
 		log_error(INTERNAL_ERROR "LV %s is not cache volume.",
@@ -619,14 +620,16 @@ int lv_cache_remove(struct logical_volume *cache_lv)
 	 * remove the cache_pool then without waiting for the flush to
 	 * complete.
 	 */
-	if (!lv_cache_wait_for_clean(cache_lv, &is_clear)) {
-		if (temp_activated && !deactivate_lv(cache_lv->vg->cmd, cache_lv))
-			stack;
-		return_0;
+	r = lv_cache_wait_for_clean(cache_lv, &is_clear);
+	if (temp_activated) {
+		sync_local_dev_names(cmd);
+		if (!deactivate_lv(cmd, cache_lv))
+			log_warn("Failed to deactivate after cleaning cache.");
+		sync_local_dev_names(cmd);
 	}
 
-	if (temp_activated && !deactivate_lv(cache_lv->vg->cmd, cache_lv))
-		log_warn("Failed to deactivate after cleaning cache.");
+	if (!r)
+		return_0;
 
 	cache_pool_lv = cache_seg->pool_lv;
 	if (!detach_pool_lv(cache_seg))
@@ -691,6 +694,7 @@ int lv_cache_remove(struct logical_volume *cache_lv)
 	if (!lv_update_and_reload(cache_lv))
 		return_0;
 	cache_lv = corigin_lv;
+	sync_local_dev_names(cmd);
 remove:
 	if (!detach_pool_lv(cache_seg))
 		return_0;
