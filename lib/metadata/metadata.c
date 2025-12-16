@@ -514,10 +514,10 @@ int move_pvs_used_by_lv(struct volume_group *vg_from,
 			struct dm_list *dev_list)
 {
 	struct vg_from_to data = { .from = vg_from, .to = vg_to, .dev_list = dev_list };
-	struct lv_list *lvl;
+	struct logical_volume *lv;
 
 	/* FIXME: handle tags */
-	if (!(lvl = find_lv_in_vg(vg_from, lv_name))) {
+	if (!(lv = find_lv(vg_from, lv_name))) {
 		log_error("Logical volume %s not in volume group %s",
 			  lv_name, vg_from->name);
 		return 0;
@@ -533,10 +533,10 @@ int move_pvs_used_by_lv(struct volume_group *vg_from,
 		return 0;
 	}
 
-	if (!for_each_sub_lv(lvl->lv, _move_pvs_used_by_lv_cb, &data))
+	if (!for_each_sub_lv(lv, _move_pvs_used_by_lv_cb, &data))
 		return_0;
 
-	if (!_move_pvs_used_by_lv_cb(lvl->lv, &data))
+	if (!_move_pvs_used_by_lv_cb(lv, &data))
 		return_0;
 
 	return 1;
@@ -1655,31 +1655,6 @@ struct pv_list *find_pv_in_vg_by_uuid(const struct volume_group *vg,
 	return NULL;
 }
 
-struct lv_list *find_lv_in_vg(const struct volume_group *vg,
-			      const char *lv_name)
-{
-	struct logical_volume *lv;
-	struct lv_list *lvl;
-	const char *ptr;
-
-	/* Use last component */
-	if ((ptr = strrchr(lv_name, '/')))
-		ptr++;
-	else
-		ptr = lv_name;
-
-	if (vg->lv_names) {
-		lv = radix_tree_lookup_ptr(vg->lv_names, ptr, strlen(ptr));
-		return (lv) ? &lv->lvl : NULL;
-	}
-
-	dm_list_iterate_items(lvl, &vg->lvs)
-		if (!strcmp(lvl->lv->name, ptr))
-			return lvl;
-
-	return NULL;
-}
-
 struct logical_volume *find_lv_in_vg_by_lvid(const struct volume_group *vg,
 					     const union lvid *lvid)
 {
@@ -1705,8 +1680,26 @@ struct logical_volume *find_lv_in_vg_by_lvid(const struct volume_group *vg,
 struct logical_volume *find_lv(const struct volume_group *vg,
 			       const char *lv_name)
 {
-	struct lv_list *lvl = find_lv_in_vg(vg, lv_name);
-	return lvl ? lvl->lv : NULL;
+	struct logical_volume *lv = NULL;
+	struct lv_list *lvl;
+	const char *ptr;
+
+	/* Use last component */
+	if ((ptr = strrchr(lv_name, '/')))
+		ptr++;
+	else
+		ptr = lv_name;
+
+	if (!vg->lv_names) {
+		dm_list_iterate_items(lvl, &vg->lvs)
+			if (!strcmp(lvl->lv->name, ptr)) {
+				lv = lvl->lv;
+				break;
+			}
+	} else
+		lv = radix_tree_lookup_ptr(vg->lv_names, ptr, strlen(ptr));
+
+	return lv;
 }
 
 struct generic_logical_volume *find_historical_glv(const struct volume_group *vg,

@@ -131,12 +131,10 @@ int link_lv_to_vg(struct volume_group *vg, struct logical_volume *lv)
 
 int unlink_lv_from_vg(struct logical_volume *lv)
 {
-	struct lv_list *lvl;
-
-	if (!(lvl = find_lv_in_vg(lv->vg, lv->name)))
+	if ((lv->status & LV_REMOVED))
 		return_0;
 
-	dm_list_move(&lv->vg->removed_lvs, &lvl->list);
+	dm_list_move(&lv->vg->removed_lvs, &lv->lvl.list);
 	lv->status |= LV_REMOVED;
 
 	/* lv->lv_name stays valid for historical LV usage

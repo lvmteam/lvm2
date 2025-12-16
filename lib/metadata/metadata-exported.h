@@ -1126,10 +1126,6 @@ struct pv_list *find_pv_in_vg_by_uuid(const struct volume_group *vg,
 				      const struct id *id);
 
 /* Find an LV within a given VG */
-struct lv_list *find_lv_in_vg(const struct volume_group *vg,
-			      const char *lv_name);
-
-/* FIXME Merge these functions with ones above */
 struct logical_volume *find_lv(const struct volume_group *vg,
 			       const char *lv_name);
 
