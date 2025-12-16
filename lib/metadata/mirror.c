@@ -1482,18 +1482,6 @@ const struct logical_volume *find_pvmove_lv_in_lv(const struct logical_volume *l
 	return pvmove_lv;
 }
 
-const char *get_pvmove_pvname_from_lv(const struct logical_volume *lv)
-{
-	const struct logical_volume *pvmove_lv;
-
-	pvmove_lv = find_pvmove_lv_in_lv(lv);
-
-	if (pvmove_lv)
-		return get_pvmove_pvname_from_lv_mirr(pvmove_lv);
-
-	return NULL;
-}
-
 struct logical_volume *find_pvmove_lv(struct volume_group *vg,
 				      struct device *dev,
 				      uint64_t lv_type)

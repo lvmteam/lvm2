@@ -1414,7 +1414,6 @@ int check_vdo_constrains(struct cmd_context *cmd, const struct vdo_pool_size_con
 struct logical_volume *find_pvmove_lv(struct volume_group *vg,
 				      struct device *dev, uint64_t lv_type);
 const struct logical_volume *find_pvmove_lv_in_lv(const struct logical_volume *lv);
-const char *get_pvmove_pvname_from_lv(const struct logical_volume *lv);
 const char *get_pvmove_pvname_from_lv_mirr(const struct logical_volume *lv_mirr);
 struct dm_list *lvs_using_lv(struct cmd_context *cmd, struct volume_group *vg,
 			  struct logical_volume *lv);
