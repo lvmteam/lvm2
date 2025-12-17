@@ -26,7 +26,6 @@ static int _use_aio = 0;
 static int _md_filtering = 0;
 static int _internal_filtering = 0;
 static int _fwraid_filtering = 0;
-static int _pvmove = 0;
 static int _obtain_device_list_from_udev = DEFAULT_OBTAIN_DEVICE_LIST_FROM_UDEV;
 static enum dev_ext_e _external_device_info_source = DEV_EXT_NONE;
 static int _debug_level = 0;
@@ -86,11 +85,6 @@ void init_internal_filtering(int level)
 void init_fwraid_filtering(int level)
 {
 	_fwraid_filtering = level;
-}
-
-void init_pvmove(int level)
-{
-	_pvmove = level;
 }
 
 void init_obtain_device_list_from_udev(int device_list_from_udev)
@@ -254,11 +248,6 @@ int internal_filtering(void)
 int fwraid_filtering(void)
 {
 	return _fwraid_filtering;
-}
-
-int pvmove_mode(void)
-{
-	return _pvmove;
 }
 
 int obtain_device_list_from_udev(void)

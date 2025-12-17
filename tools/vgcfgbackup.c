@@ -109,14 +109,10 @@ int vgcfgbackup(struct cmd_context *cmd, int argc, char **argv)
 	cmd->handles_missing_pvs = 1;
 	cmd->handles_unknown_segments = 1;
 
-	init_pvmove(1);
-
 	ret = process_each_vg(cmd, argc, argv, NULL, NULL, 0, 0,
 			      handle, &_vg_backup_single);
 
 	free(last_filename);
-
-	init_pvmove(0);
 
 	destroy_processing_handle(cmd, handle);
 	return ret;
