@@ -47,7 +47,6 @@ static unsigned _is_static = 0;
 static int _udev_checking = 1;
 static int _retry_deactivation = DEFAULT_RETRY_DEACTIVATION;
 static int _activation_checks = 0;
-static char _sysfs_dir_path[PATH_MAX] = "";
 static uint64_t _pv_min_size = (DEFAULT_PV_MIN_SIZE_KB * 1024L >> SECTOR_SHIFT);
 static const char *_unknown_device_name = DEFAULT_UNKNOWN_DEVICE_NAME;
 static int _io_memory_size_kb = DEFAULT_IO_MEMORY_SIZE_KB;
@@ -212,11 +211,6 @@ const char *get_cmd_name(void)
 	return _cmd_name;
 }
 
-void set_sysfs_dir_path(const char *path)
-{
-	dm_strncpy(_sysfs_dir_path, path, sizeof(_sysfs_dir_path));
-}
-
 const char *log_command_info(void)
 {
 	return _log_command_info;
@@ -359,11 +353,6 @@ int retry_deactivation(void)
 int activation_checks(void)
 {
 	return _activation_checks;
-}
-
-const char *sysfs_dir_path(void)
-{
-	return _sysfs_dir_path;
 }
 
 uint64_t pv_min_size(void)

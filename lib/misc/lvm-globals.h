@@ -56,7 +56,6 @@ void init_io_memory_size(int val);
 
 void set_cmd_name(const char *cmd_name);
 const char *get_cmd_name(void);
-void set_sysfs_dir_path(const char *path);
 
 int test_mode(void);
 int use_aio(void);
@@ -79,7 +78,6 @@ const char *log_command_info(void);
 const char *log_command_file(void);
 unsigned is_static(void);
 int udev_checking(void);
-const char *sysfs_dir_path(void);
 uint64_t pv_min_size(void);
 int activation_checks(void);
 int retry_deactivation(void);
