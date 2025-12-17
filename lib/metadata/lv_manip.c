@@ -1682,7 +1682,7 @@ static int _lv_reduce(struct logical_volume *lv, uint32_t extents, int delete)
 /*
  * Empty an LV.
  */
-int lv_empty(struct logical_volume *lv)
+static int _lv_empty(struct logical_volume *lv)
 {
 	return _lv_reduce(lv, lv->le_count, 0);
 }
@@ -1698,7 +1698,7 @@ int replace_lv_with_error_segment(struct logical_volume *lv)
 	if (!(segtype = get_segtype_from_string(lv->vg->cmd, SEG_TYPE_NAME_ERROR)))
 		return_0;
 
-	if (len && !lv_empty(lv))
+	if (len && !_lv_empty(lv))
 		return_0;
 
 	/* Minimum size required for a table. */
@@ -8382,7 +8382,7 @@ int remove_layer_from_lv(struct logical_volume *lv,
 		return 0;
 	}
 
-	if (!lv_empty(parent_lv))
+	if (!_lv_empty(parent_lv))
 		return_0;
 
 	if (!move_lv_segments(parent_lv, layer_lv, 0, 0))

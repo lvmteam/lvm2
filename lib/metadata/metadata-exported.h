@@ -840,9 +840,6 @@ int lv_change_tag(struct logical_volume *lv, const char *tag, int add_tag);
 /* Reduce the size of an LV by extents */
 int lv_reduce(struct logical_volume *lv, uint32_t extents);
 
-/* Empty an LV prior to deleting it */
-int lv_empty(struct logical_volume *lv);
-
 /* Empty an LV and add error segment */
 int replace_lv_with_error_segment(struct logical_volume *lv);
 
