@@ -332,7 +332,7 @@ static int _lv_detach_writecache_cachevol_active(struct logical_volume *lv, int 
 	/*
 	 * suspend does not use 'lv' as we know it here, but grabs the
 	 * old (precommitted) version of 'lv' using lv_committed(),
-	 * which is from vg->vg_comitted.
+	 * which is from vg->vg_committed.
 	 */
 	log_debug("Suspending writecache to detach %s", display_lvname(lv));
 

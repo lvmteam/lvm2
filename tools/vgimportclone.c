@@ -117,7 +117,7 @@ static int _update_vg(struct cmd_context *cmd, struct volume_group *vg,
 	vg->lock_args = NULL;
 	vg->system_id = cmd->system_id ? dm_pool_strdup(vg->vgmem, cmd->system_id) : NULL;
 
-	/* The PR ability/settings of the orginal dev may not work on the cloned dev. */
+	/* The PR ability/settings of the original dev may not work on the cloned dev. */
 	vg->pr = 0;
 
 	dm_list_iterate_items(pvl, &vg->pvs) {

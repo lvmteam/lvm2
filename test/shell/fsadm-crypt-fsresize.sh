@@ -481,7 +481,7 @@ test_reiserfs_plain() {
 }
 
 # $1 LVM header backend (vg/lv name)
-# $2 LVM hedaer backend device (/dev/vg/lv)
+# $2 LVM header backend device (/dev/vg/lv)
 # $3 active dm-crypt device (/dev/mapper/some_name )
 # $4 active dm-crypt name ( some_name )a
 test_ext2_detached() {

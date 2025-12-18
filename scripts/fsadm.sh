@@ -499,7 +499,7 @@ resize_ext() {
 		test "$IS_MOUNTED" -eq 1 && verbose "$RESIZE_EXT needs unmounted filesystem" && try_umount
 		REMOUNT=$MOUNTED
 		if test -n "$MOUNTED"; then
-			# Forced fsck -f for umounted extX filesystem.
+			# Forced fsck -f for unmounted extX filesystem.
 			case "$-" in
 			*i*) FLAG=$YES ;;
 			*)   FLAG="-p" ;;

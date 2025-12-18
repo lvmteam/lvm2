@@ -122,7 +122,7 @@ activation/thin_pool_autoextend_threshold=99" $vg/pool
 #  when it's <90%
 test "$(meta_percent_)" -lt "90"
 
-# After such operatoin creation of thin LV has to pass
+# After such operation creation of thin LV has to pass
 lvcreate -V20 $vg/pool
 
 # Let's revalidate pool metadata (thin_check upon deactivation/activation)

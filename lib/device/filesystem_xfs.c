@@ -28,7 +28,7 @@
 /* #IOCTL to obtain geometry info */
 #define XFS_IOC_FSGEOMETRY 0x8100587e
 
-/* Copy of some basic and hopefully unchangable XFS header data variables */
+/* Copy of some basic and hopefully unchangeable XFS header dat>a variables */
 struct xfs_fsop_geom {
 	uint32_t blocksize;	/* filesystem (data) block size */
 	uint32_t rtextsize;

@@ -52,7 +52,7 @@ check lv_field $vg/pool_generic zero "zero"
 # policy is used to calculate chunk size which is 512KiB
 # or optimal_io_suize if it's higher. Our test device has
 # 1MiB, so that should be used. Also, zeroing is not used
-# under "thin-perforance" profile.
+# under "thin-performance" profile.
 lvcreate --profile thin-performance -L8m -T $vg/pool_performance
 check lv_field $vg/pool_performance profile "thin-performance"
 $SHOULD check lv_field $vg/pool_performance chunk_size 1.00m

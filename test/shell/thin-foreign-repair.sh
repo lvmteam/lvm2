@@ -65,7 +65,7 @@ clean_thin_
 
 lvchange -an $vg/pool
 
-# Repair thin-pool used by 'foreing' apps (setting their own tid)
+# Repair thin-pool used by 'foreign' apps (setting their own tid)
 lvconvert --repair $vg/pool 2>&1 | tee out
 
 not grep "Transaction id" out

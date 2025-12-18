@@ -71,7 +71,7 @@ kill -INT $PID_CONVERT
 sleep 0.5
 aux enable_dev "$dev2"
 wait "$PID_CONVERT" || true
-# close 'tee' descritor
+# close 'tee' descriptor
 exec 3>$-
 
 #cat logconvert || true

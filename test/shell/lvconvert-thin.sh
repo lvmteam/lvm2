@@ -149,7 +149,7 @@ fi
 #lvs -a -o+chunk_size,stripe_size,seg_pe_ranges
 
 ####################################
-# Prohibites thin pool conversions #
+# Prohibits thin pool conversions #
 ####################################
 lvcreate -L32 -n $lv1 $vg
 lvcreate -L16 -n $lv2 $vg

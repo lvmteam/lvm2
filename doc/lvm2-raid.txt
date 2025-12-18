@@ -224,9 +224,9 @@ lv {
 The real trick is dealing with the metadata devices.  Mirroring has an entry,
 'mirror_log', in the top-level segment.  This won't work for RAID because there
 is a one-to-one mapping between the data devices and the metadata devices.  The
-mirror devices are layed-out in sub-device/le pairs.  The 'le' parameter is
-redundant since it will always be zero.  So for RAID, I have simple put the
-metadata and data devices in pairs without the 'le' parameter.
+mirror devices are laid-out in sub-device/le pairs.  The 'le' parameter
+is redundant since it will always be zero.  So for RAID, I have simple
+put the metadata and data devices in pairs without the 'le' parameter.
 
 RAID metadata:
 lv {

@@ -143,7 +143,7 @@ static inline int headings_arg(struct cmd_context *cmd __attribute__((unused)), 
  *
  * .nf ... .fi
  *	used to disable filling or adjusting within paragraph
- *	usually comes with non-propotional font.
+ *	usually comes with non-proportional font.
  *
  * .ns ... .rs
  *	used to disable/enable space mode.
@@ -848,7 +848,7 @@ static void _print_man_usage_common_cmd(const struct command *cmd)
  * "another line of text."
  *
  * Supports also 'prefix' for all commands before the first '#cmdname'.
- * "#\n" is restorting printing for all commands.
+ * "#\n" is restoring printing for all commands.
  */
 static void _print_man_option_desc(const struct command_name *cname, int opt_enum)
 {
@@ -923,7 +923,7 @@ static void _print_man_all_options_list(const struct command_name *cname)
 			adl = 1;
 			printf(".RS 5\n");
 			/* Optionally we can use different alignment for
-			 * postscript/pdf adn ascii renderer
+			 * postscript/pdf and ascii renderer
 			 */
 			printf(".if t .ta 3nR +1uL \\\" PostScript/PDF\n");
 			printf(".PD 0\n");

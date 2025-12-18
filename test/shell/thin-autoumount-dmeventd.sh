@@ -134,7 +134,7 @@ wait "$PID_SLEEP" || true
 PID_SLEEP=
 
 # Here we may need to wait upto 2 x 10s as dmeventd may postpone some checks
-# when it recieves failing exit code
+# when it receives failing exit code
 for i in {1..22} ; do
 	_is_lv_opened "$vg/$lv2" || break
 	sleep 1
