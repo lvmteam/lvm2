@@ -46,6 +46,7 @@ test-job:
     matrix:
       - TAG: rhel8
         CONFIGURE: >
+          --with-default-use-devices-file=0
           --with-cluster=internal
           --enable-cmirrord
       - TAG: rhel9
@@ -80,9 +81,7 @@ test-job:
       --enable-lvmlockd-sanlock
       --enable-dbus-service --enable-notify-dbus
       --enable-dmfilemapd
-      --with-writecache=internal
-      --with-vdo=internal --with-vdo-format=/usr/bin/vdoformat
-      --with-integrity=internal
+      --with-vdo-format=/usr/bin/vdoformat
       --disable-silent-rules
     - make
     - rm -rf test/results
