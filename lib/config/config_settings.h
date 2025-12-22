@@ -536,16 +536,16 @@ cfg(devices_pv_min_size_CFG, "pv_min_size", devices_CFG_SECTION, CFG_DEFAULT_COM
 	"value was 512.\n")
 
 cfg(devices_issue_discards_CFG, "issue_discards", devices_CFG_SECTION, CFG_DEFAULT_COMMENTED, CFG_TYPE_BOOL, DEFAULT_ISSUE_DISCARDS, vsn(2, 2, 85), NULL, 0, NULL,
-	"Issue discards to PVs that are no longer used by an LV.\n"
-	"Discards are sent to an LV's underlying physical volumes when the LV\n"
-	"is no longer using the physical volumes' space, e.g. lvremove,\n"
-	"lvreduce. Discards inform the storage that a region is no longer\n"
-	"used. Storage that supports discards advertise the protocol-specific\n"
-	"way discards should be issued by the kernel (TRIM, UNMAP, or\n"
-	"WRITE SAME with UNMAP bit set). Not all storage will support or\n"
-	"benefit from discards, but SSDs and thinly provisioned LUNs\n"
-	"generally do. If enabled, discards will only be issued if both the\n"
-	"storage and kernel provide support.\n")
+	"Issue discard commands to physical volumes when freeing space.\n"
+	"When an LV frees space on a PV (e.g., lvremove, lvreduce), LVM can\n"
+	"send discard commands to notify the storage device that those blocks\n"
+	"are no longer in use. NVMe/SSDs use this information for TRIM operations\n"
+	"to improve performance and longevity. Thinly provisioned storage uses\n"
+	"UNMAP to reclaim the freed space. Discards are issued using the\n"
+	"protocol supported by the device (TRIM, UNMAP, or WRITE SAME with\n"
+	"UNMAP bit set) and only when both the storage and kernel support it.\n"
+	"Warning: vgcfgrestore restores only VG metadata, not LV data. Any\n"
+	"data in discarded regions will be lost.\n")
 
 cfg(devices_allow_changes_with_duplicate_pvs_CFG, "allow_changes_with_duplicate_pvs", devices_CFG_SECTION, CFG_DEFAULT_COMMENTED, CFG_TYPE_BOOL, DEFAULT_ALLOW_CHANGES_WITH_DUPLICATE_PVS, vsn(2, 2, 153), NULL, 0, NULL,
 	"Allow VG modification while a PV appears on multiple devices.\n"
