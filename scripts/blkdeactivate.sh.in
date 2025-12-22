@@ -35,7 +35,7 @@ DEV_DIR="/dev"
 SYS_BLK_DIR="/sys/block"
 
 MDADM="/sbin/mdadm"
-MOUNTPOINT="/bin/mountpoint"
+MOUNTPOINT="/usr/bin/mountpoint"
 MPATHD="/sbin/multipathd"
 UMOUNT="/bin/umount"
 VDO="/bin/vdo"
