@@ -687,7 +687,8 @@ See \fBlvmreport\fP(7) for more information.
 .
 .TP
 .O_resizefs
-Resize the fs using the fs-specific resize command.
+Resize the fs using the fs-specific resize command
+(See: \fBresize2fs\fP(8), \fBxfs_growfs\fP(8), \fBbtrfs\fP(8)).
 May include mounting, unmounting, or running fsck. See --fsmode to control
 mounting behavior, and --nofsck to disable fsck. See --fs for more options
 (--resizefs is equivalent to --fs resize.)

@@ -413,16 +413,16 @@ devices {
 	# pv_min_size = 2048
 
 	# Configuration option devices/issue_discards.
-	# Issue discards to PVs that are no longer used by an LV.
-	# Discards are sent to an LV's underlying physical volumes when the LV
-	# is no longer using the physical volumes' space, e.g. lvremove,
-	# lvreduce. Discards inform the storage that a region is no longer
-	# used. Storage that supports discards advertise the protocol-specific
-	# way discards should be issued by the kernel (TRIM, UNMAP, or
-	# WRITE SAME with UNMAP bit set). Not all storage will support or
-	# benefit from discards, but SSDs and thinly provisioned LUNs
-	# generally do. If enabled, discards will only be issued if both the
-	# storage and kernel provide support.
+	# Issue discard commands to physical volumes when freeing space.
+	# When an LV frees space on a PV (e.g., lvremove, lvreduce), LVM can
+	# send discard commands to notify the storage device that those blocks
+	# are no longer in use. NVMe/SSDs use this information for TRIM operations
+	# to improve performance and longevity. Thinly provisioned storage uses
+	# UNMAP to reclaim the freed space. Discards are issued using the
+	# protocol supported by the device (TRIM, UNMAP, or WRITE SAME with
+	# UNMAP bit set) and only when both the storage and kernel support it.
+	# Warning: vgcfgrestore restores only VG metadata, not LV data. Any
+	# data in discarded regions will be lost.
 	# This configuration option has an automatic default value.
 	# issue_discards = 0
 
