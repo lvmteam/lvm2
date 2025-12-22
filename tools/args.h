@@ -1697,7 +1697,8 @@ arg(readahead_ARG, 'r', "readahead", readahead_VAL, 0, 0,
     "\\fBnone\\fP is equivalent to zero.\n")
 
 arg(resizefs_ARG, 'r', "resizefs", 0, 0, 0,
-    "Resize the fs using the fs-specific resize command.\n"
+    "Resize the fs using the fs-specific resize command\n"
+    "(See: \\fBresize2fs\\fP(8), \\fBxfs_growfs\\fP(8), \\fBbtrfs\\fP(8)).\n"
     "May include mounting, unmounting, or running fsck. See --fsmode to control\n"
     "mounting behavior, and --nofsck to disable fsck. See --fs for more options\n"
     "(--resizefs is equivalent to --fs resize.)\n")
