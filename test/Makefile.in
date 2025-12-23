@@ -281,7 +281,7 @@ LDFLAGS_lib/idm_inject_failure += $(INTERNAL_LIBS) $(LIBS) -lseagate_ilm
 
 lib/%: lib/%.o .lib-dir-stamp
 	$(SHOW) "    [LD] $@"
-	$(Q) $(CC) $(CFLAGS) $(LDFLAGS) $(ELDFLAGS) -o $@ $< $(LDFLAGS_$@)
+	$(Q) $(CC) $(CFLAGS) $(LDFLAGS) $(EXTRA_EXEC_LDFLAGS) $(ELDFLAGS) -o $@ $< $(LDFLAGS_$@)
 
 lib/%: $(srcdir)/lib/%.sh .lib-dir-stamp
 	$(SHOW) "    [CP] $@"
