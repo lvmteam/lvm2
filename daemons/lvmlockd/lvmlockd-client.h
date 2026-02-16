@@ -66,5 +66,7 @@ static inline void lvmlockd_close(daemon_handle h)
 #define LOCKARGS_NOTIMEOUT      0x00000008 /* meta or user */
 #define LOCKARGS_PERSIST        0x00000010 /* meta or user */
 #define LOCKARGS_NOPERSIST      0x00000020 /* user only */
+#define LOCKARGS_CAW		0x00000040 /* user only */
+#define LOCKARGS_NOCAW		0x00000080 /* user only */
 
 #endif	/* _LVM_LVMLOCKD_CLIENT_H */

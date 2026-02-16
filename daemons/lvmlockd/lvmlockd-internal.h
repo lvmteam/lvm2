@@ -266,6 +266,7 @@ struct lockspace {
 	unsigned int kill_vg: 1;
 	unsigned int fence_pr: 1;
 	unsigned int no_timeout: 1;
+	unsigned int using_caw : 1;
 
 	struct list_head actions;	/* new client actions */
 	struct list_head resources;	/* resource/lock state for gl/vg/lv */

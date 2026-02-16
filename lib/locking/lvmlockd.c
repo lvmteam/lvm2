@@ -173,6 +173,10 @@ int lockd_lockargs_get_user_flags(const char *str, uint32_t *flags)
 			*flags |= LOCKARGS_TIMEOUT;
 		else if (!strcmp(argv[i], "notimeout"))
 			*flags |= LOCKARGS_NOTIMEOUT;
+		else if (!strcmp(argv[i], "caw"))
+			*flags |= LOCKARGS_CAW;
+		else if (!strcmp(argv[i], "nocaw"))
+			*flags |= LOCKARGS_NOCAW;
 		else {
 			log_error("Unknown lockargs option value: %s", argv[i]);
 			return 0;
@@ -180,7 +184,8 @@ int lockd_lockargs_get_user_flags(const char *str, uint32_t *flags)
 	} 
 
 	if (((*flags & LOCKARGS_PERSIST) && (*flags & LOCKARGS_NOPERSIST)) ||
-	    ((*flags & LOCKARGS_TIMEOUT) && (*flags & LOCKARGS_NOTIMEOUT))) {
+	    ((*flags & LOCKARGS_TIMEOUT) && (*flags & LOCKARGS_NOTIMEOUT)) ||
+	    ((*flags & LOCKARGS_CAW) && (*flags & LOCKARGS_NOCAW))) {
 		log_error("Invalid setlockargs option combination: %s", str);
 		return 0;
 	}

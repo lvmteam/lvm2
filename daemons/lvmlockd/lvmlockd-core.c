@@ -531,6 +531,10 @@ int lockd_lockargs_get_user_flags(const char *str, uint32_t *flags)
 			*flags |= LOCKARGS_TIMEOUT;
 		else if (!strcmp(argv[i], "notimeout"))
 			*flags |= LOCKARGS_NOTIMEOUT;
+		else if (!strcmp(argv[i], "caw"))
+			*flags |= LOCKARGS_CAW;
+		else if (!strcmp(argv[i], "nocaw"))
+			*flags |= LOCKARGS_NOCAW;
 		else {
 			log_error("Unknown lockargs option value: %s", argv[i]);
 			return -1;
@@ -7380,7 +7384,7 @@ static int main_loop(daemon_state *ds_arg)
 	pthread_mutex_init(&log_mutex, NULL);
 
 	openlog("lvmlockd", LOG_CONS | LOG_PID, LOG_DAEMON);
-	log_warn("lvmlockd started");
+	log_warn("lvmlockd started " LVM_VERSION " sanlock_support %u", LOCKDSANLOCK_SUPPORT);
 
 	listen_fd = ds_arg->socket_fd;
 	listen_pi = add_pollfd(listen_fd);
@@ -7615,7 +7619,7 @@ int main(int argc, char *argv[])
 			usage(argv[0], stdout);
 			exit(EXIT_SUCCESS);
 		case 'V':
-			printf("lvmlockd version: " LVM_VERSION "\n");
+			printf("lvmlockd version: " LVM_VERSION " sanlock_support %u\n", LOCKDSANLOCK_SUPPORT);
 			exit(EXIT_SUCCESS);
 		case 'T':
 			daemon_test = 1;

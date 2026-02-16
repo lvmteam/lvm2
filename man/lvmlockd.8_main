@@ -280,6 +280,29 @@ When enabled, PR needs to be started for the VG before locking:
 .br
 .B $ vgchange --persist start
 .I VG
+.P
+.B Atomic leases
+.br
+sanlock can use atomic leases when devices support the SCSI COMPARE AND
+WRITE (CAW) command (sometimes referred to as atomic test and set.)
+Atomic/CAW leases are faster and more efficient than the lease algorithms
+used without CAW (disk-paxos for resource leases, and time-delay leases
+for lockspace leases.)
+.P
+sanlock leases are configured to use CAW when they are initialized
+during vgcreate.  CAW usage depends on the sanlock configuration,
+device COMPARE AND WRITE support, and vgcreate --setlockargs options:
+.P
+.B --setlockargs caw
+.br
+Use CAW if supported by the device and allowed by the sanlock configuration.
+.P
+.B --setlockargs nocaw
+.br
+Do not use CAW, even if supported by the device and the sanlock configuration.
+.P
+If neither option is specified, CAW usage will depend on the sanlock
+configuration and device support.
 .
 .SH TOPICS
 .

@@ -29,7 +29,17 @@
 #define SANLK_GET_HOST_LOCAL   0x00000001
 #define SANLK_LSF_NO_TIMEOUT   0x00000004
 #define SANLK_WRITE_LS_FLAGS   0x00000001
+#define SANLK_LSF_USING_CAW     0x00000008 /* struct sanlk_lockspace.flags */
+#define SANLK_RES_USING_CAW     0x00000400 /* struct sanlk_resource.flags */
+#define SANLK_WRITE_USE_CAW     0x00000002 /* sanlock_write_resource(flags) */
+#define SANLK_WRITE_NO_CAW      0x00000004 /* sanlock_write_resource(flags) */
+#define SANLK_WRITE_LS_USE_CAW  0x00000002 /* sanlock_write_lockspace(flags) */
+#define SANLK_WRITE_LS_NO_CAW   0x00000004 /* sanlock_write_lockspace(flags) */
+#define SANLK_INIT_HOST_USE_CAW 0x00000001 /* sanlock_init_lockspace_host(flags) */
+#define SANLK_INIT_HOST_NO_CAW  0x00000002 /* sanlock_init_lockspace_host(flags) */
 #define SANLK_ACQUIRE_OWNED_NO_TIMEOUT -249
+#define SANLK_WRONG_CAW -281
+#define SANLK_CAW_MISCOMPARE -285
 
 #include <stddef.h>
 #include <poll.h>
@@ -151,6 +161,7 @@ struct lm_sanlock {
 	struct sanlk_lockspace ss;
 	int sector_size;
 	int align_size;
+	int using_caw;
 	int sock; /* sanlock daemon connection */
 	uint32_t ss_flags; /* sector and align flags for lockspace */
 	uint32_t rs_flags; /* sector and align flags for resource */
@@ -359,7 +370,8 @@ out:
 }
 
 #if LOCKDSANLOCK_SUPPORT >= 410
-static int read_info_file(char *vg_name, uint32_t *host_id, uint64_t *generation, int *sector_size, int *align_size, int *no_timeout)
+static int read_info_file(char *vg_name, uint32_t *host_id, uint64_t *generation,
+			  int *sector_size, int *align_size, int *no_timeout, int *using_caw)
 {
 	char line[MAX_LINE];
 	char path[PATH_MAX] = { 0 };
@@ -391,6 +403,9 @@ static int read_info_file(char *vg_name, uint32_t *host_id, uint64_t *generation
 		} else if (!strncmp(line, "no_timeout ", 11)) {
 			if (sscanf(line, "no_timeout %d", no_timeout) != 1)
 				goto fail;
+		} else if (!strncmp(line, "using_caw", 3)) {
+			if (sscanf(line, "using_caw %d", using_caw) != 1)
+				goto fail;
 		}
 	}
 
@@ -405,7 +420,7 @@ fail:
 }
 #endif
 
-static int write_info_file(char *vg_name, uint32_t host_id, uint64_t generation, int sector_size, int align_size, int no_timeout)
+static int write_info_file(char *vg_name, uint32_t host_id, uint64_t generation, int sector_size, int align_size, int no_timeout, int using_caw)
 {
 	char path[PATH_MAX] = { 0 };
 	FILE *fp;
@@ -425,6 +440,7 @@ static int write_info_file(char *vg_name, uint32_t host_id, uint64_t generation,
 	fprintf(fp, "sector_size %d\n", sector_size);
 	fprintf(fp, "align_size %d\n", align_size);
 	fprintf(fp, "no_timeout %d\n", no_timeout);
+	fprintf(fp, "using_caw %d\n", using_caw);
 
 	if (fflush(fp))
 		log_warn("Failed to write/flush %s", path);
@@ -611,7 +627,9 @@ static int _lease_corrupt_error(int rv)
 	    rv == SANLK_LEADER_LOCKSPACE ||
 	    rv == SANLK_LEADER_RESOURCE ||
 	    rv == SANLK_LEADER_CHECKSUM ||
-	    rv == SANLK_DBLOCK_CHECKSUM)
+	    rv == SANLK_LEADER_CHECKSUM ||
+	    rv == SANLK_DBLOCK_CHECKSUM ||
+	    rv == SANLK_WRONG_CAW)
 		return 1;
 	return 0;
 }
@@ -620,7 +638,8 @@ static int _lease_corrupt_error(int rv)
    sanlock encoded this in the lockspace/resource structs on disk. */
 
 static int read_lockspace_info(char *path, uint32_t host_id, int *sector_size, int *align_size, int *align_mb,
-			       uint32_t *ss_size_flags, uint32_t *rs_size_flags, int *no_timeout, struct sanlk_host *hs)
+			       uint32_t *ss_size_flags, uint32_t *rs_size_flags, int *no_timeout, int *using_caw,
+			       struct sanlk_host *hs)
 {
 	struct sanlk_lockspace ss;
 	uint32_t io_timeout = 0;
@@ -687,8 +706,11 @@ static int read_lockspace_info(char *path, uint32_t host_id, int *sector_size, i
 	if (ss.flags & SANLK_LSF_NO_TIMEOUT)
 		*no_timeout = 1;
 
-	log_debug("read_lockspace_info %s %u found sector_size %d align_size %d no_timeout %d",
-		  path, host_id, *sector_size, *align_size, *no_timeout);
+	if (ss.flags & SANLK_LSF_USING_CAW)
+		*using_caw = 1;
+
+	log_debug("read_lockspace_info %s %u found sector_size %d align_size %d no_timeout %d using_caw %d",
+		  path, host_id, *sector_size, *align_size, *no_timeout, *using_caw);
 	return 0;
 }
 
@@ -711,12 +733,16 @@ int lm_init_vg_sanlock(char *ls_name, char *vg_name, uint32_t flags, char *vg_ar
 	const char *gl_name = NULL;
 	uint32_t lock_args_flags = 0;
 	uint32_t rs_flags;
+	uint32_t write_ls_flags = 0;
+	uint32_t write_rs_flags = 0;
 	uint32_t daemon_version = 0;
 	uint32_t daemon_proto = 0;
 	uint64_t offset;
 	uint64_t dev_size;
 	int no_timeout;
 	int persist;
+	int caw;
+	int no_caw;
 	int sector_size = 0;
 	int align_size = 0;
 	int align_mb = 0;
@@ -728,6 +754,15 @@ int lm_init_vg_sanlock(char *ls_name, char *vg_name, uint32_t flags, char *vg_ar
 	}
 	no_timeout = (lock_args_flags & LOCKARGS_NOTIMEOUT) ? 1 :0;
 	persist = (lock_args_flags & LOCKARGS_PERSIST) ? 1 : 0;
+	caw = (lock_args_flags & LOCKARGS_CAW) ? 1 : 0;
+	no_caw = (lock_args_flags & LOCKARGS_NOCAW) ? 1 : 0;
+
+#if LOCKDSANLOCK_SUPPORT < 500
+	if (caw) {
+		log_error("S %s init_vg_san lvmlockd sanlock build %u does not support args %s", ls_name, LOCKDSANLOCK_SUPPORT, other_args);
+		return -EARGS;
+	}
+#endif
 
 #if LOCKDSANLOCK_SUPPORT < 420
 	if (no_timeout || persist) {
@@ -831,13 +866,42 @@ int lm_init_vg_sanlock(char *ls_name, char *vg_name, uint32_t flags, char *vg_ar
 	if (no_timeout)
 		ss.flags |= SANLK_LSF_NO_TIMEOUT;
 
-	rv = sanlock_write_lockspace(&ss, 0, 0, sanlock_io_timeout);
+	/*
+	 * If neither USE_CAW or NO_CAW is set, then caw may or may not
+	 * be used for any given lease, depending on the sanlock config
+	 * settings and device support.
+	 * . USE_CAW: lease will use CAW when supported by device and
+	 *   allowed by sanlock config.
+	 * . NO_CAW: lease will not use CAW regardless of device support
+	 *   and sanlock config.
+	 *
+	 * When setting USE_CAW, some leases may use caw, and others not.
+	 * If leases are spread across multiple underlying devices with
+	 * inconsistent support for caw, then the leases on devices
+	 * supporting caw will use it, and the leases on devices not
+	 * supporting caw will not use it.
+	 *
+	 * All of the delta leases in the lockspace are assumed to be
+	 * on the same device, with consistent caw usage for all of
+	 * them.  If caw is enabled in lockspace delta leases, all
+	 * resource paxos leases in the lockspace will attempt to
+	 * enable caw.
+	 */
+	if (caw) {
+		write_ls_flags |= SANLK_WRITE_LS_USE_CAW;
+		write_rs_flags |= SANLK_WRITE_USE_CAW;
+	} else if (no_caw) {
+		write_ls_flags |= SANLK_WRITE_LS_NO_CAW;
+		write_rs_flags |= SANLK_WRITE_NO_CAW;
+	}
+
+	rv = sanlock_write_lockspace(&ss, 0, write_ls_flags, sanlock_io_timeout);
 	if (rv < 0) {
 		log_error("S %s init_vg_san write_lockspace error %d %s",
 			  ls_name, rv, ss.host_id_disk.path);
 		return rv;
 	}
-	
+
 	/*
 	 * We want to create the global lock in the first sanlock vg.
 	 * If other sanlock vgs exist, then one of them must contain
@@ -864,7 +928,7 @@ int lm_init_vg_sanlock(char *ls_name, char *vg_name, uint32_t flags, char *vg_ar
 	rd.rs.num_disks = 1;
 	rd.rs.flags = rs_flags;
 
-	rv = sanlock_write_resource(&rd.rs, 0, 0, 0);
+	rv = sanlock_write_resource(&rd.rs, 0, 0, write_rs_flags);
 	if (rv < 0) {
 		log_error("S %s init_vg_san write_resource gl error %d %s",
 			  ls_name, rv, rd.rs.disks[0].path);
@@ -878,7 +942,7 @@ int lm_init_vg_sanlock(char *ls_name, char *vg_name, uint32_t flags, char *vg_ar
 	rd.rs.num_disks = 1;
 	rd.rs.flags = rs_flags;
 
-	rv = sanlock_write_resource(&rd.rs, 0, 0, 0);
+	rv = sanlock_write_resource(&rd.rs, 0, 0, write_rs_flags);
 	if (rv < 0) {
 		log_error("S %s init_vg_san write_resource vg error %d %s",
 			  ls_name, rv, rd.rs.disks[0].path);
@@ -902,13 +966,24 @@ int lm_init_vg_sanlock(char *ls_name, char *vg_name, uint32_t flags, char *vg_ar
 
 	log_debug("S %s init_vg_san clearing lv lease areas", ls_name);
 
+	/*
+	 * Even when using caw, disable it when clearing resource
+	 * leases so that sanlock can avoid testing if the disk
+	 * supports caw.  Later, when one of these lease areas is
+	 * used, lm_init_lv_sanlock() calls sanlock_write_resource()
+	 * again for this lease area and will set USE_CAW then if
+	 * caw is enabled.
+	 */
+	write_rs_flags &= ~SANLK_WRITE_USE_CAW;
+	write_rs_flags |= SANLK_WRITE_NO_CAW;
+
 	for (i = 0; ; i++) {
 		if (dev_size && (offset + align_size > dev_size))
 			break;
 
 		rd.rs.disks[0].offset = offset;
 
-		rv = sanlock_write_resource(&rd.rs, 0, 0, 0);
+		rv = sanlock_write_resource(&rd.rs, 0, 0, write_rs_flags);
 		if (rv == -EMSGSIZE || rv == -ENOSPC) {
 			/* This indicates the end of the device is reached. */
 			rv = -EMSGSIZE;
@@ -965,8 +1040,10 @@ int lm_init_lv_sanlock(struct lockspace *ls, char *ls_name, char *vg_name, char 
 	int align_size = 0;
 	int align_mb;
 	int no_timeout = 0;
+	int using_caw = 0;
 	uint32_t ss_flags;
 	uint32_t rs_flags = 0;
+	uint32_t write_rs_flags = 0;
 	uint32_t tries = 1;
 	int rv;
 
@@ -1000,6 +1077,7 @@ int lm_init_lv_sanlock(struct lockspace *ls, char *ls_name, char *vg_name, char 
 		lms = (struct lm_sanlock *)ls->lm_data;
 		align_size = lms->align_size;
 		rs_flags = lms->rs_flags;
+		using_caw = lms->using_caw;
 		offset = ls->free_lock_offset;
 	} else {
 		/* FIXME: optimize repeated init_lv for vgchange --locktype sanlock,
@@ -1007,7 +1085,8 @@ int lm_init_lv_sanlock(struct lockspace *ls, char *ls_name, char *vg_name, char 
 
 		/* using host_id 1 to get sizes since we don't need host-specific info */
 
-		rv = read_lockspace_info(disk_path, 1, &sector_size, &align_size, &align_mb, &ss_flags, &rs_flags, &no_timeout, NULL);
+		rv = read_lockspace_info(disk_path, 1, &sector_size, &align_size, &align_mb, &ss_flags, &rs_flags,
+					 &no_timeout, &using_caw, NULL);
 		if (rv < 0) {
 			log_error("S %s init_lv_san read_lockspace_info error %d %s",
 				  ls_name, rv, disk_path);
@@ -1033,6 +1112,7 @@ int lm_init_lv_sanlock(struct lockspace *ls, char *ls_name, char *vg_name, char 
 	rd.rs.num_disks = 1;
 	memcpy(rd.rs.disks[0].path, disk_path, SANLK_PATH_LEN-1);
 	rd.rs.flags = rs_flags;
+	write_rs_flags = using_caw ? SANLK_WRITE_USE_CAW : SANLK_WRITE_NO_CAW;
 
 	while (1) {
 		rd.rs.disks[0].offset = offset;
@@ -1072,7 +1152,7 @@ int lm_init_lv_sanlock(struct lockspace *ls, char *ls_name, char *vg_name, char 
 			strcpy_name_len(rd.rs.name, lv_name, SANLK_NAME_LEN);
 			rd.rs.flags = rs_flags;
 
-			rv = sanlock_write_resource(&rd.rs, 0, 0, 0);
+			rv = sanlock_write_resource(&rd.rs, 0, 0, write_rs_flags);
 			if (!rv) {
 				snprintf(lv_args, MAX_ARGS, "%s:%llu",
 				         LV_LOCK_ARGS_V1, (unsigned long long)offset);
@@ -1103,6 +1183,8 @@ int lm_rename_vg_sanlock(char *ls_name, char *vg_name, uint32_t flags, char *vg_
 	char lock_lv_name[MAX_ARGS+1];
 	uint64_t offset;
 	uint32_t io_timeout;
+	uint32_t write_ls_flags = 0;
+	uint32_t write_rs_flags = 0;
 	int sector_size = 0;
 	int align_size = 0;
 	int i, rv;
@@ -1148,6 +1230,16 @@ int lm_rename_vg_sanlock(char *ls_name, char *vg_name, uint32_t flags, char *vg_
 		return rv;
 	}
 
+	if (ss.flags & SANLK_LSF_USING_CAW) {
+		/* it would be nice if sanlock could skip verifying caw is
+		   supported for each sanlock_write_resource(USE_CAW) below. */
+		write_ls_flags = SANLK_WRITE_LS_USE_CAW;
+		write_rs_flags = SANLK_WRITE_USE_CAW;
+	} else {
+		write_ls_flags = SANLK_WRITE_LS_NO_CAW;
+		write_rs_flags = SANLK_WRITE_NO_CAW;
+	}
+
 	if (ss.flags & SANLK_LSF_SECTOR512) {
 		sector_size = 512;
 		align_size = ONE_MB;
@@ -1177,7 +1269,7 @@ int lm_rename_vg_sanlock(char *ls_name, char *vg_name, uint32_t flags, char *vg_
 
 	strcpy_name_len(ss.name, ls_name, SANLK_NAME_LEN);
 
-	rv = sanlock_write_lockspace(&ss, 0, 0, sanlock_io_timeout);
+	rv = sanlock_write_lockspace(&ss, 0, write_ls_flags, sanlock_io_timeout);
 	if (rv < 0) {
 		log_error("S %s rename_vg_san write_lockspace error %d %s",
 			  ls_name, rv, ss.host_id_disk.path);
@@ -1202,7 +1294,7 @@ int lm_rename_vg_sanlock(char *ls_name, char *vg_name, uint32_t flags, char *vg_
 
 	memcpy(rd.rs.lockspace_name, ss.name, SANLK_NAME_LEN);
 
-	rv = sanlock_write_resource(&rd.rs, 0, 0, 0);
+	rv = sanlock_write_resource(&rd.rs, 0, 0, write_rs_flags);
 	if (rv < 0) {
 		log_error("S %s rename_vg_san write_resource gl error %d %s",
 			  ls_name, rv, rd.rs.disks[0].path);
@@ -1220,14 +1312,14 @@ int lm_rename_vg_sanlock(char *ls_name, char *vg_name, uint32_t flags, char *vg_
 
 	rv = sanlock_read_resource(&rd.rs, 0);
 	if (rv < 0) {
-		log_error("S %s rename_vg_san write_resource vg error %d %s",
+		log_error("S %s rename_vg_san read_resource vg error %d %s",
 			  ls_name, rv, rd.rs.disks[0].path);
 		return rv;
 	}
 
 	memcpy(rd.rs.lockspace_name, ss.name, SANLK_NAME_LEN);
 
-	rv = sanlock_write_resource(&rd.rs, 0, 0, 0);
+	rv = sanlock_write_resource(&rd.rs, 0, 0, write_rs_flags);
 	if (rv < 0) {
 		log_error("S %s rename_vg_san write_resource vg error %d %s",
 			  ls_name, rv, rd.rs.disks[0].path);
@@ -1261,7 +1353,7 @@ int lm_rename_vg_sanlock(char *ls_name, char *vg_name, uint32_t flags, char *vg_
 
 		memcpy(rd.rs.lockspace_name, ss.name, SANLK_NAME_LEN);
 
-		rv = sanlock_write_resource(&rd.rs, 0, 0, 0);
+		rv = sanlock_write_resource(&rd.rs, 0, 0, write_rs_flags);
 		if (rv) {
 			log_error("S %s rename_vg_san write_resource resource area %llu error %d",
 				  ls_name, (unsigned long long)offset, rv);
@@ -1300,7 +1392,12 @@ int lm_free_lv_sanlock(struct lockspace *ls, struct resource *r)
 		return -1;
 	}
 
-	rv = sanlock_write_resource(rs, 0, 0, 0);
+	/* Even when using caw, set NO_CAW here when freeing the lease
+	   area, so that sanlock can avoid testing if the disk supports caw.
+	   Later when lm_init_lv_sanlock() calls sanlock_write_resource() to
+	   use this lease area, it will set USE_CAW if it should be enabled. */
+
+	rv = sanlock_write_resource(rs, 0, 0, SANLK_WRITE_NO_CAW);
 	if (rv < 0)
 		log_error("%s:%s free_lv_san %llu write error %d",
 			  ls->name, r->name, (unsigned long long)offset, rv);
@@ -1386,6 +1483,7 @@ int lm_able_gl_sanlock(struct lockspace *ls, int enable)
 	struct lm_sanlock *lms = (struct lm_sanlock *)ls->lm_data;
 	struct sanlk_resourced rd;
 	const char *gl_name;
+	uint32_t write_rs_flags = (lms->using_caw) ? SANLK_WRITE_USE_CAW : SANLK_WRITE_NO_CAW;
 	int rv;
 
 	if (enable)
@@ -1406,7 +1504,7 @@ int lm_able_gl_sanlock(struct lockspace *ls, int enable)
 	rd.rs.disks[0].offset = lms->align_size * GL_LOCK_BEGIN;
 	rd.rs.flags = lms->rs_flags;
 
-	rv = sanlock_write_resource(&rd.rs, 0, 0, 0);
+	rv = sanlock_write_resource(&rd.rs, 0, 0, write_rs_flags);
 	if (rv < 0) {
 		log_error("S %s able_gl %d write_resource gl error %d %s",
 			  ls->name, enable, rv, rd.rs.disks[0].path);
@@ -1638,6 +1736,7 @@ int lm_prepare_lockspace_sanlock(struct lockspace *ls, uint64_t *prev_generation
 	int align_size = 0;
 	int align_mb = 0;
 	int no_timeout = 0;
+	int using_caw = 0;
 	int retries = 0;
 	int gl_found;
 	int ret, rv;
@@ -1764,14 +1863,16 @@ int lm_prepare_lockspace_sanlock(struct lockspace *ls, uint64_t *prev_generation
 	align_size = 0;
 	no_timeout = 0;
 
-	rv = read_lockspace_info(disk_path, lms->ss.host_id, &sector_size, &align_size, &align_mb, &ss_flags, &rs_flags, &no_timeout, &hs);
+	rv = read_lockspace_info(disk_path, lms->ss.host_id, &sector_size, &align_size, &align_mb, &ss_flags, &rs_flags,
+				 &no_timeout, &using_caw, &hs);
 
 #if LOCKDSANLOCK_SUPPORT >= 410
 	if ((rv == -ELOCKREPAIR) && repair && !retries) {
 		uint64_t generation = 0;
 		uint32_t host_id = 0;
+		uint32_t flags = 0;
 
-		rv = read_info_file(ls->vg_name, &host_id, &generation, &sector_size, &align_size, &no_timeout);
+		rv = read_info_file(ls->vg_name, &host_id, &generation, &sector_size, &align_size, &no_timeout, &using_caw);
 		if (rv < 0) {
 			log_error("S %s prepare_lockspace_san cannot repair lockspace no info file", lsname);
 			ret = -EINVAL;
@@ -1805,9 +1906,12 @@ int lm_prepare_lockspace_sanlock(struct lockspace *ls, uint64_t *prev_generation
 		if (no_timeout)
 			lms->ss.flags |= SANLK_LSF_NO_TIMEOUT;
 
-		log_debug("S %s prepare_lockspace_san repair host %u lease", lsname, host_id);
+		flags = using_caw ? SANLK_INIT_HOST_USE_CAW : SANLK_INIT_HOST_NO_CAW;
 
-		rv = sanlock_init_lockspace_host(&lms->ss, NULL, generation, 0, 0, 0);
+		log_debug("S %s prepare_lockspace_san repair host %u lease ls_flags 0x%x cmd_flags 0x%x",
+			  lsname, host_id, lms->ss.flags, flags);
+
+		rv = sanlock_init_lockspace_host(&lms->ss, NULL, generation, 0, flags, 0);
 		if (rv < 0) {
 			log_error("S %s prepare_lockspace_san repair host %u lease error %d", lsname, host_id, rv);
 			ret = -EMANAGER;
@@ -1860,8 +1964,8 @@ int lm_prepare_lockspace_sanlock(struct lockspace *ls, uint64_t *prev_generation
 	lms->sector_size = sector_size;
 	lms->ss_flags = ss_flags;
 	lms->rs_flags = rs_flags;
-
 	lms->ss.flags = ss_flags;
+	lms->using_caw = using_caw;
 
 	gl_found = gl_is_enabled(ls, lms);
 	if (gl_found < 0) {
@@ -1901,6 +2005,8 @@ int lm_add_lockspace_sanlock(struct lockspace *ls, int adopt_only, int adopt_ok,
 {
 	struct lm_sanlock *lms = (struct lm_sanlock *)ls->lm_data;
 	struct sanlk_host *hs = NULL;
+	struct sanlk_lockspace ls_read;
+	uint32_t io_timeout = 0;
 	uint32_t flags = 0;
 	int count = 0;
 	int rv;
@@ -1954,7 +2060,16 @@ int lm_add_lockspace_sanlock(struct lockspace *ls, int adopt_only, int adopt_ok,
 
 	free(hs);
 
-	write_info_file(ls->vg_name, ls->host_id, ls->generation, lms->sector_size, lms->align_size, ls->no_timeout);
+	memcpy(&ls_read, &lms->ss, sizeof(struct sanlk_lockspace));
+
+	rv = sanlock_read_lockspace(&ls_read, 0, &io_timeout);
+	if (rv < 0) {
+		log_error("S %s add_lockspace_san add_lockspace read_lockspace error %d", ls->name, rv);
+		goto fail_rem;
+	}
+	ls->using_caw = (ls_read.flags & SANLK_LSF_USING_CAW) ? 1 : 0;
+
+	write_info_file(ls->vg_name, ls->host_id, ls->generation, lms->sector_size, lms->align_size, ls->no_timeout, ls->using_caw);
 
 	/*
 	 * Don't let the lockspace be cleanly released if orphan locks
@@ -2102,6 +2217,7 @@ int lm_lock_sanlock(struct lockspace *ls, struct resource *r, int ld_mode,
 	char *owner_name = NULL;
 	uint64_t lock_lv_offset;
 	uint32_t flags = 0;
+	uint32_t write_rs_flags = 0;
 	struct val_blk vb = { 0 };
 	int added = 0;
 	int retries = 0;
@@ -2259,6 +2375,7 @@ int lm_lock_sanlock(struct lockspace *ls, struct resource *r, int ld_mode,
 	    rv == SANLK_ACQUIRE_OTHER ||
 	    rv == SANLK_ACQUIRE_OWNED_RETRY ||
 	    rv == SANLK_ACQUIRE_OWNED_NO_TIMEOUT ||
+	    rv == SANLK_CAW_MISCOMPARE ||
 	    rv == -EAGAIN) {
 
 		/*
@@ -2325,7 +2442,9 @@ int lm_lock_sanlock(struct lockspace *ls, struct resource *r, int ld_mode,
 	if (_lease_corrupt_error(rv) && repair && !retries) {
 		log_debug("%s:%s lock_san acquire lease_corrupt %d repair", ls->name, r->name, rv);
 
-		rv = sanlock_write_resource(rs, 0, 0, 0);
+		write_rs_flags = lms->using_caw ? SANLK_WRITE_USE_CAW : SANLK_WRITE_NO_CAW;
+
+		rv = sanlock_write_resource(rs, 0, 0, write_rs_flags);
 		if (rv < 0) {
 			log_error("%s:%s lock_san acquire lease repair write_resource error %d", ls->name, r->name, rv);
 			return rv;
@@ -2482,6 +2601,7 @@ int lm_convert_sanlock(struct lockspace *ls, struct resource *r,
 	case SANLK_ACQUIRE_OWNED_RETRY:
 	case SANLK_ACQUIRE_OWNED_NO_TIMEOUT:
 	case SANLK_ACQUIRE_OTHER:
+	case SANLK_CAW_MISCOMPARE:
 	case SANLK_AIO_TIMEOUT:
 		/* expected errors from known/normal cases like lock contention or io timeouts */
 		log_debug("%s:%s convert_san error %d", ls->name, r->name, rv);
@@ -2808,13 +2928,14 @@ static void update_info_file(char *vg_name, int no_timeout_new)
 	int sector_size = 0;
 	int align_size = 0;
 	int no_timeout = 0;
+	int using_caw = 0;
 	int rv;
 
-	rv = read_info_file(vg_name, &host_id, &generation, &sector_size, &align_size, &no_timeout);
+	rv = read_info_file(vg_name, &host_id, &generation, &sector_size, &align_size, &no_timeout, &using_caw);
 	if (rv < 0)
 		return;
 
-	write_info_file(vg_name, host_id, generation, sector_size, align_size, no_timeout_new);
+	write_info_file(vg_name, host_id, generation, sector_size, align_size, no_timeout_new, using_caw);
 }
 
 void lm_set_host_dead_sanlock(struct lockspace *ls, struct owner *owner)
@@ -2888,6 +3009,7 @@ int lm_setlockargs_vg_sanlock(char *ls_name, char *vg_name, struct action *act)
 	int align_size = 0;
 	int align_mb = 0;
 	int no_timeout;
+	int using_caw;
 	int persist;
 	int rv;
 
@@ -2913,7 +3035,8 @@ int lm_setlockargs_vg_sanlock(char *ls_name, char *vg_name, struct action *act)
 
 	/* get the sector and align flags from host_id 1 in the current lockspace */
 
-	rv = read_lockspace_info(disk_path, 1, &sector_size, &align_size, &align_mb, &ss_size_flags, &rs_size_flags, &no_timeout, NULL);
+	rv = read_lockspace_info(disk_path, 1, &sector_size, &align_size, &align_mb, &ss_size_flags, &rs_size_flags,
+				 &no_timeout, &using_caw, NULL);
 	if (rv < 0) {
 		log_error("S %s setlockargs read_lockspace_info error %d %s", ls_name, rv, disk_path);
 		return rv;
