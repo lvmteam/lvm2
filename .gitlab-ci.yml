@@ -49,12 +49,47 @@ test-job:
           --with-default-use-devices-file=0
           --with-cluster=internal
           --enable-cmirrord
+          --enable-lvmlockd-dlm --enable-lvmlockd-dlmcontrol
       - TAG: rhel9
         CONFIGURE: >
           --with-default-use-devices-file=1
           --enable-app-machineid
           --enable-editline
           --disable-readline
+          --enable-lvmlockd-dlm --enable-lvmlockd-dlmcontrol
+      - TAG: rhel10
+        CONFIGURE: >
+          --with-default-use-devices-file=1
+          --enable-app-machineid
+          --enable-editline
+          --disable-readline
+      - TAG: f42
+        CONFIGURE: >
+          --with-default-use-devices-file=1
+          --enable-app-machineid
+          --enable-editline
+          --disable-readline
+          --enable-lvmlockd-dlm --enable-lvmlockd-dlmcontrol
+      - TAG: f43
+        CONFIGURE: >
+          --with-default-use-devices-file=1
+          --enable-app-machineid
+          --enable-editline
+          --disable-readline
+          --enable-lvmlockd-dlm --enable-lvmlockd-dlmcontrol
+      # f44+ are not yet supported by gitlab runner
+      # - TAG: f44
+      #   CONFIGURE: >
+      #     --with-default-use-devices-file=1
+      #     --enable-app-machineid
+      #     --enable-editline
+      #     --disable-readline
+      # - TAG: rawhide
+      #   CONFIGURE: >
+      #     --with-default-use-devices-file=1
+      #     --enable-app-machineid
+      #     --enable-editline
+      #     --disable-readline
   artifacts:
     paths:
       - test/results/
@@ -77,7 +112,6 @@ test-job:
       --with-thin=internal
       --with-cache=internal
       --enable-lvmpolld
-      --enable-lvmlockd-dlm --enable-lvmlockd-dlmcontrol
       --enable-lvmlockd-sanlock
       --enable-dbus-service --enable-notify-dbus
       --enable-dmfilemapd
@@ -118,6 +152,11 @@ reboot:
     matrix:
       - TAG: rhel8
       - TAG: rhel9
+      - TAG: rhel10
+      - TAG: f42
+      - TAG: f43
+      #- TAG: f44
+      #- TAG: rawhide
   tags:
       - ${TAG}
   timeout: 1m
