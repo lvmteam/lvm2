@@ -95,12 +95,21 @@ lvremove -f $vg/pvmove0_mimage_0
 ##########################################
 
 _create_lv
-_keep_open pvmove0_mimage_1 &
+# Capture _keep_open stdout to detect when it actually holds the device open.
+# Checking dmsetup open_count is not sufficient -- it may see transient opens
+# from the pvmove polling process before _keep_open has opened the device.
+_keep_open pvmove0_mimage_1 >keep_open_log 2>&1 &
 KEEP_OPEN_PID=$!
 
 # with background mode - it's forking polling
 pvmove -b -i1 --atomic -vvvv "$dev1" "$dev3"
 aux wait_pvmove_lv_ready "$vg-pvmove0"
+# Wait until _keep_open prints "Keeping open", confirming exec 3<"$d" succeeded.
+for i in {30..0}; do
+	test "$i" -eq 0 && die "Timed out waiting for _keep_open to open pvmove0_mimage_1"
+	grep -q "Keeping open" keep_open_log 2>/dev/null && break
+	sleep .1
+done
 
 not pvmove -i0 --abort -vvvv |& tee out
 
