@@ -1,5 +1,6 @@
 stages:
   - approve
+  - pre
   - test
   - post
 
@@ -33,6 +34,14 @@ pages:
       - doc/**/*
       - ikiwiki.setup
 
+make-rpm:
+  stage: pre
+  tags:
+    - builder
+  timeout: 10m
+  script:
+    - ./configure
+    - make rpm
 
 # TODO:
 # - check results of autoreconf and make generate - may need additional commit
