@@ -1,7 +1,13 @@
 stages:
+  # Commits from third parties go through screening first before entering CI pipeline:
   - approve
+  # Make sure MR passes build first:
   - pre
+  # Make sure all commits within MR pass the build AND run test suite on one OS:
+  - test1
+  # Matrix testing over supported versions of Fedora and RHEL:
   - test
+  # Reboot the runners:
   - post
 
 approve1:
@@ -43,6 +49,81 @@ make-rpm:
     - ./configure
     - make rpm
 
+# TODO: add a script
+# make-rpm-all:
+#   stage: test1
+#   tags:
+#     - builder2
+#   timeout: 2h
+#   script:
+#     # check all commits compile
+#     - ./configure
+#     - make rpm
+
+# TODO: Add more checks:
+# - static analysis
+# - spell checker
+# - autoformatter
+
+test1:
+  stage: test1
+  artifacts:
+    paths:
+      - test/results/
+    expire_in: 1 week
+    when: always
+  tags:
+      - test
+  timeout: 2h
+  script:
+    # TODO: Share snippets with next stage
+    # TODO: Skip the test suite:
+    # - when only doc files were touched,
+    #
+    # Common options go here, diffs to the above matrix
+    - >
+      ./configure
+      --with-default-use-devices-file=1
+      --enable-app-machineid
+      --enable-editline
+      --disable-readline
+      --enable-lvmlockd-dlm --enable-lvmlockd-dlmcontrol
+      --enable-fsadm
+      --enable-write_install
+      --enable-pkgconfig
+      --enable-cmdlib
+      --enable-dmeventd
+      --enable-blkid_wiping
+      --enable-udev_sync
+      --with-thin=internal
+      --with-cache=internal
+      --enable-lvmpolld
+      --enable-lvmlockd-sanlock
+      --enable-dbus-service --enable-notify-dbus
+      --enable-dmfilemapd
+      --with-vdo-format=/usr/bin/vdoformat
+      --disable-silent-rules
+    - make
+    - rm -rf test/results
+    - mkdir -p /dev/shm/lvm2-test
+    - mount -o remount,dev /dev/shm
+    # TODO: Need to distinguish failed test from failed harness
+    # TODO: Also need a way to find if run is incomplete, e.g. full disk resulting in many skipped tests
+    - VERBOSE=0 BATCH=1 LVM_TEST_DIR=/dev/shm/lvm2-test make check || true
+    - rm -rf /dev/shm/lvm2-test
+    - cut -d' ' -f2 test/results/list | sort | uniq -c
+    # Filter artifacts - keep only logs from tests which are not pass
+    - (cd test/results && rm $(grep 'passed$' list | cut -d' ' -f1 | sed -e 's|/|_|g' -e 's|.*|\0.txt|'))
+    - find test/results -type f -empty -delete
+    # TODO: Keep a list of known failures, and translate into regexp - or simply use python...
+    - if grep failed test/results/list | grep -v '\(dbustest\|lvconvert-mirror\|lvconvert-raid-reshape-size\|lvconvert-raid-reshape-stripes-load-fail\)\.sh' | sort; then false; else true; fi
+  rules:
+    # Filter only safe repositories, or user in developers:
+    # NOTE: Already done in approve stage, may be more caution than necessary
+    - if: $CI_PROJECT_PATH != "csonto/lvm2" && $CI_PROJECT_PATH != "lvmteam/lvm2"
+      when: manual
+    - when: on_success
+
 # TODO:
 # - check results of autoreconf and make generate - may need additional commit
 #     - we need a particular setup (rawhide OR latest supported fedora?)
@@ -53,6 +134,7 @@ test-job:
   stage: test
   parallel:
     matrix:
+      # TODO: Replace CONFIGURE with make rpm testing(?)
       - TAG: rhel8
         CONFIGURE: >
           --with-default-use-devices-file=0
@@ -79,13 +161,14 @@ test-job:
           --enable-editline
           --disable-readline
           --enable-lvmlockd-dlm --enable-lvmlockd-dlmcontrol
-      - TAG: f43
-        CONFIGURE: >
-          --with-default-use-devices-file=1
-          --enable-app-machineid
-          --enable-editline
-          --disable-readline
-          --enable-lvmlockd-dlm --enable-lvmlockd-dlmcontrol
+      # f43 (latest supported fedora) is serving as first test - test1
+      # - TAG: f43
+      #   CONFIGURE: >
+      #     --with-default-use-devices-file=1
+      #     --enable-app-machineid
+      #     --enable-editline
+      #     --disable-readline
+      #     --enable-lvmlockd-dlm --enable-lvmlockd-dlmcontrol
       # f44+ are not yet supported by gitlab runner
       # - TAG: f44
       #   CONFIGURE: >
@@ -159,11 +242,15 @@ reboot:
   stage: post
   parallel:
     matrix:
+      # TODO: Problem: How to reboot the runner tagged 'test' which actually
+      # run the tests?
+      # - Add more tags for each machine, test will create a dirty file, and we
+      #   will check the presence of the file before reboot...
       - TAG: rhel8
       - TAG: rhel9
       - TAG: rhel10
       - TAG: f42
-      - TAG: f43
+      #- TAG: f43
       #- TAG: f44
       #- TAG: rawhide
   tags:
