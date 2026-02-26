@@ -1204,6 +1204,11 @@ int vg_remove_snapshot(struct logical_volume *cow);
 
 int validate_snapshot_origin(const struct logical_volume *origin_lv);
 
+struct lv_status_snapshot {
+	struct dm_pool *mem;
+	struct dm_status_snapshot *snap;
+	dm_percent_t usage;
+};
 
 int vg_check_status(const struct volume_group *vg, uint64_t status);
 

@@ -1609,6 +1609,83 @@ int dev_manager_snapshot_percent(struct dev_manager *dm,
 	return 1;
 }
 
+/*
+ * Get COW snapshot status for an active COW snapshot LV.
+ * If flush is non-zero a DM flush is issued so that in-flight writes are
+ * accounted for before the status is read.
+ * On success *status is populated and (*status)->mem must be destroyed by
+ * the caller.  Returns 1 on success, 0 on failure.  *exists is set to 0 if
+ * the DM device does not exist (inactive LV), 1 if it does.
+ */
+int dev_manager_snapshot_status(struct dev_manager *dm,
+				const struct logical_volume *lv,
+				int flush,
+				struct lv_status_snapshot **status,
+				int *exists)
+{
+	int r = 0;
+	const struct logical_volume *snap_lv;
+	const char *dlid;
+	struct dm_task *dmt;
+	struct dm_info info;
+	uint64_t start, length;
+	char *type = NULL;
+	char *params = NULL;
+
+	*exists = -1;
+	if (!(*status = dm_pool_zalloc(dm->mem, sizeof(struct lv_status_snapshot))))
+		return_0;
+
+	if (lv_is_merging_cow(lv))
+		/* must check status of origin for a merging snapshot */
+		snap_lv = origin_from_cow(lv);
+	else
+		snap_lv = lv;
+
+	if (!(dlid = build_dm_uuid(dm->mem, snap_lv, NULL)))
+		return_0;
+
+	if (!(dmt = _setup_task_run(DM_DEVICE_STATUS, &info, NULL, dlid, 0, 0, 0, 0, flush, 0)))
+		return_0;
+
+	if (!(*exists = info.exists))
+		goto out;
+
+	log_debug_activation("Checking snapshot status for LV %s.",
+			     display_lvname(snap_lv));
+
+	dm_get_next_target(dmt, NULL, &start, &length, &type, &params);
+
+	if (!type || strcmp(type, TARGET_NAME_SNAPSHOT) || !params) {
+		log_error("Expected snapshot segment type for %s but got %s.",
+			  display_lvname(snap_lv), type ? type : "NULL");
+		goto out;
+	}
+
+	if (!dm_get_status_snapshot(dm->mem, params, &(*status)->snap))
+		goto_out;
+
+	(*status)->mem = dm->mem;
+
+	if ((*status)->snap->invalid)
+		(*status)->usage = DM_PERCENT_INVALID;
+	else if ((*status)->snap->merge_failed)
+		(*status)->usage = LVM_PERCENT_MERGE_FAILED;
+	else if ((*status)->snap->has_metadata_sectors &&
+		 (*status)->snap->used_sectors == (*status)->snap->metadata_sectors)
+		(*status)->usage = DM_PERCENT_0;
+	else if ((*status)->snap->used_sectors == (*status)->snap->total_sectors)
+		(*status)->usage = DM_PERCENT_100;
+	else
+		(*status)->usage = dm_make_percent((*status)->snap->used_sectors,
+						   (*status)->snap->total_sectors);
+	r = 1;
+out:
+	dm_task_destroy(dmt);
+
+	return r;
+}
+
 /* FIXME Merge with snapshot_percent, auto-detecting target type */
 /* FIXME Cope with more than one target */
 int dev_manager_mirror_percent(struct dev_manager *dm,

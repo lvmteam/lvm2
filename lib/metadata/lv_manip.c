@@ -5817,6 +5817,55 @@ static int _lv_reduce_vdo_discard(struct cmd_context *cmd,
 	return 1;
 }
 
+static int _lv_resize_check_cow_reduce(struct logical_volume *lv,
+				       uint64_t new_size)
+{
+	struct cmd_context *cmd = lv->vg->cmd;
+	struct lv_status_snapshot *snap_status;
+	int r;
+
+	/*
+	 * COW snapshot must be active to check how many exception blocks are
+	 * in use.  Reject when inactive to avoid silently truncating data.
+	 * If the snapshot content is not needed, remove it with lvremove.
+	 */
+	if (!lv_is_active(lv_lock_holder(lv))) {
+		log_error("Inactive snapshot %s cannot be reduced "
+			  "(activate or remove it).",
+			  display_lvname(lv));
+		return 0;
+	}
+
+	/*
+	 * Reject reduce if it would truncate exception data already written
+	 * to the COW store.  Flush so that in-flight writes are reflected
+	 * in the exception counts before we compare.
+	 */
+	if ((r = lv_snapshot_status(lv, 1, &snap_status))) {
+		/* merge_failed cannot occur here: merging snapshots are
+		 *   rejected earlier in _lv_resize_check_type(); kept as
+		 *   a defensive check.
+		 * overflow mode is currently not supported by lvm2
+		 *   kept as a defensive check. */
+		if (snap_status->snap->invalid ||
+		    snap_status->snap->merge_failed ||
+		    snap_status->snap->overflow) {
+			log_error("Invalid snapshot %s cannot be reduced, only removed.",
+				  display_lvname(lv));
+			r = 0;
+		} else if (new_size < snap_status->snap->used_sectors) {
+			log_error("Cannot reduce snapshot %s to below %s (%.2f%% full, would lose exception data).",
+				  display_lvname(lv),
+				  display_size(cmd, snap_status->snap->used_sectors),
+				  dm_percent_to_round_float(snap_status->usage, 2));
+			r = 0;
+		}
+		dm_pool_destroy(snap_status->mem);
+	}
+
+	return r;
+}
+
 static int _lv_resize_check_type(struct logical_volume *lv,
 				 struct lvresize_params *lp)
 {
@@ -5895,6 +5944,9 @@ static int _lv_resize_check_type(struct logical_volume *lv,
 			log_error("Cannot reduce LV with integrity.");
 			return 0;
 		}
+		if (lv_is_cow(lv) &&
+		    !_lv_resize_check_cow_reduce(lv, (uint64_t)lp->extents * lv->vg->extent_size))
+			return_0;
 	} else if (lp->resize == LV_EXTEND)  {
 		if (lv_is_thin_pool_metadata(lv) &&
 		    (!(seg = find_pool_seg(first_seg(lv))) ||

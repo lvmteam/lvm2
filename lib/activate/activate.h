@@ -188,6 +188,9 @@ int lv_check_transient(struct logical_volume *lv);
  * Returns 1 if percent has been set, else 0.
  */
 int lv_snapshot_percent(const struct logical_volume *lv, dm_percent_t *percent);
+int lv_snapshot_status(const struct logical_volume *lv,
+		       int flush,
+		       struct lv_status_snapshot **status);
 int lv_mirror_percent(struct cmd_context *cmd, const struct logical_volume *lv,
 		      int wait, dm_percent_t *percent, uint32_t *event_nr);
 int lv_raid_percent(const struct logical_volume *lv, dm_percent_t *percent);

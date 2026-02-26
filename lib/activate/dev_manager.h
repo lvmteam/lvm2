@@ -20,6 +20,7 @@
 
 struct logical_volume;
 struct lv_activate_opts;
+struct lv_status_snapshot;
 struct volume_group;
 struct cmd_context;
 struct dev_manager;
@@ -56,6 +57,11 @@ int dev_manager_info(struct cmd_context *cmd, const struct logical_volume *lv,
 int dev_manager_snapshot_percent(struct dev_manager *dm,
 				 const struct logical_volume *lv,
 				 dm_percent_t *percent);
+int dev_manager_snapshot_status(struct dev_manager *dm,
+				const struct logical_volume *lv,
+				int flush,
+				struct lv_status_snapshot **status,
+				int *exists);
 int dev_manager_mirror_percent(struct dev_manager *dm,
 			       const struct logical_volume *lv, int wait,
 			       dm_percent_t *percent, uint32_t *event_nr);
