@@ -195,6 +195,11 @@ not diff df1 df2
 # resize works and reports correct size info.
 lvcreate -s -n $lv1 -L80M $vg/$lv
 not lvresize -L80M $vg/$lv1
+# lvreduce of a CoW snapshot COW store should not check/resize the origin
+# filesystem (issue: lvreduce on CoW snapshot LV gives misleading fs errors)
+# and must not erase CoW exception blocks that are in use by the snapshot.
+lvreduce --yes -L60M $vg/$lv1
+check lv_field $vg/$lv1 lv_size "60.00m"
 lvremove -f $vg/$lv1
 
 # keep mounted fs
