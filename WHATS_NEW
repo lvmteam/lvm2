@@ -1,5 +1,8 @@
 Version 2.03.39 - 
 ==================
+  Fix pofile generation to include SOURCES2 binaries and update xgettext options.
+  Reject lvreduce of CoW snapshot COW store when it would truncate exception data.
+  Skip filesystem resize handling for CoW snapshot COW store LVs in lvresize.
   Fix dmeventd inode fallback to use /dev/dm-X when dm_dir() path is unavailable.
   Use temporary activations for integrity, writecache, thin and VDO pool conv.
   Add activate_lv_temporary() to consolidate LV_TEMPORARY and sync handling.
