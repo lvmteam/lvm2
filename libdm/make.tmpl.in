@@ -316,7 +316,7 @@ DEPS = $(top_builddir)/libdm/make.tmpl $(top_srcdir)/VERSION \
        $(top_builddir)/libdm/Makefile
 
 OBJECTS = $(SOURCES:%.c=%.o) $(CXXSOURCES:%.cpp=%.o)
-POTFILES = $(SOURCES:%.c=%.pot)
+POTFILES = $(SOURCES:%.c=%.pot) $(SOURCES2:%.c=%.pot)
 
 .PHONY: all pofile distclean clean cleandir cflow device-mapper
 .PHONY: install install_device-mapper install_lvm2

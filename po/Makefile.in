@@ -24,42 +24,30 @@ DM_POSOURCES = $(top_builddir)/libdm/dm-tools/dmsetup.pot $(top_builddir)/libdm/
 
 LVM_POSOURCES = $(top_builddir)/tools/*.pot $(top_builddir)/lib/*/*.pot
 
+XGETTEXT_FLAGS = -C -F --no-git --add-location=file \
+	--keyword=log_debug --keyword=log_info --keyword=log_notice \
+	--keyword=log_warn --keyword=log_err --keyword=log_fatal \
+	--keyword=log_error --keyword=log_print --keyword=log_verbose \
+	--keyword=log_very_verbose --keyword=_ --keyword=N_ \
+	-d -
+
 include $(top_builddir)/make.tmpl
 
 lvm2.po: Makefile $(LVM_POSOURCES)
 	@echo Compiling string table
-	@xgettext -C -F --keyword=print_log --keyword=log_debug \
-		--keyword=log_info --keyword=_ --keyword=N_ \
-		--keyword=log_notice --keyword=log_warn --keyword=log_err \
-		--keyword=log_fatal --keyword=log_debug --keyword=log_error \
-		--keyword=log_print --keyword=log_verbose \
-		--keyword=log_very_verbose -d - \
-		$(LVM_POSOURCES) > $@
+	@xgettext $(XGETTEXT_FLAGS) --keyword=print_log $(LVM_POSOURCES) > $@
 
-device-mapper.po: Makefile $(DM_POSOURCES)
+libdm.po: Makefile $(DM_POSOURCES)
 	@echo Compiling string table
-	@xgettext -C -F --keyword=dm_log --keyword=log_debug \
-		--keyword=log_info --keyword=_ --keyword=N_ \
-		--keyword=log_notice --keyword=log_warn --keyword=log_err \
-		--keyword=log_fatal --keyword=log_debug --keyword=log_error \
-		--keyword=log_print --keyword=log_verbose \
-		--keyword=log_very_verbose -d - \
-		$(DM_POSOURCES) > $@
+	@xgettext $(XGETTEXT_FLAGS) --keyword=dm_log $(DM_POSOURCES) > $@
 
-pofile: lvm2.po device-mapper.po
+DOMAINS = lvm2 libdm
 
-# FIXME
+pofile: $(DOMAINS:%=%.po)
+
 install: $(TARGETS)
 	@echo Installing translation files in $(localedir)
-	@( \
-		for lang in $(LANGS); do \
-			$(INSTALL_DATA) -D $$lang.mo \
-			    $(localedir)/$$lang/LC_MESSAGES/lvm2.mo;\
-	  done; \
-	)
-	@( \
-		for lang in $(LANGS); do \
-			$(INSTALL_DATA) -D $$lang.mo \
-			    $(localedir)/$$lang/LC_MESSAGES/device-mapper.mo;\
-	  done; \
-	)
+	$(foreach lang,$(LANGS),\
+		$(foreach domain,$(DOMAINS),\
+			$(INSTALL_DATA) -D $(lang).mo \
+				$(localedir)/$(lang)/LC_MESSAGES/$(domain).mo ;))
