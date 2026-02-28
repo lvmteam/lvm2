@@ -44,7 +44,7 @@ lvcreate --type cache-pool -n ${lv1}_pool -l 4 $vg "$dev1"
 check lv_tree_on $vg ${lv1}_foo "$dev1"
 check lv_tree_on $vg ${lv1}_pool "$dev1"
 
-pvmove $mode "$dev1" "$dev5" 2>&1 | tee out
+pvmove $mode -i0 "$dev1" "$dev5" 2>&1 | tee out
 lvs -a -o+devices $vg
 check lv_tree_on $vg ${lv1}_pool "$dev5"
 check lv_tree_on $vg ${lv1}_foo "$dev5"
@@ -63,14 +63,14 @@ check lv_tree_on $vg ${lv1}_pool_cpool "$dev5"
 check lv_tree_on $vg ${lv1} "$dev1"
 
 aux mkdev_md5sum $vg $lv1
-pvmove $mode "$dev1" "$dev3" 2>&1 | tee out
+pvmove $mode -i0 "$dev1" "$dev3" 2>&1 | tee out
 check lv_tree_on $vg ${lv1}_foo "$dev3"
 #check lv_tree_on $vg ${lv1}_pool "$dev5"
 lvs -a -o name,attr,devices $vg
 check lv_tree_on $vg ${lv1} "$dev3"
 #check dev_md5sum $vg $lv1
 
-#pvmove $mode -n $lv1 "$dev3" "$dev1"
+#pvmove $mode -i0 -n $lv1 "$dev3" "$dev1"
 #check lv_tree_on $vg ${lv1}_foo "$dev3"
 #check lv_tree_on $vg ${lv1}_pool "$dev5"
 #check lv_tree_on $vg ${lv1} "$dev1"
@@ -81,21 +81,21 @@ dmsetup info -c | not grep $vg
 # Testing pvmove of a RAID origin LV
 ####################################
 lvcreate -aey -l 2 -n ${lv1}_foo $vg "$dev1"
-lvcreate --type raid1 -m 1 -l 8 -n $lv1 $vg "$dev1" "$dev2"
+lvcreate --type raid1 -m 1 -l 8 --nosync -n $lv1 $vg "$dev1" "$dev2"
 lvcreate --type cache -l 4 -n ${lv1}_pool $vg/$lv1 "$dev5"
 check lv_tree_on $vg ${lv1}_foo "$dev1"
 check lv_tree_on $vg ${lv1} "$dev1" "$dev2"
 check lv_tree_on $vg ${lv1}_pool_cpool "$dev5"
 
 aux mkdev_md5sum $vg $lv1
-pvmove $mode "$dev1" "$dev3" 2>&1 | tee out
+pvmove $mode -i0 "$dev1" "$dev3" 2>&1 | tee out
 check lv_tree_on $vg ${lv1}_foo "$dev3"
 lvs -a -o+devices $vg
 not check lv_tree_on $vg ${lv1} "$dev1"
 #check lv_tree_on $vg ${lv1}_pool "$dev5"
 #check dev_md5sum $vg $lv1 -- THIS IS WHERE THINGS FAIL IF PVMOVE NOT DISALLOWED
 
-#pvmove $mode -n $lv1 "$dev3" "$dev1"
+#pvmove $mode -i0 -n $lv1 "$dev3" "$dev1"
 #check lv_tree_on $vg ${lv1}_foo "$dev3"
 #check lv_tree_on $vg ${lv1} "$dev1" "$dev2"
 #check lv_tree_on $vg ${lv1}_pool "$dev5"
@@ -106,8 +106,8 @@ dmsetup info -c | not grep $vg
 # Testing pvmove of a RAID cachepool (metadata and data)
 ########################################################
 lvcreate -aey -l 2 -n ${lv1}_foo $vg "$dev1"
-lvcreate --type raid1 -L 6M -n meta $vg "$dev1" "$dev2"
-lvcreate --type raid1 -L 4M -n ${lv1}_pool $vg "$dev1" "$dev2"
+lvcreate --type raid1 -L 6M --nosync -n meta $vg "$dev1" "$dev2"
+lvcreate --type raid1 -L 4M --nosync -n ${lv1}_pool $vg "$dev1" "$dev2"
 lvconvert --yes --type cache-pool $vg/${lv1}_pool --poolmetadata $vg/meta
 lvcreate --type cache -n $lv1 -L 8M $vg/${lv1}_pool "$dev5"
 
@@ -118,13 +118,13 @@ check lv_tree_on $vg ${lv1} "$dev5"
 aux mkdev_md5sum $vg $lv1
 # This will move ${lv1}_foo and the cache-pool data & meta
 #  LVs, both of which contain a RAID1 _rimage & _rmeta LV - 5 total LVs
-pvmove $mode "$dev1" "$dev3" 2>&1 | tee out
+pvmove $mode -i0 "$dev1" "$dev3" 2>&1 | tee out
 check lv_tree_on $vg ${lv1}_foo "$dev3"
 not check lv_tree_on $vg ${lv1}_pool_cpool "$dev1"
 #check lv_tree_on $vg ${lv1} "$dev5"
 #check dev_md5sum $vg $lv1
 
-#pvmove $mode -n ${lv1}_pool "$dev3" "$dev1"
+#pvmove $mode -i0 -n ${lv1}_pool "$dev3" "$dev1"
 #check lv_tree_on $vg ${lv1}_foo "$dev3"
 #check lv_tree_on $vg ${lv1}_pool "$dev1" "$dev2"
 #check lv_tree_on $vg ${lv1} "$dev5"
@@ -136,11 +136,11 @@ dmsetup info -c | not grep $vg
 #################################################
 lvcreate -aey -l 2 -n ${lv1}_foo $vg "$dev1"
 # RAID for cachepool
-lvcreate --type raid1 -m 1 -L 6M -n meta $vg "$dev1" "$dev2"
-lvcreate --type raid1 -m 1 -L 4M -n cachepool $vg "$dev1" "$dev2"
+lvcreate --type raid1 -m 1 -L 6M --nosync -n meta $vg "$dev1" "$dev2"
+lvcreate --type raid1 -m 1 -L 4M --nosync -n cachepool $vg "$dev1" "$dev2"
 lvconvert --yes --type cache-pool $vg/cachepool --poolmetadata $vg/meta
 # RAID for thin pool data LV
-lvcreate --type raid1 -m 1 -L 8 -n thinpool $vg "$dev3" "$dev4"
+lvcreate --type raid1 -m 1 -L 8 --nosync -n thinpool $vg "$dev3" "$dev4"
 # Convert thin pool data to a cached LV
 lvconvert --type cache -Zy $vg/thinpool --cachepool $vg/cachepool
 # Create simple thin pool meta
@@ -157,14 +157,14 @@ check lv_tree_on $vg thinpool "$dev1" "$dev3" "$dev4"
 aux mkdev_md5sum $vg thin_lv
 lvs -a -o name,attr,devices $vg
 # Should move ${lv1}_foo and thinpool_tmeta from dev1 to dev5
-pvmove $mode "$dev1" "$dev5" 2>&1 | tee out
+pvmove $mode -i0 "$dev1" "$dev5" 2>&1 | tee out
 lvs -a -o name,attr,devices $vg
 check lv_tree_on $vg ${lv1}_foo "$dev5"
 not check lv_tree_on $vg cachepool_cpool "$dev1"
 check lv_tree_on $vg thinpool "$dev3" "$dev4" "$dev5" # Move non-cache tmeta
 #check dev_md5sum $vg/thin_lv
 
-#pvmove $mode -n $vg/cachepool "$dev5" "$dev1"
+#pvmove $mode -i0 -n $vg/cachepool "$dev5" "$dev1"
 #check lv_tree_on $vg ${lv1}_foo "$dev5"
 #check lv_tree_on $vg $vg/cachepool "$dev1" "$dev2"
 #check lv_tree_on $vg $vg/thinpool "$dev3" "$dev4"
