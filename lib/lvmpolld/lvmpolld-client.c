@@ -211,7 +211,8 @@ static int _process_poll_init(const struct cmd_context *cmd, const char *poll_ty
 	if (!str)
 		return r;
 
-	if (snprintf(str, INTERV_SIZE, "%u", parms->interval) >= INTERV_SIZE) {
+	if (snprintf(str, INTERV_SIZE, "%s%u", parms->wait_before_testing ? "+" : "",
+		     parms->interval) >= INTERV_SIZE) {
 		log_warn("Interval string conversion got truncated.");
 		str[INTERV_SIZE - 1] = '\0';
 	}
