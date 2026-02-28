@@ -743,8 +743,11 @@ See \fBlvmraid\fP(7) for more information.
 Used by: \fBlvchange\fP, \fBlvconvert\fP, \fBlvcreate\fP
 .
 .TP
-\fB-i\fP|\fB--interval\fP \fINumber\fP
+\fB-i\fP|\fB--interval\fP [\fB+\fP]\fINumber\fP
 Report progress at regular intervals.
+With a '+' prefix, the first check is delayed by the given number
+of seconds, allowing background operations to start before polling
+begins.
 .br
 Used by: \fBlvconvert\fP, \fBlvpoll\fP, \fBpvmove\fP
 .

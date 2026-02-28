@@ -78,7 +78,7 @@
 ..
 .de O_interval
 .OPA i interval
-\fINumber\fP
+[\fB+\fP]\fINumber\fP
 ..
 .de O_journal
 .OPA journal
@@ -400,6 +400,9 @@ Display help text.
 .TP
 .O_interval
 Report progress at regular intervals.
+With a '+' prefix, the first check is delayed by the given number
+of seconds, allowing background operations to start before polling
+begins.
 .
 .TP
 .O_journal
