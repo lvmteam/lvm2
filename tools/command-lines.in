@@ -368,14 +368,14 @@ DESC: Convert LV to linear.
 RULE: all not lv_is_locked lv_is_pvmove
 
 lvconvert --type striped LV
-OO: --stripes_long Number, --stripesize SizeKB, --regionsize RegionSize, --interval Number, OO_LVCONVERT
+OO: --stripes_long Number, --stripesize SizeKB, --regionsize RegionSize, --interval PNumber, OO_LVCONVERT
 OP: PV ...
 ID: lvconvert_raid_types
 DESC: Convert LV to striped.
 RULE: all not lv_is_locked lv_is_pvmove
 
 lvconvert --type mirror LV
-OO: --mirrors SNumber, --stripes_long Number, --stripesize SizeKB, --regionsize RegionSize, --interval Number, --mirrorlog MirrorLog, OO_LVCONVERT
+OO: --mirrors SNumber, --stripes_long Number, --stripesize SizeKB, --regionsize RegionSize, --interval PNumber, --mirrorlog MirrorLog, OO_LVCONVERT
 OP: PV ...
 ID: lvconvert_raid_types
 DESC: Convert LV to type mirror (also see type raid1),
@@ -385,7 +385,7 @@ RULE: all not lv_is_locked lv_is_pvmove
 # (changing layout of raid0 and raid1 not allowed.)
 
 lvconvert --type raid LV
-OO: --mirrors SNumber, --stripes_long Number, --stripesize SizeKB, --regionsize RegionSize, --interval Number, OO_LVCONVERT
+OO: --mirrors SNumber, --stripes_long Number, --stripesize SizeKB, --regionsize RegionSize, --interval PNumber, OO_LVCONVERT
 OP: PV ...
 ID: lvconvert_raid_types
 DESC: Convert LV to raid or change raid layout
@@ -394,14 +394,14 @@ RULE: all not lv_is_locked lv_is_pvmove
 RULE: lv_is_raid_with_integrity not --stripes_long --stripesize --regionsize --interval
 
 lvconvert --mirrors SNumber LV
-OO: --regionsize RegionSize, --interval Number, --mirrorlog MirrorLog, OO_LVCONVERT
+OO: --regionsize RegionSize, --interval PNumber, --mirrorlog MirrorLog, OO_LVCONVERT
 OP: PV ...
 ID: lvconvert_raid_types
 DESC: Convert LV to raid1 or mirror, or change number of mirror images.
 RULE: all not lv_is_locked lv_is_pvmove
 
 lvconvert --stripes_long Number LV_raid
-OO: OO_LVCONVERT, --interval Number, --regionsize RegionSize, --stripesize SizeKB
+OO: OO_LVCONVERT, --interval PNumber, --regionsize RegionSize, --stripesize SizeKB
 OP: PV ...
 ID: lvconvert_raid_types
 DESC: Convert raid LV to change number of stripe images.
@@ -409,7 +409,7 @@ RULE: all not lv_is_locked lv_is_pvmove lv_is_raid_with_integrity
 RULE: all not LV_raid0 LV_raid1
 
 lvconvert --stripesize SizeKB LV_raid
-OO: OO_LVCONVERT, --interval Number, --regionsize RegionSize
+OO: OO_LVCONVERT, --interval PNumber, --regionsize RegionSize
 ID: lvconvert_raid_types
 DESC: Convert raid LV to change the stripe size.
 RULE: all not lv_is_locked lv_is_pvmove lv_is_raid_with_integrity
@@ -717,7 +717,7 @@ FLAGS: SECONDARY_SYNTAX
 # operations on each LV it finds, depending on the current LV type.
 
 lvconvert --merge LV_linear_striped_raid_thin_snapshot|VG|Tag ...
-OO: --background, --interval Number, OO_LVCONVERT
+OO: --background, --interval PNumber, OO_LVCONVERT
 ID: lvconvert_merge
 DESC: Merge LV that was split from a mirror (variant, use --mergemirrors).
 DESC: Merge thin LV into its origin LV (variant, use --mergethin).
@@ -740,7 +740,7 @@ RULE: all and lv_is_visible
 # Create a new command set for these and migrate them out of lvconvert?
 
 lvconvert --mergesnapshot LV_snapshot ...
-OO: --background, --interval Number, OO_LVCONVERT
+OO: --background, --interval PNumber, OO_LVCONVERT
 ID: lvconvert_merge_snapshot
 DESC: Merge COW snapshot LV into its origin.
 RULE: all not lv_is_locked lv_is_pvmove lv_is_merging_origin lv_is_virtual_origin lv_is_external_origin lv_is_merging_cow
@@ -810,7 +810,7 @@ AUTOTYPE: snapshot
 # and the LV type is known.
 
 lvconvert --repair LV_cache_cachepool_mirror_raid_thinpool
-OO: --usepolicies, --interval Number, --setactivationskip Bool, --poolmetadataspare Bool, OO_LVCONVERT
+OO: --usepolicies, --interval PNumber, --setactivationskip Bool, --poolmetadataspare Bool, OO_LVCONVERT
 OP: PV ...
 ID: lvconvert_repair
 DESC: Replace failed PVs in a raid or mirror LV.
@@ -1677,13 +1677,13 @@ DESC: Generate colon separated output.
 
 pvmove PV
 OO: --abort, --alloc Alloc, --atomic, --autobackup Bool, --background,
---interval Number, --name LV, --noudevsync, --reportformat ReportFmt
+--interval PNumber, --name LV, --noudevsync, --reportformat ReportFmt
 OP: PV ...
 ID: pvmove_one
 DESC: Move PV extents.
 
 pvmove
-OO: --abort, --background, --interval Number
+OO: --abort, --background, --interval PNumber
 ID: pvmove_any
 DESC: Continue or abort existing pvmove operations.
 
@@ -2105,7 +2105,7 @@ OO: --reportformat ReportFmt, --select String
 ID: lastlog_general
 
 lvpoll --polloperation PollOp LV ...
-OO: --abort, --autobackup Bool, --handlemissingpvs, --interval Number
+OO: --abort, --autobackup Bool, --handlemissingpvs, --interval PNumber
 ID: lvpoll_general
 
 formats

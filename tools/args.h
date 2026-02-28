@@ -1429,8 +1429,11 @@ arg(import_ARG, 'i', "import", 0, 0, 0,
     "Import exported VGs. Otherwise VGs that have been exported\n"
     "will not be changed (nor will their associated PVs).\n")
 
-arg(interval_ARG, 'i', "interval", number_VAL, 0, 0,
-    "Report progress at regular intervals.\n")
+arg(interval_ARG, 'i', "interval", pnumber_VAL, 0, 0,
+    "Report progress at regular intervals.\n"
+    "With a '+' prefix, the first check is delayed by the given number\n"
+    "of seconds, allowing background operations to start before polling\n"
+    "begins.\n")
 
 /* Not used */
 arg(iop_version_ARG, 'i', "iop_version", 0, 0, 0, NULL)
