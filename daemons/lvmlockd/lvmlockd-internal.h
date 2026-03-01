@@ -67,6 +67,7 @@ enum {
 	LD_OP_FENCE_RESULT,
 	LD_OP_SETLOCKARGS_BEFORE,
 	LD_OP_SETLOCKARGS_FINAL,
+	LD_OP_SET_REMOTE_LV_LOCK, /* test-only: simulate remote node holding LV lock */
 };
 
 /* resource types */
@@ -221,6 +222,8 @@ struct resource {
 	unsigned int adopt : 1;		/* temp flag in remove_inactive_lvs */
 	unsigned int version_zero_valid : 1;
 	unsigned int use_vb : 1;
+	unsigned int test_remote_ex : 1;	/* daemon_test: remote node holds EX lock */
+	unsigned int test_remote_sh : 1;	/* daemon_test: remote node holds SH lock */
 	struct list_head locks;
 	struct list_head actions;
 	struct list_head fence_wait_actions;

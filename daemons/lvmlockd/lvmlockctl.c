@@ -35,7 +35,17 @@ static int gl_enable = 0;
 static int gl_disable = 0;
 static int use_stderr = 0;
 static int stop_lockspaces = 0;
+static int set_lock = 0;
 static char *arg_vg_name = NULL;
+static char *arg_lv_uuid = NULL;
+static char *arg_lock_mode = NULL;
+
+/* long-option codes for options without a short equivalent */
+enum {
+	OPT_SET_REMOTE_LV_LOCK = 128,
+	OPT_LV_UUID,
+	OPT_LOCK_MODE,
+};
 
 #define DUMP_SOCKET_NAME "lvmlockd-dump.sock"
 #define DUMP_BUF_SIZE (4 * 1024 * 1024)
@@ -779,6 +789,34 @@ static int do_able(const char *req_name)
 	return rv;
 }
 
+static int do_set_lock(void)
+{
+	daemon_reply reply;
+	int result;
+	int rv = 0;
+
+	if (!arg_vg_name || !arg_lv_uuid || !arg_lock_mode) {
+		log_error("--set-remote-lv-lock requires --lv-uuid and --lock-mode");
+		return -EINVAL;
+	}
+
+	reply = _lvmlockd_send("set_remote_lv_lock",
+			       "cmd = %s", "lvmlockctl",
+			       "pid = " FMTd64, (int64_t) getpid(),
+			       "vg_name = %s", arg_vg_name,
+			       "lv_uuid = %s", arg_lv_uuid,
+			       "mode = %s", arg_lock_mode,
+			       NULL);
+
+	if (!_lvmlockd_result(reply, &result)) {
+		log_error("lvmlockd result %d", result);
+		rv = result;
+	}
+
+	daemon_reply_destroy(reply);
+	return rv;
+}
+
 static int do_stop_lockspaces(void)
 {
 	daemon_reply reply;
@@ -1220,6 +1258,8 @@ static void print_usage(void)
 	printf("      Stop all lockspaces.\n");
 	printf("--stderr | -e\n");
 	printf("      Send kill and drop messages to stderr instead of syslog\n");
+	printf("--set-remote-lv-lock <vgname> --lv-uuid <uuid> --lock-mode <mode>\n");
+	printf("      Test only (daemon_test mode): simulate a remote LV lock.\n");
 }
 
 static int read_options(int argc, char *argv[])
@@ -1240,6 +1280,9 @@ static int read_options(int argc, char *argv[])
 		{"gl-disable",      required_argument, 0,  'D' },
 		{"stop-lockspaces", no_argument,       0,  'S' },
 		{"stderr",          no_argument,       0,  'e' },
+		{"set-remote-lv-lock", required_argument, 0,  OPT_SET_REMOTE_LV_LOCK },
+		{"lv-uuid",            required_argument, 0,  OPT_LV_UUID            },
+		{"lock-mode",          required_argument, 0,  OPT_LOCK_MODE          },
 		{0, 0, 0, 0 }
 	};
 
@@ -1298,6 +1341,19 @@ static int read_options(int argc, char *argv[])
 			break;
 		case 'e':
 			use_stderr = 1;
+			break;
+		case OPT_SET_REMOTE_LV_LOCK:
+			set_lock = 1;
+			free(arg_vg_name);
+			arg_vg_name = strdup(optarg);
+			break;
+		case OPT_LV_UUID:
+			free(arg_lv_uuid);
+			arg_lv_uuid = strdup(optarg);
+			break;
+		case OPT_LOCK_MODE:
+			free(arg_lock_mode);
+			arg_lock_mode = strdup(optarg);
 			break;
 		default:
 			print_usage();
@@ -1362,6 +1418,11 @@ int main(int argc, char **argv)
 
 	if (stop_lockspaces) {
 		rv = do_stop_lockspaces();
+		goto out;
+	}
+
+	if (set_lock) {
+		rv = do_set_lock();
 		goto out;
 	}
 

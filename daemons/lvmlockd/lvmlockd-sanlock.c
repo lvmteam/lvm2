@@ -2299,7 +2299,11 @@ int lm_lock_sanlock(struct lockspace *ls, struct resource *r, int ld_mode,
 			vb_out->flags = le16toh(rds->vb->flags);
 			vb_out->r_version = le32toh(rds->vb->r_version);
 		}
-		return 0;
+		if (!r->test_remote_sh && !r->test_remote_ex)
+			return 0;
+		if ((ld_mode == LD_LK_SH) && r->test_remote_sh && !r->test_remote_ex)
+			return 0;
+		return -EAGAIN;
 	}
 
 	if (rds->vb)
