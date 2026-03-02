@@ -49,16 +49,19 @@ make-rpm:
     - ./configure
     - make rpm
 
-# TODO: add a script
-# make-rpm-all:
-#   stage: test1
-#   tags:
-#     - builder2
-#   timeout: 2h
-#   script:
-#     # check all commits compile
-#     - ./configure
-#     - make rpm
+make-rpm-all:
+  stage: test1
+  tags:
+    - builder2
+  timeout: 2h
+  script:
+    # check all commits compile
+    - chmod 755 ci/compile-all.sh
+    - ci/compile-all.sh
+  rules:
+    - if: $CI_MERGE_REQUEST_TITLE =~ /^Draft:/
+      when: never
+  allow_failure: true
 
 # TODO: Add more checks:
 # - static analysis
@@ -224,6 +227,9 @@ test-job:
     # TODO: Keep a list of known failures, and translate into regexp - or simply use python...
     - if grep failed test/results/list | grep -v '\(dbustest\|lvconvert-mirror\|lvconvert-raid-reshape-size\|lvconvert-raid-reshape-stripes-load-fail\)\.sh' | sort; then false; else true; fi
   rules:
+    # TODO: This takes a long time, run this only after succesfull review(?)
+    - if: $CI_MERGE_REQUEST_TITLE =~ /^Draft:/
+      when: never
     # Filter only safe repositories, or user in developers:
     # NOTE: Already done in approve stage, may be more caution than necessary
     - if: $CI_PROJECT_PATH != "csonto/lvm2" && $CI_PROJECT_PATH != "lvmteam/lvm2"
@@ -259,5 +265,8 @@ reboot:
   script:
     - reboot
   allow_failure: true
-  when: always
+  rules:
+    - if: $CI_MERGE_REQUEST_TITLE =~ /^Draft:/
+      when: never
+    - when: always
 
