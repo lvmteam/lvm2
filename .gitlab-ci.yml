@@ -1,3 +1,9 @@
+# * TODO: Add dry run.
+#   When changing only .gitlab-ci.yml and/or files under ci/*, do not run tests,
+#   only show what would run
+# * TODO: When changing only things under man/, WHATS_NEW*, VERSION* - do not run tests
+# * TODO: When changing files under test/shell/ - run only changed tests
+
 stages:
   # Commits from third parties go through screening first before entering CI pipeline:
   - approve
@@ -5,6 +11,7 @@ stages:
   - pre
   # Make sure all commits within MR pass the build AND run test suite on one OS:
   - test1
+  # TODO: Add manual confirmation here - in case of stress we could run the rest of pipeline on demand only(?)
   # Matrix testing over supported versions of Fedora and RHEL:
   - test
   # Reboot the runners:
@@ -46,6 +53,7 @@ make-rpm:
     - builder
   timeout: 10m
   script:
+    - if bash ci/dry-run.sh; then echo "# ./configure && make rpm"; exit 0; fi
     - ./configure
     - make rpm
 
@@ -56,6 +64,7 @@ make-rpm-all:
   timeout: 2h
   script:
     # check all commits compile
+    - if bash ci/dry-run.sh; then echo "# ci/compile-all.sh"; exit 0; fi
     - chmod 755 ci/compile-all.sh
     - ci/compile-all.sh
   rules:
@@ -79,6 +88,7 @@ test1:
       - test
   timeout: 2h
   script:
+    - if bash ci/dry-run.sh; then echo "# ./configure && make && make check"; exit 0; fi
     # TODO: Share snippets with next stage
     # TODO: Skip the test suite:
     # - when only doc files were touched,
@@ -194,6 +204,7 @@ test-job:
       - ${TAG}
   timeout: 2h
   script:
+    - if bash ci/dry-run.sh; then echo "# ./configure && make && make check"; exit 0; fi
     # Common options go here, diffs to the above matrix
     - >
       ./configure ${CONFIGURE}
@@ -263,6 +274,7 @@ reboot:
       - ${TAG}
   timeout: 1m
   script:
+    - if bash ci/dry-run.sh; then echo "# reboot"; exit 0; fi
     - reboot
   allow_failure: true
   rules:
