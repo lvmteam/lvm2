@@ -24,8 +24,9 @@ lvcreate -aey -l1 -n $lv1 $vg "$dev1"
 lvs -o +devices | tee out
 grep "$dev1" out
 
-LVM_TEST_TAG="kill_me_$PREFIX" pvmove $mode -i 1 -b "$dev1" "$dev2"
-sleep 5 # arbitrary...
+LVM_TEST_TAG="kill_me_$PREFIX" pvmove $mode -i 0 -b "$dev1" "$dev2"
+# wait for lvpoll to detect completion and remove the pvmove0 LV
+i=60; while get lv_field $vg pvmove0 name -a 2>/dev/null && [ "$i" -gt 0 ] ; do sleep .5; i=$((i-1)); done
 lvs -o +devices | tee out
 not grep "pvmove" out
 lvs -o +devices | tee out

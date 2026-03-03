@@ -21,11 +21,6 @@ aux target_at_least dm-mirror 1 2 0 || skip
 
 aux prepare_pvs 3 90
 
-aux delay_dev "$dev3" 0 1 "$(get first_extent_sector "$dev3"):"
-# fallback to mirror throttling
-# this does not work too well with fast CPUs
-test -f HAVE_DM_DELAY || { aux throttle_dm_mirror || skip ; }
-
 vgcreate -s 512k $vg "$dev1" "$dev2"
 pvcreate --metadatacopies 0 "$dev3"
 vgextend $vg "$dev3"
@@ -36,11 +31,11 @@ for backgroundarg in "-b" "" ;
 do
 
 # Create multisegment LV
-lvcreate -an -Zn -l60 -n $lv1 $vg "$dev1"
-lvcreate -an -Zn -l80 -n $lv2 $vg "$dev2"
+lvcreate -an -Zn -l10 -n $lv1 $vg "$dev1"
+lvcreate -an -Zn -l20 -n $lv2 $vg "$dev2"
 
-cmd1=(pvmove -i1 $backgroundarg $mode "$dev1" "$dev3")
-cmd2=(pvmove -i1 $backgroundarg $mode "$dev2" "$dev3")
+cmd1=(pvmove -i +3 $backgroundarg $mode "$dev1" "$dev3")
+cmd2=(pvmove -i +3 $backgroundarg $mode "$dev2" "$dev3")
 
 if test -z "$backgroundarg" ; then
 	"${cmd1[@]}" &
@@ -70,8 +65,5 @@ test -z "$backgroundarg" && wait "$PVMOVE1_PID" "$PVMOVE2_PID" || true
 aux kill_tagged_processes
 done
 done
-
-# Restore throttling
-aux restore_dm_mirror
 
 vgremove -ff $vg

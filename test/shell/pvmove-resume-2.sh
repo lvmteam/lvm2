@@ -29,9 +29,7 @@ test_pvmove_resume() {
 	lvcreate -an -Zn -l15 -n $lv1 $vg "$dev1"
 	lvcreate -an -Zn -l15 -n $lv2 $vg "$dev1"
 
-	aux delay_dev "$dev2" 0 30 "$(get first_extent_sector "$dev2"):"
-
-	pvmove -i5 "$dev1" &
+	pvmove -i +3 "$dev1" &
 	PVMOVE_PID=$!
 	aux wait_pvmove_lv_ready "$vg-pvmove0"
 	kill $PVMOVE_PID
@@ -48,11 +46,11 @@ test_pvmove_resume() {
 	$1 1
 
 	aux enable_dev "$dev2"
-
-	for i in {100..0} ; do # wait for 10 secs at max
+	for i in {50..0} ; do # wait for 5 secs at max
 		get lv_field $vg name -a | grep -E "^\[?pvmove" || break
 		sleep .1
 	done
+
 	test $i -gt 0 || die "Pvmove is too slow or does not progress."
 
 	aux kill_tagged_processes
