@@ -17,7 +17,10 @@ TARGET=${2:-"main"}
 
 answ=0
 
-if git diff --name-only | grep -v '^\(\.gitlab-ci.yaml\|ci/\|WHATS_NEW\|VERSION\|man/\|doc/\|README\|TESTING\|COPYING\|INSTALL\|\.gitignore\|coverity\|ikiwiki.setup/\|nix/\|po/\)'; then
+echo "Checking files changed in the MR for signigicant changes:"
+git diff --name-only "${HEAD}" "^${TARGET}"
+echo "-----"
+if git diff --name-only "${HEAD}" "^${TARGET}" | grep -v '^\(\.gitlab-ci.yaml\|ci/\|WHATS_NEW\|VERSION\|man/\|doc/\|README\|TESTING\|COPYING\|INSTALL\|\.gitignore\|coverity\|ikiwiki.setup/\|nix/\|po/\)'; then
 	echo "INFO: Changed files, running CI" >&2
 	exit 1
 else
