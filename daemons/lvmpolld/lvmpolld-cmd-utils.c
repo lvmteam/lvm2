@@ -47,7 +47,7 @@ static int add_to_cmd_arr(const char ***cmdargv, const char *str, unsigned *ind)
 	return 1;
 }
 
-const char **cmdargv_ctr(const struct lvmpolld_lv *pdlv, const char *lvm_binary, unsigned abort_polling, unsigned handle_missing_pvs)
+const char **cmdargv_ctr(const struct lvmpolld_lv *pdlv, const char *lvm_binary, unsigned abort_polling, unsigned handle_missing_pvs, const char *log_config)
 {
 	unsigned i = 0;
 	const char **cmd_argv = malloc(MIN_ARGV_SIZE * sizeof(char *));
@@ -90,6 +90,11 @@ const char **cmdargv_ctr(const struct lvmpolld_lv *pdlv, const char *lvm_binary,
 
 	/* disable metadata backup */
 	if (!add_to_cmd_arr(&cmd_argv, "-An", &i))
+		goto err;
+
+	/* -l cmd: pass -vvvv to lvpoll so log_debug() appears in captured pipe */
+	if (log_config && strstr(log_config, "cmd") &&
+	    !add_to_cmd_arr(&cmd_argv, "-vvvv", &i))
 		goto err;
 
 	if (pdlv->devicesfile) {

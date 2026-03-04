@@ -573,7 +573,7 @@ static struct lvmpolld_lv *construct_pdlv(request req, struct lvmpolld_state *ls
 		return NULL;
 	}
 
-	cmdargv = cmdargv_ctr(pdlv, pdlv->ls->lvm_binary, abort_polling, handle_missing_pvs);
+	cmdargv = cmdargv_ctr(pdlv, pdlv->ls->lvm_binary, abort_polling, handle_missing_pvs, ls->log_config);
 	if (!cmdargv) {
 		pdlv_destroy(pdlv);
 		ERROR(ls, "%s: %s", PD_LOG_PREFIX, "failed to construct cmd arguments for lvpoll command");

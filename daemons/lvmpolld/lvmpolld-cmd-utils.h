@@ -17,7 +17,7 @@
 
 #include "lvmpolld-data-utils.h"
 
-const char **cmdargv_ctr(const struct lvmpolld_lv *pdlv, const char *lvm_binary, unsigned abort, unsigned handle_missing_pvs);
+const char **cmdargv_ctr(const struct lvmpolld_lv *pdlv, const char *lvm_binary, unsigned abort, unsigned handle_missing_pvs, const char *log_config);
 const char **cmdenvp_ctr(const struct lvmpolld_lv *pdlv);
 
 const char *polling_op(enum poll_type);
