@@ -34,7 +34,13 @@ see_also.end
 
 *_meta
     Metadata about a man page used for index and category generation.
-    Contains key=value pairs (currently only "category = <name>").
+    Contains key=value pairs:
+      category = <name>    Category for the categorized index.
+      conditional = yes    Optional.  Marks the entry as conditional.
+                           When pregenerated pages are used (cross-
+                           compilation), entries for man pages not
+                           enabled by the current configure are
+                           filtered out.
     Every man page has a _meta file, including builtin commands that
     have no dedicated man page of their own (e.g. config.8_meta,
     help.8_meta).
@@ -89,4 +95,8 @@ Index and category pages (_meta based):
         --> SUBSTVARS  -->  ESCAPEHYPHENS  -->  *.7
 
     If the generator is unavailable, *_pregen is used in place
-    of the generation step.
+    of the generation step.  The pregenerated index and category
+    files contain all possible entries (full configuration) with
+    condition markers around optional entries.  At build time,
+    entries for man pages not enabled by configure are filtered
+    out.
