@@ -88,9 +88,11 @@ Display software and driver version information
 .TP 20
 .B lvmautoactivation
 LVM autoactivation
+.\" CONDITION_BEGIN lvmcache.7
 .TP 20
 .B lvmcache
 LVM caching
+.\" CONDITION_END lvmcache.7
 .TP 20
 .B lvmraid
 LVM RAID
@@ -100,12 +102,16 @@ LVM reporting and related features
 .TP 20
 .B lvmsystemid
 LVM system ID
+.\" CONDITION_BEGIN lvmthin.7
 .TP 20
 .B lvmthin
 LVM thin provisioning
+.\" CONDITION_END lvmthin.7
+.\" CONDITION_BEGIN lvmvdo.7
 .TP 20
 .B lvmvdo
 Support for Virtual Data Optimizer in LVM
+.\" CONDITION_END lvmvdo.7
 .PD
 .
 .SH Configuration
@@ -274,43 +280,63 @@ Check the consistency of volume group(s)
 .
 .SH Daemons
 .PD 0
+.\" CONDITION_BEGIN cmirrord.8
 .TP 20
 .B cmirrord
 cluster mirror log daemon
+.\" CONDITION_END cmirrord.8
+.\" CONDITION_BEGIN dmeventd.8
 .TP 20
 .B dmeventd
 Device-mapper event daemon
+.\" CONDITION_END dmeventd.8
+.\" CONDITION_BEGIN dmfilemapd.8
 .TP 20
 .B dmfilemapd
 Device-mapper filemap monitoring daemon
+.\" CONDITION_END dmfilemapd.8
+.\" CONDITION_BEGIN lvmdbusd.8
 .TP 20
 .B lvmdbusd
 LVM D-Bus daemon
+.\" CONDITION_END lvmdbusd.8
+.\" CONDITION_BEGIN lvmlockd.8
 .TP 20
 .B lvmlockd
 LVM locking daemon
+.\" CONDITION_END lvmlockd.8
+.\" CONDITION_BEGIN lvmpolld.8
 .TP 20
 .B lvmpolld
 LVM poll daemon
+.\" CONDITION_END lvmpolld.8
 .PD
 .
 .SH Utility Commands
 .PD 0
+.\" CONDITION_BEGIN blkdeactivate.8
 .TP 20
 .B blkdeactivate
 Utility to deactivate block devices
+.\" CONDITION_END blkdeactivate.8
+.\" CONDITION_BEGIN fsadm.8
 .TP 20
 .B fsadm
 Utility to resize or check filesystem on a device
+.\" CONDITION_END fsadm.8
+.\" CONDITION_BEGIN lvm_import_vdo.8
 .TP 20
 .B lvm_import_vdo
 Utility to import VDO volumes into a new volume group
+.\" CONDITION_END lvm_import_vdo.8
 .TP 20
 .B lvmdump
 Create lvm2 information dumps for diagnostic purposes
+.\" CONDITION_BEGIN lvmlockctl.8
 .TP 20
 .B lvmlockctl
 Control for lvmlockd
+.\" CONDITION_END lvmlockctl.8
 .TP 20
 .B lvmpersist
 Manage persistent reservations on a group of block devices
