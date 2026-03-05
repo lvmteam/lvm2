@@ -101,7 +101,7 @@ static int _lv_passes_volumes_filter(struct cmd_context *cmd, const struct logic
 {
 	const struct dm_config_value *cv;
 	const char *str;
-	static char config_path[PATH_MAX];
+	char config_path[PATH_MAX];
 	size_t len = strlen(lv->vg->name);
 
 	config_def_get_path(config_path, sizeof(config_path), cfg_id);
