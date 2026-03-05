@@ -61,7 +61,7 @@ MANALL = $(MAN5) $(MAN7) $(MAN8) $(MAN8SO) $(MAN8DM) $(MAN8CLUSTER) $(MANBUILTIN
 # Uses = (not :=) so expansion is deferred until use, after conditional += appends.
 MANALL_META = $(wildcard $(addprefix $(srcdir)/,$(addsuffix _meta,$(MANALL))))
 
-MAN_ALL_GOALS := distclean all_man install_all_man
+MAN_ALL_GOALS := distclean all_man install_all_man pregenerated_man generate
 ifneq (,$(filter $(MAN_ALL_GOALS),$(MAKECMDGOALS)))
   MAN7 += lvmcache.7 lvmthin.7 lvmvdo.7
   MAN8+=$(FSADMMAN) $(LVMPOLLDMAN) $(LVMLOCKDMAN) $(LVMDBUSDMAN) $(LVMIMPORTVDOMAN)
@@ -342,10 +342,36 @@ pregenerated_man: $(MANGENERATOR) $(TESTMAN)
 	$(MANGENERATOR) --categories --with-condition-markers $(MANALL_META) > $(srcdir)/$(MAN7CATEGORIES)_pregen && \
 	$(MANGENERATOR) --args > $(srcdir)/$(MAN7ARGS)_pregen
 
+# Filter pregenerated index/categories pages so they only contain entries
+# for man pages enabled by the current configure (listed in MANALL).
+#
+# Pregenerated files contain CONDITION_BEGIN/END markers around optional
+# entries (e.g. .\" CONDITION_BEGIN fsadm.8 ... .\" CONDITION_END fsadm.8).
+# The awk script below:
+#
+#   1. Builds an associative array 'inc' from MANALL (the enabled pages).
+#   2. On CONDITION_BEGIN: if the tagged page is NOT in inc, sets 'skip'
+#      to suppress all lines until the matching CONDITION_END.
+#   3. Buffers .SH headers (and the following .PD 0) so they are only
+#      printed when at least one real entry follows.  If all entries in
+#      a section were conditional and got skipped, the section header
+#      and its .PD 0 / .PD / separator lines are dropped entirely.
+#   4. Passes all other non-skipped lines through unchanged.
+#
+FILTER_PREGEN = $(AWK) -v incl="$(MANALL)" \
+  'BEGIN{n=split(incl,a," ");for(i=1;i<=n;i++)inc[a[i]]=1} \
+   /^\.\\" CONDITION_BEGIN/{split($$0,f);if(!(f[3] in inc)){skip=f[3]};next} \
+   /^\.\\" CONDITION_END/{split($$0,f);if(f[3]==skip){skip=""};next} \
+   skip!=""{next} \
+   /^\.SH /{if(hdr!="")hdr="";hdr=$$0"\n";has=0;next} \
+   /^\.PD 0$$/{if(hdr!=""){hdr=hdr $$0"\n";next}} \
+   /^\.PD$$/{if(!has){hdr="";next}hdr=""} \
+   {if(hdr!=""){printf "%s",hdr;hdr="";has=1}if(!has&&/^\.$$/)next;has=1;print}'
+
 $(MAN7INDEX)_gen: $(MANGENERATOR) $(TESTMAN) $(MANALL_META)
 	$(Q) set -e ; ( \
 	    if [ ! -s $(TESTMAN) ] ; then \
-		cat $(srcdir)/$(@:%.7_gen=%.7_pregen) ; \
+		$(FILTER_PREGEN) $(srcdir)/$(@:%.7_gen=%.7_pregen) ; \
 	    else \
 		$(MANGENERATOR) --index $(MANALL_META) ; \
 	    fi \
@@ -354,7 +380,7 @@ $(MAN7INDEX)_gen: $(MANGENERATOR) $(TESTMAN) $(MANALL_META)
 $(MAN7CATEGORIES)_gen: $(MANGENERATOR) $(TESTMAN) $(MANALL_META)
 	$(Q) set -e ; ( \
 	    if [ ! -s $(TESTMAN) ] ; then \
-		cat $(srcdir)/$(@:%.7_gen=%.7_pregen) ; \
+		$(FILTER_PREGEN) $(srcdir)/$(@:%.7_gen=%.7_pregen) ; \
 	    else \
 		$(MANGENERATOR) --categories $(MANALL_META) ; \
 	    fi \
