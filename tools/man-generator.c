@@ -1512,20 +1512,30 @@ static int _get_category_index(const char *value)
 	return -1;
 }
 
-static int _read_meta_category(const char *path)
+/*
+ * Read a single "key = value" field from an already-open _meta file stream.
+ * Returns 1 if the field was found, 0 if not found, -1 on error.
+ * The value is copied into buf with the trailing newline stripped.
+ */
+static int _read_meta_field(FILE *fp, const char *key,
+			    char *buf, size_t buf_size)
 {
-	FILE *f;
+	const char *value;
 	char line[256];
-	char *value;
-	int category = -1;
+	size_t key_len = strlen(key);
+	size_t len;
 
-	if (!(f = fopen(path, "r")))
-		return -1;
+	buf[0] = '\0';
 
-	while (fgets(line, sizeof(line), f)) {
-		if (strncmp(line, "category", 8))
+	rewind(fp);
+
+	while (fgets(line, sizeof(line), fp)) {
+		if (strncmp(line, key, key_len))
 			continue;
-		value = line + 8;
+		value = line + key_len;
+		/* Key must be followed by whitespace or '=', not another letter */
+		if (*value != ' ' && *value != '\t' && *value != '=')
+			continue;
 		while (*value == ' ' || *value == '\t')
 			value++;
 		if (*value != '=')
@@ -1533,12 +1543,20 @@ static int _read_meta_category(const char *path)
 		value++;
 		while (*value == ' ' || *value == '\t')
 			value++;
-		category = _get_category_index(value);
-		break;
+		len = strlen(value);
+		if (len > 0 && value[len - 1] == '\n')
+			len--;
+		if (len >= buf_size) {
+			log_error("Value too long for key \"%s\" (%zu >= %zu).",
+				  key, len, buf_size);
+			return -1;
+		}
+		memcpy(buf, value, len);
+		buf[len] = '\0';
+		return 1;
 	}
 
-	(void) fclose(f);
-	return category;
+	return 0;
 }
 
 static size_t _str_has_suffix(const char *str, const char *suffix)
@@ -1702,10 +1720,13 @@ static int _get_index_cname(const char *meta_path, struct index_cname **entry)
 	const struct command_name *cname;
 	const char *name;
 	char derived[4096];
+	char buf[64];
 	char *s, *cmd_name;
 	size_t pos;
-	int category;
+	int category = -1;
 	int r = 0;
+	int ret;
+	FILE *f;
 
 	/* Verify _meta suffix */
 	pos = _str_has_suffix(meta_path, "_meta");
@@ -1715,7 +1736,20 @@ static int _get_index_cname(const char *meta_path, struct index_cname **entry)
 	}
 
 	/* Read category from the meta file */
-	category = _read_meta_category(meta_path);
+	if (!(f = fopen(meta_path, "r"))) {
+		log_error("Failed to open meta file %s.", meta_path);
+		return 0;
+	}
+
+	ret = _read_meta_field(f, "category", buf, sizeof(buf));
+	if (ret < 0) {
+		(void) fclose(f);
+		return 0;
+	}
+	if (ret > 0)
+		category = _get_category_index(buf);
+
+	(void) fclose(f);
 
 	/* Try _des file first */
 	if (pos + sizeof("_des") <= sizeof(derived)) {
