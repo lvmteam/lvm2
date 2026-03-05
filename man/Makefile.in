@@ -338,8 +338,8 @@ pregenerated_man: $(MANGENERATOR) $(TESTMAN)
 		$(MANGENERATOR) --secondary $$CMD )  \
 		> $(srcdir)/$$CMD.8_pregen ; \
 	done && \
-	$(MANGENERATOR) --index $(MANALL_META) > $(srcdir)/$(MAN7INDEX)_pregen && \
-	$(MANGENERATOR) --categories $(MANALL_META) > $(srcdir)/$(MAN7CATEGORIES)_pregen && \
+	$(MANGENERATOR) --index --with-condition-markers $(MANALL_META) > $(srcdir)/$(MAN7INDEX)_pregen && \
+	$(MANGENERATOR) --categories --with-condition-markers $(MANALL_META) > $(srcdir)/$(MAN7CATEGORIES)_pregen && \
 	$(MANGENERATOR) --args > $(srcdir)/$(MAN7ARGS)_pregen
 
 $(MAN7INDEX)_gen: $(MANGENERATOR) $(TESTMAN) $(MANALL_META)

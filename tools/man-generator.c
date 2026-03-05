@@ -26,6 +26,9 @@ static const char _OPTION_PREFIX[] = "O_";
 static const char _TAB_NAME[] = "TT";
 static const char _2TAB_NAME[] = "DTT";
 
+/* When set, wrap conditional entries with CONDITION_BEGIN/END markers */
+static int _condition_markers;
+
 struct cmd_context {
 	void *libmem;
 };
@@ -1754,19 +1757,21 @@ static int _get_index_cname(const char *meta_path, struct index_cname **entry)
 
 	/* Derive condition tag from meta filename (e.g. "man/fsadm.8_meta" -> "fsadm.8") */
 	condition[0] = '\0';
-	ret = _read_meta_field(f, "conditional", buf, sizeof(buf));
-	if (ret < 0)
-		goto out_close;
-	if (ret > 0 && !strcmp(buf, "yes")) {
-		base = strrchr(meta_path, '/');
-		base = base ? base + 1 : meta_path;
-		base_len = pos - (base - meta_path);
-		if (base_len >= sizeof(condition)) {
-			log_error("Condition tag too long for %s.", meta_path);
+	if (_condition_markers) {
+		ret = _read_meta_field(f, "conditional", buf, sizeof(buf));
+		if (ret < 0)
 			goto out_close;
+		if (ret > 0 && !strcmp(buf, "yes")) {
+			base = strrchr(meta_path, '/');
+			base = base ? base + 1 : meta_path;
+			base_len = pos - (base - meta_path);
+			if (base_len >= sizeof(condition)) {
+				log_error("Condition tag too long for %s.", meta_path);
+				goto out_close;
+			}
+			memcpy(condition, base, base_len);
+			condition[base_len] = '\0';
 		}
-		memcpy(condition, base, base_len);
-		condition[base_len] = '\0';
 	}
 
 	(void) fclose(f);
@@ -1884,7 +1889,7 @@ static void _print_alphabetical_index(struct index_cname **entries, int count)
 		}
 
 		/* Wrap conditional entries with markers */
-		if (entries[i]->condition[0])
+		if (_condition_markers && entries[i]->condition[0])
 			printf(".\\\" CONDITION_BEGIN %s\n", entries[i]->condition);
 
 		/* Print command entry */
@@ -1893,7 +1898,7 @@ static void _print_alphabetical_index(struct index_cname **entries, int count)
 		if (entries[i]->desc && entries[i]->desc[0])
 			printf("%s\n", entries[i]->desc);
 
-		if (entries[i]->condition[0])
+		if (_condition_markers && entries[i]->condition[0])
 			printf(".\\\" CONDITION_END %s\n", entries[i]->condition);
 	}
 
@@ -1938,13 +1943,13 @@ static void _print_category_index(struct index_cname **entries, int count)
 
 			/* Print all commands in this category */
 			for (j = category_start; j < i; j++) {
-				if (entries[j]->condition[0])
+				if (_condition_markers && entries[j]->condition[0])
 					printf(".\\\" CONDITION_BEGIN %s\n", entries[j]->condition);
 				printf(".TP 20\n");
 				printf(".B %s\n", entries[j]->name);
 				if (entries[j]->desc && entries[j]->desc[0])
 					printf("%s\n", entries[j]->desc);
-				if (entries[j]->condition[0])
+				if (_condition_markers && entries[j]->condition[0])
 					printf(".\\\" CONDITION_END %s\n", entries[j]->condition);
 			}
 			printf(".PD\n");
@@ -2352,6 +2357,7 @@ int main(int argc, char *argv[])
 		{"index", no_argument, 0, 'i' },
 		{"categories", no_argument, 0, 'a'},
 		{"args", no_argument, 0, 'r'},
+		{"with-condition-markers", no_argument, 0, 'm'},
 		{0, 0, 0, 0 }
 	};
 
@@ -2364,7 +2370,7 @@ int main(int argc, char *argv[])
 		int c;
 		int option_index = 0;
 
-		c = getopt_long(argc, argv, "psciar", long_options, &option_index);
+		c = getopt_long(argc, argv, "psciarm", long_options, &option_index);
 		if (c == -1)
 			break;
 
@@ -2389,6 +2395,9 @@ int main(int argc, char *argv[])
 		case 'r':
 			args = 1;
 			break;
+		case 'm':
+			_condition_markers = 1;
+			break;
 		}
 	}
 
@@ -2398,7 +2407,8 @@ int main(int argc, char *argv[])
 	if ((group_psc + index + categories + args) != 1 ||
 	    (check && (primary || secondary))) {
 		log_error("Usage: %s --primary|--secondary|--check <command> [/path/to/description-file] "
-			  "| --index file1 file2 ... | --categories file1 file2 ... | --args", argv[0]);
+			  "| --index [--with-condition-markers] file1 file2 ... "
+			  "| --categories [--with-condition-markers] file1 file2 ... | --args", argv[0]);
 		goto out_free;
 	}
 
@@ -2418,6 +2428,10 @@ int main(int argc, char *argv[])
 			}
 		}
 	} else {
+		if (_condition_markers) {
+			log_error("--with-condition-markers can only be used with --index or --categories.");
+			goto out_free;
+		}
 		if (optind < argc) {
 			if (!(cmdname = strdup(argv[optind++]))) {
 				log_error("Out of memory.");
