@@ -1475,6 +1475,7 @@ struct index_cname {
 	char name[24];
 	char *desc;
 	int category;	/* index into _cmd_categories[], -1 if unknown */
+	char condition[64];	/* man page name from meta filename, empty if unconditional */
 };
 
 static int _compare_index_name(const void *a, const void *b)
@@ -1713,41 +1714,60 @@ static int _get_main_index_cname(const char *path, const char *filename, struct 
  * Derive the _des or _main path from the _meta path and use it to extract
  * command name and description. If neither exists, treat as a builtin command
  * and get the name and description from the command_names table.
- * Category is always read from the _meta file.
+ * Category and conditional flag are always read from the _meta file.
+ * When conditional, the man page name (e.g. "fsadm.8") derived from
+ * the meta filename is used as the condition tag in markers.
  */
 static int _get_index_cname(const char *meta_path, struct index_cname **entry)
 {
+	static const char _meta_suffix[] = "_meta";
 	const struct command_name *cname;
-	const char *name;
+	const char *name, *base;
 	char derived[4096];
+	char condition[64];
 	char buf[64];
 	char *s, *cmd_name;
-	size_t pos;
+	size_t pos, base_len;
 	int category = -1;
 	int r = 0;
 	int ret;
 	FILE *f;
 
 	/* Verify _meta suffix */
-	pos = _str_has_suffix(meta_path, "_meta");
+	pos = _str_has_suffix(meta_path, _meta_suffix);
 	if (!pos) {
 		log_error("Expected _meta file: %s.", meta_path);
 		return 0;
 	}
 
-	/* Read category from the meta file */
+	/* Read fields from the meta file (single open) */
 	if (!(f = fopen(meta_path, "r"))) {
 		log_error("Failed to open meta file %s.", meta_path);
 		return 0;
 	}
 
 	ret = _read_meta_field(f, "category", buf, sizeof(buf));
-	if (ret < 0) {
-		(void) fclose(f);
-		return 0;
-	}
+	if (ret < 0)
+		goto out_close;
 	if (ret > 0)
 		category = _get_category_index(buf);
+
+	/* Derive condition tag from meta filename (e.g. "man/fsadm.8_meta" -> "fsadm.8") */
+	condition[0] = '\0';
+	ret = _read_meta_field(f, "conditional", buf, sizeof(buf));
+	if (ret < 0)
+		goto out_close;
+	if (ret > 0 && !strcmp(buf, "yes")) {
+		base = strrchr(meta_path, '/');
+		base = base ? base + 1 : meta_path;
+		base_len = pos - (base - meta_path);
+		if (base_len >= sizeof(condition)) {
+			log_error("Condition tag too long for %s.", meta_path);
+			goto out_close;
+		}
+		memcpy(condition, base, base_len);
+		condition[base_len] = '\0';
+	}
 
 	(void) fclose(f);
 
@@ -1761,6 +1781,7 @@ static int _get_index_cname(const char *meta_path, struct index_cname **entry)
 			if (!_get_des_index_cname(name, entry))
 				return 0;
 			(*entry)->category = category;
+			_dm_strncpy((*entry)->condition, condition, sizeof((*entry)->condition));
 			return 1;
 		}
 	}
@@ -1775,6 +1796,7 @@ static int _get_index_cname(const char *meta_path, struct index_cname **entry)
 			if (!_get_main_index_cname(derived, name, entry))
 				return 0;
 			(*entry)->category = category;
+			_dm_strncpy((*entry)->condition, condition, sizeof((*entry)->condition));
 			return 1;
 		}
 	}
@@ -1819,11 +1841,16 @@ static int _get_index_cname(const char *meta_path, struct index_cname **entry)
 		}
 	}
 	(*entry)->category = category;
+	_dm_strncpy((*entry)->condition, condition, sizeof((*entry)->condition));
 
 	r = 1;
 out:
 	free(cmd_name);
 	return r;
+
+out_close:
+	(void) fclose(f);
+	return 0;
 }
 
 static void _print_alphabetical_index(struct index_cname **entries, int count)
@@ -1856,11 +1883,18 @@ static void _print_alphabetical_index(struct index_cname **entries, int count)
 			printf(".PD 0\n");
 		}
 
+		/* Wrap conditional entries with markers */
+		if (entries[i]->condition[0])
+			printf(".\\\" CONDITION_BEGIN %s\n", entries[i]->condition);
+
 		/* Print command entry */
 		printf(".TP 20\n");
 		printf(".B %s\n", entries[i]->name);
 		if (entries[i]->desc && entries[i]->desc[0])
 			printf("%s\n", entries[i]->desc);
+
+		if (entries[i]->condition[0])
+			printf(".\\\" CONDITION_END %s\n", entries[i]->condition);
 	}
 
 	if (current_letter != 0)
@@ -1904,10 +1938,14 @@ static void _print_category_index(struct index_cname **entries, int count)
 
 			/* Print all commands in this category */
 			for (j = category_start; j < i; j++) {
+				if (entries[j]->condition[0])
+					printf(".\\\" CONDITION_BEGIN %s\n", entries[j]->condition);
 				printf(".TP 20\n");
 				printf(".B %s\n", entries[j]->name);
 				if (entries[j]->desc && entries[j]->desc[0])
 					printf("%s\n", entries[j]->desc);
+				if (entries[j]->condition[0])
+					printf(".\\\" CONDITION_END %s\n", entries[j]->condition);
 			}
 			printf(".PD\n");
 			category_start = i;
