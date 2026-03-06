@@ -2,7 +2,7 @@
 
 die() {
 	echo "ERROR: $*" >&2
-	exit 1
+	exit 2
 }
 
 hash() {
@@ -11,15 +11,24 @@ hash() {
 
 # TODO: This just compares HEAD with main. Do we care about other branches?
 HEAD="${1:-"HEAD"}"
-DESCRIBE="$(git describe "$HEAD")"
-HASH="$(hash "$HEAD")"
 TARGET=${2:-"origin/main"}
 
 answ=0
 
-echo "Checking files changed in the MR for significant changes:"
-git diff --name-only "${HEAD}" "^${TARGET}"
-echo "-----"
+echo -e "\nFiles changed in the MR:"
+git diff --exit-code --name-only "${HEAD}" "^${TARGET}"
+case $? in
+	0)
+		;;
+	1)
+		echo "INFO: Huh, empty MR?" >&2
+		exit 1 ;;
+	*)
+		die "problem with git diff"
+		exit 2 ;;
+esac
+
+echo -e "\nChecking the files for significant changes:"
 
 if git diff --name-only "${HEAD}" "^${TARGET}" | grep -v '^\(\.gitlab-ci.yaml\|ci/\|WHATS_NEW\|VERSION\|man/\|doc/\|README\|TESTING\|COPYING\|INSTALL\|\.gitignore\|coverity\|ikiwiki.setup/\|nix/\|po/\)'; then
 	echo "INFO: Changed files, running CI" >&2

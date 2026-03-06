@@ -1,7 +1,3 @@
-# * TODO: Add dry run.
-#   When changing only .gitlab-ci.yml and/or files under ci/*, do not run tests,
-#   only show what would run
-# * TODO: When changing only things under man/, WHATS_NEW*, VERSION* - do not run tests
 # * TODO: When changing files under test/shell/ - run only changed tests
 
 stages:
