@@ -114,9 +114,9 @@ stacktrace() {
 	# n-=1 - ignoring last frame as well - it is not interesting
 	n=$(( n - 1 ))
 
-	echo "## - $0:${BASH_LINENO[$((n-1))]}"
+	echo "## - $0:${BASH_LINENO[$((n-1))]}" >&2
 	while [[ $i -lt $n ]]; do
-		echo "## $i ${FUNCNAME[$i]}() called from ${BASH_SOURCE[$((i+1))]}:${BASH_LINENO[$i]}"
+		echo "## $i ${FUNCNAME[$i]}() called from ${BASH_SOURCE[$((i+1))]}:${BASH_LINENO[$i]}" >&2
 		i=$(( i + 1 ))
 	done
 }
@@ -125,6 +125,9 @@ STACKTRACE() {
 	trap - ERR
 	local i
 
+	# Use stderr for all diagnostic output so it is never captured
+	# by $() command substitution when ERR trap fires in a subshell
+	{
 	stacktrace
 
 	if [[ "${LVM_TEST_PARALLEL:-0}" -eq 0 && -z "$RUNNING_DMEVENTD" && \
@@ -162,6 +165,7 @@ STACKTRACE() {
 			sed -e "s,^,## GDB:	," || continue
 		done
 	fi
+	} >&2
 
 	[[ -f SKIP_THIS_TEST ]] && exit 200
 
@@ -211,7 +215,7 @@ STACKTRACE() {
 		local script=$0
 		[[ -f "$script" ]] || script="$TESTOLDPWD/$0"
 		awk '{print "## Line:", NR, "\t", $0}' "$script"
-	fi
+	fi >&2
 }
 
 init_udev_transaction() {
