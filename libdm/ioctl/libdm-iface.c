@@ -2033,16 +2033,24 @@ static int _dm_ioctl_unmangle_uuids(int type, struct dm_ioctl *dmi)
 }
 #endif
 
-static struct dm_ioctl *_do_dm_ioctl(struct dm_task *dmt, unsigned command,
-				     unsigned buffer_repeat_count,
-				     unsigned retry_repeat_count,
-				     int *retryable)
+/* True for ioctl types that generate a udev event and need cookie handling. */
+static inline int _dmt_has_uevent(const struct dm_task *dmt)
+{
+	return dmt->type == DM_DEVICE_RESUME ||
+	       dmt->type == DM_DEVICE_REMOVE ||
+	       dmt->type == DM_DEVICE_RENAME;
+}
+
+/*
+ * Flatten the task into a fresh dm_ioctl buffer and set all flags and
+ * udev cookie bits.  Returns the allocated buffer (caller owns it) or
+ * NULL on failure.
+ */
+static struct dm_ioctl *_dm_task_build_dmi(struct dm_task *dmt,
+					   unsigned buffer_repeat_count,
+					   unsigned retry_repeat_count)
 {
 	struct dm_ioctl *dmi;
-	int ioctl_with_uevent;
-	int r;
-
-	dmt->ioctl_errno = 0;
 
 	dmi = _flatten(dmt, buffer_repeat_count);
 	if (!dmi) {
@@ -2058,11 +2066,7 @@ static struct dm_ioctl *_do_dm_ioctl(struct dm_task *dmt, unsigned command,
 	if (dmt->no_open_count)
 		dmi->flags |= DM_SKIP_BDGET_FLAG;
 
-	ioctl_with_uevent = dmt->type == DM_DEVICE_RESUME ||
-			    dmt->type == DM_DEVICE_REMOVE ||
-			    dmt->type == DM_DEVICE_RENAME;
-
-	if (ioctl_with_uevent && dm_cookie_supported()) {
+	if (_dmt_has_uevent(dmt) && dm_cookie_supported()) {
 		/*
 		 * Always mark events coming from libdevmapper as
 		 * "primary sourced". This is needed to distinguish
@@ -2128,7 +2132,25 @@ static struct dm_ioctl *_do_dm_ioctl(struct dm_task *dmt, unsigned command,
 			     dmt->enable_checks ? "enablechecks " : "",
 			     dmt->sector, _sanitise_message(dmt->message),
 			     dmi->data_size, retry_repeat_count);
+
+	return dmi;
+}
+
+static struct dm_ioctl *_do_dm_ioctl(struct dm_task *dmt, unsigned command,
+				     unsigned buffer_repeat_count,
+				     unsigned retry_repeat_count,
+				     int *retryable)
+{
+	struct dm_ioctl *dmi;
+	int r;
+
+	if (!(dmi = _dm_task_build_dmi(dmt, buffer_repeat_count,
+				       retry_repeat_count)))
+		return NULL;
+
 #ifdef DM_IOCTLS
+	dmt->ioctl_errno = 0;
+
 	r = ioctl(_control_fd, command, dmi);
 
 	if (dmt->record_timestamp)
@@ -2180,7 +2202,7 @@ static struct dm_ioctl *_do_dm_ioctl(struct dm_task *dmt, unsigned command,
 		}
 	}
 
-	if (ioctl_with_uevent && dm_udev_get_sync_support() &&
+	if (_dmt_has_uevent(dmt) && dm_udev_get_sync_support() &&
 	    !_check_uevent_generated(dmi)) {
 		if (dmt->deferred_remove)
 			log_debug_activation("Deferred remove: device busy, "
@@ -2215,6 +2237,72 @@ void dm_task_update_nodes(void)
 	update_devs();
 }
 
+/*
+ * Perform device-node operations after a successful ioctl.
+ * Returns 1 on success, 0 on failure.
+ */
+static int _dm_task_node_ops(struct dm_task *dmt, struct dm_ioctl *dmi)
+{
+	const char *dev_name = DEV_NAME(dmt);
+	int check_udev = dmt->cookie_set &&
+			 !(dmt->event_nr >> DM_UDEV_FLAGS_SHIFT &
+			   DM_UDEV_DISABLE_DM_RULES_FLAG);
+	int rely_on_udev = dmt->cookie_set ? (dmt->event_nr >> DM_UDEV_FLAGS_SHIFT &
+					      DM_UDEV_DISABLE_LIBRARY_FALLBACK) : 0;
+
+	switch (dmt->type) {
+	case DM_DEVICE_CREATE:
+		if ((dmt->add_node == DM_ADD_NODE_ON_CREATE) &&
+		    dev_name && *dev_name && !rely_on_udev)
+			add_dev_node(dev_name, MAJOR(dmi->dev),
+				     MINOR(dmi->dev), dmt->uid, dmt->gid,
+				     dmt->mode, check_udev, rely_on_udev);
+		break;
+	case DM_DEVICE_REMOVE:
+		/* FIXME Kernel needs to fill in dmi->name */
+		if (dev_name && !rely_on_udev)
+			rm_dev_node(dev_name, check_udev, rely_on_udev);
+		break;
+
+	case DM_DEVICE_RENAME:
+		/* FIXME Kernel needs to fill in dmi->name */
+		if (!dmt->new_uuid && dev_name)
+			rename_dev_node(dev_name, dmt->newname,
+					check_udev, rely_on_udev);
+		break;
+
+	case DM_DEVICE_RESUME:
+		if ((dmt->add_node == DM_ADD_NODE_ON_RESUME) &&
+		    dev_name && *dev_name)
+			add_dev_node(dev_name, MAJOR(dmi->dev),
+				     MINOR(dmi->dev), dmt->uid, dmt->gid,
+				     dmt->mode, check_udev, rely_on_udev);
+		/* FIXME Kernel needs to fill in dmi->name */
+		set_dev_node_read_ahead(dev_name,
+					MAJOR(dmi->dev), MINOR(dmi->dev),
+					dmt->read_ahead, dmt->read_ahead_flags);
+		break;
+
+	case DM_DEVICE_MKNODES:
+		if (dmi->flags & DM_EXISTS_FLAG)
+			add_dev_node(dmi->name, MAJOR(dmi->dev),
+				     MINOR(dmi->dev), dmt->uid,
+				     dmt->gid, dmt->mode, 0, rely_on_udev);
+		else if (dev_name)
+			rm_dev_node(dev_name, 0, rely_on_udev);
+		break;
+
+	case DM_DEVICE_STATUS:
+	case DM_DEVICE_TABLE:
+	case DM_DEVICE_WAITEVENT:
+		if (!_unmarshal_status(dmt, dmi))
+			return 0;
+		break;
+	}
+
+	return 1;
+}
+
 #define DM_IOCTL_RETRIES 25
 #define DM_RETRY_USLEEP_DELAY 200000
 
@@ -2241,8 +2329,6 @@ DM_EXPORT_NEW_SYMBOL(int, dm_task_run, 1_02_197)
 {
 	struct dm_ioctl *dmi;
 	unsigned command;
-	int check_udev;
-	int rely_on_udev;
 	int suspended_counter;
 	unsigned ioctl_retry = 1;
 	int retryable = 0;
@@ -2329,65 +2415,8 @@ repeat_ioctl:
 		}
 	}
 
-	/*
-	 * Are we expecting a udev operation to occur that we need to check for?
-	 */
-	check_udev = dmt->cookie_set &&
-		     !(dmt->event_nr >> DM_UDEV_FLAGS_SHIFT &
-		       DM_UDEV_DISABLE_DM_RULES_FLAG);
-
-	rely_on_udev = dmt->cookie_set ? (dmt->event_nr >> DM_UDEV_FLAGS_SHIFT &
-					  DM_UDEV_DISABLE_LIBRARY_FALLBACK) : 0;
-
-	switch (dmt->type) {
-	case DM_DEVICE_CREATE:
-		if ((dmt->add_node == DM_ADD_NODE_ON_CREATE) &&
-		    dev_name && *dev_name && !rely_on_udev)
-			add_dev_node(dev_name, MAJOR(dmi->dev),
-				     MINOR(dmi->dev), dmt->uid, dmt->gid,
-				     dmt->mode, check_udev, rely_on_udev);
-		break;
-	case DM_DEVICE_REMOVE:
-		/* FIXME Kernel needs to fill in dmi->name */
-		if (dev_name && !rely_on_udev)
-			rm_dev_node(dev_name, check_udev, rely_on_udev);
-		break;
-
-	case DM_DEVICE_RENAME:
-		/* FIXME Kernel needs to fill in dmi->name */
-		if (!dmt->new_uuid && dev_name)
-			rename_dev_node(dev_name, dmt->newname,
-					check_udev, rely_on_udev);
-		break;
-
-	case DM_DEVICE_RESUME:
-		if ((dmt->add_node == DM_ADD_NODE_ON_RESUME) &&
-		    dev_name && *dev_name)
-			add_dev_node(dev_name, MAJOR(dmi->dev),
-				     MINOR(dmi->dev), dmt->uid, dmt->gid,
-				     dmt->mode, check_udev, rely_on_udev);
-		/* FIXME Kernel needs to fill in dmi->name */
-		set_dev_node_read_ahead(dev_name,
-					MAJOR(dmi->dev), MINOR(dmi->dev),
-					dmt->read_ahead, dmt->read_ahead_flags);
-		break;
-	
-	case DM_DEVICE_MKNODES:
-		if (dmi->flags & DM_EXISTS_FLAG)
-			add_dev_node(dmi->name, MAJOR(dmi->dev),
-				     MINOR(dmi->dev), dmt->uid,
-				     dmt->gid, dmt->mode, 0, rely_on_udev);
-		else if (dev_name)
-			rm_dev_node(dev_name, 0, rely_on_udev);
-		break;
-
-	case DM_DEVICE_STATUS:
-	case DM_DEVICE_TABLE:
-	case DM_DEVICE_WAITEVENT:
-		if (!_unmarshal_status(dmt, dmi))
-			goto bad;
-		break;
-	}
+	if (!_dm_task_node_ops(dmt, dmi))
+		goto bad;
 
 	/* Was structure reused? */
 	_dm_zfree_dmi(dmt->dmi.v4);
