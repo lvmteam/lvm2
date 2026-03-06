@@ -1506,6 +1506,69 @@ int dev_manager_transient(struct dev_manager *dm, const struct logical_volume *l
 	return r;
 }
 
+#ifdef UDEV_SYNC_SUPPORT
+/*
+ * Until the DM_UEVENT_GENERATED_FLAG was introduced in kernel patch
+ * 856a6f1dbd8940e72755af145ebcd806408ecedd
+ * some operations could not be performed by udev, requiring our fallback code.
+ */
+static int _dm_driver_has_stable_udev_support(void)
+{
+	char vsn[80];
+	unsigned maj, min, patchlevel;
+
+	return driver_version(vsn, sizeof(vsn)) &&
+	       (sscanf(vsn, "%u.%u.%u", &maj, &min, &patchlevel) == 3) &&
+	       (maj == 4 ? min >= 18 : maj > 4);
+}
+
+/*
+ * Pre-compute udev_fallback so later checks can use const cmd.
+ * Must be called once before any threaded deactivation paths.
+ */
+static void _init_udev_fallback(struct cmd_context *cmd)
+{
+	struct config_info *settings = &cmd->current_settings;
+
+	if (settings->udev_fallback != -1)
+		return;
+
+	/*
+	 * Use udev fallback automatically in case udev
+	 * is disabled via DM_DISABLE_UDEV environment
+	 * variable or udev rules are switched off.
+	 */
+	settings->udev_fallback = !settings->udev_rules ? 1 :
+		find_config_tree_bool(cmd, activation_verify_udev_operations_CFG, NULL);
+
+	/* Do not rely fully on udev if the udev support is known to be incomplete. */
+	if (!settings->udev_fallback && !_dm_driver_has_stable_udev_support()) {
+		log_very_verbose("Kernel driver has incomplete udev support so "
+				 "LVM will check and perform some operations itself.");
+		settings->udev_fallback = 1;
+	}
+}
+
+/* Read-only check after _init_udev_fallback() has been called */
+static int _udev_fallback(const struct cmd_context *cmd)
+{
+	return cmd->current_settings.udev_fallback;
+}
+
+#else /* UDEV_SYNC_SUPPORT */
+
+static void _init_udev_fallback(struct cmd_context *cmd)
+{
+	cmd->current_settings.udev_fallback = 1;
+}
+
+static int _udev_fallback(const struct cmd_context *cmd)
+{
+	return cmd->current_settings.udev_fallback;
+}
+
+#endif /* UDEV_SYNC_SUPPORT */
+
 /*
  * dev_manager implementation.
  */
@@ -1525,6 +1588,9 @@ struct dev_manager *dev_manager_create(struct cmd_context *cmd,
 	dm->cmd = cmd;
 	dm->mem = mem;
 	dm->vg_name = vg_name;
+
+	/* Pre-compute udev_fallback so deactivation path can use const cmd */
+	_init_udev_fallback(cmd);
 
 	/*
 	 * When we manipulate (normally suspend/resume) the PVMOVE
@@ -2278,57 +2344,6 @@ int dev_manager_mknodes(const struct logical_volume *lv)
 	return r;
 }
 
-#ifdef UDEV_SYNC_SUPPORT
-/*
- * Until the DM_UEVENT_GENERATED_FLAG was introduced in kernel patch
- * 856a6f1dbd8940e72755af145ebcd806408ecedd
- * some operations could not be performed by udev, requiring our fallback code.
- */
-static int _dm_driver_has_stable_udev_support(void)
-{
-	char vsn[80];
-	unsigned maj, min, patchlevel;
-
-	return driver_version(vsn, sizeof(vsn)) &&
-	       (sscanf(vsn, "%u.%u.%u", &maj, &min, &patchlevel) == 3) &&
-	       (maj == 4 ? min >= 18 : maj > 4);
-}
-
-static int _check_udev_fallback(struct cmd_context *cmd)
-{
-	struct config_info *settings = &cmd->current_settings;
-
-	if (settings->udev_fallback != -1)
-		goto out;
-
-	/*
-	 * Use udev fallback automatically in case udev
-	 * is disabled via DM_DISABLE_UDEV environment
-	 * variable or udev rules are switched off.
-	 */
-	settings->udev_fallback = !settings->udev_rules ? 1 :
-		find_config_tree_bool(cmd, activation_verify_udev_operations_CFG, NULL);
-
-	/* Do not rely fully on udev if the udev support is known to be incomplete. */
-	if (!settings->udev_fallback && !_dm_driver_has_stable_udev_support()) {
-		log_very_verbose("Kernel driver has incomplete udev support so "
-				 "LVM will check and perform some operations itself.");
-		settings->udev_fallback = 1;
-	}
-out:
-	return settings->udev_fallback;
-}
-
-#else /* UDEV_SYNC_SUPPORT */
-
-static int _check_udev_fallback(struct cmd_context *cmd)
-{
-	/* We must use old node/symlink creation code if not compiled with udev support at all! */
-	return cmd->current_settings.udev_fallback = 1;
-}
-
-#endif /* UDEV_SYNC_SUPPORT */
-
 static uint16_t _get_udev_flags(struct dev_manager *dm, const struct logical_volume *lv,
 				const char *layer, int noscan, int temporary,
 				int visible_component)
@@ -2339,7 +2354,7 @@ static uint16_t _get_udev_flags(struct dev_manager *dm, const struct logical_vol
 	 * Instruct also libdevmapper to disable udev
 	 * fallback in accordance to LVM2 settings.
 	 */
-	if (!_check_udev_fallback(dm->cmd))
+	if (!_udev_fallback(dm->cmd))
 		udev_flags |= DM_UDEV_DISABLE_LIBRARY_FALLBACK;
 
 	/*
@@ -3861,7 +3876,7 @@ static int _create_lv_symlinks(struct dev_manager *dm, struct dm_tree_node *root
 	int r = 1;
 
 	/* Nothing to do if udev fallback is disabled. */
-	if (!_check_udev_fallback(dm->cmd)) {
+	if (!_udev_fallback(dm->cmd)) {
 		fs_set_create();
 		return 1;
 	}
@@ -3909,7 +3924,7 @@ static int _remove_lv_symlinks(struct dev_manager *dm, struct dm_tree_node *root
 	int r = 1;
 
 	/* Nothing to do if udev fallback is disabled. */
-	if (!_check_udev_fallback(dm->cmd))
+	if (!_udev_fallback(dm->cmd))
 		return 1;
 
 	while ((child = dm_tree_next_child(&handle, root, 0))) {
