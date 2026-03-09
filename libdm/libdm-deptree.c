@@ -1018,22 +1018,23 @@ static int _node_has_closed_parents(struct dm_tree_node *node,
 	return 1;
 }
 
-static int _deactivate_node(const char *name, uint32_t major, uint32_t minor,
-			    uint32_t *cookie, uint16_t udev_flags, int retry)
+static struct dm_task *_create_remove_task(const char *name,
+					   uint32_t major, uint32_t minor,
+					   uint32_t *cookie,
+					   uint16_t udev_flags, int retry)
 {
 	struct dm_task *dmt;
-	int r = 0;
 
 	log_verbose("Removing %s (%" PRIu32 ":%" PRIu32 ")", name, major, minor);
 
 	if (!(dmt = dm_task_create(DM_DEVICE_REMOVE))) {
 		log_error("Deactivation dm_task creation failed for %s", name);
-		return 0;
+		return NULL;
 	}
 
 	if (!dm_task_set_major(dmt, major) || !dm_task_set_minor(dmt, minor)) {
 		log_error("Failed to set device number for %s deactivation", name);
-		goto out;
+		goto bad;
 	}
 
 	if (!dm_task_no_open_count(dmt))
@@ -1041,10 +1042,26 @@ static int _deactivate_node(const char *name, uint32_t major, uint32_t minor,
 
 	if (cookie)
 		if (!dm_task_set_cookie(dmt, cookie, udev_flags))
-			goto out;
+			goto_bad;
 
 	if (retry)
 		dm_task_retry_remove(dmt);
+
+	return dmt;
+bad:
+	dm_task_destroy(dmt);
+	return NULL;
+}
+
+static int _deactivate_node(const char *name, uint32_t major, uint32_t minor,
+			    uint32_t *cookie, uint16_t udev_flags, int retry)
+{
+	struct dm_task *dmt;
+	int r;
+
+	if (!(dmt = _create_remove_task(name, major, minor,
+					cookie, udev_flags, retry)))
+		return_0;
 
 	r = dm_task_run(dmt);
 
@@ -1054,7 +1071,6 @@ static int _deactivate_node(const char *name, uint32_t major, uint32_t minor,
 
 	/* FIXME Remove node from tree or mark invalid? */
 
-out:
 	dm_task_destroy(dmt);
 
 	return r;
