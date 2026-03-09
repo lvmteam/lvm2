@@ -16,14 +16,15 @@
 . lib/inittest --skip-with-lvmpolld
 
 # Number of LVs to create
-TEST_DEVS=1000
-# On low-memory boxes let's not stress too much
-test "$(aux total_mem)" -gt 524288 || TEST_DEVS=256
+TEST_DEVS=${TEST_DEVS:-1000}
 
-aux prepare_pvs 1 400
+# On low-memory boxes let's not stress too much
+[[ "$(aux total_mem)" -lt 524288 && "$TEST_DEVS" -gt 256 ]] && TEST_DEVS=256
+
+aux prepare_devs 1 1000
 get_devs
 
-vgcreate $SHARED -s 128K "$vg" "${DEVICES[@]}"
+vgcreate $SHARED --metadatasize 10M -s 128K "$vg" "${DEVICES[@]}"
 
 vgcfgbackup -f data $vg
 
