@@ -276,10 +276,17 @@ The vgcreate command options when enabling PR-based recovery with sanlock:
 .br
 .B $ vgcreate --shared --setpersist y --setlockargs persist,notimeout
 .P
-When enabled, PR needs to be started for the VG before locking:
+When enabled, PR needs to be started for the VG before lockstart:
 .br
 .B $ vgchange --persist start
 .I VG
+.br
+.P
+Or start PR and locking with one command:
+.br
+.B $ vgchange --persist start --lockstart
+.I VG
+.br
 .P
 .B Atomic leases
 .br
@@ -363,20 +370,25 @@ $ vgs --shared
 .
 .SS Persistent Reservations
 .
-To enable PR-based recovery ("fencing") in an existing VG:
+
+PR-based lock recovery for a shared VG is possible when using sanlock.  In
+the standard form of this feature, lvmlockd removes the PR key of a failed
+host, and then permits sanlock to grant locks that had been held by the
+failed host.  LVM commands on other hosts can then acquire those locks,
+e.g. activate LVs that the failed host had active at the time it failed.
+Removal of PR keys for failed hosts can be considered a form of "fencing".
+For more information on using PR with LVM in general, see
+.BR lvmpersist (8).
+.P
+The vgcreate options to enable PR-based lock recovery in a new VG are shown above.
+.P
+To enable PR-based lock recovery in an existing VG:
 .br
 .B $ vgchange --setpersist y --setlockargs persist,notimeout
 .I VG
 .P
-Changing the lock args requires the VG to be stopped on all other nodes.
-.P
-Once enabled, PR needs to be started before or with lockstart:
-.br
-.B $ vgchange --persist start
-.I VG
-.br
-.B $ vgchange --persist start --lockstart
-.I VG
+Changing the PR or lockargs settings requires the VG to be stopped on all
+other nodes.
 .P
 Display the VG attributes configured by setpersist and setlockargs:
 .br
@@ -386,27 +398,86 @@ Display the VG attributes configured by setpersist and setlockargs:
 .B $ vgs -o+lockargs
 .I VG
 .P
-.B setpersist y
-.br
-With this setting, LVM requires that PR be started before
-lockstart, and any VG modifications or activations require
-that PR is started.
-.br
-.B setlockargs persist
-.br
-This lockargs setting causes lvmlockd to remove the PR key of a
-failed host when a lock request fails due to a lock owned by the
-failed host. sanlock is then permitted to grant the lock.
-.br
-.B setlockargs notimeout
-.br
-This lockargs setting causes lvmlockd to configure sanlock leases
-to not time out. Removing the PR of a failed host replaces timeouts
-as a faster mechanism for lock recovery. With timeouts disabled,
-the local watchdog is not used by sanlock for the VG lockspace.
+When PR is enabled for a shared VG (the
+.B --setpersist y
+option), LVM requires a specific startup sequence before the VG can be used: PR
+must be started first (this step registers the local PR key and acquires a
+reservation on the VG devices), and the lock manager must be started
+second (this enables distributed locks to be acquired for the VG.)  These startup
+steps must complete successfully before VG modifications or LV activations
+are allowed.  PR and locking can be started in separate commands, or with
+a single command:
 .P
-For more information, see
-.BR lvmpersist (8).
+.B $ vgchange --persist start
+.IR VG ;
+.B vgchange --lockstart
+.I VG
+.br
+.B $ vgchange --persist start --lockstart
+.I VG
+.P
+The sanlock lock manager can be configured to handle recovery of failed
+hosts in different ways.  The first variation (persist,notimeout) is
+considered the standard form of PR-based lock recovery.  The second
+variation (nopersist,timeout) is the default behavior of lvmlockd/sanlock
+when no setlockargs value is specified (the default settings "nopersist"
+and "timeout" do not appear in the lockargs reporting field.)
+
+.IP \[bu] 2
+--setlockargs persist,notimeout
+.br
+persist: lvmlockd will remove the PR key of a failed host when a lock
+request fails due to a lock owned by a failed host.  After PR key removal,
+sanlock is permitted to grant the lock.  
+.br
+notimeout: a failed host's locks will not expire and be granted to another
+host after a timeout (i.e. after the time when the failed host's watchdog
+has fired.)
+.br
+Removal of the PR key is the only mechanism by which a failed host's
+locks are recovered.
+.P
+.IP \[bu] 2
+--setlockargs nopersist,timeout
+.br
+nopersist: lvmlockd will not remove a PR key of a failed host when a lock
+request fails due to a lock owned by a failed host.  (PR does not need
+to be enabed for the VG.)
+.br
+timeout: a failed host's locks will expire and be granted to another
+host after a timeout indicates the failed host's watchdog has fired.
+.br
+Watchdog expiration of a failed host is the only mechanism by which
+a failed host's locks are recovered.
+.P
+.IP \[bu] 2
+--setlockargs persist,timeout
+.br
+persist: lvmlockd will remove the PR key of a failed host when a lock
+request fails due to a lock owned by a failed host.  After PR key removal,
+sanlock is permitted to grant the lock.
+.br
+timeout: a failed host's locks will expire and be granted to another
+host after a timeout indicates the failed host's watchdog has fired.
+.br
+Removal of the PR key, or watchdog expiration will both allow a failed
+host's locks to be recovered.
+.P
+.IP \[bu] 2
+--setlockargs nopersist,notimeout
+.br
+nopersist: lvmlockd will not remove a PR key of a failed host when a lock
+request fails due to a lock owned by a failed host.  (PR does not need
+to be enabed for the VG.)
+.br
+notimeout: a failed host's locks will not expire and be granted to another
+host after a timeout (i.e. after the time when the failed host's watchdog
+has fired.)
+.br
+There is no automated recovery of locks with this configuration.  A user
+is responsible for manually resetting/fencing a failed host, and then
+manually notifying sanlock that the host is dead, which will allow the
+failed host's locks to be granted.
 .
 .SS System ID
 .br

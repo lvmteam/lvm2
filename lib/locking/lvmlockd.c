@@ -183,24 +183,17 @@ int lockd_lockargs_get_user_flags(const char *str, uint32_t *flags)
 		}
 	} 
 
+	/*
+	 * . nopersist and timeout: default
+	 * . persist and notimeout: permitted with setlockargs
+	 * . nopersist and notimeout: requires manual set host dead
+	 * . persist and timeout: watchdog still resets host when PR is used
+	 */
+
 	if (((*flags & LOCKARGS_PERSIST) && (*flags & LOCKARGS_NOPERSIST)) ||
 	    ((*flags & LOCKARGS_TIMEOUT) && (*flags & LOCKARGS_NOTIMEOUT)) ||
 	    ((*flags & LOCKARGS_CAW) && (*flags & LOCKARGS_NOCAW))) {
 		log_error("Invalid setlockargs option combination: %s", str);
-		return 0;
-	}
-
-	/*
-	 * . nopersist and timeout: default
-	 * . persist and notimeout: permitted with setlockargs
-	 *
-	 * FIXME: when tested, allow
-	 * . nopersist and notimeout: requires manual set host dead
-	 * . persist and timeout: watchdog still resets host when PR is used
-	 */
-	if (((*flags & LOCKARGS_PERSIST) && !(*flags & LOCKARGS_NOTIMEOUT)) ||
-	    ((*flags & LOCKARGS_NOTIMEOUT) && !(*flags & LOCKARGS_PERSIST))) {
-		log_error("setlockargs persist and notimeout are currently required together.");
 		return 0;
 	}
 
