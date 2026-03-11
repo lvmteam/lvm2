@@ -2306,6 +2306,8 @@ int setup_device(struct cmd_context *cmd, const char *devname)
 	   be rejected by filter-deviceid. */
 	if (cmd->enable_devices_file)
 		device_ids_match_dev(cmd, dev);
+	if (cmd->enable_devices_list)
+		device_ids_match_device_list(cmd);
 
 	return 1;
 }
