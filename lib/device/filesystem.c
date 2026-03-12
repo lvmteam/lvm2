@@ -213,15 +213,17 @@ static int _btrfs_get_mnt(struct fs_info *fsi, dev_t lv_devt)
 
 		r = read(fd, buffer, sizeof(buffer));
 
+		if (r <= 0) {
+			ret = 0;
+			log_sys_debug("read", rdev_path);
+		}
+
 		if (close(fd))
 			log_sys_debug("close", rdev_path);
 		fd = -1;
 
-		if (r <= 0) {
-			ret = 0;
-			log_sys_debug("read", rdev_path);
+		if (r <= 0)
 			break;
-		}
 
 		buffer[r - 1] = 0;
 
