@@ -17,7 +17,7 @@ TARGET=${2:-"origin/main"}
 
 answ=0
 
-echo "Checking files changed in the MR for signigicant changes:"
+echo "Checking files changed in the MR for significant changes:"
 git diff --name-only "${HEAD}" "^${TARGET}"
 echo "-----"
 
