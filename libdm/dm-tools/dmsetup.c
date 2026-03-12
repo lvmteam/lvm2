@@ -1312,7 +1312,7 @@ static int _create_concise(const struct command *cmd, int argc, char **argv)
 			*n++ = *c++;
 
 			continue;
-		} 
+		}
 
 		/* Comma marking end of field? */
 		if (*c == ',' && f < 4) {
@@ -1327,7 +1327,7 @@ static int _create_concise(const struct command *cmd, int argc, char **argv)
 				c++;
 
 			continue;
-		} 
+		}
 
 		/* Comma marking end of a table line? */
 		if (*c == ',' && f >= 4) {
@@ -1335,7 +1335,7 @@ static int _create_concise(const struct command *cmd, int argc, char **argv)
 			*n++ = '\n', c++;
 
 			continue;
-		} 
+		}
 
 		/* Semi-colon marking end of device? */
 		if (*c == ';' || *(c + 1) == '\0') {
@@ -1396,7 +1396,7 @@ static int _create_concise(const struct command *cmd, int argc, char **argv)
 				c++;
 
 			continue;
-		} 
+		}
 
 		/* Normal character */
 		*n++ = *c++;
