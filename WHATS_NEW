@@ -13,7 +13,7 @@ Version 2.03.39 -
   Fix checking error codes from io_destroy() and io_getevents().
   Add lvm-index(7), lvm-categories(7) and lvm-args(7) man pages.
   Show active cache mode in kernel table line with lvs -o kernel_cache_mode.
-  Preserve file desciptors with CLOEXEC opened in library constructors.
+  Preserve file descriptors with CLOEXEC opened in library constructors.
   Use -Wl,-rpath-link for library linking.
   Switch from use of internal device_mapper library to libdm.
   Refactor libbase radix tree to lib/datastruct.

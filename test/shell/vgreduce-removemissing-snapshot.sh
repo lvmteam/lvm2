@@ -31,7 +31,7 @@ check mirror $vg 4way "$dev5"
 
 vgremove -ff $vg
 
-# snaphost of mirror
+# snapshot of mirror
 vgcreate $vg "$dev1" "$dev2" "$dev3"
 lvcreate --type mirror -m 1 -L 2M -n mirror_lv $vg
 lvcreate -s $vg/mirror_lv -L 2m -n snap

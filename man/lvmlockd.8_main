@@ -442,7 +442,7 @@ locks are recovered.
 .br
 nopersist: lvmlockd will not remove a PR key of a failed host when a lock
 request fails due to a lock owned by a failed host.  (PR does not need
-to be enabed for the VG.)
+to be enabled for the VG.)
 .br
 timeout: a failed host's locks will expire and be granted to another
 host after a timeout indicates the failed host's watchdog has fired.
@@ -468,7 +468,7 @@ host's locks to be recovered.
 .br
 nopersist: lvmlockd will not remove a PR key of a failed host when a lock
 request fails due to a lock owned by a failed host.  (PR does not need
-to be enabed for the VG.)
+to be enabled for the VG.)
 .br
 notimeout: a failed host's locks will not expire and be granted to another
 host after a timeout (i.e. after the time when the failed host's watchdog
