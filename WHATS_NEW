@@ -2,6 +2,7 @@ Version 2.03.39 -
 ==================
   Support --interval +N to delay first poll in pvmove and lvpoll.
   Add lvmpolld 'cmd' log keyword to enable verbose lvpoll output.
+  Add atomic leases using Compare and Write (CAW) to lvmlockd.
   Fix pofile generation to include SOURCES2 binaries and update xgettext options.
   Reject lvreduce of CoW snapshot COW store when it would truncate exception data.
   Skip filesystem resize handling for CoW snapshot COW store LVs in lvresize.
