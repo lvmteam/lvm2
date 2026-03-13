@@ -403,7 +403,7 @@ static int read_info_file(char *vg_name, uint32_t *host_id, uint64_t *generation
 		} else if (!strncmp(line, "no_timeout ", 11)) {
 			if (sscanf(line, "no_timeout %d", no_timeout) != 1)
 				goto fail;
-		} else if (!strncmp(line, "using_caw", 3)) {
+		} else if (!strncmp(line, "using_caw", 9)) {
 			if (sscanf(line, "using_caw %d", using_caw) != 1)
 				goto fail;
 		}
@@ -626,7 +626,6 @@ static int _lease_corrupt_error(int rv)
 	    rv == SANLK_LEADER_DIFF ||
 	    rv == SANLK_LEADER_LOCKSPACE ||
 	    rv == SANLK_LEADER_RESOURCE ||
-	    rv == SANLK_LEADER_CHECKSUM ||
 	    rv == SANLK_LEADER_CHECKSUM ||
 	    rv == SANLK_DBLOCK_CHECKSUM ||
 	    rv == SANLK_WRONG_CAW)
