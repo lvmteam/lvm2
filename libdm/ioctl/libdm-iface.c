@@ -1609,12 +1609,81 @@ static int _check_uevent_generated(struct dm_ioctl *dmi)
 }
 #endif
 
+/*
+ * Create a RELOAD task and populate it with table data.
+ * Used by both _create_and_load_v4() and the async create chain.
+ * The target list (head/tail) is moved -- caller must NULL its own copy.
+ * Returns the new task on success, NULL on failure.
+ */
+static struct dm_task *_new_reload_task(const char *name,
+					struct target *head,
+					struct target *tail,
+					int read_only,
+					int secure_data,
+					int ima_measurement,
+					int major,
+					int minor)
+{
+	struct dm_task *task;
+
+	if (!(task = dm_task_create(DM_DEVICE_RELOAD)))
+		return_NULL;
+
+	if (name && !dm_task_set_name(task, name)) {
+		dm_task_destroy(task);
+		return_NULL;
+	}
+
+	task->read_only = read_only;
+	task->head = head;
+	task->tail = tail;
+	task->secure_data = secure_data;
+	task->ima_measurement = ima_measurement;
+	task->major = major;
+	task->minor = minor;
+
+	return task;
+}
+
+/*
+ * Revert a failed CREATE-with-table by issuing a synchronous REMOVE.
+ * If cookie_set, sets up a udev cookie for the remove.
+ * Used by both _create_and_load_v4() and the async create chain.
+ */
+static void _revert_create(const char *dev_name,
+			   int cookie_set, uint32_t event_nr)
+{
+	struct dm_task *dmt;
+	uint32_t cookie;
+
+	if (!(dmt = dm_task_create(DM_DEVICE_REMOVE)))
+		return;
+
+	if (!dm_task_set_name(dmt, dev_name)) {
+		dm_task_destroy(dmt);
+		return;
+	}
+
+	if (cookie_set) {
+		cookie = (event_nr & ~DM_UDEV_FLAGS_MASK) |
+			 (DM_COOKIE_MAGIC << DM_UDEV_FLAGS_SHIFT);
+		if (!dm_task_set_cookie(dmt, &cookie,
+					(event_nr & DM_UDEV_FLAGS_MASK) >>
+					DM_UDEV_FLAGS_SHIFT))
+			stack; /* keep going */
+	}
+
+	if (!dm_task_run(dmt))
+		log_error("Failed to revert device creation.");
+
+	dm_task_destroy(dmt);
+}
+
 static int _create_and_load_v4(struct dm_task *dmt)
 {
 	struct dm_info info;
 	struct dm_task *task;
 	int r, ioctl_errno = 0;
-	uint32_t cookie;
 
 	/* Use new task struct to create the device */
 	if (!(task = dm_task_create(DM_DEVICE_CREATE))) {
@@ -1650,27 +1719,14 @@ static int _create_and_load_v4(struct dm_task *dmt)
 	dm_task_destroy(task);
 
 	/* Next load the table */
-	if (!(task = dm_task_create(DM_DEVICE_RELOAD))) {
+	if (!(task = _new_reload_task(dmt->dev_name, dmt->head, dmt->tail,
+				      dmt->read_only, dmt->secure_data,
+				      dmt->ima_measurement,
+				      info.major, info.minor))) {
 		stack;
 		_udev_complete(dmt);
 		goto revert;
 	}
-
-	/* Copy across relevant fields */
-	if (dmt->dev_name && !dm_task_set_name(task, dmt->dev_name)) {
-		stack;
-		dm_task_destroy(task);
-		_udev_complete(dmt);
-		goto revert;
-	}
-
-	task->major = info.major;
-	task->minor = info.minor;
-	task->read_only = dmt->read_only;
-	task->head = dmt->head;
-	task->tail = dmt->tail;
-	task->secure_data = dmt->secure_data;
-	task->ima_measurement = dmt->ima_measurement;
 
 	r = dm_task_run(task);
 	if (!r)
@@ -1699,29 +1755,7 @@ static int _create_and_load_v4(struct dm_task *dmt)
 		return 1;
 
       revert:
-	dmt->type = DM_DEVICE_REMOVE;
-	dm_free(dmt->uuid);
-	dmt->uuid = NULL;
-	dm_free(dmt->mangled_uuid);
-	dmt->mangled_uuid = NULL;
-	/* coverity[double_free] recursive function call */
-	_dm_task_free_targets(dmt);
-
-	/*
-	 * Also udev-synchronize "remove" dm task that is a part of this revert!
-	 * But only if the original dm task was supposed to be synchronized.
-	 */
-	if (dmt->cookie_set) {
-		cookie = (dmt->event_nr & ~DM_UDEV_FLAGS_MASK) |
-			 (DM_COOKIE_MAGIC << DM_UDEV_FLAGS_SHIFT);
-		if (!dm_task_set_cookie(dmt, &cookie,
-					(dmt->event_nr & DM_UDEV_FLAGS_MASK) >>
-					DM_UDEV_FLAGS_SHIFT))
-			stack; /* keep going */
-	}
-
-	if (!dm_task_run(dmt))
-		log_error("Failed to revert device creation.");
+	_revert_create(dmt->dev_name, dmt->cookie_set, dmt->event_nr);
 
 	if (ioctl_errno != 0)
 		dmt->ioctl_errno =  ioctl_errno;
