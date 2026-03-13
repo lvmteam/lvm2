@@ -1,5 +1,6 @@
 Version 1.02.214 - 
 ===================
+  Fix dangling pointer in dmsetup _slurp_stdin after realloc.
 
 Version 1.02.213 - 13rd March 2026
 ==================================
