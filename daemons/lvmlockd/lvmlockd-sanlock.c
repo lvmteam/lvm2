@@ -2121,7 +2121,7 @@ int lm_rem_lockspace_sanlock(struct lockspace *ls, int free_vg)
 		 */
 		strcpy_name_len(lms->ss.name, "#unused", SANLK_NAME_LEN);
 
-		rv = sanlock_write_lockspace(&lms->ss, 0, 0, sanlock_io_timeout);
+		rv = sanlock_write_lockspace(&lms->ss, 0, SANLK_WRITE_LS_NO_CAW, sanlock_io_timeout);
 		if (rv < 0) {
 			log_error("S %s rem_lockspace free_vg write_lockspace error %d %s",
 				  ls->name, rv, lms->ss.host_id_disk.path);
