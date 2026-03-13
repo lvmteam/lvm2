@@ -1228,21 +1228,22 @@ out:
 
 static char *_slurp_stdin(void)
 {
-	char *newbuf, *buf, *pos;
-	size_t bufsize = DEFAULT_BUF_SIZE;
-	size_t total = 0;
-	ssize_t n = 0;
+	char *newbuf, *buf, *end, *lim;
+	size_t bufsize = 2 * DEFAULT_BUF_SIZE;
+	size_t total;
+	ssize_t n;
 
 	if (!(buf = malloc(bufsize))) {
 		log_error("Buffer memory allocation failed.");
 		return NULL;
 	}
 
-	pos = buf;
+	end = buf;
+	lim = buf + bufsize - 1;
+
 	do  {
 		do
-			/* coverity[overflow_sink] - only positive 'n' is used */
-			n = read(STDIN_FILENO, pos, (size_t) bufsize - total - 1);
+			n = read(STDIN_FILENO, end, (size_t)(lim - end));
 		while ((n < 0) && ((errno == EINTR) || (errno == EAGAIN)));
 
 		if (n < 0) {
@@ -1254,23 +1255,24 @@ static char *_slurp_stdin(void)
 		if (!n)
 			break;
 
-		/* coverity[overflow] - only positive 'n' is used */
-		total += n;
-		pos += n;
-		if (total == bufsize - 1) {
-			bufsize *= 2;
-			if (!(newbuf = realloc(buf, bufsize))) {
-				log_error("Buffer memory extension to %" PRIsize_t " bytes failed.", bufsize);
-				free(buf);
-				return NULL;
-			}
-			buf = newbuf;
-			pos = buf + total;
+		end += n;
+
+		if ((size_t)(lim - end) >= DEFAULT_BUF_SIZE)
+			continue;
+
+		total = (size_t)(end - buf);
+		bufsize *= 2;
+		if (!(newbuf = realloc(buf, bufsize))) {
+			log_error("Buffer memory extension to %" PRIsize_t " bytes failed.", bufsize);
+			free(buf);
+			return NULL;
 		}
+		buf = newbuf;
+		end = buf + total;
+		lim = buf + bufsize - 1;
 	} while (1);
 
-	/* coverity[deref_overflow] - only positive 'n' was used */
-	buf[total] = '\0';
+	*end = '\0';
 
 	return buf;
 }
