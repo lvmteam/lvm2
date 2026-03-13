@@ -1,5 +1,5 @@
-Version 2.03.39 - 
-==================
+Version 2.03.39 - 13rd March 2026
+=================================
   Support --interval +N to delay first poll in pvmove and lvpoll.
   Add lvmpolld 'cmd' log keyword to enable verbose lvpoll output.
   Add atomic leases using Compare and Write (CAW) to lvmlockd.
