@@ -1876,7 +1876,7 @@ static int _dm_tree_deactivate_children(struct dm_tree_node *dnode,
 			stack;
 			/* FIXME Deactivation must currently ignore failure
 			 * here so that lvremove can continue: we need an
-			 * alternative way to handle this state without 
+			 * alternative way to handle this state without
 			 * setting r=0.  Or better, skip calling thin_check
 			 * entirely if the device is about to be removed. */
 

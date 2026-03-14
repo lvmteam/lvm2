@@ -2215,7 +2215,7 @@ static int _error_device(CMD_ARGS)
 		log_error("No device specified.");
 		return 0;
 	}
-		
+
 	size = _get_device_size(name);
 
 	if (!(dmt = dm_task_create(DM_DEVICE_RELOAD)))
