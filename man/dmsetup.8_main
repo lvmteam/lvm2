@@ -661,6 +661,10 @@ Answer yes to all prompts automatically.
 .TP
 .BR -v | --verbose " [" -v |\: --verbose ]
 Produce additional output.
+Repeat up to 4 times (\fB-vvvv\fP) to increase detail:
+\fB-vv\fP enables debug messages,
+\fB-vvv\fP adds elapsed time after each ioctl,
+\fB-vvvv\fP adds source file and line numbers.
 .
 .TP
 .B --verifyudev
@@ -1237,6 +1241,11 @@ It is an alternative to using \fB--udevcookie\fP option.
 A default mangling mode.
 Defaults to "\fB#DEFAULT_MANGLING#\fP"
 and it is an alternative to using \fB--manglename\fP option.
+.
+.TP
+.B DM_DEBUG_WITH_LINE_NUMBERS
+Set to \fB1\fP to prepend source file and line number to debug messages.
+Automatically enabled by \fB-vvvv\fP.
 .
 .SH AUTHORS
 .
