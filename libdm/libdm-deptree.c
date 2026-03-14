@@ -1047,6 +1047,14 @@ static struct dm_task *_create_remove_task(const char *name,
 	if (retry)
 		dm_task_retry_remove(dmt);
 
+	/* Set dev_name for _dm_task_node_ops (rm_dev_node).
+	 * _flatten() skips copying it into dmi->name for REMOVE
+	 * when major:minor are set, same as for RESUME/RELOAD. */
+	if (!dm_task_set_name(dmt, name)) {
+		log_error("Failed to set name for %s deactivation", name);
+		goto bad;
+	}
+
 	return dmt;
 bad:
 	dm_task_destroy(dmt);
@@ -1064,12 +1072,6 @@ static int _deactivate_node(const char *name, uint32_t major, uint32_t minor,
 		return_0;
 
 	r = dm_task_run(dmt);
-
-	/* FIXME Until kernel returns actual name so dm-iface.c can handle it */
-	rm_dev_node(name, dmt->cookie_set && !(udev_flags & DM_UDEV_DISABLE_DM_RULES_FLAG),
-		    dmt->cookie_set && (udev_flags & DM_UDEV_DISABLE_LIBRARY_FALLBACK));
-
-	/* FIXME Remove node from tree or mark invalid? */
 
 	dm_task_destroy(dmt);
 

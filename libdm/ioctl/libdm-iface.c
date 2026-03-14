@@ -1428,10 +1428,12 @@ static struct dm_ioctl *_flatten(struct dm_task *dmt, unsigned repeat_count)
 	/* FIXME Until resume ioctl supplies name, use dev_name for readahead */
 	if (DEV_NAME(dmt) &&
 	    (((dmt->type != DM_DEVICE_RESUME) &&
-	      (dmt->type != DM_DEVICE_RELOAD)) ||
+	      (dmt->type != DM_DEVICE_RELOAD) &&
+	      (dmt->type != DM_DEVICE_REMOVE)) ||
 	     (dmt->minor < 0) || (dmt->major < 0)))
-		/* When RESUME or RELOAD sets maj:min and dev_name, use just maj:min,
-		 * passed dev_name is useful for better error/debug messages */
+		/* When RESUME, RELOAD or REMOVE sets maj:min and dev_name,
+		 * use just maj:min for the ioctl; dev_name stays on dmt
+		 * for error/debug messages and _dm_task_node_ops */
 		memccpy(dmi->name, DEV_NAME(dmt), 0, sizeof(dmi->name));
 
 	if (DEV_UUID(dmt))
@@ -2307,13 +2309,11 @@ static int _dm_task_node_ops(struct dm_task *dmt, struct dm_ioctl *dmi)
 				     dmt->mode, check_udev, rely_on_udev);
 		break;
 	case DM_DEVICE_REMOVE:
-		/* FIXME Kernel needs to fill in dmi->name */
 		if (dev_name && !rely_on_udev)
 			rm_dev_node(dev_name, check_udev, rely_on_udev);
 		break;
 
 	case DM_DEVICE_RENAME:
-		/* FIXME Kernel needs to fill in dmi->name */
 		if (!dmt->new_uuid && dev_name)
 			rename_dev_node(dev_name, dmt->newname,
 					check_udev, rely_on_udev);
@@ -2325,7 +2325,6 @@ static int _dm_task_node_ops(struct dm_task *dmt, struct dm_ioctl *dmi)
 			add_dev_node(dev_name, MAJOR(dmi->dev),
 				     MINOR(dmi->dev), dmt->uid, dmt->gid,
 				     dmt->mode, check_udev, rely_on_udev);
-		/* FIXME Kernel needs to fill in dmi->name */
 		set_dev_node_read_ahead(dev_name,
 					MAJOR(dmi->dev), MINOR(dmi->dev),
 					dmt->read_ahead, dmt->read_ahead_flags);
