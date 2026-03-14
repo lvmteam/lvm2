@@ -73,7 +73,6 @@
 #include <sys/stat.h>
 #include <sys/resource.h> /* rusage */
 #include <sys/select.h>
-#include <sys/socket.h>
 #include <sys/time.h>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -969,17 +968,19 @@ struct TestCase {
     void pipe() {
         int fds[2] = { 0 };
 
-        if (socketpair( PF_UNIX, SOCK_STREAM, 0, fds )) {
-            perror("socketpair");
+        /*
+         * Use pipe() instead of socketpair(SOCK_STREAM).
+         * Child dup2()s both stdout and stderr to fds[1],
+         * so threaded programs do concurrent write()s to the
+         * same fd. SOCK_STREAM has no message boundaries --
+         * the kernel can split and interleave those writes
+         * arbitrarily. pipe() guarantees atomic writes for
+         * messages <= PIPE_BUF (4096), keeping log lines intact.
+         */
+        if (::pipe( fds )) {
+            perror("pipe");
             exit(201);
         }
-
-#if 0
-        if (fcntl( fds[0], F_SETFL, O_NONBLOCK ) == -1) {
-            perror("fcntl on socket");
-            exit(202);
-        }
-#endif
 
         io.sources.push_back( new Source( fds[0] ) );
         child.fd = fds[1];
