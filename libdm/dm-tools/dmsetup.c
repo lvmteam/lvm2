@@ -6887,6 +6887,8 @@ static int _process_switches(int *argcp, char ***argvp, const char *dev_dir)
 
 	if (_switches[VERBOSE_ARG] > 1) {
 		dm_log_init_verbose(_switches[VERBOSE_ARG] - 1);
+		if (_switches[VERBOSE_ARG] > 3)
+			setenv("DM_DEBUG_WITH_LINE_NUMBERS", "1", 0);
 		if (_switches[VERBOSE_ARG] > 2) {
 			if (!(_initial_timestamp = dm_timestamp_alloc()))
 				stack;
