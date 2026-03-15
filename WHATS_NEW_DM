@@ -5,7 +5,7 @@ Version 1.02.214 -
   Add dm_udev_create_cookie stub for non-udev builds.
   Fix dangling pointer in dmsetup _slurp_stdin after realloc.
 
-Version 1.02.213 - 13rd March 2026
+Version 1.02.213 - 13th March 2026
 ==================================
   Copy dm_device_list_destroy, dm_task_get_device_list.
   Add dm_device_list_equal.

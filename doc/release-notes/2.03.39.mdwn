@@ -21,7 +21,7 @@ Other changes
 * Reject lvreduce of CoW snapshot COW store when it would truncate exception data.
 * Skip filesystem resize handling for CoW snapshot COW store LVs in lvresize.
 * Fix vgsplit to not fail on no active LV on a PV being split to an existing VG.
-* Preserve file desciptors with CLOEXEC opened in library constructors.
+* Preserve file descriptors with CLOEXEC opened in library constructors.
 * Add lvmpolld 'cmd' log keyword to enable verbose lvpoll output.
 * Add `activate_lv_temporary()` to consolidate `LV_TEMPORARY` and sync handling.
 * Add missing sync in `add_mirror_log()` and `activate_and_wipe_lv_list()`.
