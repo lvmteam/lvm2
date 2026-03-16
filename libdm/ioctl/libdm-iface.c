@@ -123,6 +123,18 @@ static const struct cmd_data _cmd_data_v4[] = {
 };
 /* *INDENT-ON* */
 
+/* Validate task type against the command table. */
+static int _validate_task_type(struct dm_task *dmt)
+{
+	if ((unsigned) dmt->type >= DM_ARRAY_SIZE(_cmd_data_v4)) {
+		log_error(INTERNAL_ERROR "unknown device-mapper task %d",
+			  dmt->type);
+		return 0;
+	}
+
+	return 1;
+}
+
 #define ALIGNMENT 8
 
 /* FIXME Rejig library to record & use errno instead */
@@ -2369,11 +2381,8 @@ DM_EXPORT_NEW_SYMBOL(int, dm_task_run, 1_02_197)
 	const char *dev_name = DEV_NAME(dmt);
 	const char *dev_uuid = DEV_UUID(dmt);
 
-	if ((unsigned) dmt->type >= DM_ARRAY_SIZE(_cmd_data_v4)) {
-		log_error(INTERNAL_ERROR "unknown device-mapper task %d",
-			  dmt->type);
-		return 0;
-	}
+	if (!_validate_task_type(dmt))
+		return_0;
 
 	command = _cmd_data_v4[dmt->type].cmd;
 
