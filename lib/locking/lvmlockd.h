@@ -142,11 +142,11 @@ void lockd_free_removed_lvs(struct cmd_context *cmd, struct volume_group *vg, in
 
 const char *lockd_running_lock_type(struct cmd_context *cmd, int *found_multiple);
 
-int lockd_lv_uses_lock(struct logical_volume *lv);
+int lockd_lv_uses_lock(const struct logical_volume *lv);
 
 int lockd_lv_refresh(struct cmd_context *cmd, struct lvresize_params *lp);
 
-int lockd_query_lv(struct cmd_context *cmd, struct logical_volume *lv, int *ex, int *sh);
+int lockd_query_lv(struct cmd_context *cmd, const struct logical_volume *lv, int *ex, int *sh);
 
 int lockd_lvcreate_prepare(struct cmd_context *cmd, struct volume_group *vg, struct lvcreate_params *lp);
 int lockd_lvcreate_lock(struct cmd_context *cmd, struct volume_group *vg, struct lvcreate_params *lp,
@@ -341,7 +341,7 @@ static inline const char *lockd_running_lock_type(struct cmd_context *cmd, int *
 	return NULL;
 }
 
-static inline int lockd_lv_uses_lock(struct logical_volume *lv)
+static inline int lockd_lv_uses_lock(const struct logical_volume *lv)
 {
 	return 0;
 }
@@ -351,7 +351,7 @@ static inline int lockd_lv_refresh(struct cmd_context *cmd, struct lvresize_para
 	return 0;
 }
 
-static inline int lockd_query_lv(struct cmd_context *cmd, struct logical_volume *lv, int *ex, int *sh)
+static inline int lockd_query_lv(struct cmd_context *cmd, const struct logical_volume *lv, int *ex, int *sh)
 {
 	return 0;
 }

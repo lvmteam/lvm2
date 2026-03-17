@@ -3964,7 +3964,7 @@ static int _lvactiveexclusively_disp(struct dm_report *rh, struct dm_pool *mem,
 
 	if (ex && vg_is_shared(lv->vg)) {
 		ex = 0;
-		if (!lockd_query_lv(lv->vg->cmd, (struct logical_volume *)lv, &ex, &sh))
+		if (!lockd_query_lv(lv->vg->cmd, lv, &ex, &sh))
 			return _binary_undef_disp(rh, mem, field, private);
 	}
 

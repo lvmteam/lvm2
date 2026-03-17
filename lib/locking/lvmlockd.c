@@ -2969,7 +2969,7 @@ static int _query_lv(struct cmd_context *cmd, struct volume_group *vg,
 	return ret;
 }
 
-int lockd_query_lv(struct cmd_context *cmd, struct logical_volume *lv, int *ex, int *sh)
+int lockd_query_lv(struct cmd_context *cmd, const struct logical_volume *lv, int *ex, int *sh)
 {
 	struct volume_group *vg = lv->vg;
 	char lv_uuid[64] __attribute__((aligned(8)));
@@ -4540,7 +4540,7 @@ out:
 
 /* Some LV types have no lock. */
 
-int lockd_lv_uses_lock(struct logical_volume *lv)
+int lockd_lv_uses_lock(const struct logical_volume *lv)
 {
 	if (!lv_is_visible(lv))
 		return 0;
