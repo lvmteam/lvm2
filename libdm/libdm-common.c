@@ -2341,6 +2341,13 @@ int dm_task_set_cookie(struct dm_task *dmt, uint32_t *cookie, uint16_t flags)
 	return 1;
 }
 
+int dm_udev_create_cookie(uint32_t *cookie)
+{
+	*cookie = 0;
+
+	return 1;
+}
+
 int dm_udev_complete(uint32_t cookie)
 {
 	return 1;
