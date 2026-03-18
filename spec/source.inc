@@ -60,6 +60,9 @@
 
 %if %{fedora} >= 27 || %{rhel} >= 7
  %service lvmlockd 1
+ %if %{fedora}
+   %global enable_lvmlockd_sanlock 1
+ %endif
 # For RH7 require 7.4 for sanlock
  %if %{rhel} > 7 || 0%{?rhel_minor_version} > 4
    %global enable_lvmlockd_sanlock 1
