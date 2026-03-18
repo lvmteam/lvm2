@@ -1,5 +1,6 @@
 Version 2.03.40 - 
 ==================
+  Kill orphaned polling lvpoll process in lvmpolld on pvmove --abort.
   Fix pvmove mirror image bounds check off-by-one in poll completion.
   Fix dev_manager to restore track_pvmove_deps flag on error path.
 
