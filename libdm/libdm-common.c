@@ -1099,8 +1099,10 @@ static int _add_dev_node(const char *dev_name, uint32_t major, uint32_t minor,
 	 * Test environment optimization: If using alternative dev dir (e.g., /tmp/LVMTEST/dev)
 	 * and the real /dev node already exists, create a symlink instead of a duplicate node.
 	 * This ensures operations trigger udev events which only monitors /dev.
+	 * Requires cookie support (DM >= 4.15) for udev sync; on older kernels
+	 * udev may transiently delete /dev/dm-N nodes, breaking the symlinks.
 	 */
-	if (strcmp(_dm_dir, DEV_DIR) != 0) {
+	if (dm_cookie_supported() && strcmp(_dm_dir, DEV_DIR) != 0) {
 		char real_path[PATH_MAX];
 		struct stat real_stat;
 
