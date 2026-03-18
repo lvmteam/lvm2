@@ -19,12 +19,12 @@ echo -e "\nFiles changed in the MR:"
 git diff --exit-code --name-only "${HEAD}" "^${TARGET}"
 case $? in
 	0)
-		;;
-	1)
 		echo "INFO: Huh, empty MR?" >&2
-		exit 1 ;;
+		exit 0 ;;
+	1)
+		;;
 	*)
-		die "problem with git diff"
+		die "Problem with git diff. The tests will run anyway."
 		exit 2 ;;
 esac
 
