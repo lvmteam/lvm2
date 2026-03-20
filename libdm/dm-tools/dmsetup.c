@@ -7106,7 +7106,7 @@ doit:
 		r = _perform_command_for_all_repeatable_args(cmd, subcommand, argc, argv, NULL, multiple_devices);
 		if (_concise_output_produced) {
 			putchar('\n');
-			fflush(stdout);
+			(void) fflush(stdout);
 		}
 		if (_report) {
 			/* only output headings for repeating reports */
