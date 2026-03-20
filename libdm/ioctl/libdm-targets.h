@@ -86,6 +86,13 @@ struct cmd_data {
 	const int version[3];
 };
 
+/* Retry constants for EBUSY removes. */
+#define DM_IOCTL_RETRIES              25
+#define DM_RETRY_USLEEP_DELAY         200000
+
+/* Execute a single DM ioctl (no retry, no logging). */
+int dm_ioctl_exec(int fd, struct dm_task *dmt, struct dm_ioctl *dmi);
+
 int dm_check_version(void);
 uint64_t dm_task_get_existing_table_size(struct dm_task *dmt);
 
