@@ -2376,14 +2376,15 @@ static int _dm_task_node_ops(struct dm_task *dmt, struct dm_ioctl *dmi)
 		break;
 
 	case DM_DEVICE_RESUME:
-		if ((dmt->add_node == DM_ADD_NODE_ON_RESUME) &&
-		    dev_name && *dev_name)
-			add_dev_node(dev_name, MAJOR(dmi->dev),
-				     MINOR(dmi->dev), dmt->uid, dmt->gid,
-				     dmt->mode, check_udev, rely_on_udev);
-		set_dev_node_read_ahead(dev_name,
-					MAJOR(dmi->dev), MINOR(dmi->dev),
-					dmt->read_ahead, dmt->read_ahead_flags);
+		if (dev_name && *dev_name) {
+			if (dmt->add_node == DM_ADD_NODE_ON_RESUME)
+				add_dev_node(dev_name, MAJOR(dmi->dev),
+					     MINOR(dmi->dev), dmt->uid, dmt->gid,
+					     dmt->mode, check_udev, rely_on_udev);
+			set_dev_node_read_ahead(dev_name,
+						MAJOR(dmi->dev), MINOR(dmi->dev),
+						dmt->read_ahead, dmt->read_ahead_flags);
+		}
 		break;
 
 	case DM_DEVICE_MKNODES:
