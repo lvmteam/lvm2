@@ -32,15 +32,6 @@
 #define NULL ((void *)0)
 
 /* Forward declarations */
-struct lv_segment;
-struct logical_volume;
-struct cmd_context;
-struct profile;
-struct dm_pool;
-struct dm_list;
-struct lvinfo;
-struct dminfo;
-struct lv_seg_status;
 
 /* Partial definition of segment_type - only fields we need for modeling */
 struct segment_type {
@@ -323,8 +314,6 @@ void dm_list_add(struct dm_list *head, struct dm_list *elem)
 	__coverity_escape__(elem);
 }
 
-struct segtype_library;
-
 /* lvm_register_segtype - registers a segment type
  * Returns 1 on success, 0 on failure
  * On failure, it calls segtype->ops->destroy(segtype) which frees the resource
@@ -388,6 +377,57 @@ int lv_info(struct cmd_context *cmd, const struct logical_volume *lv, int use_la
 	if (info) {
 		__coverity_writeall__(info);
 	}
+
+	return 1;
+}
+
+/*
+ * On success (return 1) the entire *info struct is initialized.
+ * On failure (return 0) *info is untouched.
+ */
+int dm_task_get_info(struct dm_task *dmt, struct dm_info *info)
+{
+	int success;
+
+	if (!dmt)
+		__coverity_panic__();
+
+	__coverity_read_pointee__(dmt);
+
+	if (!success) {
+		/* On failure, dminfo may not be initialized */
+		return 0;
+	}
+
+	__coverity_writeall__(info);
+
+	return 1;
+}
+
+/*
+ * dm_stats_create_region - create a statistics region
+ * Returns 1 on success and writes *region_id, 0 on failure.
+ * Versioned symbol - Coverity cannot resolve the actual implementation.
+ */
+int dm_stats_create_region(struct dm_stats *dms, unsigned long long *region_id,
+			   unsigned long long start, unsigned long long len,
+			   long long step, int precise,
+			   struct dm_histogram *bounds,
+			   const char *program_id, const char *user_data)
+{
+	int success;
+
+	if (!dms)
+		__coverity_panic__();
+
+	__coverity_read_pointee__(dms);
+
+	if (!success)
+		return 0;
+
+	/* On success, *region_id is written */
+	if (region_id)
+		__coverity_writeall__(region_id);
 
 	return 1;
 }
