@@ -1672,6 +1672,9 @@ static void _revert_create(const char *dev_name,
 	struct dm_task *dmt;
 	uint32_t cookie;
 
+	if (!dev_name || !*dev_name)
+		return;
+
 	if (!(dmt = dm_task_create(DM_DEVICE_REMOVE)))
 		return;
 
