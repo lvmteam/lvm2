@@ -245,9 +245,11 @@ void pdst_locked_unlock_all_pdlvs(const struct lvmpolld_store *pdst)
 		pdlv_unlock(dm_hash_get_data(pdst->store, n));
 }
 
+/* called with pdlv->lock held via _lvmpolld_global_lock */
 static void _pdlv_locked_dump(struct buffer *buff, const struct lvmpolld_lv *pdlv)
 {
 	char tmp[1024];
+	/* coverity[missing_lock] */
 	const struct lvmpolld_cmd_stat *cmd_state = &pdlv->cmd_state;
 
 	/* pdlv-section { */
@@ -269,8 +271,10 @@ static void _pdlv_locked_dump(struct buffer *buff, const struct lvmpolld_lv *pdl
 		buffer_append(buff, tmp);
 	if (dm_snprintf(tmp, sizeof(tmp), "\t\tlvm_command_pid=%d\n", pdlv->cmd_pid) > 0)
 		buffer_append(buff, tmp);
+	/* coverity[missing_lock] */
 	if (dm_snprintf(tmp, sizeof(tmp), "\t\tpolling_finished=%d\n", pdlv->polling_finished) > 0)
 		buffer_append(buff, tmp);
+	/* coverity[missing_lock] */
 	if (dm_snprintf(tmp, sizeof(tmp), "\t\terror_occurred=%d\n", pdlv->error) > 0)
 		buffer_append(buff, tmp);
 	if (dm_snprintf(tmp, sizeof(tmp), "\t\tinit_requests_count=%d\n", pdlv->init_rq_count) > 0)

@@ -155,6 +155,7 @@ static inline struct lvmpolld_cmd_stat pdlv_locked_cmd_state(const struct lvmpol
 
 static inline int pdlv_locked_polling_finished(const struct lvmpolld_lv *pdlv)
 {
+	/* coverity[missing_lock] called with pdlv->lock held via _lvmpolld_global_lock */
 	return pdlv->polling_finished;
 }
 
