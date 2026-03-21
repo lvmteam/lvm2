@@ -2912,8 +2912,10 @@ static int _add_lv_to_dtree(struct dev_manager *dm, struct dm_tree *dtree,
 			/* Check for lock holding LV to reload its whole device tree */
 			plv = lv_lock_holder(sl->seg->lv);
 			if (!_cached_dm_tree_node(dm->mem, dtree, plv, lv_layer(plv)) &&
-			    !_add_lv_to_dtree(dm, dtree, plv, 0))
+			    !_add_lv_to_dtree(dm, dtree, plv, 0)) {
+				dm->track_pvmove_deps = 1;
 				return_0;
+			}
 		}
 		dm->track_pvmove_deps = 1;
 	}
