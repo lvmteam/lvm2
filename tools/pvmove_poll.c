@@ -35,7 +35,7 @@ static int _is_pvmove_image_removable(struct logical_volume *mimage_lv,
 		return 0;
 	}
 
-	if (mimage_to_remove > mirror_seg->area_count) {
+	if (mimage_to_remove >= mirror_seg->area_count) {
 		log_error(INTERNAL_ERROR "Mirror image %" PRIu32 " not found in segment",
 			  mimage_to_remove);
 		return 0;
