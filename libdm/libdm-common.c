@@ -374,7 +374,7 @@ static int _find_dm_name_of_device(dev_t st_rdev, char *buf, size_t buf_len)
 			continue;
 
 		if (st.st_rdev == st_rdev) {
-			strncpy(buf, name, buf_len);
+			dm_strncpy(buf, name, buf_len);
 			r = 1;
 			break;
 		}
