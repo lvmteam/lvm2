@@ -7103,6 +7103,7 @@ doit:
 			    (argc || (!_switches[UUID_ARG] && !_switches[MAJOR_ARG])));
 
 	do {
+		/* coverity[path_manipulation_sink] argv comes from trusted CLI input */
 		r = _perform_command_for_all_repeatable_args(cmd, subcommand, argc, argv, NULL, multiple_devices);
 		if (_concise_output_produced) {
 			putchar('\n');
