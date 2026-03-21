@@ -104,7 +104,8 @@ static int _check_lv_status(struct cmd_context *cmd,
 		if (parms->poll_fns->update_metadata &&
 		    !parms->poll_fns->update_metadata(cmd, vg, lv, lvs_changed, 0)) {
 			log_error("ABORTING: Segment progression failed.");
-			parms->poll_fns->finish_copy(cmd, vg, lv, lvs_changed);
+			if (!parms->poll_fns->finish_copy(cmd, vg, lv, lvs_changed))
+				stack;
 			return 0;
 		}
 		*finished = 0;	/* Another segment */
