@@ -1396,7 +1396,7 @@ static int _set_read_ahead(const char *dev_name, uint32_t major, uint32_t minor,
 	}
 
 	if (!*dev_name) {
-		log_error("Empty device name passed to BLKRAGET");
+		log_error("Empty device name passed to BLKRASET.");
 		return 0;
 	}
 
