@@ -168,7 +168,7 @@ help:
 	@echo "  install_initscripts	Install initialization scripts."
 	@echo "  install_lvm2		Install lvm2 files."
 	@echo "  install_systemd_units	Install systemd units."
-	@echo "  lcov			Generate lcov output."
+	@echo "  lcov			Generate lcov output (html + txt)."
 	@echo "  lcov-dated		Generate lcov with timedate suffix."
 	@echo "  lcov-reset		Reset lcov counters"
 	@echo "  man			Build man pages."
@@ -200,6 +200,30 @@ lcov:
 	-test ! -s $(LCOV_REPORTS_DIR)/out.info || \
 		$(GENHTML) -o $(LCOV_REPORTS_DIR) --ignore-errors source \
 		$(LCOV_REPORTS_DIR)/out.info
+	@# Text coverage: summary + per-file gcov + uncovered-line extracts
+	$(MKDIR_P) $(LCOV_REPORTS_DIR)/txt
+	-$(LCOV) --list $(LCOV_REPORTS_DIR)/out.info \
+		--ignore-errors source,negative \
+		> $(LCOV_REPORTS_DIR)/txt/summary.txt 2>/dev/null
+	@for gcda in $$(find $(top_builddir) -name '*.gcda' 2>/dev/null); do \
+		dir=$$(dirname "$$gcda"); \
+		base=$$(basename "$$gcda" .gcda); \
+		src="$$base.c"; \
+		test -f "$$dir/$$src" || continue; \
+		outname=$$(echo "$$dir/$$src" | sed 's|^\./||;s|/|__|g'); \
+		( cd "$$dir" && gcov -b "$$base.gcda" > /dev/null 2>&1 ) || continue; \
+		test -f "$$dir/$$src.gcov" || continue; \
+		mv "$$dir/$$src.gcov" "$(LCOV_REPORTS_DIR)/txt/$$outname.gcov"; \
+		grep -n -B2 -A2 '^\s*#####:' \
+			"$(LCOV_REPORTS_DIR)/txt/$$outname.gcov" \
+			> "$(LCOV_REPORTS_DIR)/txt/$$outname.uncov" 2>/dev/null; \
+		test -s "$(LCOV_REPORTS_DIR)/txt/$$outname.uncov" || \
+			$(RM) "$(LCOV_REPORTS_DIR)/txt/$$outname.uncov"; \
+	done
+	@echo "HTML report:      $(LCOV_REPORTS_DIR)/index.html"
+	@echo "Coverage summary: $(LCOV_REPORTS_DIR)/txt/summary.txt"
+	@echo "Full gcov files:  $(LCOV_REPORTS_DIR)/txt/*.gcov"
+	@echo "Uncovered lines:  $(LCOV_REPORTS_DIR)/txt/*.uncov"
 endif
 
 endif
