@@ -1,5 +1,8 @@
 Version 1.02.214 - 
 ===================
+  Fix libdm rm_dev_node to work correctly for REMOVE-by-major:minor tasks.
+  Guard libdm set_dev_node_read_ahead against NULL device name on resume.
+  Skip libdm dev-node symlink optimization on kernels without cookie support.
   Distinguish deferred remove from missing uevent in log message.
   Document dmsetup -vvvv verbosity levels and DM_DEBUG_WITH_LINE_NUMBERS.
   Add dm_udev_create_cookie stub for non-udev builds.
