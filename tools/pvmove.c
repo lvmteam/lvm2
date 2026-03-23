@@ -37,7 +37,7 @@ struct pvmove_params {
 	int found_pv;
 };
 
-static int _pvmove_target_present(struct cmd_context *cmd, int clustered)
+static int _pvmove_target_present(struct cmd_context *cmd)
 {
 	const struct segment_type *segtype;
 	int found = 1;
@@ -245,7 +245,6 @@ static int _insert_pvmove_mirrors(struct cmd_context *cmd,
 				  struct dm_list *source_pvl,
 				  struct logical_volume *lv,
 				  struct dm_list *lvs_changed)
-
 {
 	struct pv_list *pvl;
 	uint32_t prev_le_count;
@@ -799,7 +798,7 @@ int pvmove(struct cmd_context *cmd, int argc, char **argv)
 	unsigned is_abort = arg_is_set(cmd, abort_ARG);
 
 	/* dm raid1 target must be present in every case */
-	if (!_pvmove_target_present(cmd, 0)) {
+	if (!_pvmove_target_present(cmd)) {
 		log_error("Required device-mapper target(s) not "
 			  "detected in your kernel.");
 		return ECMD_FAILED;
