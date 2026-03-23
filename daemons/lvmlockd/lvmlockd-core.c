@@ -7384,7 +7384,11 @@ static int main_loop(daemon_state *ds_arg)
 	pthread_mutex_init(&log_mutex, NULL);
 
 	openlog("lvmlockd", LOG_CONS | LOG_PID, LOG_DAEMON);
+#ifdef LOCKDSANLOCK_SUPPORT
 	log_warn("lvmlockd started " LVM_VERSION " sanlock_support %u", LOCKDSANLOCK_SUPPORT);
+#else
+	log_warn("lvmlockd started " LVM_VERSION " sanlock_support no");
+#endif
 
 	listen_fd = ds_arg->socket_fd;
 	listen_pi = add_pollfd(listen_fd);
@@ -7619,7 +7623,11 @@ int main(int argc, char *argv[])
 			usage(argv[0], stdout);
 			exit(EXIT_SUCCESS);
 		case 'V':
+#ifdef LOCKDSANLOCK_SUPPORT
 			printf("lvmlockd version: " LVM_VERSION " sanlock_support %u\n", LOCKDSANLOCK_SUPPORT);
+#else
+			printf("lvmlockd version: " LVM_VERSION " sanlock_support no\n");
+#endif
 			exit(EXIT_SUCCESS);
 		case 'T':
 			daemon_test = 1;
