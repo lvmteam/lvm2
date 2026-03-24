@@ -1531,7 +1531,10 @@ static int _read_meta_field(FILE *fp, const char *key,
 
 	buf[0] = '\0';
 
-	rewind(fp);
+	if (fseek(fp, 0L, SEEK_SET)) {
+		log_error("fseek failed for key \"%s\".", key);
+		return -1;
+	}
 
 	while (fgets(line, sizeof(line), fp)) {
 		if (strncmp(line, key, key_len))
