@@ -2152,6 +2152,10 @@ static int _alloc_parallel_area(struct alloc_handle *ah, uint32_t max_to_allocat
 		}
 
 		pva = alloc_state->areas[s + ix_log_skip].pva;
+		if (!pva) {
+			log_error("Missing PV area for parallel allocation.");
+			return 0;
+		}
 		if (ah->alloc_and_split_meta && !ah->split_metadata_is_allocated) {
 			/*
 			 * The metadata area goes at the front of the allocated
