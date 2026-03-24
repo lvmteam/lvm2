@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2017 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2026 Red Hat, Inc. All rights reserved.
  * Copyright (C) 2006 Rackable Systems All rights reserved.
  *
  * This file is part of the device-mapper userspace tools.
@@ -580,7 +580,7 @@ int dm_message_supports_precise_timestamps(void);
 
 /*
  * Precise timestamps and histogram support.
- * 
+ *
  * Test for the presence of precise_timestamps and histogram support.
  */
 int dm_stats_driver_supports_precise(void);
@@ -2194,6 +2194,38 @@ int dm_vdo_parse_logical_size(const char *vdo_path, uint64_t *logical_blocks);
 
 int dm_vdo_status_parse(struct dm_pool *mem, const char *input,
 			struct dm_vdo_status_parse_result *result);
+
+struct dm_vdo_stats {
+	uint64_t physical_blocks;
+	uint64_t logical_blocks;
+	uint64_t bytes_per_physical_block;
+	uint64_t bytes_per_logical_block;
+	uint64_t data_blocks_used;
+	uint64_t overhead_blocks_used;
+	uint64_t logical_blocks_used;
+	uint64_t bios_in;	/* write bios only (kernel: biosIn.write) */
+	uint64_t bios_out;	/* write bios only (kernel: biosOut.write) */
+	uint64_t bios_meta;	/* write bios only (kernel: biosMeta.write) */
+	enum dm_vdo_operating_mode operating_mode;
+};
+
+struct dm_vdo_stats_field {
+	char label[64];
+	char value[64];
+};
+
+struct dm_vdo_stats_full {
+	struct dm_vdo_stats *stats;
+	unsigned field_count;
+	struct dm_vdo_stats_field fields[];
+};
+
+#define DM_VDO_STATS_BASIC 0x0
+#define DM_VDO_STATS_FULL  0x1
+
+struct dm_vdo_stats_full *dm_vdo_stats_parse(struct dm_pool *mem,
+					     const char *stats_str,
+					     unsigned flags);
 
 /*
  * FIXME Add individual cache policy pairs  <key> = value, like:
@@ -4066,7 +4098,7 @@ int dm_udev_complete(uint32_t cookie);
 int dm_udev_wait(uint32_t cookie);
 
 /*
- * dm_dev_wait_immediate 
+ * dm_dev_wait_immediate
  * If *ready is 1 on return, the wait is complete.
  * If *ready is 0 on return, the wait is incomplete and either
  * this function or dm_udev_wait() must be called again.

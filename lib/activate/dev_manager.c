@@ -179,7 +179,7 @@ out:
 	return NULL;
 }
 
-/* Read info from DM VDO 'stats' message */
+/* Read data_blocks_used and logical_blocks_used from VDO stats message */
 static int _vdo_pool_message_stats(struct dm_pool *mem,
 				   const struct logical_volume *lv,
 				   struct lv_status_vdo *status)
@@ -187,19 +187,11 @@ static int _vdo_pool_message_stats(struct dm_pool *mem,
 	const char *response;
 	const char *dlid;
 	struct dm_task *dmt = NULL;
+	struct dm_vdo_stats_full *full;
 	int r = 0;
-	unsigned i;
-	const char *p;
-	struct vdo_msg_elem {
-		const char *name;
-		uint64_t *val;
-	} const vme[] = { /* list of properties lvm2 wants to parse */
-		{ "dataBlocksUsed", &status->data_blocks_used },
-		{ "logicalBlocksUsed", &status->logical_blocks_used }
-	};
 
-	for (i = 0; i < DM_ARRAY_SIZE(vme); ++i)
-		*vme[i].val = ULLONG_MAX;
+	status->data_blocks_used = ULLONG_MAX;
+	status->logical_blocks_used = ULLONG_MAX;
 
 	if (!(dlid = build_dm_uuid(mem, lv, lv_layer(lv))))
 		return_0;
@@ -217,17 +209,10 @@ static int _vdo_pool_message_stats(struct dm_pool *mem,
 			     display_lvname(lv));
 
 	if ((response = dm_task_get_message_response(dmt))) {
-		for (i = 0; i < DM_ARRAY_SIZE(vme); ++i) {
-			errno = 0;
-			if (!(p = strstr(response,  vme[i].name)) ||
-			    !(p = strchr(p, ':')) ||
-			    ((*vme[i].val = strtoul(p + 1, NULL, 10)) == ULLONG_MAX) || errno) {
-				log_debug("Cannot parse %s in VDO DM stats message.", vme[i].name);
-				*vme[i].val = ULLONG_MAX;
-				goto out;
-			}
-			if (*vme[i].val != ULLONG_MAX)
-				log_debug("VDO property %s = " FMTu64, vme[i].name, *vme[i].val);
+		if ((full = dm_vdo_stats_parse(NULL, response, DM_VDO_STATS_BASIC))) {
+			status->data_blocks_used = full->stats->data_blocks_used;
+			status->logical_blocks_used = full->stats->logical_blocks_used;
+			dm_free(full);
 		}
 	}
 
