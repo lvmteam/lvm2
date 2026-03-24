@@ -40,7 +40,7 @@ CLEAN_TARGETS += $(shell find -H lib -type l 2>/dev/null) \
 	$(CXXSOURCES:%.cpp=%.o) $(CXXSOURCES:%.cpp=%.d) $(CXXSOURCES:%.cpp=%.gcno) $(CXXSOURCES:%.cpp=%.gcda)
 
 CLEAN_TARGETS += .lib-dir-stamp .tests-stamp $(LIB) $(addprefix lib/,\
-	clvmd harness dmeventd dmsetup dmstats lvmpolld \
+	clvmd harness dmeventd dmsetup dmstats dmvdostats lvmpolld \
 	$(LVM_PROFILES) $(LVM_SCRIPTS) \
 	paths-installed paths-installed-t paths-common paths-common-t)
 
@@ -369,6 +369,7 @@ endif
 	$(Q) $(MKDIR_P) api lib unit
 	$(Q) $(RM) lib/clvmd
 	$(Q) $(LN_S) -f dmsetup lib/dmstats
+	$(Q) $(LN_S) -f dmsetup lib/dmvdostats
 	$(Q) $(foreach FILE, $(CMDS), $(LN_S) -f lvm-wrapper lib/$(FILE) $(newline))
 	$(Q) $(foreach FILE, $(LVM_TOOLS), $(LN_S) -f $(abs_top_builddir)/$(FILE) lib/ $(newline))
 	$(Q) $(LN_S) -f $(addprefix $(abs_top_srcdir)/conf/, $(LVM_PROFILES)) lib/

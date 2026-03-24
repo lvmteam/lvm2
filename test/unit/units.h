@@ -35,6 +35,7 @@ void radix_tree_tests(struct dm_list *all_tests);
 void regex_tests(struct dm_list *all_tests);
 void string_tests(struct dm_list *all_tests);
 void vdo_tests(struct dm_list *all_tests);
+void vdo_stats_tests(struct dm_list *all_tests);
 
 // ... and call it in here.
 static inline void register_all_tests(struct dm_list *all_tests)
@@ -54,6 +55,7 @@ static inline void register_all_tests(struct dm_list *all_tests)
 	regex_tests(all_tests);
 	string_tests(all_tests);
 	vdo_tests(all_tests);
+	vdo_stats_tests(all_tests);
 }
 
 //-----------------------------------------------------------------

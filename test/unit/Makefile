@@ -14,8 +14,6 @@
 #       which defined all top_* variables
 
 UNIT_SOURCE=\
-	libdm/vdo/vdo_status.c \
-	\
 	test/unit/bcache_t.c \
 	test/unit/daemon_stray_t.c \
 	test/unit/bcache_utils_t.c \
@@ -32,7 +30,8 @@ UNIT_SOURCE=\
 	test/unit/radix_tree_t.c \
 	test/unit/run.c \
 	test/unit/string_t.c \
-	test/unit/vdo_t.c
+	test/unit/vdo_t.c \
+	test/unit/vdo_stats_t.c
 
 UNIT_TARGET = test/unit/unit-test
 UNIT_DEPENDS = $(UNIT_SOURCE:%.c=%.d)
