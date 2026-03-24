@@ -18,7 +18,7 @@ top_builddir = @top_builddir@
 
 all: device-mapper
 
-SOURCES2 = dmsetup.c
+SOURCES2 = dmsetup.c dmvdostats.c
 
 CFLOW_SOURCES = $(addprefix $(srcdir)/, $(SOURCES2))
 CFLOW_TARGET := $(TARGETS_DM)
@@ -56,30 +56,35 @@ CLEAN_TARGETS = $(LDDEPS) .exported_symbols_generated \
 include $(top_builddir)/libdm/make.tmpl
 
 CFLAGS_dmsetup.o += $(UDEV_CFLAGS) $(EXTRA_EXEC_CFLAGS)
+CFLAGS_dmvdostats.o += $(EXTRA_EXEC_CFLAGS)
 CFLAGS_dmfilemapd.o += $(EXTRA_EXEC_CFLAGS)
 LIBDM_LIBS = -L$(interfacebuilddir) -ldevmapper
 LIBDM_SHARED = $(interfacebuilddir)/libdevmapper.so
 LIBDM_STATIC = $(interfacebuilddir)/libdevmapper.a
 
-dmsetup: dmsetup.o $(LIBDM_SHARED)
+DMSETUP_OBJS = dmsetup.o dmvdostats.o
+
+dmsetup: $(DMSETUP_OBJS) $(LIBDM_SHARED)
 	$(SHOW) "    [CC] $@"
 	$(Q) $(CC) $(CFLAGS) $(LDFLAGS) $(EXTRA_EXEC_LDFLAGS) $(ELDFLAGS) \
-	      -o $@ $< $(LIBDM_LIBS) $(LIBS)
+	      -o $@ $(DMSETUP_OBJS) $(LIBDM_LIBS) $(LIBS)
 
-dmsetup.static: dmsetup.o $(LIBDM_STATIC)
+dmsetup.static: $(DMSETUP_OBJS) $(LIBDM_STATIC)
 	$(SHOW) "    [CC] $@"
 	$(Q) $(CC) $(CFLAGS) $(LDFLAGS) $(STATIC_LDFLAGS) -static \
-	      -o $@ $< $(LIBDM_LIBS) $(LIBS) $(STATIC_LIBS)
+	      -o $@ $(DMSETUP_OBJS) $(LIBDM_LIBS) $(LIBS) $(STATIC_LIBS)
 
 install_dmsetup_dynamic: dmsetup
 	$(SHOW) "    [INSTALL] $<"
 	$(Q) $(INSTALL_PROGRAM) -D $< $(sbindir)/$(<F)
 	$(Q) $(LN_S) -f $(<F) $(sbindir)/dmstats
+	$(Q) $(LN_S) -f $(<F) $(sbindir)/dmvdostats
 
 install_dmsetup_static: dmsetup.static
 	$(SHOW) "    [INSTALL] $<"
 	$(Q) $(INSTALL_PROGRAM) -D $< $(staticdir)/$(<F)
 	$(Q) $(LN_S) -f $(<F) $(staticdir)/dmstats.static
+	$(Q) $(LN_S) -f $(<F) $(staticdir)/dmvdostats.static
 
 
 dmfilemapd: dmfilemapd.o $(LIBDM_SHARED)

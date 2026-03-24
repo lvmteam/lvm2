@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2001-2004 Sistina Software, Inc. All rights reserved.
- * Copyright (C) 2004-2025 Red Hat, Inc. All rights reserved.
+ * Copyright (C) 2004-2026 Red Hat, Inc. All rights reserved.
  * Copyright (C) 2005-2007 NEC Corporation
  *
  * This file is part of the device-mapper userspace tools.
@@ -19,6 +19,7 @@
 // For canonicalize_file_name()
 #include "libdm/misc/dm-logging.h"
 #include "libdm/dm-tools/util.h"
+#include "libdm/dm-tools/dmvdostats.h"
 
 #ifdef __linux__
 #  include "libdm/misc/kdev_t.h"
@@ -115,14 +116,16 @@ typedef enum {
 	DMLOSETUP_CMD = 2,
 	DMSTATS_CMD = 3,
 	DMSETUP_STATS_CMD = 4,
-	DEVMAP_NAME_CMD = 5
+	DEVMAP_NAME_CMD = 5,
+	VDOSTATS_CMD = 6
 } cmd_name_t;
 
 typedef enum {
 	DMSETUP_TYPE = 0,
 	LOSETUP_TYPE = 1,
 	STATS_TYPE = 2,
-	DEVMAP_NAME_TYPE = 3
+	DEVMAP_NAME_TYPE = 3,
+	VDOSTATS_TYPE = 4
 } cmd_type_t;
 
 #define DMSETUP_CMD_NAME "dmsetup"
@@ -131,6 +134,7 @@ typedef enum {
 #define DMSTATS_CMD_NAME "dmstats"
 #define DMSETUP_STATS_CMD_NAME "dmsetup stats"
 #define DEVMAP_NAME_CMD_NAME "devmap_name"
+#define VDOSTATS_CMD_NAME "dmvdostats"
 
 static const struct {
 	cmd_name_t command;
@@ -143,6 +147,7 @@ static const struct {
 	{ DMSTATS_CMD, DMSTATS_CMD_NAME, STATS_TYPE },
 	{ DMSETUP_STATS_CMD, DMSETUP_STATS_CMD_NAME, STATS_TYPE },
 	{ DEVMAP_NAME_CMD, DEVMAP_NAME_CMD_NAME, DEVMAP_NAME_TYPE },
+	{ VDOSTATS_CMD, VDOSTATS_CMD_NAME, VDOSTATS_TYPE },
 };
 
 static const int _num_base_commands = DM_ARRAY_SIZE(_base_commands);
@@ -250,6 +255,12 @@ typedef enum {
 	DN_MAP		/* Map name (for dm devices only, equal to DN_BLK otherwise) */
 } dev_name_t;
 
+static uint64_t _disp_factor = 512; /* display sizes in sectors */
+static char _disp_units = 's';
+
+uint64_t get_disp_factor(void) { return _disp_factor; }
+char get_disp_units(void) { return _disp_units; }
+
 static cmd_name_t _base_command = DMSETUP_CMD;	/* Default command is 'dmsetup' */
 static cmd_type_t _base_command_type = DMSETUP_TYPE;
 static uint16_t _switches[NUM_SWITCHES];
@@ -270,8 +281,6 @@ static report_type_t _report_type;
 static dev_name_t _dev_name_type;
 static int64_t _count = 1; /* count of repeating reports */
 static struct dm_timestamp *_initial_timestamp = NULL;
-static uint64_t _disp_factor = 512; /* display sizes in sectors */
-static char _disp_units = 's';
 static const char *_program_id = DM_STATS_PROGRAM_ID; /* program_id used for reports. */
 static uint64_t _statstype = 0; /* stats objects to report */
 static int _concise_output_produced = 0; /* Was any concise output already printed? */
@@ -899,7 +908,7 @@ static int _display_info_cols(struct dm_task *dmt, struct dm_info *info)
 
 	if (!(_report_type & (DR_STATS | DR_STATS_META))) {
 		/*
-		 * If _selection_cmd is set we are applying -S to some other command, so suppress 
+		 * If _selection_cmd is set we are applying -S to some other command, so suppress
 		 * output and run that other command if the device matches the criteria.
 		 */
 		if (!dm_report_object_is_selected(_report, &obj, _selection_cmd ? 0 : 1, &selected))
@@ -3172,7 +3181,7 @@ static int _uint32_disp(struct dm_report *rh,
 	return dm_report_field_uint32(rh, field, &value);
 }
 
-static int _show_units(void)
+int show_units(void)
 {
 	/* --nosuffix overrides --units */
 	if (_switches[NOSUFFIX_ARG])
@@ -3714,7 +3723,7 @@ static int _dm_stats_region_start_disp(struct dm_report *rh,
 		return_0;
 
 	if (!(repstr = dm_size_to_string(mem, region_start, units, 1, factor,
-					 _show_units(), DM_SIZE_UNIT)))
+					 show_units(), DM_SIZE_UNIT)))
 		return_0;
 
 	if (!(sortval = dm_pool_alloc(mem, sizeof(uint64_t))))
@@ -3742,7 +3751,7 @@ static int _dm_stats_region_len_disp(struct dm_report *rh,
 		return_0;
 
 	if (!(repstr = dm_size_to_string(mem, region_length, units, 1, factor,
-					 _show_units(), DM_SIZE_UNIT)))
+					 show_units(), DM_SIZE_UNIT)))
 		return_0;
 
 	if (!(sortval = dm_pool_alloc(mem, sizeof(uint64_t))))
@@ -3784,7 +3793,7 @@ static int _dm_stats_area_start_disp(struct dm_report *rh,
 		return_0;
 
 	if (!(repstr = dm_size_to_string(mem, area_start, units, 1, factor,
-					 _show_units(), DM_SIZE_UNIT)))
+					 show_units(), DM_SIZE_UNIT)))
 		return_0;
 
 	if (!(sortval = dm_pool_alloc(mem, sizeof(uint64_t))))
@@ -3812,7 +3821,7 @@ static int _dm_stats_area_offset_disp(struct dm_report *rh,
 		return_0;
 
 	if (!(repstr = dm_size_to_string(mem, area_offset, units, 1, factor,
-					 _show_units(), DM_SIZE_UNIT)))
+					 show_units(), DM_SIZE_UNIT)))
 		return_0;
 
 	if (!(sortval = dm_pool_alloc(mem, sizeof(uint64_t))))
@@ -3840,7 +3849,7 @@ static int _dm_stats_area_len_disp(struct dm_report *rh,
 		return_0;
 
 	if (!(repstr = dm_size_to_string(mem, area_len, units, 1, factor,
-					 _show_units(), DM_SIZE_UNIT)))
+					 show_units(), DM_SIZE_UNIT)))
 		return_0;
 
 	if (!(sortval = dm_pool_alloc(mem, sizeof(uint64_t))))
@@ -4180,7 +4189,7 @@ static int _dm_stats_size_disp_helper(struct dm_report *rh,
 		return_0;
 
 	if (!(repstr = dm_size_to_string(mem, (uint64_t) value, _disp_units, 1,
-					 _disp_factor, _show_units(), DM_SIZE_UNIT)))
+					 _disp_factor, show_units(), DM_SIZE_UNIT)))
 		return_0;
 
 	if (!(sortval = dm_pool_alloc(mem, sizeof(double))))
@@ -4598,8 +4607,17 @@ static int _report_init(const struct command *cmd, const char *subcommand)
 	if (columns_as_rows)
 		flags |= DM_REPORT_OUTPUT_COLUMNS_AS_ROWS;
 
-	if (!(_report = dm_report_init_with_selection(&_report_type, _report_types,
-				_report_fields, options, separator, flags, keys,
+	if (cmd && !strcmp(cmd->name, "vdostats")) {
+		const char *vdo_opts =
+			(_switches[OPTIONS_ARG] && _string_args[OPTIONS_ARG])
+				? options : NULL;
+		if (!(_report = vdostats_report_init(vdo_opts, separator,
+						     flags, keys,
+						     selection)))
+			goto_out;
+	} else if (!(_report = dm_report_init_with_selection(&_report_type,
+				_report_types, _report_fields, options,
+				separator, flags, keys,
 				selection, NULL, NULL)))
 		goto_out;
 
@@ -5982,6 +6000,86 @@ static const struct command _stats_subcommands[] = {
 
 static int _dmsetup_help(CMD_ARGS);
 
+/*
+ * VDO stats command.
+ */
+
+static int _vdostats_process_device(const char *name)
+{
+	char *stats_str;
+
+	if (!(stats_str = vdo_get_stats(name)))
+		return_0;
+
+	if (_switches[VERBOSE_ARG]) {
+		if (_switches[OPTIONS_ARG])
+			log_warn("WARNING: --verbose overrides "
+				 "-o/--options; use one or the other.");
+		vdostats_print_verbose(name, stats_str);
+	} else if (_report) {
+		if (!vdostats_report_device(_report, name, stats_str)) {
+			dm_free(stats_str);
+			return_0;
+		}
+	}
+
+	dm_free(stats_str);
+	return 1;
+}
+
+static int _vdo_check_device(const char *name)
+{
+	struct dm_task *dmt;
+	uint64_t start, length;
+	char *target_type = NULL;
+	char *params = NULL;
+	void *next = NULL;
+	int r = 0;
+
+	if (!(dmt = dm_task_create(DM_DEVICE_TABLE)))
+		return_0;
+	if (!dm_task_set_name(dmt, name))
+		goto_out;
+	if (!dm_task_no_open_count(dmt))
+		goto_out;
+	if (!_task_run(dmt))
+		goto_out;
+	next = dm_get_next_target(dmt, next, &start, &length,
+				  &target_type, &params);
+	if (!target_type || strcmp(target_type, "vdo"))
+		goto_out;
+	/* Reject multi-target devices */
+	if (dm_get_next_target(dmt, next, &start, &length,
+			       &target_type, &params))
+		goto_out;
+	r = 1;
+out:
+	dm_task_destroy(dmt);
+	return r;
+}
+
+static int _vdostats(CMD_ARGS)
+{
+	const char *name = NULL;
+
+	if (names)
+		name = names->name;
+	else {
+		if (!argc && !_switches[UUID_ARG] && !_switches[MAJOR_ARG])
+			return _process_all(cmd, NULL, argc, argv, 1,
+					    _vdostats);
+		name = argv[0];
+	}
+
+	if (!_vdo_check_device(name)) {
+		if (!names)
+			log_error("Device %s is not a VDO device.", name);
+		return names ? 1 : 0;
+	}
+
+	return _vdostats_process_device(name);
+}
+
 static const struct command _dmsetup_commands[] = {
 	{"help", "[-c|-C|--columns]", 0, 0, 0, 0, _dmsetup_help},
 	{"create", "<dev_name>\n"
@@ -6024,6 +6122,7 @@ static const struct command _dmsetup_commands[] = {
 	{"version", "", 0, 0, 0, 0, _version},
 	{"setgeometry", "<device> <cyl> <head> <sect> <start>", 5, 5, 0, 0, _setgeometry},
 	{"splitname", "<device> [<subsystem>]", 1, 2, 0, 0, _splitname},
+	{"vdostats", "[<device>...]", 0, -1, 1, 0, _vdostats},
 };
 
 /*
@@ -6033,6 +6132,24 @@ static const struct command _dmsetup_commands[] = {
 static void _devmap_name_usage(FILE *out)
 {
 	fprintf(out, "Usage: " DEVMAP_NAME_CMD_NAME " <major> <minor>\n\n");
+}
+
+static void _vdostats_usage(FILE *out)
+{
+	fprintf(out, "Usage:\n\n"
+		"%s\n\t"
+		"[-h|--help]\n\t"
+		"[-v|--verbose [-v|--verbose ...]]\n\t"
+		"[--count <count>] [--interval <seconds>]\n\t"
+		"[-o <fields>] [-O|--sort <sort_fields>]\n\t"
+		"[-S|--select <selection>]\n\t"
+		"[--noheadings] [--nosuffix] [--separator <separator>]\n\t"
+		"[--units <units>]\n\t"
+		"[<device>...]\n\n",
+		_base_commands[_base_command].name);
+
+	fprintf(out, "<device> may be device name.\n"
+		"<fields> are comma-separated.  Use 'help -c' for list.\n\n");
 }
 
 static void _stats_usage(FILE *out)
@@ -6078,7 +6195,8 @@ static void _dmsetup_usage(FILE *out)
 		_base_commands[_base_command].name);
 
 	for (i = 0; i < DM_ARRAY_SIZE(_dmsetup_commands); ++i)
-		fprintf(out, "\t%s %s\n", _dmsetup_commands[i].name, _dmsetup_commands[i].help);
+		if (strcmp(_dmsetup_commands[i].name, "vdostats"))
+			fprintf(out, "\t%s %s\n", _dmsetup_commands[i].name, _dmsetup_commands[i].help);
 
 	fprintf(out, "\n<device> may be device name or (if only one) -u <uuid> or "
 		"-j <major> -m <minor>\n"
@@ -6118,6 +6236,9 @@ static void _usage(FILE *out)
 		break;
 	case DEVMAP_NAME_TYPE:
 		_devmap_name_usage(out);
+		break;
+	case VDOSTATS_TYPE:
+		_vdostats_usage(out);
 		break;
 	}
 }
@@ -6919,9 +7040,11 @@ static int _process_switches(int *argcp, char ***argvp, const char *dev_dir)
 	*argvp += optind;
 	*argcp -= optind;
 
-	if (!*argcp)
+	if (_base_command == VDOSTATS_CMD) {
+		_command = "vdostats";
+	} else if (!*argcp) {
 		_command = NULL;
-	else if (!strcmp((*argvp)[0], "stats")) {
+	} else if (!strcmp((*argvp)[0], "stats")) {
 		_base_command = DMSETUP_STATS_CMD;
 		_base_command_type = STATS_TYPE;
 		_command = "stats";
@@ -6929,6 +7052,12 @@ static int _process_switches(int *argcp, char ***argvp, const char *dev_dir)
 		(*argcp)--;
 	} else if (_base_command == DMSTATS_CMD) {
 		_command = "stats";
+	} else if (!strcmp((*argvp)[0], "vdostats")) {
+		_base_command = VDOSTATS_CMD;
+		_base_command_type = VDOSTATS_TYPE;
+		_command = "vdostats";
+		(*argvp)++;
+		(*argcp)--;
 	} else if (*argcp) {
 		_command = (*argvp)[0];
 		(*argvp)++;
@@ -7028,6 +7157,14 @@ unknown:
 		_switches[COLS_ARG]++;
 
 	if (!strcmp(cmd->name, "stats")) {
+		_switches[COLS_ARG]++;
+		if (!_switches[UNITS_ARG]) {
+			_switches[UNITS_ARG]++;
+			_string_args[UNITS_ARG] = (char *) "h";
+		}
+	}
+
+	if (!strcmp(cmd->name, "vdostats") && !_switches[VERBOSE_ARG]) {
 		_switches[COLS_ARG]++;
 		if (!_switches[UNITS_ARG]) {
 			_switches[UNITS_ARG]++;

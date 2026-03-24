@@ -1,0 +1,208 @@
+.TH DMVDOSTATS 8 "Mar 2026" Linux "MAINTENANCE COMMANDS"
+.
+.SH NAME
+.
+dmvdostats \(em Display VDO statistics for device-mapper devices
+.
+.SH SYNOPSIS
+.
+.B dmvdostats
+.RB [ -h | --help ]
+.RB [ -v | --verbose ]
+.RB [ --count
+.IR count ]
+.RB [ --interval
+.IR seconds ]
+.RB [ -o | --options
+.IR fields ]
+.RB [ -O | --sort
+.IR sort_fields ]
+.RB [ -S | --select
+.IR selection ]
+.RB [ --noheadings ]
+.RB [ --nosuffix ]
+.RB [ --separator
+.IR separator ]
+.RB [ --units
+.IR units ]
+.RI [ device ...]
+.
+.P
+.B dmsetup vdostats
+.RI [ options ]
+.RI [ device ...]
+.
+.SH DESCRIPTION
+.
+.B dmvdostats
+displays statistics for VDO (Virtual Data Optimizer) device-mapper
+targets.  It queries each VDO device via the kernel stats
+message interface and presents the results in either a
+tabular (report) format or a verbose key-value format.
+.P
+If no
+.I device
+argument is given,
+.B dmvdostats
+enumerates all device-mapper devices and reports statistics for every
+VDO target found.
+.P
+.B dmvdostats
+is installed as a symlink to
+.BR dmsetup (8)
+and may also be invoked as
+.BR "dmsetup vdostats" .
+.
+.SH OPTIONS
+.
+.TP
+.BR -h ", " --help
+Display usage information.
+.
+.TP
+.BR -v ", " --verbose
+Produce verbose output.  Instead of the tabular report, display all
+kernel statistics in a key-value format compatible with the legacy
+.B vdostats
+tool.  Derived fields (1K-blocks, used percent, saving percent, write
+amplification) are inserted into the output.
+.
+.TP
+.BI --count " count"
+Repeat the report
+.I count
+times.  Use with
+.B --interval
+to monitor VDO statistics continuously.
+.
+.TP
+.BI --interval " seconds"
+Pause
+.I seconds
+between report iterations when
+.B --count
+is greater than one.
+.
+.TP
+.BR -o ", " --options " " \fIfields\fP
+Comma-separated list of fields to display.
+Use
+.B -o help
+to see a list of available fields.
+If not specified, the default fields are:
+.br
+.BR vdo_name , vdo_physical_size , vdo_used ,
+.BR vdo_available , vdo_used_pct , vdo_saving_pct .
+.
+.TP
+.BR -O ", " --sort " " \fIsort_fields\fP
+Comma-separated list of fields to sort by.
+.
+.TP
+.BR -S ", " --select " " \fIselection\fP
+Display only rows that match the selection criteria.
+See
+.BR lvmreport (7)
+for the selection syntax.
+.
+.TP
+.B --noheadings
+Suppress the headings line in report output.
+.
+.TP
+.B --nosuffix
+Suppress the suffix on size values.
+.
+.TP
+.BI --separator " separator"
+Use
+.I separator
+between fields in report output.
+.
+.TP
+.BI --units " units"
+Set the display unit for size fields.
+Available units:
+.BR b (ytes),
+.BR s (ectors),
+.BR k (ilobytes),
+.BR m (egabytes),
+.BR g (igabytes),
+.BR t (erabytes),
+.BR p (etabytes),
+.BR e (xabytes).
+Capitalize to use multiples of 1000 (S.I.) instead of 1024.
+Default is human-readable
+.RB ( h ).
+.
+.SH FIELDS
+.
+The following fields are available for report output
+.RB ( -o ):
+.
+.TP
+.B vdo_name
+VDO device name.
+.TP
+.B vdo_physical_size
+Physical size of the VDO device.
+.TP
+.B vdo_used
+Physical space used (data blocks + overhead).
+.TP
+.B vdo_available
+Physical space available.
+.TP
+.B vdo_used_pct
+Percentage of physical space used.
+.TP
+.B vdo_saving_pct
+Percentage of logical data saved by deduplication and compression.
+.TP
+.B vdo_all
+All VDO fields.
+.
+.SH EXAMPLES
+.
+Display default statistics for all VDO devices:
+.P
+.EX
+# dmvdostats
+.EE
+.
+.P
+Display verbose output for a specific device:
+.P
+.EX
+# dmvdostats -v /dev/mapper/vg-vpool0-vpool
+.EE
+.
+.P
+Display selected fields:
+.P
+.EX
+# dmvdostats -o vdo_name,vdo_used_pct,vdo_saving_pct
+.EE
+.
+.P
+Monitor usage every 5 seconds, 10 times:
+.P
+.EX
+# dmvdostats --count 10 --interval 5
+.EE
+.
+.P
+Filter to devices over 50% usage:
+.P
+.EX
+# dmvdostats -S 'vdo_used_pct > 50'
+.EE
+.
+.SH SEE ALSO
+.
+.nh
+.BR dmsetup (8),
+.BR lvm (8),
+.BR lvmvdo (7),
+.BR lvs (8)
+.hy
