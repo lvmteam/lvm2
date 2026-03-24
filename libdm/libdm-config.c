@@ -1499,13 +1499,17 @@ struct dm_pool *dm_config_memory(struct dm_config_tree *cft)
 static int _override_path(const char *path, struct dm_config_node *node, void *baton)
 {
 	struct dm_config_tree *cft = baton;
-	struct dm_config_node dummy, *target;
+	struct dm_config_node dummy, *target, *cn;
 	dummy.child = cft->root;
 	if (!(target = _find_or_make_node(cft->mem, &dummy, path, 0)))
 		return_0;
 	if (!(target->v = _clone_config_value(cft->mem, node->v)))
 		return_0;
 	cft->root = dummy.child;
+	/* Clear dangling parent pointers to stack variable */
+	for (cn = cft->root; cn; cn = cn->sib)
+		if (cn->parent == &dummy)
+			cn->parent = NULL;
 	return 1;
 }
 
