@@ -2318,7 +2318,7 @@ void lvmcache_update_vg_from_read(struct volume_group *vg, int *incorrect_pv_cla
 		if (!_outdated_warning++)
 			log_warn("See vgck --updatemetadata to clear outdated metadata.");
 
-		_drop_vginfo(info, vginfo); /* remove from vginfo->infos */
+		_vginfo_detach_info(info); /* remove from vginfo->infos */
 		dm_list_add(&vginfo->outdated_infos, &info->list);
 	}
 
