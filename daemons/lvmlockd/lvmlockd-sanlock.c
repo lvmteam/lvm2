@@ -666,6 +666,9 @@ static int read_lockspace_info(char *path, uint32_t host_id, int *sector_size, i
 		return rv;
 	}
 
+	*no_timeout = 0;
+	*using_caw = 0;
+
 	if ((ss.flags & SANLK_LSF_SECTOR4K) && (ss.flags & SANLK_LSF_ALIGN8M)) {
 		*sector_size = 4096;
 		*align_mb = 8;
