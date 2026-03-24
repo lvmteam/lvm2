@@ -2154,12 +2154,13 @@ static void res_process(struct lockspace *ls, struct resource *r,
 
 	list_for_each_entry_safe(act, safe, &r->actions, list) {
 		if (act->op == LD_OP_ENABLE || act->op == LD_OP_DISABLE) {
+			int is_disable = (act->op == LD_OP_DISABLE);
 			rv = res_able(ls, r, act);
 			act->result = rv;
 			list_del(&act->list);
 			add_client_result(act);
 
-			if (!rv && act->op == LD_OP_DISABLE) {
+			if (!rv && is_disable) {
 				log_debug("%s:%s free disabled", ls->name, r->name);
 				goto r_free;
 			}
