@@ -595,6 +595,8 @@ static void _check_lv_segment(struct logical_volume *lv, struct lv_segment *seg,
 			seg_error("is not flagged as integrity LV");
 		if (seg->area_count != 1)
 			seg_error("is missing integrity origin");
+		else if (!seg_lv(seg, 0))
+			seg_error("is missing integrity origin LV");
 		else if (!lv_is_integrity_origin(seg_lv(seg, 0)))
 			seg_error("has invalid integrity origin");
 		else if (!strstr(seg_lv(seg, 0)->name, "_iorig"))
