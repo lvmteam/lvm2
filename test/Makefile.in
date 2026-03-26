@@ -152,6 +152,11 @@ check_local: .tests-stamp
 		--testdir . --outdir $(LVM_TEST_RESULTS) \
 		--flavours ndev-vanilla --only $(T) --skip $(S)
 
+check_local_extended: .tests-stamp
+	VERBOSE=$(VERBOSE) ./lib/runner \
+		--testdir . --outdir $(LVM_TEST_RESULTS) \
+		--flavours ndev-vanilla-extended --only $(T) --skip $(S)
+
 ifeq ("@BUILD_LVMPOLLD@", "yes")
 check_lvmpolld: .tests-stamp
 	VERBOSE=$(VERBOSE) ./lib/runner \
@@ -202,6 +207,7 @@ EXECDIR := $(libexecdir)/lvm2-testsuite
 LIB_FLAVOURS :=\
  flavour-ndev-lvmpolld\
  flavour-ndev-vanilla\
+ flavour-ndev-vanilla-extended\
  flavour-ndev-devicesfile\
  flavour-udev-lvmpolld\
  flavour-udev-lvmlockd-sanlock\
