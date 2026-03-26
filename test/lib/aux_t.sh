@@ -1200,6 +1200,8 @@ common_dev_() {
 			echo "$from $len delay $pvdev $(( pos + offset )) 0 $err_dev 0 0" ;;
 		delayzero)
 			echo "$from $len delay $zero_dev 0 $read_ms $zero_dev 0 $write_ms" ;;
+		dropwrites)
+			echo "$from $len flakey $pvdev $(( pos + offset )) 0 180 1 drop_writes" ;;
 		error|zero)
 			echo "$from $len $tgtype" ;;
 		esac
@@ -1417,6 +1419,20 @@ delayzero_dev() {
 	fi
 
 	common_dev_ delayzero "$@"
+}
+
+#
+# Convert device to one where reads pass through but writes are silently
+# dropped (using dm-flakey with drop_writes).  Useful for simulating a
+# dirty shutdown -- the caller's writes appear to succeed but never
+# reach persistent storage.  Restore with enable_dev.
+# i.e.  dropwrites_dev "$dev1"
+dropwrites_dev() {
+	if [[ ! -f HAVE_DM_FLAKEY ]]; then
+		target_at_least dm-flakey 1 1 0 || skip "dm-flakey required"
+		touch HAVE_DM_FLAKEY
+	fi
+	common_dev_ dropwrites "$@"
 }
 
 #
@@ -1948,6 +1964,41 @@ have_vdo() {
 	# TODO: lvmconfig should have an option to give this output directly
 	vdoformat=${vdoformat//\"}
 	[[ -x "$vdoformat" ]] || { echo "No executable to format VDO \"$vdoformat\"..."; return 1; }
+}
+
+get_vdo_stat() {
+	local dmname="$1"
+	local field="$2"
+	sync
+	local key
+	case "$field" in
+	"data blocks used")       key="dataBlocksUsed" ;;
+	"logical blocks used")    key="logicalBlocksUsed" ;;
+	"overhead blocks used")   key="overheadBlocksUsed" ;;
+	"physical blocks")        key="physicalBlocks" ;;
+	*)
+		echo "unknown vdo stat field: $field" >&2
+		return 1 ;;
+	esac
+	local response
+	response=$(dmsetup message "$dmname" 0 stats) || {
+		echo "dmsetup message failed for $dmname" >&2
+		return 1
+	}
+	echo "$response" | sed -n "s/.*${key} *: *\([0-9][0-9]*\).*/\1/p" | tail -1
+}
+
+wait_for_vdo_index() {
+	local dmname="$1"
+	local i
+	for i in $(seq 1 30); do
+		local state
+		state=$(dmsetup status "$dmname" | awk '{for(i=1;i<=NF;i++) if($i=="online") {print "online"; exit}}')
+		test "$state" = "online" && return 0
+		sleep 1
+	done
+	echo "Timed out waiting for VDO index to come online"
+	return 1
 }
 
 have_writecache() {
