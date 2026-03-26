@@ -223,4 +223,27 @@ grep "tim2_lv:tim1_lv" out
 
 lvremove -f $vg/tim1_lv $vg/tim2_lv
 
+# -------------------------------------------------------------------
+# 14. Sort by PCT field (snap_percent / data_percent)
+#     PCT maps to DM_REPORT_FIELD_TYPE_PERCENT.
+#     Create snapshots with different usage to get distinct values.
+#     Non-snapshot LVs have DM_PERCENT_INVALID (empty display).
+# -------------------------------------------------------------------
+lvcreate -l 8 -n pct_orig $vg
+lvcreate -l 4 -s -n pct_snap1 $vg/pct_orig
+lvcreate -l 8 -s -n pct_snap2 $vg/pct_orig
+# Write some data to origin so snapshots diverge
+dd if=/dev/zero of="$DM_DEV_DIR/$vg/pct_orig" bs=4096 count=64 conv=fdatasync
+
+# pct_snap1 (smaller COW) should have higher snap_percent than pct_snap2
+# Ascending: lower percent first
+lvs $ROPTS -o lv_name -O snap_percent -S "lv_name=~^pct_snap" $vg > out
+grep "pct_snap2:pct_snap1" out
+
+# Descending: higher percent first
+lvs $ROPTS -o lv_name -O -snap_percent -S "lv_name=~^pct_snap" $vg > out
+grep "pct_snap1:pct_snap2" out
+
+lvremove -f $vg/pct_snap1 $vg/pct_snap2 $vg/pct_orig
+
 vgremove -ff $vg
