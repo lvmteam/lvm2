@@ -4643,12 +4643,22 @@ static int _row_compare(const void *a, const void *b)
 			} else {	/* FLD_DESCENDING */
 				return (numa < numb) ? 1 : -1;
 			}
+		} else if (sfa->props->flags & DM_REPORT_FIELD_TYPE_STRING_LIST) {
+			int cmp = strcmp(((const struct str_list_sort_value *) sfa->sort_value)->value,
+					((const struct str_list_sort_value *) sfb->sort_value)->value);
+
+			if (!cmp)
+				continue;
+
+			if (sfa->props->flags & FLD_ASCENDING) {
+				return (cmp > 0) ? 1 : -1;
+			} else {	/* FLD_DESCENDING */
+				return (cmp < 0) ? 1 : -1;
+			}
 		} else {
-			/* DM_REPORT_FIELD_TYPE_STRING
-			 * DM_REPORT_FIELD_TYPE_STRING_LIST */
-			const char *stra = (const char *) sfa->sort_value;
-			const char *strb = (const char *) sfb->sort_value;
-			int cmp = strcmp(stra, strb);
+			/* DM_REPORT_FIELD_TYPE_STRING and others */
+			int cmp = strcmp((const char *) sfa->sort_value,
+					(const char *) sfb->sort_value);
 
 			if (!cmp)
 				continue;
