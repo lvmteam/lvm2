@@ -4622,10 +4622,12 @@ static int _row_compare(const void *a, const void *b)
 	const struct row *rowb = *(const struct row * const *) b;
 	const struct dm_report_field *sfa, *sfb;
 	uint32_t cnt;
+	int cmp;
 
 	for (cnt = 0; cnt < rowa->rh->keys_count; cnt++) {
 		sfa = (*rowa->sort_fields)[cnt];
 		sfb = (*rowb->sort_fields)[cnt];
+
 		if (sfa->props->flags &
 		    (DM_REPORT_FIELD_TYPE_NUMBER |
 		     DM_REPORT_FIELD_TYPE_SIZE |
@@ -4636,40 +4638,34 @@ static int _row_compare(const void *a, const void *b)
 			const uint64_t numb =
 			    *(const uint64_t *) sfb->sort_value;
 
-			if (numa == numb)
-				continue;
+			cmp = (numa == numb) ? 0 : (numa > numb) ? 1 : -1;
+		} else if (sfa->props->flags &
+			   (DM_REPORT_FIELD_TYPE_STRING |
+			    DM_REPORT_FIELD_TYPE_STRING_LIST)) {
+			const char *stra, *strb;
 
-			if (sfa->props->flags & FLD_ASCENDING) {
-				return (numa > numb) ? 1 : -1;
-			} else {	/* FLD_DESCENDING */
-				return (numa < numb) ? 1 : -1;
+			if (sfa->props->flags & DM_REPORT_FIELD_TYPE_STRING_LIST) {
+				stra = ((const struct str_list_sort_value *) sfa->sort_value)->value;
+				strb = ((const struct str_list_sort_value *) sfb->sort_value)->value;
+			} else {
+				stra = (const char *) sfa->sort_value;
+				strb = (const char *) sfb->sort_value;
 			}
-		} else if (sfa->props->flags & DM_REPORT_FIELD_TYPE_STRING_LIST) {
-			int cmp = strcmp(((const struct str_list_sort_value *) sfa->sort_value)->value,
-					((const struct str_list_sort_value *) sfb->sort_value)->value);
 
-			if (!cmp)
-				continue;
-
-			if (sfa->props->flags & FLD_ASCENDING) {
-				return (cmp > 0) ? 1 : -1;
-			} else {	/* FLD_DESCENDING */
-				return (cmp < 0) ? 1 : -1;
-			}
+			cmp = strcmp(stra, strb);
 		} else {
-			/* DM_REPORT_FIELD_TYPE_STRING and others */
-			int cmp = strcmp((const char *) sfa->sort_value,
-					(const char *) sfb->sort_value);
-
-			if (!cmp)
-				continue;
-
-			if (sfa->props->flags & FLD_ASCENDING) {
-				return (cmp > 0) ? 1 : -1;
-			} else {	/* FLD_DESCENDING */
-				return (cmp < 0) ? 1 : -1;
-			}
+			log_err_once(INTERNAL_ERROR "_row_compare: unhandled field type: %#x",
+				     sfa->props->flags & DM_REPORT_FIELD_TYPE_MASK);
+			return 0;
 		}
+
+		if (!cmp)
+			continue;
+
+		if (sfa->props->flags & FLD_ASCENDING)
+			return (cmp > 0) ? 1 : -1;
+		else	/* FLD_DESCENDING */
+			return (cmp < 0) ? 1 : -1;
 	}
 
 	return 0;		/* Identical */
