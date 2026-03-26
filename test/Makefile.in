@@ -28,7 +28,7 @@ datarootdir = @datarootdir@
 LVM_TEST_RESULTS ?= results
 
 # FIXME: resolve testing of: unit
-SOURCES := lib/not.c lib/harness.c lib/dmsecuretest.c
+SOURCES := lib/not.c lib/harness.c lib/dmsecuretest.c lib/gen_data_blocks.c
 CXXSOURCES := lib/runner.cpp
 CXXFLAGS += $(EXTRA_EXEC_CFLAGS)
 
@@ -235,7 +235,7 @@ LIB_NOT := not
 LIB_SHARED := check aux inittest utils get lvm-wrapper lvm_vdo_wrapper
 LIB_CONF := $(LIB_LVMLOCKD_CONF) $(LIB_MKE2FS_CONF)
 LIB_DATA := $(LIB_FLAVOURS) dm-version-expected version-expected
-LIB_EXEC := $(LIB_NOT) dmsecuretest
+LIB_EXEC := $(LIB_NOT) dmsecuretest gen_data_blocks
 LVM_SCRIPTS := fsadm lvresize_fs_helper lvm_import_vdo
 
 install: .tests-stamp lib/paths-installed
@@ -275,6 +275,7 @@ lib/runner.o: $(wildcard $(srcdir)/lib/*.h)
 CFLAGS_lib/runner.o += $(EXTRA_EXEC_CFLAGS)
 CFLAGS_lib/dmsecuretest.o += $(EXTRA_EXEC_CFLAGS)
 LDFLAGS_lib/dmsecuretest += $(EXTRA_EXEC_LDFLAGS) $(INTERNAL_LIBS) $(LIBS)
+LDFLAGS_lib/gen_data_blocks += -lm
 LDFLAGS_lib/idm_inject_failure += $(INTERNAL_LIBS) $(LIBS) -lseagate_ilm
 
 lib/%: lib/%.o .lib-dir-stamp
