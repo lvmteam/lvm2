@@ -86,9 +86,9 @@ static const char *_extract_lvname(struct cmd_context *cmd, const char *vgname,
 
 /* Create list of PVs for allocation of replacement extents */
 static struct dm_list *_get_allocatable_pvs(struct cmd_context *cmd, int argc,
-					 char **argv, struct volume_group *vg,
-					 struct physical_volume *pv,
-					 alloc_policy_t alloc)
+					    char **argv, struct volume_group *vg,
+					    struct physical_volume *pv,
+					    alloc_policy_t alloc)
 {
 	struct dm_list *allocatable_pvs, *pvht, *pvh;
 	struct pv_list *pvl;
@@ -728,9 +728,9 @@ out:
 }
 
 static int _pvmove_read_single(struct cmd_context *cmd,
-				struct volume_group *vg,
-				struct physical_volume *pv,
-				struct processing_handle *handle)
+			       struct volume_group *vg,
+			       struct physical_volume *pv,
+			       struct processing_handle *handle)
 {
 	struct pvmove_params *pp = (struct pvmove_params *) handle->custom_handle;
 	struct logical_volume *lv;

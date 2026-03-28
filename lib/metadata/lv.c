@@ -1799,7 +1799,7 @@ int lv_active_change(struct cmd_context *cmd, struct logical_volume *lv,
 		ay_with_mode = "sh";
 	if (activate == CHANGE_AEY)
 		ay_with_mode = "ex";
-	
+
 	if (is_change_activating(activate) &&
 	    !lockd_lv(cmd, lv, ay_with_mode, LDLV_PERSISTENT)) {
 		log_error("Failed to lock logical volume %s.", display_lvname(lv));
