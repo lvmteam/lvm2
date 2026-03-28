@@ -238,7 +238,7 @@ static int _trim_allocatable_pvs(struct dm_list *alloc_list,
 
 /*
  * Replace any LV segments on given PV with temporary mirror.
- * Returns list of LVs changed.
+ * Affected LVs are added to lvs_changed.
  */
 static int _insert_pvmove_mirrors(struct cmd_context *cmd,
 				  struct logical_volume *lv_mirr,
