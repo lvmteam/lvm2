@@ -139,7 +139,7 @@ static int _remove_sibling_pvs_from_trim_list(struct logical_volume *lv,
 	struct pv_list *pvl1, *pvl2;
 	uint32_t s;
 
-	/* Early return for invalid cases */
+	/* Early return when collocation is not applicable */
 	if (!lv_name || !*lv_name ||
 	    !seg_is_raid(raid_seg) ||
 	    seg_is_raid0(raid_seg) ||
