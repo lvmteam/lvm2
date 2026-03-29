@@ -10,6 +10,7 @@
  * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
  */
 #include "logging.h"
+#include "common.h"
 #include "functions.h"
 #include "base/memory/zalloc.h"
 
@@ -614,7 +615,8 @@ static int clog_ctr(struct dm_ulog_request *rq)
 
 	/* No returning data */
 	if ((rq->version > 1) && !strcmp(argv[0], "clustered-disk"))
-		rq->data_size = sprintf(rq->data, "%s", argv[1]) + 1;
+		rq->data_size = snprintf(rq->data, DM_ULOG_REQUEST_DATA_SIZE,
+					 "%s", argv[1]) + 1;
 	else
 		rq->data_size = 0;
 
@@ -1442,7 +1444,7 @@ static int core_status_info(struct log_c *lc __attribute__((unused)), struct dm_
 	int r;
 	char *data = (char *)rq->data;
 
-	r = sprintf(data, "1 clustered-core");
+	r = snprintf(data, DM_ULOG_REQUEST_DATA_SIZE, "1 clustered-core");
 	if (r < 0)
 		return r;
 
@@ -1462,9 +1464,10 @@ static int disk_status_info(struct log_c *lc, struct dm_ulog_request *rq)
 		return -errno;
 	}
 
-	r = sprintf(data, "3 clustered-disk %d:%d %c",
-		    major(statbuf.st_rdev), minor(statbuf.st_rdev),
-		    (lc->log_dev_failed) ? 'D' : 'A');
+	r = snprintf(data, DM_ULOG_REQUEST_DATA_SIZE,
+		     "3 clustered-disk %d:%d %c",
+		     major(statbuf.st_rdev), minor(statbuf.st_rdev),
+		     (lc->log_dev_failed) ? 'D' : 'A');
 	if (r < 0)
 		return r;
 
@@ -1502,11 +1505,12 @@ static int core_status_table(struct log_c *lc, struct dm_ulog_request *rq)
 	int r;
 	char *data = (char *)rq->data;
 
-	r = sprintf(data, "clustered-core %u %s%s ",
-		    lc->region_size,
-		    (lc->sync == DEFAULTSYNC) ? "" :
-		    (lc->sync == NOSYNC) ? "nosync " : "sync ",
-		    (lc->block_on_error) ? "block_on_error" : "");
+	r = snprintf(data, DM_ULOG_REQUEST_DATA_SIZE,
+		     "clustered-core %u %s%s ",
+		     lc->region_size,
+		     (lc->sync == DEFAULTSYNC) ? "" :
+		     (lc->sync == NOSYNC) ? "nosync " : "sync ",
+		     (lc->block_on_error) ? "block_on_error" : "");
 	if (r < 0)
 		return r;
 
@@ -1525,12 +1529,13 @@ static int disk_status_table(struct log_c *lc, struct dm_ulog_request *rq)
 		return -errno;
 	}
 
-	r = sprintf(data, "clustered-disk %d:%d %u %s%s ",
-		    major(statbuf.st_rdev), minor(statbuf.st_rdev),
-		    lc->region_size,
-		    (lc->sync == DEFAULTSYNC) ? "" :
-		    (lc->sync == NOSYNC) ? "nosync " : "sync ",
-		    (lc->block_on_error) ? "block_on_error" : "");
+	r = snprintf(data, DM_ULOG_REQUEST_DATA_SIZE,
+		     "clustered-disk %d:%d %u %s%s ",
+		     major(statbuf.st_rdev), minor(statbuf.st_rdev),
+		     lc->region_size,
+		     (lc->sync == DEFAULTSYNC) ? "" :
+		     (lc->sync == NOSYNC) ? "nosync " : "sync ",
+		     (lc->block_on_error) ? "block_on_error" : "");
 	if (r < 0)
 		return r;
 

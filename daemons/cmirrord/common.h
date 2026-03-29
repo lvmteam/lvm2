@@ -29,5 +29,7 @@
 #define EXIT_QUEUE_NOMEM           7
 
 #define DM_ULOG_REQUEST_SIZE 1024
+#define DM_ULOG_REQUEST_DATA_SIZE \
+	(DM_ULOG_REQUEST_SIZE - sizeof(struct dm_ulog_request))
 
 #endif /* _LVM_CLOG_COMMON_H */
