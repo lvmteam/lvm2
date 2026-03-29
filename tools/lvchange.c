@@ -1207,7 +1207,7 @@ static int _lvchange_compression(struct logical_volume *lv, uint32_t *mr)
 		return 0;
 	}
 
-	if (compression == seg->vdo_params.use_compression) {
+	if (compression == (unsigned)seg->vdo_params.use_compression) {
 		log_error("Logical volume %s already uses --compression %c.",
 			  display_lvname(lv), compression ? 'y' : 'n');
 		return 0;
@@ -1235,7 +1235,7 @@ static int _lvchange_deduplication(struct logical_volume *lv, uint32_t *mr)
 		return 0;
 	}
 
-	if (deduplication == seg->vdo_params.use_deduplication) {
+	if (deduplication == (unsigned)seg->vdo_params.use_deduplication) {
 		log_error("Logical volume %s already uses --deduplication %c.",
 			  display_lvname(lv), deduplication ? 'y' : 'n');
 		return 0;

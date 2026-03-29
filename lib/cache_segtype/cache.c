@@ -587,6 +587,7 @@ static int _cache_add_target_line(struct dev_manager *dm,
 	unsigned  i, j;
 	union lvid metadata_lvid;
 	union lvid data_lvid;
+	const char *policy_name;
 	char *metadata_uuid, *cachevol_uuid, *data_uuid, *origin_uuid;
 	uint64_t feature_flags = 0;
 	unsigned attr;
@@ -649,7 +650,7 @@ static int _cache_add_target_line(struct dev_manager *dm,
 		return_0;
 
 	/* Validate and prepare policy settings and name (common for both cache pool and cachevol) */
-	const char *policy_name = seg->cleaner_policy ? "cleaner" :
+	policy_name = seg->cleaner_policy ? "cleaner" :
 		/* undefined policy name -> likely an old "mq" */
 		cache_pool_seg->policy_name ? : "mq";
 

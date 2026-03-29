@@ -167,11 +167,12 @@ static void _allocate_memory(void)
 	 * meanwhile let users use lvm2 code without memory preallocation.
 	 * Compilation for VALGRIND tracing also goes without preallocation.
 	 */
+#define MAX_AREAS 32
 	void *stack_mem;
 	struct rlimit limit;
-	int i, area = 0, missing = _size_malloc_tmp, max_areas = 32;
+	int i, area = 0, missing = _size_malloc_tmp;
 	size_t hblks;
-	char *areas[max_areas];
+	char *areas[MAX_AREAS];
 
 	/* Check if we could preallocate requested stack */
 	if (getrlimit(RLIMIT_STACK, &limit) == 0) {
@@ -219,7 +220,7 @@ static void _allocate_memory(void)
 			missing -= _size_malloc_tmp;
 		}
 
-		if (area == max_areas && missing > 0) {
+		if (area == MAX_AREAS && missing > 0) {
 			/* Too bad. Warn the user and proceed, as things are
 			 * most likely going to work out anyway. */
 			log_warn("WARNING: Failed to reserve memory, %d bytes missing.", missing);
