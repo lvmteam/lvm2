@@ -1781,10 +1781,11 @@ int lockd_start_vg(struct cmd_context *cmd, struct volume_group *vg, int *exists
 	 * used in the in-progress start will be +1.  We want
 	 * to use the current generation number in the PR key.
 	 */
-	if (!result && !strcmp(lock_type, "sanlock")) {
+	if (!result && !strcmp(lock_type, "sanlock") && (vg->pr & VG_PR_REQUIRE)) {
 		uint32_t prev_gen = (uint32_t)daemon_reply_int(reply, "prev_generation", 0);
 		log_debug("lockd start update pr key with prev_gen %u", prev_gen);
 		if (!persist_key_update(cmd, vg, prev_gen)) {
+			log_error("Failed to update PR key generation.");
 			lockd_stop_vg(cmd, vg);
 			ret = 0;
 		}
