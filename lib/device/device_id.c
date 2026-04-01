@@ -1240,6 +1240,9 @@ static int _dev_has_id(struct device *dev, uint16_t idtype, const char *idname)
 {
 	struct dev_id *id;
 
+	if (!idname)
+		return 0;
+
 	dm_list_iterate_items(id, &dev->ids) {
 		if (id->idtype != idtype)
 			continue;
