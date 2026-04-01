@@ -389,8 +389,7 @@ char *lvseg_monitor_dup(struct dm_pool *mem, const struct lv_segment *seg)
 		segm = first_seg(seg->lv->snapshot->lv);
 
 	// log_debug("Query LV:%s mon:%s segm:%s tgtm:%p  segmon:%d statusm:%d", seg->lv->name, segm->lv->name, segm->segtype->name, segm->segtype->ops->target_monitored, seg_monitored(segm), (int)(segm->status & PVMOVE));
-	if (!segm->segtype->ops ||
-	    !segm->segtype->ops->target_monitored)
+	if (!segm->segtype->ops->target_monitored)
 		/* Nothing to do, monitoring not supported */;
 	else if (dmeventd_monitor_mode() != 1)
 		s = "not enabled";
@@ -432,8 +431,7 @@ uint64_t lvseg_chunksize(const struct lv_segment *seg)
 const char *lvseg_name(const struct lv_segment *seg)
 {
 	/* Support even segtypes without 'ops' */
-	if (seg->segtype->ops &&
-	    seg->segtype->ops->name)
+	if (seg->segtype->ops->name)
 		return seg->segtype->ops->name(seg);
 
 	return seg->segtype->name;

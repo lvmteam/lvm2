@@ -2768,9 +2768,11 @@ static struct logical_volume _historical_lv = {
 	.hostname = "",
 };
 
+static const struct segtype_handler _historical_ops = { 0 };
 static struct segment_type _historical_segment_type = {
 	.name = "historical",
 	.flags = SEG_VIRTUAL | SEG_CANNOT_BE_ZEROED,
+	.ops = &_historical_ops,
 };
 
 static struct lv_segment _historical_lv_segment = {

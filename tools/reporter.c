@@ -339,8 +339,10 @@ static int _do_pvsegs_sub_single(struct cmd_context *cmd,
 	int ret = ECMD_PROCESSED;
 	struct lv_segment *seg = pvseg->lvseg;
 
+	static const struct segtype_handler _freeseg_ops = { 0 };
 	struct segment_type _freeseg_type = {
 		.flags = SEG_VIRTUAL | SEG_CANNOT_BE_ZEROED,
+		.ops = &_freeseg_ops,
 		.name = "free",
 	};
 
