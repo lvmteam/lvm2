@@ -685,7 +685,8 @@ bad:
 static void _stats_update_groups(struct dm_stats *dms)
 {
 	struct dm_stats_group *group;
-	uint64_t group_id, i;
+	uint64_t group_id;
+	int i; /* dm_bit_get_first/next return int, -1 == (int)DM_STATS_GROUP_NOT_PRESENT */
 
 	for (group_id = 0; group_id < dms->max_region + 1; group_id++) {
 		if (!_stats_group_id_present(dms, group_id))
@@ -694,7 +695,7 @@ static void _stats_update_groups(struct dm_stats *dms)
 		group = &dms->groups[group_id];
 
 		for (i = dm_bit_get_first(group->regions);
-		     i != DM_STATS_GROUP_NOT_PRESENT;
+		     i != (int)DM_STATS_GROUP_NOT_PRESENT;
 		     i = dm_bit_get_next(group->regions, i))
 			dms->regions[i].group_id = group_id;
 	}
@@ -3418,7 +3419,7 @@ static struct dm_histogram *_aggregate_histogram(const struct dm_stats *dms,
 {
 	struct dm_histogram *dmh_aggr, *dmh_cur, **dmh_cachep;
 	uint64_t group_id = DM_STATS_GROUP_NOT_PRESENT;
-	int bin, nr_bins, group = 1;
+	int bin, nr_bins, group = 1, i, j;
 	size_t hist_size;
 
 	if (area_id == DM_STATS_WALK_REGION) {
@@ -3476,8 +3477,8 @@ static struct dm_histogram *_aggregate_histogram(const struct dm_stats *dms,
 			_sum_histogram_bins(dms, dmh_aggr, region_id, area_id);
 		}
 	else {
-		_foreach_group_area(dms, group_id, region_id, area_id) {
-			_sum_histogram_bins(dms, dmh_aggr, region_id, area_id);
+		_foreach_group_area(dms, group_id, i, j) {
+			_sum_histogram_bins(dms, dmh_aggr, i, j);
 		}
 	}
 
