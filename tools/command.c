@@ -690,7 +690,12 @@ static void _add_oo_definition_line(const char *name, const char *line)
 		return;
 	}
 
-	start = strchr(line, ':') + 2;
+	if (!(start = strchr(line, ':'))) {
+		log_error("Parsing command defs: invalid OO line.");
+		return;
+	}
+	start += 2;
+
 	if (!(oo->line = strdup(start))) {
 		log_error("Failed to duplicate line %s.", start);
 		return;
