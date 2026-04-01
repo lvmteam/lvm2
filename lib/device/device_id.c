@@ -1550,8 +1550,11 @@ static void devices_file_backup(struct cmd_context *cmd, char *fc, char *fb, tim
 		stack;
 		return;
 	}
-	tm = localtime(tp);
-	strftime(datetime_str, sizeof(datetime_str), "%Y%m%d.%H%M%S", tm);
+	if (!(tm = localtime(tp)) ||
+	    !strftime(datetime_str, sizeof(datetime_str), "%Y%m%d.%H%M%S", tm)) {
+		log_warn("WARNING: Failed to format backup timestamp.");
+		return;
+	}
 
 	/* arbitrary max for devicesfile_backup_limit setting */
 	if (backup_limit > 5000)
