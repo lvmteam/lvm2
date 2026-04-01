@@ -153,14 +153,14 @@ int parse_vpd_ids(const unsigned char *vpd_data, int vpd_datalen, struct dm_list
 	char id[ID_BUFSIZE];
 	unsigned char tmp_str[ID_BUFSIZE];
 	const unsigned char *d, *cur_id_str;
-	size_t id_len = ID_BUFSIZE;
+	const unsigned char *vpd_end = vpd_data + vpd_datalen;
 	int id_size = -1;
 	int type;
 	uint8_t cur_id_size = 0;
 
 	memset(id, 0, ID_BUFSIZE);
 	for (d = vpd_data + 4;
-	     d < vpd_data + vpd_datalen;
+	     d + 4 <= vpd_end;
 	     d += d[3] + 4) {
 		memset(tmp_str, 0, sizeof(tmp_str));
 
@@ -168,8 +168,8 @@ int parse_vpd_ids(const unsigned char *vpd_data, int vpd_datalen, struct dm_list
 		case 0x1:
 			/* T10 Vendor ID */
 			cur_id_size = d[3];
-			if ((size_t)(cur_id_size + 4) > id_len)
-				cur_id_size = id_len - 4;
+			if (d + 4 + cur_id_size > vpd_end)
+				cur_id_size = vpd_end - d - 4;
 			cur_id_str = d + 4;
 			format_t10_id(cur_id_str, cur_id_size, tmp_str, sizeof(tmp_str));
 			id_size = snprintf(id, ID_BUFSIZE, "t10.%s", tmp_str);
@@ -230,9 +230,9 @@ int parse_vpd_ids(const unsigned char *vpd_data, int vpd_datalen, struct dm_list
 		case 0x8:
 			/* SCSI name string */
 			cur_id_size = d[3];
+			if (d + 4 + cur_id_size > vpd_end)
+				cur_id_size = vpd_end - d - 4;
 			cur_id_str = d + 4;
-			if (cur_id_size >= id_len)
-				cur_id_size = id_len - 1;
 			memcpy(id, cur_id_str, cur_id_size);
 			id_size = cur_id_size;
 
