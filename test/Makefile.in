@@ -48,6 +48,8 @@ include $(top_builddir)/make.tmpl
 
 T ?= .
 S ?= @ # never match anything by default
+# Ensure basic system binaries are found even under env -i
+export PATH := $(if $(PATH),$(PATH),/usr/sbin:/usr/bin:/sbin:/bin)
 VERBOSE ?= 0
 comma = ,
 RUN := $(shell find -L $(srcdir) -regextype posix-egrep \( -path \*/shell/\*.sh -or -path \*/api/\*.sh -or -path \*/unit/\*.sh \) -and -regex "$(srcdir)/.*($(subst $(comma),|,$(T))).*" -and -not -regex "$(srcdir)/.*($(subst $(comma),|,$(S))).*" | $(SORT))
