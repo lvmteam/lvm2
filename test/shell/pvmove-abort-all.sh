@@ -42,9 +42,9 @@ lvcreate -an -Zn -l10 -n $lv2 $vg "$dev2"
 lvcreate -an -Zn -l10 -n $lv1 $vg1 "$dev4"
 lvextend -l+30 -n $vg1/$lv1 "$dev5"
 
-cmd1=(pvmove -i +3 $backgroundarg $mode "$dev1" "$dev3")
-cmd2=(pvmove -i +3 $backgroundarg $mode "$dev2" "$dev3")
-cmd3=(pvmove -i +3 $backgroundarg $mode -n $vg1/$lv1 "$dev4" "$dev6")
+cmd1=(pvmove -i +2 $backgroundarg $mode "$dev1" "$dev3")
+cmd2=(pvmove -i +2 $backgroundarg $mode "$dev2" "$dev3")
+cmd3=(pvmove -i +2 $backgroundarg $mode -n $vg1/$lv1 "$dev4" "$dev6")
 
 
 if test -z "$backgroundarg" ; then
@@ -73,9 +73,15 @@ not grep "^\[pvmove" out
 
 lvremove -ff $vg $vg1
 
-test -z "$backgroundarg" && wait "$PVMOVE1_PID" "$PVMOVE2_PID" "$PVMOVE3_PID" || true
+if test -z "$backgroundarg" ; then
+	kill "$PVMOVE1_PID" "$PVMOVE2_PID" "$PVMOVE3_PID" || true
+	wait "$PVMOVE1_PID" "$PVMOVE2_PID" "$PVMOVE3_PID" || true
+fi
 aux kill_tagged_processes
+
 done
 done
+
+wait
 
 vgremove -ff $vg $vg1
