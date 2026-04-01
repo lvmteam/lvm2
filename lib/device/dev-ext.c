@@ -140,6 +140,12 @@ int dev_ext_release(struct device *dev)
 
 int dev_ext_enable(struct device *dev, dev_ext_t src)
 {
+	if (src >= DEV_EXT_NUM) {
+		log_error(INTERNAL_ERROR "%s: Invalid external source [%d].",
+			   dev_name(dev), src);
+		return 0;
+	}
+
 	if (dev->ext.enabled && (dev->ext.src != src) && !dev_ext_release(dev)) {
 		log_error("%s: Failed to enable external handle [%s].",
 			   dev_name(dev), _ext_registry[src].name); 
