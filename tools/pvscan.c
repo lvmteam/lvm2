@@ -834,8 +834,10 @@ static int _pvscan_aa(struct cmd_context *cmd, struct pvscan_aa_params *pp,
 		 * so tell process_each to skip it.
 		 */
 
-		if (!do_all)
-			lvmcache_label_scan(cmd);
+		if (!do_all) {
+			if (!lvmcache_label_scan(cmd))
+				stack;
+		}
 
 		read_flags |= PROCESS_SKIP_SCAN;
 
