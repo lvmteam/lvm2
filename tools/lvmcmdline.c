@@ -2227,6 +2227,7 @@ static int _process_command_line(struct cmd_context *cmd, int *argc, char ***arg
 {
 	char str[((ARG_COUNT + 1) * 2) + 1], *ptr = str;
 	struct option opts[ARG_COUNT + 1], *o = opts;
+	struct command_name_args *cna;
 	const struct opt_name *a;
 	struct arg_values *av;
 	struct arg_value_group_list *current_group = NULL;
@@ -2244,12 +2245,12 @@ static int _process_command_line(struct cmd_context *cmd, int *argc, char ***arg
 	 * create the short-form character array (str) and the long-form option
 	 * array (opts) to pass to the getopt_long() function.  IOW we generate
 	 * the arguments to pass to getopt_long() from the opt_names data.
+	 *
+	 * cmd->cname is guaranteed non-NULL (caller checks before calling).
 	 */
-	if (cmd->cname) {
-		struct command_name_args *cna = &command_names_args[cmd->cname->lvm_command_enum];
-		for (i = 0; i < cna->num_args; i++)
-			_add_getopt_arg(cna->valid_args[i], &ptr, &o);
-	}
+	cna = &command_names_args[cmd->cname->lvm_command_enum];
+	for (i = 0; i < cna->num_args; i++)
+		_add_getopt_arg(cna->valid_args[i], &ptr, &o);
 
 	*ptr = '\0';
 	memset(o, 0, sizeof(*o));
