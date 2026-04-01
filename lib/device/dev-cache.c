@@ -490,7 +490,7 @@ static struct device *_get_device_for_sysfs_dev_name_using_devno(const char *dev
 {
 	char path[PATH_MAX];
 	char buf[PATH_MAX];
-	int major, minor;
+	unsigned major, minor;
 	dev_t devno;
 	struct device *dev;
 
@@ -502,7 +502,7 @@ static struct device *_get_device_for_sysfs_dev_name_using_devno(const char *dev
 	if (!get_sysfs_value(path, buf, sizeof(buf), 1))
 		return_NULL;
 
-	if (sscanf(buf, "%d:%d", &major, &minor) != 2) {
+	if (sscanf(buf, "%u:%u", &major, &minor) != 2) {
 		log_error("_get_device_for_sysfs_dev_name_using_devno: %s: failed to get major and minor number", devname);
 		return NULL;
 	}
@@ -920,7 +920,7 @@ static int _dev_cache_iterate_sysfs_for_index(struct cmd_context *cmd, const cha
 	char devname[PATH_MAX];
 	DIR *d;
 	struct dirent *dirent;
-	int major, minor;
+	unsigned major, minor;
 	dev_t devno;
 	struct device *dev;
 	int partial_failure = 0;
@@ -936,7 +936,7 @@ static int _dev_cache_iterate_sysfs_for_index(struct cmd_context *cmd, const cha
 		    !strcmp("..", dirent->d_name))
 			continue;
 
-		if (sscanf(dirent->d_name, "%d:%d", &major, &minor) != 2) {
+		if (sscanf(dirent->d_name, "%u:%u", &major, &minor) != 2) {
 			log_error("_dev_cache_iterate_sysfs_for_index: %s: failed "
 				  "to get major and minor number", dirent->d_name);
 			partial_failure = 1;
