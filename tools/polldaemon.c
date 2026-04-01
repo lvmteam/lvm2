@@ -153,6 +153,7 @@ static int _sleep_and_rescan_devices(struct cmd_context *cmd, struct daemon_parm
 int wait_for_single_lv(struct cmd_context *cmd, const struct poll_operation_id *id,
 		       struct daemon_parms *parms)
 {
+	const char *match_uuid = id->uuid;
 	struct volume_group *vg = NULL;
 	struct logical_volume *lv;
 	int finished = 0;
@@ -161,14 +162,19 @@ int wait_for_single_lv(struct cmd_context *cmd, const struct poll_operation_id *
 	int is_lockd;
 	int ret;
 	unsigned wait_before_testing = parms->wait_before_testing;
+	char saved_uuid[sizeof(union lvid)] = { 0 };
 
-	if (!wait_before_testing)
-		if (!lvmcache_label_scan(cmd))
-			stack;
+	if (!lvmcache_label_scan(cmd))
+		stack;
 
 	/* Poll for completion */
 	while (!finished) {
-		if (wait_before_testing &&
+		/*
+		 * Sleep and rescan when waiting before testing, but
+		 * skip the sleep until LVID is captured so we validate
+		 * the LV exists immediately on entry.
+		 */
+		if (wait_before_testing && match_uuid &&
 		    !_sleep_and_rescan_devices(cmd, parms)) {
 			log_error("ABORTING: Polling interrupted for %s.", id->display_name);
 			return 0;
@@ -202,7 +208,7 @@ int wait_for_single_lv(struct cmd_context *cmd, const struct poll_operation_id *
 
 		lv = find_lv(vg, id->lv_name);
 
-		if (lv && id->uuid && strcmp(id->uuid, (char *)&lv->lvid))
+		if (lv && match_uuid && strcmp(match_uuid, (char *)&lv->lvid))
 			lv = NULL;
 		if (lv && parms->lv_type && !(lv->status & parms->lv_type))
 			lv = NULL;
@@ -219,6 +225,19 @@ int wait_for_single_lv(struct cmd_context *cmd, const struct poll_operation_id *
 		}
 
 		/*
+		 * Capture LVID on first successful find so a stale poller
+		 * can detect when the LV is replaced by a new one reusing
+		 * the same name.  When waiting before testing, skip the DM
+		 * status check on this first pass -- just validate metadata.
+		 */
+		if (!match_uuid) {
+			dm_strncpy(saved_uuid, lv->lvid.s, sizeof(saved_uuid));
+			match_uuid = saved_uuid;
+			if (wait_before_testing)
+				goto next;
+		}
+
+		/*
 		 * If the LV is not active locally, the kernel cannot be
 		 * queried for its status.  We must exit in this case.
 		 */
@@ -232,7 +251,7 @@ int wait_for_single_lv(struct cmd_context *cmd, const struct poll_operation_id *
 			ret = 0;
 			goto_out;
 		}
-
+next:
 		unlock_and_release_vg(cmd, vg, vg->name);
 
 		if (is_lockd && !lockd_vg(cmd, id->vg_name, "un", 0, &lks))
