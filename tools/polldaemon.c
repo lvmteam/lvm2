@@ -133,14 +133,6 @@ static int _nanosleep(unsigned secs, unsigned allow_zero_time)
 static int _sleep_and_rescan_devices(struct cmd_context *cmd, struct daemon_parms *parms)
 {
 	if (!parms->aborting) {
-		/*
-		 * FIXME: do we really need to drop everything and then rescan
-		 * everything between each iteration?  What change exactly does
-		 * each iteration check for, and does seeing that require
-		 * rescanning everything?
-		 */
-		lvmcache_destroy(cmd, 1, 0);
-		label_scan_destroy(cmd);
 		if (!_nanosleep(parms->interval, 0))
 			return_0;
 		if (!lvmcache_label_scan(cmd))
