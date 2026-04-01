@@ -2697,7 +2697,10 @@ static int _match_du_to_dev(struct cmd_context *cmd, struct dev_use *du, struct 
 			if (!(id = zalloc(sizeof(struct dev_id))))
 				return_0;
 			id->idtype = DEV_ID_TYPE_DEVNAME;
-			id->idname = strdup(du->idname);
+			if (!(id->idname = strdup(du->idname))) {
+				free(id);
+				return_0;
+			}
 			dm_list_add(&dev->ids, &id->list);
 			du->dev = dev;
 			dev->id = id;
@@ -2844,7 +2847,10 @@ static int _match_du_to_dev(struct cmd_context *cmd, struct dev_use *du, struct 
 					id->idtype = nvme_type_to_idtype(dw->nvme_type);
 				else
 					id->idtype = scsi_type_to_idtype(dw->scsi_type);
-				id->idname = strdup(dw->id);
+				if (!(id->idname = strdup(dw->id))) {
+					free(id);
+					return_0;
+				}
 				dm_list_add(&dev->ids, &id->list);
 				du->dev = dev;
 				dev->id = id;
