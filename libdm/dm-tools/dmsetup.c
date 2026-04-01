@@ -974,8 +974,7 @@ out:
 		dm_task_destroy(obj.deps_task);
 	if (obj.split_name)
 		_destroy_split_name(obj.split_name);
-	if (obj.stats)
-		dm_stats_destroy(obj.stats);
+	dm_stats_destroy(obj.stats); /* handles NULL */
 	return r;
 }
 
