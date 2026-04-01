@@ -169,6 +169,8 @@ static inline unsigned pdlv_locked_error(const struct lvmpolld_lv *pdlv)
 struct lvmpolld_store *pdst_init(const char *name);
 void pdst_destroy(struct lvmpolld_store *pdst);
 
+pid_t pdst_kill_pdlv(struct lvmpolld_store *pdst, const char *id);
+
 void pdst_locked_dump(const struct lvmpolld_store *pdst, struct buffer *buff);
 void pdst_locked_lock_all_pdlvs(const struct lvmpolld_store *pdst);
 void pdst_locked_unlock_all_pdlvs(const struct lvmpolld_store *pdst);

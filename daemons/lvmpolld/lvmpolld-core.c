@@ -714,6 +714,17 @@ static response poll_init(client_handle h, struct lvmpolld_state *ls, request re
 
 	pdst_unlock(pdst);
 
+
+	/* Kill the polling lvpoll process for this LV before starting abort */
+	if (abort_polling) {
+		pid_t killed_pid = pdst_kill_pdlv(ls->id_to_pdlv_poll, id);
+
+		if (killed_pid)
+			DEBUGLOG(ls, "%s: %s (PID %d) %s", PD_LOG_PREFIX,
+				 "Sent SIGTERM to polling cmd", killed_pid,
+				 "after abort.");
+	}
+
 	free(id);
 
 	return daemon_reply_simple(LVMPD_RESP_OK, NULL);
