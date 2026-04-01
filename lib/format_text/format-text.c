@@ -416,6 +416,17 @@ static struct volume_group *_vg_read_raw_area(struct cmd_context *cmd,
 		goto out;
 	}
 
+	/* Validate rlocn fields fit within mda bounds before uint32_t cast */
+	if (rlocn->offset >= mdah->size ||
+	    rlocn->size > mdah->size - MDA_HEADER_SIZE) {
+		log_error("Metadata location out of bounds (offset %llu size %llu mda %llu) on %s.",
+			  (unsigned long long)rlocn->offset,
+			  (unsigned long long)rlocn->size,
+			  (unsigned long long)mdah->size,
+			  dev_name(area->dev));
+		goto out;
+	}
+
 	if (rlocn->offset + rlocn->size > mdah->size)
 		wrap = (uint32_t) ((rlocn->offset + rlocn->size) - mdah->size);
 
@@ -1501,6 +1512,18 @@ int read_metadata_location_summary(const struct format_type *fmt,
 	 * at the beginning.  The end of this wrapped metadata is located at an
 	 * offset of wrap+MDA_HEADER_SIZE from area.start.
 	 */
+
+	/* Validate rlocn fields fit within mda bounds before uint32_t cast */
+	if (rlocn->offset >= mdah->size ||
+	    rlocn->size > mdah->size - MDA_HEADER_SIZE) {
+		log_warn("WARNING: Metadata location out of bounds (offset %llu size %llu mda %llu) on %s.",
+			 (unsigned long long)rlocn->offset,
+			 (unsigned long long)rlocn->size,
+			 (unsigned long long)mdah->size,
+			 dev_name(dev_area->dev));
+		return 0;
+	}
+
 	if (rlocn->offset + rlocn->size > mdah->size)
 		wrap = (uint32_t) ((rlocn->offset + rlocn->size) - mdah->size);
 
