@@ -513,6 +513,11 @@ int config_file_read_fd(struct dm_config_tree *cft, struct device *dev, dev_io_r
 
 	/* Ensure there is extra '\0' after end of buffer since we pass
 	 * buffer to functions like strtoll() */
+	if (size + size2 < size) {
+		log_error("Metadata buffer size overflow.");
+		return 0;
+	}
+
 	if (!(buf = zalloc(size + size2 + 1))) {
 		log_error("Failed to allocate circular buffer.");
 		return 0;
