@@ -386,8 +386,7 @@ void free_dus(struct dm_list *dus)
 
 void free_did(struct dev_id *id)
 {
-	if (id->idname && strlen(id->idname))
-		free(id->idname);
+	free(id->idname);
 	free(id);
 }
 
