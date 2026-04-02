@@ -524,7 +524,7 @@ static const char *_get_pvsummary_device_id(const char *pvid_arg, const char **d
 
 	dm_list_iterate_items(vginfo, &_vginfos) {
 		dm_list_iterate_items(pvl, &vginfo->pvsummaries) {
-			if (!memcmp(&pvid, &pvl->pv->id.uuid, ID_LEN)) {
+			if (!memcmp(pvid, &pvl->pv->id.uuid, ID_LEN)) {
 				*device_id_type = pvl->pv->device_id_type;
 				return pvl->pv->device_id;
 			}
