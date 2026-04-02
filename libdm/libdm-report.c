@@ -3092,6 +3092,9 @@ static char *_get_date(char *str, struct tm *tm, time_range_t *range)
 		return NULL;
 
 	n1 = strtol(s, &end, 10);
+	if (n1 <= 1900 || n1 > 9999)
+		goto_bad;
+
 	if (*end == DELIM_DATE) {
 		len += (4 - (end - s)); /* diff in length from standard YYYY */
 		s = end + 1;
