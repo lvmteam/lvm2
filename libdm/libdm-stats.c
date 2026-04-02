@@ -1469,7 +1469,7 @@ static void _stats_walk_next_present(const struct dm_stats *dms,
 static void _stats_walk_next(const struct dm_stats *dms, uint64_t *flags,
 			     uint64_t *cur_r, uint64_t *cur_a, uint64_t *cur_g)
 {
-	if (!dms || !dms->regions)
+	if (!dms->regions)
 		return;
 
 	if (*flags & DM_STATS_WALK_AREA) {
@@ -1582,6 +1582,8 @@ void dm_stats_walk_start(struct dm_stats *dms)
 
 void dm_stats_walk_next(struct dm_stats *dms)
 {
+	if (!dms)
+		return;
 	_stats_walk_next(dms, &dms->cur_flags,
 			 &dms->cur_region, &dms->cur_area,
 			 &dms->cur_group);
@@ -1589,6 +1591,8 @@ void dm_stats_walk_next(struct dm_stats *dms)
 
 void dm_stats_walk_next_region(struct dm_stats *dms)
 {
+	if (!dms)
+		return;
 	dms->cur_flags &= ~DM_STATS_WALK_AREA;
 	_stats_walk_next(dms, &dms->cur_flags,
 			 &dms->cur_region, &dms->cur_area,
@@ -1770,7 +1774,7 @@ uint64_t dm_stats_get_nr_areas(const struct dm_stats *dms)
 	uint64_t cur_region = 0, cur_area = 0, cur_group = 0;
 
 	/* no regions to visit? */
-	if (!dms->regions)
+	if (!dms || !dms->regions)
 		return 0;
 
 	flags = DM_STATS_WALK_AREA;
