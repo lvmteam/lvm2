@@ -3052,7 +3052,7 @@ MK_STATS_GET_METRIC_FN(throughput, THROUGHPUT, tput)
 int dm_stats_get_utilization(const struct dm_stats *dms, dm_percent_t *util,
 			     uint64_t region_id, uint64_t area_id)
 {
-	double _util;
+	double _util = 0.0;
 
 	if (!dm_stats_get_metric(dms, DM_STATS_UTILIZATION,
 				 region_id, area_id, &_util))
