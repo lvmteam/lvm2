@@ -744,6 +744,11 @@ static int do_dump(const char *req_name)
 	for (count = 0; count < dump_len; count += rv) {
 		rv = recvfrom(fd, dump_buf + count, dump_len - count, MSG_WAITALL,
 			      (struct sockaddr *)&dump_addr, &dump_addrlen);
+		if (rv == 0) {
+			log_error("recvfrom connection closed.");
+			rv = -1;
+			goto out;
+		}
 		if (rv < 0) {
 			log_error("recvfrom error %d %d.", rv, errno);
 			rv = -errno;
