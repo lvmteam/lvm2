@@ -5920,7 +5920,7 @@ int pvcreate_each_device(struct cmd_context *cmd,
 	 * during the wait, then do the create steps.
 	 */
 
-	lockf_global(cmd, "un");
+	(void) lockf_global(cmd, "un");
 
 	unlocked_for_prompts = 1;
 
