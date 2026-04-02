@@ -100,7 +100,7 @@ static int read_cluster_name(char *clustername)
 	int rv;
 
 	if (daemon_test) {
-		sprintf(clustername, "%s", "test");
+		snprintf(clustername, MAX_ARGS + 1, "%s", "test");
 		return 0;
 	}
 
