@@ -2596,7 +2596,7 @@ update_vginfo:
 		if (created) {
 			dm_hash_remove(_pvid_hash, pvid);
 			info->dev->pvid[0] = 0;
-			free(info->label);
+			label_destroy(info->label);
 			free(info);
 		}
 		return NULL;
