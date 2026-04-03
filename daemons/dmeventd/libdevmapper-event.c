@@ -249,7 +249,7 @@ static int _daemon_read(struct dm_event_fifos *fifos,
 			goto bad;
 		}
 
-		ret = read(fifos->server, buf + bytes, size);
+		ret = read(fifos->server, buf + bytes, size - bytes);
 		if (ret < 0) {
 			if ((errno == EINTR) || (errno == EAGAIN))
 				continue;
