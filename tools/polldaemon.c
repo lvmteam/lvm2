@@ -731,7 +731,7 @@ static int _daemon_parms_init(struct cmd_context *cmd, struct daemon_parms *parm
 	if (cmd->devicesfile) {
 		if (!_dm_strncpy(parms->devicesfile, cmd->devicesfile,
 				 sizeof(parms->devicesfile))) {
-			log_error("devicefile name too long for lvmpolld");
+			log_error("devicesfile name too long for lvmpolld.");
 			return 0;
 		}
 	}
