@@ -112,13 +112,14 @@ static char *_chars_to_hexstr(const void *in, void *out, int num, int max, const
 	memset(out, 0, max);
 	memset(tmp, 0, max);
 
-	if (num > max-1) {
+	/* Each byte becomes 1-2 hex chars, limit to half buffer size to avoid overflow */
+	if (num > (max-1)/2) {
 		log_print("CHECK: abbreviating output for %s", field);
-		num = max - 1;
+		num = (max - 1) / 2;
 	}
 
 	for (n = 0; n < num; n++) {
-		ret = sprintf(tmp+off, "%x", *i & 0xFF);
+		ret = snprintf(tmp+off, max-off, "%x", *i & 0xFF);
 		off += ret;
 		i++;
 	}

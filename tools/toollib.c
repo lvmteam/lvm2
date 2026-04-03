@@ -105,7 +105,7 @@ int become_daemon(struct cmd_context *cmd, int skip_lvm)
 	init_verbose(VERBOSE_BASE_LEVEL);
 #endif	/* DEBUG_CHILD */
 
-	strncpy(*cmd->argv, "(lvm2)", strlen(*cmd->argv));
+	dm_strncpy(*cmd->argv, "(lvm2)", strlen(*cmd->argv));
 
 	if (!skip_lvm) {
 		reset_locking();

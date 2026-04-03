@@ -105,7 +105,7 @@ static int _lvresize_params(struct cmd_context *cmd, struct lvresize_params *lp)
 			if (!strcmp(str, "checksize") ||
 			    !strcmp(str, "resize") ||
 			    !strcmp(str, "resize_fsadm")) {
-				strncpy(lp->fsopt, str, sizeof(lp->fsopt)-1);
+				dm_strncpy(lp->fsopt, str, sizeof(lp->fsopt));
 			} else if (!strcmp(str, "ignore")) {
 				lp->fsopt[0] = '\0';
 			} else {
@@ -137,9 +137,9 @@ static int _lvresize_params(struct cmd_context *cmd, struct lvresize_params *lp)
 		if ((str = arg_str_value(cmd, fs_ARG, NULL))) {
 			if (!strcmp(str, "resize")) {
 				log_warn("Using fsadm for file system handling (resize_fsadm).");
-				strcpy(lp->fsopt, "resize_fsadm");
+				dm_strncpy(lp->fsopt, "resize_fsadm", sizeof(lp->fsopt));
 			} else if (!strcmp(str, "resize_fsadm")) {
-				strcpy(lp->fsopt, "resize_fsadm");
+				dm_strncpy(lp->fsopt, "resize_fsadm", sizeof(lp->fsopt));
 			} else if (!strcmp(str, "ignore")) {
 				log_warn("Ignoring unsupported --fs ignore with fsadm resizing.");
 			} else {
@@ -148,7 +148,7 @@ static int _lvresize_params(struct cmd_context *cmd, struct lvresize_params *lp)
 			}
 		} else if (arg_is_set(cmd, resizefs_ARG)) {
 			/* --resizefs alone equates to --fs resize_fsadm */
-			strcpy(lp->fsopt, "resize_fsadm");
+			dm_strncpy(lp->fsopt, "resize_fsadm", sizeof(lp->fsopt));
 		}
 #endif
 		if (lp->fsopt[0])
@@ -163,7 +163,7 @@ static int _lvresize_params(struct cmd_context *cmd, struct lvresize_params *lp)
 			if (!strcmp(str, "nochange") ||
 			    !strcmp(str, "offline") ||
 			    !strcmp(str, "manage")) {
-				strncpy(lp->fsmode, str, sizeof(lp->fsmode)-1);
+				dm_strncpy(lp->fsmode, str, sizeof(lp->fsmode));
 				lp->user_set_fsmode = 1;
 			} else {
 				log_error("Unknown --fsmode value.");
