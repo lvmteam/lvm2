@@ -573,26 +573,8 @@ int vgcreate_params_set_from_args(struct cmd_context *cmd,
 		vp_new->system_id = vp_def->system_id;
 	} else {
 		if (!(vp_new->system_id = system_id_from_string(cmd, system_id_arg_str)))
-			return_0;
+			stack;
 
-		/* FIXME Take local/extra_system_ids into account */
-		if (vp_new->system_id && cmd->system_id &&
-		    strcmp(vp_new->system_id, cmd->system_id)) {
-			if (*vp_new->system_id)
-				log_warn("WARNING: VG with system ID %s might become inaccessible as local system ID is %s",
-					 vp_new->system_id, cmd->system_id);
-			else
-				log_warn("WARNING: A VG without a system ID allows unsafe access from other hosts.");
-		}
-	}
-
-	if ((system_id_arg_str = arg_str_value(cmd, systemid_ARG, NULL))) {
-		vp_new->system_id = system_id_from_string(cmd, system_id_arg_str);
-	} else {
-		vp_new->system_id = vp_def->system_id;
-	}
-
-	if (system_id_arg_str) {
 		if (!vp_new->system_id || !vp_new->system_id[0])
 			log_warn("WARNING: A VG without a system ID allows unsafe access from other hosts.");
 
