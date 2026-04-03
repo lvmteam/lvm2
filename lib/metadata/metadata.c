@@ -1416,8 +1416,8 @@ int vg_split_mdas(struct cmd_context *cmd __attribute__((unused)),
 
 	common_mda = _move_mdas(vg_from, vg_to,
 				mdas_from_in_use, mdas_to_in_use);
-	common_mda = _move_mdas(vg_from, vg_to,
-				mdas_from_ignored, mdas_to_ignored);
+	common_mda |= _move_mdas(vg_from, vg_to,
+				 mdas_from_ignored, mdas_to_ignored);
 
 	if ((dm_list_empty(mdas_from_in_use) &&
 	     dm_list_empty(mdas_from_ignored)) ||
