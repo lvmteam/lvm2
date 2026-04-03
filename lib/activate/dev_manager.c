@@ -3030,7 +3030,7 @@ static char *_add_error_or_zero_device(struct dev_manager *dm, struct dm_tree *d
 		return NULL;
 	}
 
-	sprintf(errid, "missing_%d_%d", segno, s);
+	(void) dm_snprintf(errid, sizeof(errid), "missing_%d_%d", segno, s);
 
 	if (!(dlid = build_dm_uuid(dm->mem, seg->lv, errid)))
 		return_NULL;

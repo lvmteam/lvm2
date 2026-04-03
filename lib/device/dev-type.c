@@ -955,7 +955,7 @@ int fs_block_size_and_type(const char *pathname, uint32_t *fs_block_size_bytes, 
 
 	if (!blkid_probe_lookup_value(probe, "TYPE", &type_str, &len) && len && type_str) {
 		if (fstype)
-			strncpy(fstype, type_str, FSTYPE_MAX);
+			dm_strncpy(fstype, type_str, FSTYPE_MAX);
 	} else {
 		/* any difference from blkid_do_safeprobe rc=1? */
 		log_debug("No file system type on %s.", pathname);
@@ -1017,7 +1017,7 @@ int fs_get_blkid(const char *pathname, struct fs_info *fsi)
 	}
 
 	if (!blkid_probe_lookup_value(probe, "TYPE", &str, &len) && len)
-		strncpy(fsi->fstype, str, sizeof(fsi->fstype)-1);
+		dm_strncpy(fsi->fstype, str, sizeof(fsi->fstype));
 	else {
 		/* any difference from blkid_do_safeprobe rc=1? */
 		log_print_unless_silent("No file system type on %s.", pathname);
