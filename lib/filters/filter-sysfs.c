@@ -76,7 +76,7 @@ struct dev_filter *sysfs_filter_create(const char *sysfs_dir)
 	size_t len;
 
 	if (!sysfs_dir || !*sysfs_dir) {
-		log_verbose("No proc filesystem found: skipping sysfs filter");
+		log_verbose("No sysfs filesystem found: skipping sysfs filter.");
 		return NULL;
 	}
 
