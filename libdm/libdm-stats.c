@@ -1253,7 +1253,7 @@ static int _stats_parse_histogram(struct dm_pool *mem, char *hist_str,
 
 			if (*c == ':')
 				c++;
-			else if (*c & (*c != '\n'))
+			else if (*c && (*c != '\n'))
 				/* Expected ':', '\n', or NULL. */
 				goto badchar;
 
@@ -2067,7 +2067,7 @@ static int _stats_create_region(struct dm_stats *dms, uint64_t *region_id,
 			" %s %s %s", (start || len) ? range : "-",
 			(step < 0) ? "/" : "",
 			(uint64_t)llabs(step),
-			opt_args, program_id, aux_data) < 0) {
+			opt_args, program_id, aux_data_escaped) < 0) {
 		err = "message";
 		goto_bad;
 	}
