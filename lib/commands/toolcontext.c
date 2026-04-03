@@ -496,7 +496,7 @@ static int _check_config(struct cmd_context *cmd)
 	    !_check_config_by_source(cmd, CONFIG_MERGED_FILES) ||
 	    !_check_config_by_source(cmd, CONFIG_FILE)) &&
 	    abort_on_error) {
-		log_error("LVM_ configuration invalid.");
+		log_error("LVM configuration invalid.");
 		return 0;
 	}
 
