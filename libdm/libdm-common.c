@@ -1087,6 +1087,7 @@ static int _add_dev_node(const char *dev_name, uint32_t major, uint32_t minor,
 		 */
 		if (errno == ENOENT && lstat(path, &linfo) >= 0 && S_ISLNK(linfo.st_mode)) {
 			log_debug_activation("Removing dangling symlink %s", path);
+			/* coverity[toctou] lstat check is only for logging; ENOENT is handled */
 			if (unlink(path) && (errno != ENOENT)) {
 				log_sys_error("unlink", path);
 				return 0;
