@@ -1632,7 +1632,7 @@ static int _dump_search(struct cmd_context *cmd, const char *dump, struct settin
 			mda_offset = set->mda2_offset;
 			set_vals++;
 		}
-		if (set->mda_size_set) {
+		if (set->mda2_size_set) {
 			mda_size = set->mda2_size;
 			set_vals++;
 		}
