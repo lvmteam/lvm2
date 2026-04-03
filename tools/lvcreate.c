@@ -1383,7 +1383,7 @@ static int _determine_cache_argument(struct volume_group *vg,
 				return 0;
 			}
 		} else if (!deactivate_lv(cmd, lv)) {
-			log_error("Cannot deactivate activate cache origin %s.",
+			log_error("Cannot deactivate cache origin %s.",
 				  display_lvname(lv));
 			return 0;
 		}
