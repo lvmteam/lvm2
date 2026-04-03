@@ -857,7 +857,7 @@ int pvmove(struct cmd_context *cmd, int argc, char **argv)
 			}
 		}
 
-		pp.alloc = (alloc_policy_t) arg_uint_value(cmd, alloc_ARG, ALLOC_INHERIT);
+		pp.alloc = (alloc_policy_t) (uint32_t) arg_uint_value(cmd, alloc_ARG, ALLOC_INHERIT);
 
 		pp.in_progress = 1;
 

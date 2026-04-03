@@ -536,7 +536,7 @@ int vgcreate_params_set_from_args(struct cmd_context *cmd,
 					vp_def->max_lv);
 	vp_new->max_pv = arg_uint_value(cmd, maxphysicalvolumes_ARG,
 					vp_def->max_pv);
-	vp_new->alloc = (alloc_policy_t) arg_uint_value(cmd, alloc_ARG, vp_def->alloc);
+	vp_new->alloc = (alloc_policy_t) (uint32_t) arg_uint_value(cmd, alloc_ARG, vp_def->alloc);
 
 	/* Units of 512-byte sectors */
 	vp_new->extent_size =
@@ -1013,7 +1013,7 @@ int get_pool_params(struct cmd_context *cmd,
 			*zero_new_blocks = THIN_ZERO_UNSELECTED;
 
 		if (arg_is_set(cmd, discards_ARG)) {
-			*discards = (thin_discards_t) arg_uint_value(cmd, discards_ARG, 0);
+			*discards = (thin_discards_t) (uint32_t) arg_uint_value(cmd, discards_ARG, 0);
 			log_very_verbose("Setting pool discards to %s.",
 					 get_pool_discards_name(*discards));
 		} else
@@ -1187,10 +1187,10 @@ int get_cache_params(struct cmd_context *cmd,
 				 display_size(cmd, *chunk_size));
 	}
 
-	*cache_metadata_format = (cache_metadata_format_t)
+	*cache_metadata_format = (cache_metadata_format_t) (uint32_t)
 		arg_uint_value(cmd, cachemetadataformat_ARG, CACHE_METADATA_FORMAT_UNSELECTED);
 
-	*cache_mode = (cache_mode_t) arg_uint_value(cmd, cachemode_ARG, CACHE_MODE_UNSELECTED);
+	*cache_mode = (cache_mode_t) (uint32_t) arg_uint_value(cmd, cachemode_ARG, CACHE_MODE_UNSELECTED);
 
 	*name = arg_str_value(cmd, cachepolicy_ARG, NULL);
 
@@ -4963,7 +4963,7 @@ int lvremove_single(struct cmd_context *cmd, struct logical_volume *lv,
 	 * Even multiple --yes are equivalent to single --force
 	 * When we require -ff it cannot be replaced with -f -y
 	 */
-	force_t force = (force_t) arg_count(cmd, force_ARG)
+	force_t force = (force_t) (int) arg_count(cmd, force_ARG)
 		? : (arg_is_set(cmd, yes_ARG) ? DONT_PROMPT : PROMPT);
 
 	if (!lv_remove_with_dependencies(cmd, lv, force, 0))
@@ -4981,7 +4981,7 @@ int lvremove_single(struct cmd_context *cmd, struct logical_volume *lv,
 int pvcreate_params_from_args(struct cmd_context *cmd, struct pvcreate_params *pp)
 {
 	pp->yes = arg_count(cmd, yes_ARG);
-	pp->force = (force_t) arg_count(cmd, force_ARG);
+	pp->force = (force_t) (int) arg_count(cmd, force_ARG);
 
 	if (arg_int_value(cmd, labelsector_ARG, 0) >= LABEL_SCAN_SECTORS) {
 		log_error("labelsector must be less than %lu.",

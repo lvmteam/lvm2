@@ -232,7 +232,7 @@ static int _read_params(struct cmd_context *cmd, struct lvconvert_params *lp)
 		lp->mirrors_sign = arg_sign_value(cmd, mirrors_ARG, SIGN_NONE);
 	}
 
-	lp->alloc = (alloc_policy_t) arg_uint_value(cmd, alloc_ARG, ALLOC_INHERIT);
+	lp->alloc = (alloc_policy_t) (uint32_t) arg_uint_value(cmd, alloc_ARG, ALLOC_INHERIT);
 
 	/*
 	 * Final checking of each case:
@@ -3394,7 +3394,7 @@ static int _lvconvert_to_pool(struct cmd_context *cmd,
 			goto_bad;
 
 		meta_readahead = arg_uint_value(cmd, readahead_ARG, cmd->default_settings.read_ahead);
-		meta_alloc = (alloc_policy_t) arg_uint_value(cmd, alloc_ARG, ALLOC_INHERIT);
+		meta_alloc = (alloc_policy_t) (uint32_t) arg_uint_value(cmd, alloc_ARG, ALLOC_INHERIT);
 
 		if (!(metadata_lv = alloc_pool_metadata(lv,
 							meta_readahead,
@@ -3863,7 +3863,7 @@ static int _lvconvert_repair_pvs_mirror(struct cmd_context *cmd, struct logical_
 	 * for repair; it doesn't take the stripes option, but it seems to
 	 * expect lp.stripes to be set to 1.
 	 */
-	lp.alloc = (alloc_policy_t) arg_uint_value(cmd, alloc_ARG, ALLOC_INHERIT);
+	lp.alloc = (alloc_policy_t) (uint32_t) arg_uint_value(cmd, alloc_ARG, ALLOC_INHERIT);
 	lp.stripes = 1;
 
 	if (!(ret = _lvconvert_mirrors_repair(cmd, lv, &lp, use_pvh)))

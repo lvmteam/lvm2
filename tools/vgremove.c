@@ -39,7 +39,7 @@ static int _vgremove_single(struct cmd_context *cmd, const char *vg_name,
 	 * Even multiple --yes are equivalent to single --force
 	 * When we require -ff it cannot be replaces with -f -y
 	 */
-	force_t force = (force_t) arg_count(cmd, force_ARG)
+	force_t force = (force_t) (int) arg_count(cmd, force_ARG)
 		? : (arg_is_set(cmd, yes_ARG) ? DONT_PROMPT : PROMPT);
 	unsigned lv_count, missing;
 	DM_LIST_INIT(pr_devs);

@@ -366,7 +366,7 @@ static int _vgchange_alloc(struct cmd_context *cmd, struct volume_group *vg)
 {
 	alloc_policy_t alloc;
 
-	alloc = (alloc_policy_t) arg_uint_value(cmd, alloc_ARG, ALLOC_NORMAL);
+	alloc = (alloc_policy_t) (uint32_t) arg_uint_value(cmd, alloc_ARG, ALLOC_NORMAL);
 
 	/* FIXME: make consistent with vg_set_alloc_policy() */
 	if (alloc == vg->alloc) {
@@ -797,7 +797,7 @@ static int _vgchange_single(struct cmd_context *cmd, const char *vg_name,
 	}
 
 	if (arg_is_set(cmd, activate_ARG)) {
-		activate = (activation_change_t) arg_uint_value(cmd, activate_ARG, 0);
+		activate = (activation_change_t) (uint32_t) arg_uint_value(cmd, activate_ARG, 0);
 		if (!vgchange_activate(cmd, vg, activate, vp->vg_complete_to_activate, vp->root_dm_uuid))
 			return_ECMD_FAILED;
 	} else if (arg_is_set(cmd, refresh_ARG)) {
@@ -1090,7 +1090,8 @@ int vgchange(struct cmd_context *cmd, int argc, char **argv)
 
 	if (arg_is_set(cmd, activate_ARG) &&
 	    (arg_is_set(cmd, monitor_ARG) || arg_is_set(cmd, poll_ARG))) {
-		if (!is_change_activating((activation_change_t) arg_uint_value(cmd, activate_ARG, 0))) {
+		if (!is_change_activating((activation_change_t) (uint32_t)
+					  arg_uint_value(cmd, activate_ARG, 0))) {
 			log_error("Only -ay* allowed with --monitor or --poll.");
 			return EINVALID_CMD_LINE;
 		}
@@ -1129,7 +1130,8 @@ int vgchange(struct cmd_context *cmd, int argc, char **argv)
 	 * PR usage with activation/deactivation.
 	 */
 	if (arg_is_set(cmd, activate_ARG)) {
-		int is_activating = is_change_activating((activation_change_t)arg_uint_value(cmd, activate_ARG, CHANGE_AY));
+		int is_activating = is_change_activating((activation_change_t) (uint32_t)
+							 arg_uint_value(cmd, activate_ARG, CHANGE_AY));
 
 		/* Always allow deactivation without PR being started. */
 		if (!is_activating)
@@ -1177,7 +1179,8 @@ int vgchange(struct cmd_context *cmd, int argc, char **argv)
 	    (cmd->command->command_enum == vgchange_refresh_CMD)) {
 		cmd->lockd_vg_default_sh = 1;
 		/* Allow deactivating if locks fail. */
-		if (is_change_activating((activation_change_t)arg_uint_value(cmd, activate_ARG, CHANGE_AY)))
+		if (is_change_activating((activation_change_t) (uint32_t)
+					 arg_uint_value(cmd, activate_ARG, CHANGE_AY)))
 			cmd->lockd_vg_enforce_sh = 1;
 	}
 

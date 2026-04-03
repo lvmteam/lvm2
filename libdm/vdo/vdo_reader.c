@@ -147,7 +147,7 @@ static void _vdo_decode_header(struct vdo_header *h)
 
 static void _vdo_decode_geometry_region(struct vdo_volume_region *vr)
 {
-	vr->id = (enum vdo_volume_region_id) le32toh(vr->id);
+	vr->id = (enum vdo_volume_region_id) (uint32_t) le32toh(vr->id);
 	vr->start_block = le64toh(vr->start_block);
 }
 

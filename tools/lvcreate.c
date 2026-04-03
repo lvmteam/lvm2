@@ -771,7 +771,7 @@ static int _read_activation_params(struct cmd_context *cmd,
 {
 	unsigned pagesize = lvm_getpagesize() >> SECTOR_SHIFT;
 
-	lp->activate = (activation_change_t)
+	lp->activate = (activation_change_t) (uint32_t)
 		arg_uint_value(cmd, activate_ARG, CHANGE_AY);
 
 	/* Error when full */
@@ -830,7 +830,7 @@ static int _lvcreate_params(struct cmd_context *cmd,
 	dm_list_init(&lp->tags);
 	lp->target_attr = ~0;
 	lp->yes = arg_count(cmd, yes_ARG);
-	lp->force = (force_t) arg_count(cmd, force_ARG);
+	lp->force = (force_t) (int) arg_count(cmd, force_ARG);
 	lp->permission = arg_uint_value(cmd, permission_ARG,
 					LVM_READ | LVM_WRITE);
 
@@ -1281,7 +1281,7 @@ static int _lvcreate_params(struct cmd_context *cmd,
 	/* Allocation parameters */
 	contiguous = arg_int_value(cmd, contiguous_ARG, 0);
 	lp->alloc = contiguous ? ALLOC_CONTIGUOUS : ALLOC_INHERIT;
-	lp->alloc = (alloc_policy_t) arg_uint_value(cmd, alloc_ARG, lp->alloc);
+	lp->alloc = (alloc_policy_t) (uint32_t) arg_uint_value(cmd, alloc_ARG, lp->alloc);
 
 	if (contiguous && (lp->alloc != ALLOC_CONTIGUOUS)) {
 		log_error("Conflicting contiguous and alloc arguments.");

@@ -99,7 +99,7 @@ static int _lvchange_pool_update(struct cmd_context *cmd,
 	thin_discards_t discards;
 
 	if (arg_is_set(cmd, discards_ARG)) {
-		discards = (thin_discards_t) arg_uint_value(cmd, discards_ARG, THIN_DISCARDS_IGNORE);
+		discards = (thin_discards_t) (uint32_t) arg_uint_value(cmd, discards_ARG, THIN_DISCARDS_IGNORE);
 		if (discards != first_seg(lv)->discards) {
 			if (((discards == THIN_DISCARDS_IGNORE) ||
 			     (first_seg(lv)->discards == THIN_DISCARDS_IGNORE)) &&
@@ -191,7 +191,7 @@ static int _lvchange_activate(struct cmd_context *cmd, struct logical_volume *lv
 {
 	activation_change_t activate;
 
-	activate = (activation_change_t) arg_uint_value(cmd, activate_ARG, CHANGE_AY);
+	activate = (activation_change_t) (uint32_t) arg_uint_value(cmd, activate_ARG, CHANGE_AY);
 
 	/*
 	 * We can get here in the odd case where an LV is already active in
@@ -446,7 +446,7 @@ static int _lvchange_alloc(struct cmd_context *cmd,
 			   uint32_t *mr)
 {
 	int want_contiguous = arg_int_value(cmd, contiguous_ARG, 0);
-	alloc_policy_t alloc = (alloc_policy_t)
+	alloc_policy_t alloc = (alloc_policy_t) (uint32_t)
 		arg_uint_value(cmd, alloc_ARG, (want_contiguous)
 			       ? ALLOC_CONTIGUOUS : ALLOC_INHERIT);
 
@@ -1671,7 +1671,8 @@ static int _lvchange_activate_check(struct cmd_context *cmd,
 				     struct processing_handle *handle,
 				     int lv_is_named_arg)
 {
-	int do_activate = is_change_activating((activation_change_t)arg_uint_value(cmd, activate_ARG, CHANGE_AY));
+	int do_activate = is_change_activating((activation_change_t) (uint32_t)
+					       arg_uint_value(cmd, activate_ARG, CHANGE_AY));
 
 	if (lv_is_cache_vol(lv) && lv_is_named_arg) {
 		if (!do_activate)
@@ -1700,7 +1701,8 @@ static int _lvchange_activate_check(struct cmd_context *cmd,
 int lvchange_activate_cmd(struct cmd_context *cmd, int argc, char **argv)
 {
 	int ret;
-	int do_activate = is_change_activating((activation_change_t)arg_uint_value(cmd, activate_ARG, CHANGE_AY));
+	int do_activate = is_change_activating((activation_change_t) (uint32_t)
+					       arg_uint_value(cmd, activate_ARG, CHANGE_AY));
 
 	init_background_polling(arg_is_set(cmd, sysinit_ARG) ? 0 : arg_int_value(cmd, poll_ARG, DEFAULT_BACKGROUND_POLLING));
 	cmd->handles_missing_pvs = 1;

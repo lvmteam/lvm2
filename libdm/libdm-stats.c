@@ -1876,7 +1876,11 @@ static size_t _stats_group_tag_len(const struct dm_stats *dms,
 	/* coverity[overflow_sink] - only positive 'i & j' is used */
 	for (; i >= 0; i = dm_bit_get_next(regions, i)) {
 		/* length of region_id or range start in characters */
-		id_len = (i) ? 1 + (size_t) log10(i) : 1;
+		if (i) {
+			double d = log10(i);
+			id_len = 1 + (size_t) d;
+		} else
+			id_len = 1;
 		buflen += id_len;
 		j = i;
 		do
@@ -1889,7 +1893,8 @@ static size_t _stats_group_tag_len(const struct dm_stats *dms,
 		/* handle range */
 		if (i != j) {
 			/* j is always > i, which is always >= 0 */
-			id_len = 1 + (size_t) log10(j);
+			double d = log10(j);
+			id_len = 1 + (size_t) d;
 			buflen += id_len + 1; /* range end plus "-" */
 		}
 		buflen++;
@@ -2692,9 +2697,10 @@ MK_STATS_GET_COUNTER_FN(total_write_nsecs, TOTAL_WRITE_NSECS)
 static int _rd_merges_per_sec(const struct dm_stats *dms, double *rrqm,
 			      uint64_t region_id, uint64_t area_id)
 {
-	double mrgs;
-	mrgs = (double) dm_stats_get_counter(dms, DM_STATS_READS_MERGED_COUNT,
-					     region_id, area_id);
+	uint64_t mrgs;
+
+	mrgs = dm_stats_get_counter(dms, DM_STATS_READS_MERGED_COUNT,
+				    region_id, area_id);
 
 	*rrqm = mrgs / (double) dms->interval_ns;
 
@@ -2704,9 +2710,10 @@ static int _rd_merges_per_sec(const struct dm_stats *dms, double *rrqm,
 static int _wr_merges_per_sec(const struct dm_stats *dms, double *wrqm,
 			      uint64_t region_id, uint64_t area_id)
 {
-	double mrgs;
-	mrgs = (double) dm_stats_get_counter(dms, DM_STATS_WRITES_MERGED_COUNT,
-					     region_id, area_id);
+	uint64_t mrgs;
+
+	mrgs = dm_stats_get_counter(dms, DM_STATS_WRITES_MERGED_COUNT,
+				     region_id, area_id);
 
 	*wrqm = mrgs / (double) dms->interval_ns;
 
@@ -2716,9 +2723,10 @@ static int _wr_merges_per_sec(const struct dm_stats *dms, double *wrqm,
 static int _reads_per_sec(const struct dm_stats *dms, double *rd_s,
 			  uint64_t region_id, uint64_t area_id)
 {
-	double reads;
-	reads = (double) dm_stats_get_counter(dms, DM_STATS_READS_COUNT,
-					      region_id, area_id);
+	uint64_t reads;
+
+	reads = dm_stats_get_counter(dms, DM_STATS_READS_COUNT,
+				      region_id, area_id);
 
 	*rd_s = (reads * NSEC_PER_SEC) / (double) dms->interval_ns;
 
@@ -2728,9 +2736,10 @@ static int _reads_per_sec(const struct dm_stats *dms, double *rd_s,
 static int _writes_per_sec(const struct dm_stats *dms, double *wr_s,
 			   uint64_t region_id, uint64_t area_id)
 {
-	double writes;
-	writes = (double) dm_stats_get_counter(dms, DM_STATS_WRITES_COUNT,
-					       region_id, area_id);
+	uint64_t writes;
+
+	writes = dm_stats_get_counter(dms, DM_STATS_WRITES_COUNT,
+				       region_id, area_id);
 
 	*wr_s = (writes * NSEC_PER_SEC) / (double) dms->interval_ns;
 
@@ -2740,11 +2749,12 @@ static int _writes_per_sec(const struct dm_stats *dms, double *wr_s,
 static int _read_sectors_per_sec(const struct dm_stats *dms, double *rsec_s,
 				 uint64_t region_id, uint64_t area_id)
 {
-	double sect;
-	sect = (double) dm_stats_get_counter(dms, DM_STATS_READ_SECTORS_COUNT,
-					     region_id, area_id);
+	uint64_t sect;
 
-	*rsec_s = (sect * (double) NSEC_PER_SEC) / (double) dms->interval_ns;
+	sect = dm_stats_get_counter(dms, DM_STATS_READ_SECTORS_COUNT,
+				     region_id, area_id);
+
+	*rsec_s = (sect * NSEC_PER_SEC) / (double) dms->interval_ns;
 
 	return 1;
 }
@@ -2752,11 +2762,12 @@ static int _read_sectors_per_sec(const struct dm_stats *dms, double *rsec_s,
 static int _write_sectors_per_sec(const struct dm_stats *dms, double *wsec_s,
 				  uint64_t region_id, uint64_t area_id)
 {
-	double sect;
-	sect = (double) dm_stats_get_counter(dms, DM_STATS_WRITE_SECTORS_COUNT,
-					     region_id, area_id);
+	uint64_t sect;
 
-	*wsec_s = (sect * (double) NSEC_PER_SEC) / (double) dms->interval_ns;
+	sect = dm_stats_get_counter(dms, DM_STATS_WRITE_SECTORS_COUNT,
+				     region_id, area_id);
+
+	*wsec_s = (sect * NSEC_PER_SEC) / (double) dms->interval_ns;
 
 	return 1;
 }
@@ -2764,19 +2775,20 @@ static int _write_sectors_per_sec(const struct dm_stats *dms, double *wsec_s,
 static int _average_request_size(const struct dm_stats *dms, double *arqsz,
 				 uint64_t region_id, uint64_t area_id)
 {
-	double ios, sectors;
+	uint64_t ios, sectors;
 
-	ios = (double) (dm_stats_get_counter(dms, DM_STATS_READS_COUNT,
-					     region_id, area_id)
-			+ dm_stats_get_counter(dms, DM_STATS_WRITES_COUNT,
-					       region_id, area_id));
-	sectors = (double) (dm_stats_get_counter(dms, DM_STATS_READ_SECTORS_COUNT,
-						 region_id, area_id)
-			    + dm_stats_get_counter(dms, DM_STATS_WRITE_SECTORS_COUNT,
-						   region_id, area_id));
+	ios = dm_stats_get_counter(dms, DM_STATS_READS_COUNT,
+				   region_id, area_id);
+	ios += dm_stats_get_counter(dms, DM_STATS_WRITES_COUNT,
+				    region_id, area_id);
 
-	if (ios > 0.0)
-		*arqsz = sectors / ios;
+	sectors = dm_stats_get_counter(dms, DM_STATS_READ_SECTORS_COUNT,
+				       region_id, area_id);
+	sectors += dm_stats_get_counter(dms, DM_STATS_WRITE_SECTORS_COUNT,
+					region_id, area_id);
+
+	if (ios > 0)
+		*arqsz = sectors / (double) ios;
 	else
 		*arqsz = 0.0;
 
@@ -2786,11 +2798,12 @@ static int _average_request_size(const struct dm_stats *dms, double *arqsz,
 static int _average_queue_size(const struct dm_stats *dms, double *qusz,
 			       uint64_t region_id, uint64_t area_id)
 {
-	double io_ticks;
-	io_ticks = (double) dm_stats_get_counter(dms, DM_STATS_WEIGHTED_IO_NSECS,
-						 region_id, area_id);
+	uint64_t io_ticks;
 
-	if (io_ticks > 0.0)
+	io_ticks = dm_stats_get_counter(dms, DM_STATS_WEIGHTED_IO_NSECS,
+					 region_id, area_id);
+
+	if (io_ticks > 0)
 		*qusz = io_ticks / (double) dms->interval_ns;
 	else
 		*qusz = 0.0;

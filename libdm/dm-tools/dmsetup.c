@@ -1599,6 +1599,8 @@ static int _setgeometry(CMD_ARGS)
 	int r = 0;
 	struct dm_task *dmt;
 
+	(void)argc; /* required by CMD_ARGS macro, but unused by this function */
+
 	if (!(dmt = dm_task_create(DM_DEVICE_SET_GEOMETRY)))
 		return_0;
 

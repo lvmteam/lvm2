@@ -1298,7 +1298,7 @@ static dm_percent_range_t _combine_percent(dm_percent_t a, dm_percent_t b,
 	if (a == DM_PERCENT_0 && b == DM_PERCENT_0)
 		return DM_PERCENT_0;
 
-	return (dm_percent_range_t) dm_make_percent(numerator, denominator);
+	return (dm_percent_range_t) (dm_percent_t) dm_make_percent(numerator, denominator);
 }
 
 static int _percent_run(struct dev_manager *dm, const char *name,

@@ -190,7 +190,7 @@ static int _lvresize_params(struct cmd_context *cmd, struct lvresize_params *lp)
 		}
 	}
 
-	lp->alloc = (alloc_policy_t) arg_uint_value(cmd, alloc_ARG, 0);
+	lp->alloc = (alloc_policy_t) (uint32_t) arg_uint_value(cmd, alloc_ARG, 0);
 	lp->yes = arg_is_set(cmd, yes_ARG);
 	lp->force = arg_is_set(cmd, force_ARG),
 	lp->nosync = arg_is_set(cmd, nosync_ARG);
