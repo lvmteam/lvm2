@@ -1732,7 +1732,7 @@ static int _cmp_field_time(struct dm_report *rh,
 		case FLD_CMP_EQUAL:
 			return range ? ((val >= sel1) && (val <= sel2)) : val == sel1;
 		case FLD_CMP_NOT|FLD_CMP_EQUAL:
-			return range ? ((val >= sel1) && (val <= sel2)) : val != sel1;
+			return range ? !((val >= sel1) && (val <= sel2)) : val != sel1;
 		case FLD_CMP_TIME|FLD_CMP_GT:
 			if (_check_value_is_strictly_reserved(rh, field_num, DM_REPORT_FIELD_TYPE_TIME, &val, fs))
 				return 0;
