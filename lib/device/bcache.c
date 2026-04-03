@@ -1325,15 +1325,15 @@ bool bcache_flush(struct bcache *cache)
 	// try and rewrite everything.
 	dm_list_splice(&cache->dirty, &cache->errored);
 
-	while (!dm_list_empty(&cache->dirty)) {
-		struct block *b = dm_list_item(_list_pop(&cache->dirty), struct block);
-		if (b->ref_count || _test_flags(b, BF_IO_PENDING)) {
-			// The superblock may well be still locked.
-			continue;
-		}
-
-		_issue_write(b);
-	}
+	/*
+	 * _writeback() uses safe iteration and skips locked blocks
+	 * (ref_count > 0).  _issue_write() moves written blocks from
+	 * dirty to io_pending via dm_list_move() in _issue_low_level().
+	 * BF_IO_PENDING cannot occur here - _issue_low_level() moves
+	 * the block off dirty when setting that flag, and _complete_io()
+	 * clears it before moving to errored/clean.
+	 */
+	_writeback(cache, cache->nr_cache_blocks);
 
 	if (!_wait_all(cache))
 		return false;
