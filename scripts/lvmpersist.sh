@@ -90,7 +90,7 @@ set_type() {
 key_is_on_device_nvme() {
 	FINDKEY_DEC=$(printf '%u' "$FINDKEY")
 
-	if nvme resv-report --eds -o json "$dev" 2>/dev/null | grep -q "\"rkey\"\:${FINDKEY_DEC}"; then
+	if nvme resv-report --eds -o json "$dev" 2>/dev/null | grep -q '"rkey":${FINDKEY_DEC}'; then
 		true
 		return
 	fi
