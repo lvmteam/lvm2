@@ -1114,7 +1114,7 @@ int vgchange(struct cmd_context *cmd, int argc, char **argv)
 	}
 
 	if (arg_is_set(cmd, clustered_ARG) && !argc && !arg_is_set(cmd, yes_ARG) &&
-	    (yes_no_prompt("Change clustered property of all volumes groups? [y/n]: ") == 'n')) {
+	    (yes_no_prompt("Change clustered property of all volume groups? [y/n]: ") == 'n')) {
 		log_error("No volume groups changed.");
 		return ECMD_FAILED;
 	}
