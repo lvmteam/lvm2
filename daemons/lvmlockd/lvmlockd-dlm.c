@@ -123,7 +123,7 @@ static int read_cluster_name(char *clustername)
 	rv = 0;
 out:
 	if (close(fd))
-		log_error("read_cluster_name: close_error %d", fd);
+		log_error("read_cluster_name: close_error %d", errno);
 
 	return rv;
 }
