@@ -251,7 +251,8 @@ static int _target_present(struct cmd_context *cmd,
 								  &maj, &min, &patchlevel)))
 			return 0;
 
-		if (maj < 1 || min < 6) {
+		if (maj < 1 || (maj == 1 && min < 6)) {
+			_integrity_present = 0;
 			log_error("Integrity target version older than minimum 1.6.0");
 			return 0;
 		}
