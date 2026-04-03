@@ -672,7 +672,7 @@ int out_areas(struct formatter *f, const struct lv_segment *seg,
 
 			if (seg->meta_areas && seg_metalv(seg,s))
 				outf(f, "\"%s\", \"%s\"%s",
-				     (seg->meta_areas && seg_metalv(seg, s)) ? seg_metalv(seg, s)->name : "",
+				     seg_metalv(seg, s)->name,
 				     seg_lv(seg, s)->name, (s == seg->area_count - 1) ? "" : ",");
 			else
 				outf(f, "\"%s\"%s", seg_lv(seg, s)->name, (s == seg->area_count - 1) ? "" : ",");
