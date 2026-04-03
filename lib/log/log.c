@@ -296,7 +296,7 @@ void init_log_file(const char *log_file, int append)
 
 		if ((env = getenv("LVM_LOG_FILE_MAX_LINES"))) {
 			if (sscanf(env, FMTu64, &_log_file_max_lines) != 1) {
-				log_warn("WARNING: Ignoring invalid LVM_LOG_MAX_LINES envvar \"%s\".", env);
+				log_warn("WARNING: Ignoring invalid LVM_LOG_FILE_MAX_LINES envvar \"%s\".", env);
 				_log_file_max_lines = 0;
 			}
 			_log_file_lines = 0;
@@ -676,6 +676,7 @@ static void _vprint_log(int level, const char *file, int line, int dm_errno_or_c
 		if (to_journal) {
 			int prio;
 			switch (log_level(level)) {
+			case _LOG_FATAL:  prio = LOG_CRIT; break;
 			case _LOG_ERR:    prio = LOG_ERR; break;
 			case _LOG_WARN:   prio = LOG_WARNING; break;
 			case _LOG_INFO:   prio = LOG_INFO; break;
