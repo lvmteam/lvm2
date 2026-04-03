@@ -792,7 +792,7 @@ static int _read_historical_lvnames(struct cmd_context *cmd,
 	if (!_read_id(&glv->historical->lvid.id[1], hlvn, "id")) {
 		log_error("Couldn't read uuid for removed logical volume %s in vg %s.",
 			  glv->historical->name, vg->name);
-		return 0;
+		goto bad;
 	}
 	memcpy(&glv->historical->lvid.id[0], &glv->historical->vg->id, sizeof(glv->historical->lvid.id[0]));
 
