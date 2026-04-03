@@ -4577,7 +4577,7 @@ static int _lv_create_cachevol(struct cmd_context *cmd,
 	}
 
 	if (find_lv(vg, cvname)) {
-		memset(format, 0, sizeof(cvname));
+		memset(format, 0, sizeof(format));
 		memset(cvname, 0, sizeof(cvname));
 		if (dm_snprintf(format, sizeof(format), "%s_cache%%d", lv->name) < 0) {
 			log_error("Failed to generate cachevol LV format.");
@@ -6237,7 +6237,7 @@ static int _check_writecache_memory(struct cmd_context *cmd, struct logical_volu
 	unsigned long long proc_mem_kb = 0;
 	char proc_meminfo[PATH_MAX];
 
-	if (*cmd->proc_dir)
+	if (!*cmd->proc_dir)
 		goto skip_proc;
 
 	if (dm_snprintf(proc_meminfo, sizeof(proc_meminfo),
