@@ -6077,7 +6077,7 @@ do_command:
 
 		dm_list_iterate_items(pd, &pp->arg_create) {
 			if (!dev_allow_pr(cmd, pd->dev)) {
-				log_error("persistent reservation not supported for device type %s", dev_name(pd->dev));
+				log_error("Persistent reservation not supported for device type %s", dev_name(pd->dev));
 				return 0;
 			}
 		}
