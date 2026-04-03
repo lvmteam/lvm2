@@ -846,7 +846,7 @@ static int _read_hint_file(struct cmd_context *cmd, struct dm_list *hints, int *
 		if (devn && sscanf(devn, "devn:%d:%d", &major, &minor) == 2)
 			hint.devt = makedev(major, minor);
 
-		if (vgname && (strlen(vgname) > 3) && (vgname[4] != '-'))
+		if (vgname && (strlen(vgname) > 3) && (vgname[3] != '-'))
 			if (!_dm_strncpy(hint.vgname, vgname + 3, sizeof(hint.vgname)))
 				continue;
 
