@@ -331,7 +331,7 @@ int dumpconfig(struct cmd_context *cmd, int argc, char **argv)
 			return EINVALID_CMD_LINE;
 		}
 		if (arg_is_set(cmd, valuesonly_ARG)) {
-			log_err("--valuesonly has no effect with --type list or --list");
+			log_error("--valuesonly has no effect with --type list or --list.");
 			return EINVALID_CMD_LINE;
 		}
 	}
