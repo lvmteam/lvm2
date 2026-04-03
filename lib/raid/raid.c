@@ -352,8 +352,8 @@ static int _raid_add_target_line(struct dev_manager *dm __attribute__((unused)),
 
 	if (!seg_is_any_raid0(seg)) {
 		if (!seg->region_size) {
-			log_error("Missing region size for raid segment in %s.",
-				  seg_lv(seg, 0)->name);
+			log_error("Missing region size for raid volume %s.",
+				  display_lvname(seg->lv));
 			return 0;
 		}
 
