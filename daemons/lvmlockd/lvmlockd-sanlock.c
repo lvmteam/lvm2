@@ -1160,7 +1160,7 @@ int lm_init_lv_sanlock(struct lockspace *ls, char *ls_name, char *vg_name, char 
 				         LV_LOCK_ARGS_V1, (unsigned long long)offset);
 			} else {
 				log_error("S %s init_lv_san write error %d offset %llu",
-					  ls_name, rv, (unsigned long long)rv);
+					  ls_name, rv, (unsigned long long)offset);
 			}
 			break;
 		}
