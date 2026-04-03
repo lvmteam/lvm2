@@ -858,7 +858,7 @@ static int _config_def_check_node_single_value(struct cft_check_handle *handle,
 			break;
 		case DM_CFG_FLOAT:
 			if (!(def->type & CFG_TYPE_FLOAT)) {
-				_log_type_error(rp, CFG_TYPE_FLOAT, def->type, handle-> suppress_messages);
+				_log_type_error(rp, CFG_TYPE_FLOAT, def->type, handle->suppress_messages);
 				return 0;
 			}
 			break;
