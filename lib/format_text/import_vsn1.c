@@ -803,7 +803,8 @@ static int _read_historical_lvnames(struct cmd_context *cmd,
 
 	if (dm_config_has_node(hlvn, "creation_time")) {
 		if (!_read_uint64(hlvn, "creation_time", &timestamp)) {
-			log_error("Invalid creation_time for removed logical volume %s.", str);
+			log_error("Invalid creation_time for removed logical volume %s.",
+				  glv->historical->name);
 			goto bad;
 		}
 		glv->historical->timestamp = timestamp;
@@ -811,7 +812,8 @@ static int _read_historical_lvnames(struct cmd_context *cmd,
 
 	if (dm_config_has_node(hlvn, "removal_time")) {
 		if (!_read_uint64(hlvn, "removal_time", &timestamp)) {
-			log_error("Invalid removal_time for removed logical volume %s.", str);
+			log_error("Invalid removal_time for removed logical volume %s.",
+				  glv->historical->name);
 			goto bad;
 		}
 		glv->historical->timestamp_removed = timestamp;
