@@ -462,7 +462,7 @@ static int _clog_ctr(char *uuid, uint64_t luid,
 
 	if (get_log(lc->uuid, lc->luid) ||
 	    get_pending_log(lc->uuid, lc->luid)) {
-		LOG_ERROR("[%s/%" PRIu64 "u] Log already exists, unable to create.",
+		LOG_ERROR("[%s/%" PRIu64 "] Log already exists, unable to create.",
 			  SHORT_UUID(lc->uuid), lc->luid);
 		r = -EINVAL;
 		goto fail;
@@ -989,7 +989,7 @@ static int clog_in_sync(struct dm_ulog_request *rq)
 	if (!lc)
 		return -EINVAL;
 
-	if (region > lc->region_count)
+	if (region >= lc->region_count)
 		return -EINVAL;
 
 	*rtn = log_test_bit(lc->sync_bits, region);
@@ -1585,7 +1585,7 @@ static int clog_is_remote_recovering(struct dm_ulog_request *rq)
 	if (!lc)
 		return -EINVAL;
 
-	if (region > lc->region_count)
+	if (region >= lc->region_count)
 		return -EINVAL;
 
 	if (lc->recovery_halted) {
@@ -1820,7 +1820,7 @@ int push_state(const char *uuid, uint64_t luid,
 			count_bits32(lc->sync_bits));
 
 		print_bits(lc->sync_bits, 0);
-	} else if (!strncmp(which, "clean_bits", 9)) {
+	} else if (!strncmp(which, "clean_bits", 10)) {
 		memcpy(*buf, lc->clean_bits + 1, bitset_size);
 
 		LOG_DBG("[%s] storing clean_bits:", SHORT_UUID(lc->uuid));
@@ -1883,7 +1883,7 @@ int pull_state(const char *uuid, uint64_t luid,
 			count_bits32(lc->sync_bits));
 
 		print_bits(lc->sync_bits, 0);
-	} else if (!strncmp(which, "clean_bits", 9)) {
+	} else if (!strncmp(which, "clean_bits", 10)) {
 		lc->resume_override += 2;
 		memcpy(lc->clean_bits + 1, buf, bitset_size);
 
