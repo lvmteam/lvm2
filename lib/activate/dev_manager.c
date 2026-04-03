@@ -1796,7 +1796,7 @@ int dev_manager_raid_status(struct dev_manager *dm,
 	struct dm_status_raid *sr;
 
 	*exists = -1;
-	if (!(*status = dm_pool_zalloc(dm->mem, sizeof(struct lv_status_cache))))
+	if (!(*status = dm_pool_zalloc(dm->mem, sizeof(struct lv_status_raid))))
 		return_0;
 
 	if (!(dlid = build_dm_uuid(dm->mem, lv, layer)))
