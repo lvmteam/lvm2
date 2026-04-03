@@ -123,7 +123,7 @@ static int _thin_pool_text_import(struct lv_segment *seg,
 	if ((seg->chunk_size < DM_THIN_MIN_DATA_BLOCK_SIZE) ||
 	    (seg->chunk_size > DM_THIN_MAX_DATA_BLOCK_SIZE))
 		return SEG_LOG_ERROR("Unsupported value %u for chunk_size",
-				     seg->device_id);
+				     seg->chunk_size);
 
 	if (dm_config_has_node(sn, "zero_new_blocks") &&
 	    !dm_config_get_uint32(sn, "zero_new_blocks", &zero))
