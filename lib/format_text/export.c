@@ -240,7 +240,7 @@ static int _sectors_to_units(uint64_t sectors, char *buffer, size_t s)
 	/* to convert to K */
 	d /= 2.0;
 
-	for (i = 0; (d > 1024.0) && i < DM_ARRAY_SIZE(_units); ++i)
+	for (i = 0; (d > 1024.0) && i < DM_ARRAY_SIZE(_units) - 1; ++i)
 		d /= 1024.0;
 
 	return dm_snprintf(buffer, s, "# %g %s", d, _units[i]) > 0;
