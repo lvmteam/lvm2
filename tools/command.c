@@ -913,7 +913,7 @@ static void _add_pos_arg(struct command *cmd, char *str, int required)
 			cmd->cmd_flags |= CMD_FLAG_PARSE_ERROR;
 			return;
 		}
-		cmd->optional_pos_args[cmd->op_count].pos = cmd->pos_count++;;
+		cmd->optional_pos_args[cmd->op_count].pos = cmd->pos_count++;
 		cmd->optional_pos_args[cmd->op_count].def = def;
 		cmd->op_count++;
 	}

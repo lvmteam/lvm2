@@ -243,7 +243,7 @@ int vgchange_activate(struct cmd_context *cmd, struct volume_group *vg,
 	if (do_activate && pr_op && !strcmp(pr_op, "start") && cmd->disable_pr_required) {
 		if (vg_is_shared(vg)) {
 			log_error("Activation with persist start not permitted for shared VG %s.", vg->name);
-			return 0;;
+			return 0;
 		}
 		if (!persist_start_include(cmd, vg, (activate == CHANGE_AAY), 0, NULL))
 			return_0;
