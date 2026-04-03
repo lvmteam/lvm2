@@ -446,7 +446,7 @@ static void _lockd_retrieve_vg_pv_list(struct volume_group *vg,
 
 	pv_num = _lockd_retrieve_vg_pv_num(vg);
 	if (!pv_num) {
-		log_error("Fail to any PVs for VG %s", vg->name);
+		log_error("Failed to find any PVs for VG %s.", vg->name);
 		return;
 	}
 
