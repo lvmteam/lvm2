@@ -1090,6 +1090,7 @@ int lvmdevices(struct cmd_context *cmd, int argc, char **argv)
 		if ((du2 = get_du_for_pvid(cmd, pvid))) {
 			log_error("Multiple devices file entries for PVID %s (%s %s), remove by device name.",
 				  pvid, du->devname, du2->devname);
+			free_du(du);
 			goto bad;
 		}
 
