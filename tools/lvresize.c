@@ -75,7 +75,6 @@ static int _lvresize_params(struct cmd_context *cmd, struct lvresize_params *lp)
 
 	case lvresize_size_CMD:
 		lp->resize = LV_ANY;
-		lp->poolmetadata_size = arg_uint64_value(cmd, poolmetadatasize_ARG, 0);
 		if ((lp->poolmetadata_size = arg_uint64_value(cmd, poolmetadatasize_ARG, 0)))
 			lp->poolmetadata_sign = arg_sign_value(cmd, poolmetadatasize_ARG, SIGN_NONE);
 		set_extents_and_size = 1;
