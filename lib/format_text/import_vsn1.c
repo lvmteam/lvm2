@@ -1122,7 +1122,7 @@ static struct volume_group *_read_vg(struct cmd_context *cmd,
 		dm_list_init(&pr_list);
 		if (!_read_str_list(mem, &pr_list, cv)) {
 			log_error("Couldn't read pr for volume group %s.", vg->name);
-			return 0;
+			goto bad;
 		}
 		if (str_list_match_item(&pr_list, "require"))
 			vg->pr |= VG_PR_REQUIRE;
