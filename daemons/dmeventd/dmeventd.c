@@ -2704,7 +2704,7 @@ static int _restart_dmeventd(struct dm_event_fifos *fifos)
 	}
 
 	if (!_systemd_activation &&
-	    ((e = getenv(SD_ACTIVATION_ENV_VAR_NAME)) && strcmp(e, "1")))
+	    ((e = getenv(SD_ACTIVATION_ENV_VAR_NAME)) && !strcmp(e, "1")))
 		_systemd_activation = 1;
 
 	fini_fifos(fifos);
