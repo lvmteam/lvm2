@@ -3545,7 +3545,7 @@ static int _run_script(struct cmd_context *cmd, int argc, char **argv)
 			}
 		}
 		if ((strlen(buffer) == sizeof(buffer) - 1)
-		    && (buffer[sizeof(buffer) - 1] - 2 != '\n')) {
+		    && (buffer[sizeof(buffer) - 2] != '\n')) {
 			buffer[50] = '\0';
 			log_error("Line too long (max 255) beginning: %s",
 				  buffer);
