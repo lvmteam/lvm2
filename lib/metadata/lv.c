@@ -1426,7 +1426,7 @@ static int _sublvs_remove_after_reshape(const struct logical_volume *lv)
 	uint32_t s;
 	struct lv_segment *seg = first_seg(lv);
 
-	for (s = seg->area_count -1; s; s--)
+	for (s = 0; s < seg->area_count; s++)
 		if (seg_lv(seg, s)->status & LV_REMOVE_AFTER_RESHAPE)
 			return 1;
 
