@@ -1073,6 +1073,8 @@ static int _add_dev_node(const char *dev_name, uint32_t major, uint32_t minor,
 			return 1;
 		}
 
+		/* Wrong device exists, remove it before creating correct one */
+		/* coverity[toctou] stat check is for validation; ENOENT is handled */
 		if (unlink(path) && (errno != ENOENT)) {
 			log_sys_error("unlink", path);
 			return 0;
@@ -1168,6 +1170,7 @@ static int _rm_dev_node(const char *dev_name, int warn_if_udev_failed)
 			 "Falling back to direct node removal.", path);
 
 	/* udev may already have deleted the node. Ignore ENOENT. */
+	/* coverity[toctou] lstat is only for the warning; ENOENT is handled */
 	if (unlink(path) && (errno != ENOENT)) {
 		log_sys_error("unlink", path);
 		return 0;
@@ -1219,6 +1222,8 @@ static int _rename_dev_node(const char *old_name, const char *new_name,
 			return _rm_dev_node(old_name, 0);
 		}
 
+		/* Remove existing node at target path before rename */
+		/* coverity[toctou] stat/lstat checks are for validation; errors are handled */
 		if (unlink(newpath) < 0) {
 			if (errno == EPERM) {
 				/* devfs, entry has already been renamed */
