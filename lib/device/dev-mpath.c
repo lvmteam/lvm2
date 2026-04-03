@@ -577,7 +577,8 @@ static int _dev_in_wwid_file(struct cmd_context *cmd, struct device *dev,
 	 */
 	if (primary_result == 2) {
 		if (!(dev = dev_cache_get_by_devt(cmd, primary_dev))) {
-			log_debug("dev_is_mpath_component %s no primary dev", dev_name(dev));
+			log_debug("dev_is_mpath_component %s (%u:%u) no primary dev.",
+				  dev_name(dev), MAJOR(primary_dev), MINOR(primary_dev));
 			return 0;
 		}
 	}
