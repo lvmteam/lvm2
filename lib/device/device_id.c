@@ -843,7 +843,7 @@ static int _dev_read_sys_serial(struct cmd_context *cmd, struct device *dev,
 			ret = 0;
 		if (ret) {
 			format_general_id((const char *)buf, sizeof(buf), (unsigned char *)outbuf, outbufsize);
-			if (buf[0])
+			if (outbuf[0])
 				return 1;
 		}
 	}
