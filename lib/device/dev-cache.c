@@ -912,6 +912,8 @@ static int _dev_cache_iterate_devs_for_index(struct cmd_context *cmd)
 		if (!_index_dev_by_vgid_and_lvid(cmd, dev))
 			r = 0;
 
+	dev_iter_destroy(iter);
+
 	return r;
 }
 
