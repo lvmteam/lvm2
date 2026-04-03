@@ -2103,8 +2103,8 @@ static int _reactivate_siblings(struct dm_tree_node *dnode,
 				  &child->info, &child->dtree->cookie,
 				  child->props.reactivate_udev_flags, // use these flags
 				  child->info.suspended)) {
-			log_error("Failed to suspend %s (" FMTu32
-				  ":" FMTu32 ")", child->name,
+			log_error("Failed to resume %s (" FMTu32
+				  ":" FMTu32 ").", child->name,
 				  child->info.major, child->info.minor);
 			r = 0;
 			continue;
