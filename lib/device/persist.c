@@ -232,15 +232,14 @@ void persist_key_file_rename(struct volume_group *vg, const char *old_name, cons
 {
 	char old_path[PATH_MAX] = { 0 };
 	char new_path[PATH_MAX] = { 0 };
-	struct stat info;
 
 	create_persist_key_path(vg, old_name, old_path);
 	create_persist_key_path(vg, new_name, new_path);
 
-	if (stat(old_path, &info))
-		return;
-	if (rename(old_path, new_path) < 0)
-		log_warn("WARNING: Failed to rename %s", old_path);
+	if (rename(old_path, new_path) < 0) {
+		if (errno != ENOENT)
+			log_warn("WARNING: Failed to rename %s", old_path);
+	}
 }
 
 static int key_file_exists(struct cmd_context *cmd, struct volume_group *vg)
