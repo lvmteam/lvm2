@@ -140,7 +140,7 @@ static void _umount(const char *device, int major, int minor)
 		if (!fgets(buffer, sizeof(buffer), mounts))
 			break; /* eof, likely */
 
-		/* words[0] is the mount point and words[1] is the device path */
+		/* words[0] is the device path and words[1] is the mount point */
 		if (dm_split_words(buffer, 3, 0, words) < 2)
 			continue;
 
@@ -151,9 +151,9 @@ static void _umount(const char *device, int major, int minor)
 		if (S_ISBLK(st.st_mode) &&
 		    (int) major(st.st_rdev) == major &&
 		    (int) minor(st.st_rdev) == minor) {
-			log_error("Unmounting invalid snapshot %s from %s.", device, words[1]);
+			log_error("Unmounting invalid snapshot %s at mount point %s.", device, words[1]);
 			if (!_run(UMOUNT_COMMAND, "-fl", words[1], NULL))
-				log_error("Failed to umount snapshot %s from %s: %s.",
+				log_error("Failed to umount snapshot %s at mount point %s: %s.",
 					  device, words[1], strerror(errno));
 		}
 	}
