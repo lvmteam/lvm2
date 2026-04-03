@@ -85,7 +85,7 @@ static void _save_uuid(struct device *dev, unsigned char *uuid)
 
 	return;
 bad:
-	log_debug("dev_read_nvme_wwids ignore invalid uuid %s for %s", uuid, dev_name(dev));
+	log_debug("dev_read_nvme_wwids ignore invalid uuid %.16s for %s.", uuid, dev_name(dev));
 }
 
 static void _save_nguid(struct device *dev, unsigned char *nguid)
@@ -114,7 +114,7 @@ static void _save_nguid(struct device *dev, unsigned char *nguid)
 
 	return;
 bad:
-	log_debug("dev_read_nvme_wwids ignore invalid nguid %s for %s", nguid, dev_name(dev));
+	log_debug("dev_read_nvme_wwids ignore invalid nguid %.16s for %s.", nguid, dev_name(dev));
 }
 
 static void _save_eui64(struct device *dev, unsigned char *eui64)
@@ -143,7 +143,7 @@ static void _save_eui64(struct device *dev, unsigned char *eui64)
 
 	return;
 bad:
-	log_debug("dev_read_nvme_wwids ignore invalid eui64 %s for %s", eui64, dev_name(dev));
+	log_debug("dev_read_nvme_wwids ignore invalid eui64 %.8s for %s.", eui64, dev_name(dev));
 }
 
 #define ROUND_UP(N, S) ((((N) + (S) - 1) / (S)) * (S))
