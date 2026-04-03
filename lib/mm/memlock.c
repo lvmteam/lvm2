@@ -553,7 +553,7 @@ static void _lock_mem(struct cmd_context *cmd)
 			return;
 		}
 
-		if (!(_maps_fd = open(_procselfmaps, O_RDONLY))) {
+		if ((_maps_fd = open(_procselfmaps, O_RDONLY)) < 0) {
 			log_sys_debug("open", _procselfmaps);
 			return;
 		}
