@@ -547,7 +547,7 @@ int lm_lock_idm(struct lockspace *ls, struct resource *r, int ld_mode,
 	}
 
 	rdi->op.mode = to_idm_mode(ld_mode);
-	if (rv < 0) {
+	if (rdi->op.mode < 0) {
 		log_error("lock_idm invalid mode %d", ld_mode);
 		return -EINVAL;
 	}
@@ -729,7 +729,7 @@ int lm_convert_idm(struct lockspace *ls, struct resource *r,
 
 	if (rdi->vb && r_version && (r->mode == LD_LK_EX)) {
 		rv = ilm_write_lvb(lmi->sock, &rdi->id,
-				   (char *)rdi->vb_timestamp, sizeof(uint64_t));
+				   (char *)&rdi->vb_timestamp, sizeof(uint64_t));
 		if (rv < 0) {
 			log_error("S %s R %s convert_idm write lvb error %d",
 				  ls->name, r->name, rv);
