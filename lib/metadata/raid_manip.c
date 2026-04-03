@@ -7023,7 +7023,7 @@ try_again:
 		if (match_count > 0) {
 			log_error("Failed to replace %u devices."
 				  "  Attempting to replace %u instead.",
-				  match_count, match_count+1);
+				  match_count+1, match_count);
 			/*
 			 * Since we are replacing some but not all of the bad
 			 * devices, we must set partial_activation
