@@ -176,7 +176,7 @@ static int _mk_link(const char *dev_dir, const char *vg_name,
 	if (!lstat(lv_path, &buf)) {
 		if (!S_ISLNK(buf.st_mode) && !S_ISBLK(buf.st_mode)) {
 			log_error("Symbolic link %s not created: file exists",
-				  link_path);
+				  lv_path);
 			return 0;
 		}
 
