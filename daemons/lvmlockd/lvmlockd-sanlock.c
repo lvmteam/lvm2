@@ -979,7 +979,7 @@ int lm_init_vg_sanlock(char *ls_name, char *vg_name, uint32_t flags, char *vg_ar
 	write_rs_flags &= ~SANLK_WRITE_USE_CAW;
 	write_rs_flags |= SANLK_WRITE_NO_CAW;
 
-	for (i = 0; ; i++) {
+	for (i = 1; i; i++) {
 		if (dev_size && (offset + align_size > dev_size))
 			break;
 
@@ -1334,7 +1334,7 @@ int lm_rename_vg_sanlock(char *ls_name, char *vg_name, uint32_t flags, char *vg_
 
 	offset = align_size * LV_LOCK_BEGIN;
 
-	for (i = 0; ; i++) {
+	for (i = 1; i; i++) {
 		memset(&rd, 0, sizeof(rd));
 		memcpy(rd.rs.disks[0].path, disk.path, SANLK_PATH_LEN);
 		rd.rs.disks[0].offset = offset;
