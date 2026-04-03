@@ -542,13 +542,13 @@ set_env() {
 		LVM_AVAILABLE=0
 	fi
 
-	if test -f $MDADM; then
+	if test -f "$MDADM"; then
 		MDADM_AVAILABLE=1
 	else
 		MDADM_AVAILABLE=0
 	fi
 
-        if test -f $VDO; then
+        if test -f "$VDO"; then
                 VDO_AVAILABLE=1
         else
                 VDO_AVAILABLE=0
