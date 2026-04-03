@@ -1004,8 +1004,10 @@ AC_MSG_RESULT([$BUILD_LVMLOCKD])
 
 DEFAULT_USE_LVMLOCKD=0
 AS_IF([test "$BUILD_LVMLOCKD" = "yes"], [
-	AS_IF([test "$LVMPOLLD" = "no"], [AC_MSG_ERROR([cannot build lvmlockd with --disable-lvmpolld.])])
-	AS_IF([test "$BUILD_LVMPOLLD" = "no"], [BUILD_LVMPOLLD=yes; AC_MSG_WARN([Enabling lvmpolld - required by lvmlockd.])])
+	AS_IF([test "$BUILD_LVMPOLLD" = "no"], [
+		BUILD_LVMPOLLD=yes
+		AC_MSG_WARN([Enabling lvmpolld - required by lvmlockd.])
+	])
 	AC_MSG_CHECKING([defaults for use_lvmlockd])
 	AC_ARG_ENABLE(use_lvmlockd,
 		      [AS_HELP_STRING([--disable-use-lvmlockd], [disable usage of LVM lock daemon])],
@@ -1233,7 +1235,7 @@ AC_ARG_ENABLE(udev_rule_exec_detection,
 AC_MSG_RESULT([$UDEV_RULE_EXEC_DETECTION])
 
 dnl -- Check support for built-in blkid against target udev version
-AS_IF([test "$UDEV_RULE" != "no"], [
+AS_IF([test "$UDEV_RULES" != "no"], [
 	PKG_CHECK_EXISTS([libudev >= 176], [
 		UDEV_HAS_BUILTIN_BLKID="yes"
 	], [
@@ -1288,7 +1290,7 @@ AC_MSG_RESULT([$BUILD_LVMDBUSD])
 dnl -- Build notifydbus
 AC_ARG_ENABLE(notify-dbus,
 	      [AS_HELP_STRING([--enable-notify-dbus], [enable LVM notification using dbus])],
-	      [AS_IF([test "enableval" = "yes" && test "$NOTIFYDBUS_SUPPORT" = "no"],
+	      [AS_IF([test "$enableval" = "yes" && test "$NOTIFYDBUS_SUPPORT" = "no"],
 		     [AC_MSG_ERROR([--enable-notify-dbus requires systemd >= 221. (--with-systemd=$with_systemd)])])
 	       NOTIFYDBUS_SUPPORT=$enableval])
 
