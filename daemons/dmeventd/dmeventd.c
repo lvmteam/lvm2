@@ -2268,7 +2268,7 @@ static void _init_thread_signals(void)
 	struct sigaction act = { .sa_handler = _sig_alarm };
 
 	if (sigaction(SIGALRM, &act, NULL))
-		log_sys_debug("sigaction", "SIGLARM");
+		log_sys_debug("sigaction", "SIGALRM");
 	sigfillset(&my_sigset);
 
 	/* These are used for exiting */
