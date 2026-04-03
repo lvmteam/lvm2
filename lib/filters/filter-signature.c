@@ -75,7 +75,7 @@ struct dev_filter *signature_filter_create(struct dev_types *dt)
 	struct dev_filter *f;
 
 	if (!(f = zalloc(sizeof(*f)))) {
-		log_error("md filter allocation failed");
+		log_error("signature filter allocation failed.");
 		return NULL;
 	}
 
