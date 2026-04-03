@@ -6878,7 +6878,7 @@ int lv_resize(struct cmd_context *cmd, struct logical_volume *lv,
 		_setup_params_for_extend_metadata(lv_meta, &lp_meta);
 		if (lp->poolmetadata_size) {
 			lp_meta.size = lp->poolmetadata_size;
-			lp_meta.size = lp->poolmetadata_sign;
+			lp_meta.sign = lp->poolmetadata_sign;
 			lp->poolmetadata_size = 0;
 			lp->poolmetadata_sign = SIGN_NONE;
 		}
