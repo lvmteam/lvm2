@@ -265,7 +265,7 @@ char *lvseg_seg_le_ranges_str(struct dm_pool *mem, const struct lv_segment *seg)
 {
 	struct dm_list *list;
 
-	if (!(list = lvseg_seg_pe_ranges(mem, seg)))
+	if (!(list = lvseg_seg_le_ranges(mem, seg)))
 		return_NULL;
 
 	return str_list_to_str(mem, list, seg->lv->vg->cmd->report_list_item_separator);
