@@ -246,7 +246,7 @@ struct dm_config_node *config_make_nodes_v(struct dm_config_tree *cft,
 		fmt = strchr(next, '=');
 
 		if (!fmt) {
-			log_error(INTERNAL_ERROR "Bad format string '%s'", fmt);
+			log_error(INTERNAL_ERROR "Bad format string '%s'.", next);
 			return NULL;
 		}
 
