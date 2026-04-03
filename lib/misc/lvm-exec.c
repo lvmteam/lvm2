@@ -133,8 +133,8 @@ static int _reopen_fd_to_null(int fd)
 
 	r = 1;
 out:
-	if (close(null_fd)) {
-		log_sys_error("dup2", "");
+	if ((null_fd != fd) && close(null_fd)) {
+		log_sys_error("close", "/dev/null");
 		return 0;
 	}
 
