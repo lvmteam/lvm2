@@ -165,7 +165,7 @@ int lvrename(struct cmd_context *cmd, int argc, char **argv)
 
 	if (!strncmp(lv_name_new, HISTORICAL_LV_PREFIX, strlen(HISTORICAL_LV_PREFIX))) {
 		if (historical)
-			lv_name_new = lv_name_old + strlen(HISTORICAL_LV_PREFIX);
+			lv_name_new = lv_name_new + strlen(HISTORICAL_LV_PREFIX);
 		else {
 			log_error("Old name references live LV while "
 				  "new name is for historical LV.");
