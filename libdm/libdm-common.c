@@ -1965,7 +1965,6 @@ static int _sysfs_find_kernel_name(uint32_t major, uint32_t minor, char *buf, si
 	char path[PATH_MAX];
 	struct dirent *dirent, *dirent_dev;
 	DIR *d, *d_dev;
-	struct stat st;
 	int r = 0, sz;
 
 	if (!*_sysfs_dir ||
@@ -1997,56 +1996,53 @@ static int _sysfs_find_kernel_name(uint32_t major, uint32_t minor, char *buf, si
 		}
 
 		path[sz - 4] = 0; /* strip /dev from end of path string */
-		if (stat(path, &st))
-			continue;
 
-		if (S_ISDIR(st.st_mode)) {
-
-			/* let's assume there is no tree-complex device in past systems */
-			if (!(d_dev = opendir(path))) {
+		/* let's assume there is no tree-complex device in past systems */
+		if (!(d_dev = opendir(path))) {
+			/* Silently skip non-directories, log other errors */
+			if (errno != ENOTDIR)
 				log_sys_debug("opendir", path);
+			continue;
+		}
+
+		while ((dirent_dev = readdir(d_dev))) {
+			name_dev = dirent_dev->d_name;
+
+			/* skip known ignorable paths */
+			if (!strcmp(name_dev, ".") || !strcmp(name_dev, "..") ||
+			    !strcmp(name_dev, "bdi") ||
+			    !strcmp(name_dev, "dev") ||
+			    !strcmp(name_dev, "device") ||
+			    !strcmp(name_dev, "holders") ||
+			    !strcmp(name_dev, "integrity") ||
+			    !strcmp(name_dev, "loop") ||
+			    !strcmp(name_dev, "queue") ||
+			    !strcmp(name_dev, "md") ||
+			    !strcmp(name_dev, "mq") ||
+			    !strcmp(name_dev, "power") ||
+			    !strcmp(name_dev, "removable") ||
+			    !strcmp(name_dev, "slave") ||
+			    !strcmp(name_dev, "slaves") ||
+			    !strcmp(name_dev, "subsystem") ||
+			    !strcmp(name_dev, "trace") ||
+			    !strcmp(name_dev, "uevent"))
+				continue;
+
+			if (dm_snprintf(path, sizeof(path), "%sblock/%s/%s/dev",
+					_sysfs_dir, name, name_dev) == -1) {
+				log_warn("Couldn't create path for %s/%s.", name, name_dev);
 				continue;
 			}
 
-			while ((dirent_dev = readdir(d_dev))) {
-				name_dev = dirent_dev->d_name;
-
-				/* skip known ignorable paths */
-				if (!strcmp(name_dev, ".") || !strcmp(name_dev, "..") ||
-				    !strcmp(name_dev, "bdi") ||
-				    !strcmp(name_dev, "dev") ||
-				    !strcmp(name_dev, "device") ||
-				    !strcmp(name_dev, "holders") ||
-				    !strcmp(name_dev, "integrity") ||
-				    !strcmp(name_dev, "loop") ||
-				    !strcmp(name_dev, "queue") ||
-				    !strcmp(name_dev, "md") ||
-				    !strcmp(name_dev, "mq") ||
-				    !strcmp(name_dev, "power") ||
-				    !strcmp(name_dev, "removable") ||
-				    !strcmp(name_dev, "slave") ||
-				    !strcmp(name_dev, "slaves") ||
-				    !strcmp(name_dev, "subsystem") ||
-				    !strcmp(name_dev, "trace") ||
-				    !strcmp(name_dev, "uevent"))
-					continue;
-
-				if (dm_snprintf(path, sizeof(path), "%sblock/%s/%s/dev",
-						_sysfs_dir, name, name_dev) == -1) {
-					log_warn("Couldn't create path for %s/%s.", name, name_dev);
-					continue;
-				}
-
-				if (_sysfs_get_dev_major_minor(path, major, minor)) {
-					r = dm_strncpy(buf, name_dev, buf_size);
-					break; /* found */
-				}
+			if (_sysfs_get_dev_major_minor(path, major, minor)) {
+				r = dm_strncpy(buf, name_dev, buf_size);
+				break; /* found */
 			}
-
-			if (closedir(d_dev))
-				log_sys_debug("closedir", name);
 		}
-	}
+
+		if (closedir(d_dev))
+			log_sys_debug("closedir", name);
+		}
 
 	if (closedir(d))
 		log_sys_debug("closedir", path);
