@@ -1241,7 +1241,7 @@ static void cpg_message_callback(cpg_handle_t handle, const struct cpg_name *gna
 		}
 		LOG_SPRINT(match, "[%s] Checkpoint prepared for %u* (%s)",
 			   SHORT_UUID(rq->u_rq.uuid), match->checkpoint_requesters[i],
-			   (log_get_state(&rq->u_rq) != LOG_RESUMED)? "LOG_RESUMED": "LOG_SUSPENDED");
+			   (log_get_state(&rq->u_rq) == LOG_RESUMED)? "LOG_RESUMED": "LOG_SUSPENDED");
 		LOG_COND(log_checkpoint, "[%s] Checkpoint prepared for %u*",
 			 SHORT_UUID(rq->u_rq.uuid), match->checkpoint_requesters[i]);
 		match->checkpoints_needed--;
@@ -1656,6 +1656,7 @@ int create_cluster_cpg(char *uuid, uint64_t luid)
 	r = cpg_join(new->handle, &new->name);
 	if (r != CS_OK) {
 		LOG_ERROR("cpg_join failed:  Cannot join cluster");
+		cpg_finalize(new->handle);
 		free(new);
 		return -EPERM;
 	}
