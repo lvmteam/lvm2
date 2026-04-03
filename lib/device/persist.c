@@ -2581,8 +2581,8 @@ int persist_start(struct cmd_context *cmd, struct volume_group *vg,
 			}
 
 			if (found_keys) {
-				dm_pool_free(cmd->mem, found_keys);
 				found_key_print = found_keys[0];
+				dm_pool_free(cmd->mem, found_keys);
 			}
 
 			/* If our key is already found, then allow start even if others exist. */
