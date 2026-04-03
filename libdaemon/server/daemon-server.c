@@ -553,10 +553,10 @@ static void _reap(daemon_state s, int waiting)
 			if (ts->client.thread_id) {
 				if ((errno = pthread_kill(ts->client.thread_id, SIGTERM)) &&
 				    (errno != ESRCH))
-					ERROR(&s, "pthread_kill failed for pid %ld",
+					ERROR(&s, "pthread_kill failed for thread %ld.",
 					      (long)ts->client.thread_id);
 				if ((errno = pthread_join(ts->client.thread_id, &rv)))
-					ERROR(&s, "pthread_join failed: %s", strerror(errno));
+					ERROR(&s, "pthread_join failed: %s.", strerror(errno));
 			}
 			last->next = ts->next;
 			free(ts);
@@ -651,7 +651,7 @@ void daemon_start(daemon_state s)
 		 * after this point.
 		 */
 		if (dm_create_lockfile(s.pidfile) == 0) {
-			ERROR(&s, "Failed to acquire lock on %s. Already running?\n", s.pidfile);
+			ERROR(&s, "Failed to acquire lock on %s. Already running?", s.pidfile);
 			exit(EXIT_ALREADYRUNNING);
 		}
 
@@ -680,7 +680,8 @@ void daemon_start(daemon_state s)
 
 	/* Set Close-on-exec */
 	if (!failed && fcntl(s.socket_fd, F_SETFD, 1))
-		ERROR(&s, "setting CLOEXEC on socket fd %d failed: %s\n", s.socket_fd, strerror(errno));
+		ERROR(&s, "setting CLOEXEC on socket fd %d failed: %s.",
+		      s.socket_fd, strerror(errno));
 
 	/* Signal parent, letting them know we are ready to go. */
 	if (!s.foreground)
