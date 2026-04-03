@@ -410,7 +410,7 @@ static struct checkpoint_data *prepare_checkpoint(struct clog_cpg *entry,
 		return NULL;
 	}
 	new->requester = cp_requester;
-	strncpy(new->uuid, entry->name.value, entry->name.length);
+	dm_strncpy(new->uuid, entry->name.value, sizeof(new->uuid));
 
 	new->bitmap_size = push_state(entry->name.value, entry->luid,
 				      "clean_bits",
@@ -621,7 +621,7 @@ rr_create_retry:
 	dm_list_init(&rq->u.list);
 	rq->u_rq.request_type = DM_ULOG_CHECKPOINT_READY;
 	rq->originator = cp->requester;  /* FIXME: hack to overload meaning of originator */
-	strncpy(rq->u_rq.uuid, cp->uuid, CPG_MAX_NAME_LENGTH);
+	dm_strncpy(rq->u_rq.uuid, cp->uuid, sizeof(rq->u_rq.uuid));
 	rq->u_rq.seq = my_cluster_id;
 
 	r = cluster_send(rq);
@@ -653,7 +653,7 @@ static int export_checkpoint(struct checkpoint_data *cp)
 	dm_list_init(&rq->u.list);
 	rq->u_rq.request_type = DM_ULOG_CHECKPOINT_READY;
 	rq->originator = cp->requester;
-	strncpy(rq->u_rq.uuid, cp->uuid, CPG_MAX_NAME_LENGTH);
+	dm_strncpy(rq->u_rq.uuid, cp->uuid, sizeof(rq->u_rq.uuid));
 	rq->u_rq.seq = my_cluster_id;
 	rq->u_rq.data_size = rq_size - sizeof(*rq);
 
