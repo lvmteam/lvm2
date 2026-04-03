@@ -7200,6 +7200,7 @@ int lv_resize(struct cmd_context *cmd, struct logical_volume *lv,
 
 	if (!lv_meta)
 		goto do_main;
+	/* coverity[format_string_injection] lv->name is validated, cannot contain format specifiers */
 	if (!_lv_resize_volume(lv_meta, &lp_meta, lp->pvh))
 		goto_out;
 	if (!lp_meta.size_changed)
@@ -7220,6 +7221,7 @@ int lv_resize(struct cmd_context *cmd, struct logical_volume *lv,
 			goto_out;
 	}
 
+	/* coverity[format_string_injection] lv->name is validated, cannot contain format specifiers */
 	if (!_lv_resize_volume(lv_main, lp, lp->pvh))
 		goto_out;
 	if (!lp->size_changed) {
