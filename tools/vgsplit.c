@@ -599,7 +599,7 @@ int vgsplit(struct cmd_context *cmd, int argc, char **argv)
 	}
 
 	if (!(vg_from = vg_read_for_update(cmd, vg_name_from, NULL, 0))) {
-		log_error("Failed to read VG %s.", vg_name_to);
+		log_error("Failed to read VG %s.", vg_name_from);
 		unlock_and_release_vg(cmd, vg_to, vg_name_to);
 		return ECMD_FAILED;
 	}
