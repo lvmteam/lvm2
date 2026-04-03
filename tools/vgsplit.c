@@ -77,7 +77,8 @@ static int _move_one_lv(struct volume_group *vg_from,
 
 	if (lv_is_active(lv)) {
 		if ((parent_lv = lv_parent(lv)))
-			log_error("Logical volume %s (part of %s) must be inactive.", display_lvname(lv), parent_lv->name);
+			log_error("Logical volume %s (part of %s) must be inactive.",
+				  display_lvname(lv), display_lvname(parent_lv));
 		else
 			log_error("Logical volume %s must be inactive.", display_lvname(lv));
 		return 0;
