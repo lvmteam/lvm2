@@ -1227,7 +1227,7 @@ int cache_set_params(struct lv_segment *seg,
 				log_verbose("Replacing chunk size %s in cache pool %s with "
 					    "chunk size %s from profile.",
 					    display_size(cmd, pool_seg->chunk_size),
-					    display_lvname(seg->lv),
+					    display_lvname(pool_seg->lv),
 					    display_size(cmd, chunk_size));
 			pool_seg->chunk_size = chunk_size;
 		}
