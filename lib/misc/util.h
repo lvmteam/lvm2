@@ -85,13 +85,13 @@ static unsigned _dm_clz(unsigned x)
 
 #ifdef HAVE___BUILTIN_CLZLL
 #define clzll(x) __builtin_clzll((x))
-#else /* ifdef HAVE___BUILTIN_CLZ */
+#else /* ifdef HAVE___BUILTIN_CLZLL */
 static unsigned _dm_clzll(unsigned long long x)
 {
 	if (x <= 0xffffffff)
 		return 32 + clz((unsigned) (x & 0xffffffff));
 
-	return clz(x >> 32);
+	return clz((unsigned)(x >> 32));
 }
 #define clzll(x) _dm_clzll((x))
 #endif /* ifdef HAVE___BUILTIN_CLZLL */
