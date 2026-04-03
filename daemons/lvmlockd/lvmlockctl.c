@@ -861,7 +861,7 @@ static int _reopen_fd_to_null(int fd)
 		return 0;
 	}
 
-	if (close(fd)) {
+	if ((null_fd != fd) && close(fd)) {
 		log_error("close error fd %d %d", fd, errno);
 		goto out;
 	}
@@ -873,7 +873,7 @@ static int _reopen_fd_to_null(int fd)
 
 	r = 1;
 out:
-	if (close(null_fd)) {
+	if ((null_fd != fd) && close(null_fd)) {
 		log_error("close error fd %d %d", null_fd, errno);
 		return 0;
 	}
