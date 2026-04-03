@@ -160,12 +160,12 @@ void block_signals(uint32_t flags __attribute__((unused)))
 		return;
 
 	if (sigfillset(&set)) {
-		log_sys_error("sigfillset", "_block_signals");
+		log_sys_error("sigfillset", "block_signals");
 		return;
 	}
 
 	if (sigprocmask(SIG_SETMASK, &set, &_oldset)) {
-		log_sys_error("sigprocmask", "_block_signals");
+		log_sys_error("sigprocmask", "block_signals");
 		return;
 	}
 
@@ -182,7 +182,7 @@ void unblock_signals(void)
 		return;
 
 	if (sigprocmask(SIG_SETMASK, &_oldset, NULL)) {
-		log_sys_error("sigprocmask", "_block_signals");
+		log_sys_error("sigprocmask", "unblock_signals");
 		return;
 	}
 
