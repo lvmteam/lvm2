@@ -1966,6 +1966,27 @@ static int _sysfs_get_dev_major_minor(const char *path, uint32_t major, uint32_t
 
 static int _sysfs_find_kernel_name(uint32_t major, uint32_t minor, char *buf, size_t buf_size)
 {
+	/* sorted alphabetically */
+	static const char _ignore_sysfs[][16] = {
+		".",
+		"..",
+		"bdi",
+		"dev",
+		"device",
+		"holders",
+		"integrity",
+		"loop",
+		"md",
+		"mq",
+		"power",
+		"queue",
+		"removable",
+		"slave",
+		"slaves",
+		"subsystem",
+		"trace",
+		"uevent"
+	};
 	const char *name, *name_dev;
 	char path[PATH_MAX];
 	struct dirent *dirent, *dirent_dev;
@@ -2013,24 +2034,9 @@ static int _sysfs_find_kernel_name(uint32_t major, uint32_t minor, char *buf, si
 		while ((dirent_dev = readdir(d_dev))) {
 			name_dev = dirent_dev->d_name;
 
-			/* skip known ignorable paths */
-			if (!strcmp(name_dev, ".") || !strcmp(name_dev, "..") ||
-			    !strcmp(name_dev, "bdi") ||
-			    !strcmp(name_dev, "dev") ||
-			    !strcmp(name_dev, "device") ||
-			    !strcmp(name_dev, "holders") ||
-			    !strcmp(name_dev, "integrity") ||
-			    !strcmp(name_dev, "loop") ||
-			    !strcmp(name_dev, "queue") ||
-			    !strcmp(name_dev, "md") ||
-			    !strcmp(name_dev, "mq") ||
-			    !strcmp(name_dev, "power") ||
-			    !strcmp(name_dev, "removable") ||
-			    !strcmp(name_dev, "slave") ||
-			    !strcmp(name_dev, "slaves") ||
-			    !strcmp(name_dev, "subsystem") ||
-			    !strcmp(name_dev, "trace") ||
-			    !strcmp(name_dev, "uevent"))
+			/* skip known ignorable paths using binary search */
+			if (bsearch(&name_dev, _ignore_sysfs, DM_ARRAY_SIZE(_ignore_sysfs),
+				    sizeof(char *), (int (*)(const void *, const void *))strcmp))
 				continue;
 
 			if (dm_snprintf(path, sizeof(path), "%sblock/%s/%s/dev",
