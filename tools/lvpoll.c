@@ -55,12 +55,15 @@ static int _set_daemon_parms(struct cmd_context *cmd, struct daemon_parms *parms
 		parms->poll_fns = &_pvmove_fns;
 	} else if (!strcmp(poll_oper, CONVERT_POLL)) {
 		parms->progress_title = "Converted";
+		parms->lv_type = CONVERTING;
 		parms->poll_fns = &_convert_fns;
 	} else if (!strcmp(poll_oper, MERGE_POLL)) {
 		parms->progress_title = "Merged";
+		parms->lv_type = MERGING | SNAPSHOT;
 		parms->poll_fns = &_merge_fns;
 	} else if (!strcmp(poll_oper, MERGE_THIN_POLL)) {
 		parms->progress_title = "Merged";
+		parms->lv_type = MERGING | THIN_VOLUME;
 		parms->poll_fns = &_thin_merge_fns;
 	} else {
 		log_error("Unknown polling operation %s", poll_oper);
