@@ -433,7 +433,7 @@ static unsigned _find_lvm_command_enum(const char *name)
 			comp_long:
 				if (opt_names[i].desc && opt_names[i + 1].desc &&
 				    strcmp(opt_names[i].long_opt, opt_names[i + 1].long_opt) > 0) {
-					log_error("File args.h has unsorted long option name entry (%s > %s.",
+					log_error("File args.h has unsorted long option name entry (%s > %s).",
 						  opt_names[i].long_opt, opt_names[i + 1].long_opt);
 					_names_validated = 0;
 				}
