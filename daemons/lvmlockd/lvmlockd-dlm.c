@@ -112,7 +112,7 @@ static int read_cluster_name(char *clustername)
 
 	rv = read(fd, clustername, MAX_ARGS);
 	if (rv < 0) {
-		log_error("read_cluster_name: cluster name read error %d, check dlm_controld", fd);
+		log_error("read_cluster_name: cluster name read error %d, check dlm_controld", rv);
 		goto out;
 	}
 	clustername[rv] = 0;
@@ -246,7 +246,7 @@ static int get_local_nodeid(void)
 		snprintf(path, sizeof(path), "%s/%s/local",
 			 DLM_COMMS_PATH, de->d_name);
 
-		if (!(file = fopen(ls_comms_path, "r")))
+		if (!(file = fopen(path, "r")))
 			continue;
 		str1 = fgets(line, sizeof(line), file);
 		if (fclose(file))
