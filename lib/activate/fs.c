@@ -112,6 +112,7 @@ static void _rm_blks(const char *dir)
 			if (!S_ISBLK(buf.st_mode))
 				continue;
 			log_very_verbose("Removing %s", path);
+			/* coverity[toctou] lstat check avoids unlinking non-block files; ENOENT is handled */
 			if (unlink(path) && (errno != ENOENT))
 				log_sys_debug("unlink", path);
 		}
@@ -168,6 +169,7 @@ static int _mk_link(const char *dev_dir, const char *vg_name,
 			_rm_blks(vg_path);
 
 			log_very_verbose("Removing %s", lvm1_group_path);
+			/* coverity[toctou] lstat check is only for validation; ENOENT is handled */
 			if (unlink(lvm1_group_path) && (errno != ENOENT))
 				log_sys_debug("unlink", lvm1_group_path);
 		}
@@ -200,6 +202,7 @@ static int _mk_link(const char *dev_dir, const char *vg_name,
 		}
 
 		log_very_verbose("Removing %s", lv_path);
+		/* coverity[toctou] lstat check is for validation/warning; ENOENT is handled */
 		if (unlink(lv_path) && (errno != ENOENT)) {
 			log_sys_error("unlink", lv_path);
 			return 0;
@@ -252,6 +255,7 @@ static int _rm_link(const char *dev_dir, const char *vg_name,
 	}
 
 	log_very_verbose("Removing link %s", lv_path);
+	/* coverity[toctou] lstat check avoids unlinking non-symlink files; ENOENT is handled */
 	if (unlink(lv_path) && (errno != ENOENT)) {
 		log_sys_error("unlink", lv_path);
 		return 0;
