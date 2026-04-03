@@ -179,12 +179,12 @@ char *vg_system_id_dup(const struct volume_group *vg)
 
 char *vg_lock_type_dup(const struct volume_group *vg)
 {
-	return dm_pool_strdup(vg->vgmem, vg->lock_type ? : vg->lock_type ? : "");
+	return dm_pool_strdup(vg->vgmem, vg->lock_type ? : "");
 }
 
 char *vg_lock_args_dup(const struct volume_group *vg)
 {
-	return dm_pool_strdup(vg->vgmem, vg->lock_args ? : vg->lock_args ? : "");
+	return dm_pool_strdup(vg->vgmem, vg->lock_args ? : "");
 }
 
 char *vg_uuid_dup(const struct volume_group *vg)
