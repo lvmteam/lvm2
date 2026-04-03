@@ -4393,12 +4393,12 @@ static int _lv_extend_layered_lv(struct alloc_handle *ah,
 			seg_image = first_seg(lv_image);
 
 			if (!seg_image->integrity_meta_dev) {
-				log_error("1");
+				log_error("Missing integrity meta dev for %s.", display_lvname(lv_image));
 				return 0;
 			}
 
 			if (!(lv_iorig = seg_lv(seg_image, 0))) {
-				log_error("2");
+				log_error("Missing integrity origin for %s.", display_lvname(lv_image));
 				return 0;
 			}
 
