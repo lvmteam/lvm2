@@ -589,7 +589,7 @@ static int _vgchange_system_id(struct cmd_context *cmd, struct volume_group *vg,
 		return 0;
 	}
 
-	if (!strcmp(vg->system_id, system_id)) {
+	if (vg->system_id && !strcmp(vg->system_id, system_id)) {
 		log_error("Volume Group system ID is already \"%s\".", vg->system_id);
 		return 0;
 	}
