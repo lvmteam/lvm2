@@ -183,7 +183,7 @@ void process_event(struct dm_task *dmt,
 
 	dm_get_next_target(dmt, next, &start, &length, &target_type, &params);
 	if (!target_type || strcmp(target_type, "snapshot")) {
-		log_error("Target %s is not snapshot.", target_type);
+		log_error("Target %s is not snapshot.", target_type ?: "???");
 		return;
 	}
 
