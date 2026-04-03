@@ -363,7 +363,7 @@ report_log:
 
 	if (cmd->cmd_report.log_rh) {
 		dm_report_free(cmd->cmd_report.log_rh);
-		cmd->cmd_report.report_group = NULL;
+		cmd->cmd_report.log_rh = NULL;
 	}
 
 	return 0;
