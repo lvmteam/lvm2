@@ -820,6 +820,7 @@ int dev_get_primary_dev(struct dev_types *dt, struct device *dev, dev_t *result)
 	unsigned major = MAJOR(dev->dev);
 	unsigned minor = MINOR(dev->dev);
 	char path[PATH_MAX];
+	char path2[PATH_MAX];
 	char temp_path[PATH_MAX];
 	char buffer[64];
 	FILE *fp = NULL;
@@ -880,7 +881,7 @@ int dev_get_primary_dev(struct dev_types *dt, struct device *dev, dev_t *result)
 
 	temp_path[size] = '\0';
 
-	if (dm_snprintf(path, sizeof(path), "%sblock/%s/dev",
+	if (dm_snprintf(path2, sizeof(path2), "%sblock/%s/dev",
 			dm_sysfs_dir(), basename(dirname(temp_path))) < 0) {
 		log_warn("WARNING: sysfs path for %s is too long.",
 			 basename(dirname(temp_path)));
@@ -888,29 +889,29 @@ int dev_get_primary_dev(struct dev_types *dt, struct device *dev, dev_t *result)
 	}
 
 	/* finally, parse 'dev' attribute and create corresponding dev_t */
-	if (!(fp = fopen(path, "r"))) {
+	if (!(fp = fopen(path2, "r"))) {
 		if (errno == ENOENT)
-			log_debug("sysfs file %s does not exist.", path);
+			log_debug("sysfs file %s does not exist.", path2);
 		else
-			log_sys_debug("fopen", path);
+			log_sys_debug("fopen", path2);
 		goto out;
 	}
 
 	if (!fgets(buffer, sizeof(buffer), fp)) {
-		log_sys_error("fgets", path);
+		log_sys_error("fgets", path2);
 		goto out;
 	}
 
-	if (sscanf(buffer, "%d:%d", &major, &minor) != 2) {
+	if (sscanf(buffer, "%u:%u", &major, &minor) != 2) {
 		log_warn("WARNING: sysfs file %s not in expected MAJ:MIN format: %s",
-			  path, buffer);
+			  path2, buffer);
 		goto out;
 	}
 	*result = MKDEV(major, minor);
 	ret = 2;
 out:
 	if (fp && fclose(fp))
-		log_sys_debug("fclose", path);
+		log_sys_debug("fclose", path2);
 
 	return ret;
 }
