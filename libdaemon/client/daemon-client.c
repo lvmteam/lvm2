@@ -29,7 +29,7 @@ daemon_handle daemon_open(daemon_info i)
 	struct sockaddr_un sockaddr = { .sun_family = AF_UNIX };
 
 	log_debug("%s: Opening daemon socket to %s for protocol %s version %d.",
-		  i.socket, i.path, i.protocol, i.protocol_version);
+		  i.path, i.socket, i.protocol, i.protocol_version);
 
 	if ((h.socket_fd = socket(PF_UNIX, SOCK_STREAM /* | SOCK_NONBLOCK */, 0)) < 0) {
 		h.error = errno;
