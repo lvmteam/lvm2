@@ -16,7 +16,6 @@
 #define X _takeover_unsupported
 
 #define lin_r0   _takeover_from_linear_to_raid0
-#define lin_r0   _takeover_from_linear_to_raid0
 #define lin_r1   _takeover_from_linear_to_raid1
 #define lin_r10  _takeover_from_linear_to_raid10
 #define lin_r45  _takeover_from_linear_to_raid45
