@@ -2677,6 +2677,9 @@ static int _restart_dmeventd(struct dm_event_fifos *fifos)
 		message += strlen(message) + 1;
 	}
 
+	free(msg.data);
+	msg.data = NULL;
+
 	if (version >= 2) {
 		if (daemon_talk(fifos, &msg, DM_EVENT_CMD_GET_PARAMETERS, "-", "-", 0, 0)) {
 			fprintf(stderr, "Failed to acquire parameters from old dmeventd.\n");
