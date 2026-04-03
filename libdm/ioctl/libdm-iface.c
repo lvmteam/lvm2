@@ -292,8 +292,8 @@ static int _control_exists(const char *control, uint32_t major, uint32_t minor)
 
 	if (major && buf.st_rdev != MKDEV(major, minor)) {
 		log_verbose("%s: Wrong device number: (%u, %u) instead of "
-			    "(%u, %u)", control,
-			    MAJOR(buf.st_mode), MINOR(buf.st_mode),
+			    "(%u, %u).", control,
+			    MAJOR(buf.st_rdev), MINOR(buf.st_rdev),
 			    major, minor);
 		return _control_unlink(control);
 	}
