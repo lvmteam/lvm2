@@ -287,8 +287,10 @@ int fs_get_info(struct cmd_context *cmd, struct logical_volume *lv, struct fs_in
 		return 0;
 	}
 
-	if (fsi->nofs)
+	if (info.nofs) {
+		fsi->nofs = 1;
 		return 1;
+	}
 
 	/*
 	 * If there's a LUKS dm-crypt layer over the LV, then
