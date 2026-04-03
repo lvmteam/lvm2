@@ -294,7 +294,7 @@ static int poll_for_output(struct lvmpolld_lv *pdlv, struct lvmpolld_thread_data
 			if (fds[1].revents & POLLHUP)
 				DEBUGLOG(pdlv->ls, "%s: %s", PD_LOG_PREFIX, "caught err POLLHUP");
 			else
-				WARN(pdlv->ls, "%s: %s", PD_LOG_PREFIX, "poll for command's STDOUT failed");
+				WARN(pdlv->ls, "%s: %s", PD_LOG_PREFIX, "poll for command's STDERR failed");
 
 			fds[1].fd = -1;
 			fds_count--;
