@@ -256,7 +256,10 @@ void dm_pool_abandon_object(struct dm_pool *p)
 
 static void _align_chunk(struct chunk *c, unsigned alignment)
 {
-	c->begin += alignment - ((unsigned long) c->begin & (alignment - 1));
+	unsigned shift = (alignment - ((unsigned long) c->begin & (alignment - 1))) & (alignment - 1);
+
+	if (shift)
+		c->begin += shift;
 }
 
 static struct chunk *_new_chunk(struct dm_pool *p, size_t s)
