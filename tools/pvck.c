@@ -352,21 +352,29 @@ static struct devicefile *get_devicefile(struct cmd_context *cmd, const char *pa
 	struct stat sb;
 	struct devicefile *def;
 	size_t len;
+	int fd;
 
-	if (stat(path, &sb))
+	if ((fd = open(path, O_RDONLY)) < 0)
 		return_NULL;
 
-	if ((sb.st_mode & S_IFMT) != S_IFREG)
+	if (fstat(fd, &sb) < 0) {
+		(void) close(fd);
 		return_NULL;
+	}
+
+	if ((sb.st_mode & S_IFMT) != S_IFREG) {
+		(void) close(fd);
+		return_NULL;
+	}
 
 	len = strlen(path) + 1;
-	if (!(def = dm_pool_alloc(cmd->mem, sizeof(struct devicefile) + len)))
+	if (!(def = dm_pool_alloc(cmd->mem, sizeof(struct devicefile) + len))) {
+		(void) close(fd);
 		return_NULL;
+	}
 
 	memcpy(def->path, path, len);
-
-	if ((def->fd = open(path, O_RDONLY)) < 0)
-		return_NULL;
+	def->fd = fd;
 
 	return def;
 }
