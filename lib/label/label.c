@@ -563,6 +563,7 @@ static int _scan_dev_open(struct device *dev)
 		if (close(fd))
 			log_sys_debug("close", name);
 		dev->bcache_fd = -1;
+		dev->flags &= ~DEV_IN_BCACHE;
 		return 0;
 	}
 
