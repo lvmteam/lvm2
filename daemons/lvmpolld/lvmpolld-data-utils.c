@@ -124,7 +124,7 @@ struct lvmpolld_lv *pdlv_create(struct lvmpolld_state *ls, const char *id,
 	if (!pdlv || !tmp.lvmpolld_id || !tmp.lvname || !tmp.lvm_system_dir_env || !tmp.sinterval)
 		goto err;
 
-	tmp.lvid = _get_lvid(tmp.lvmpolld_id, sysdir),
+	tmp.lvid = _get_lvid(tmp.lvmpolld_id, sysdir);
 
 	*pdlv = tmp;
 
