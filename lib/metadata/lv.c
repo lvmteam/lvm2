@@ -235,7 +235,7 @@ char *lvseg_metadata_devices_str(struct dm_pool *mem, const struct lv_segment *s
 {
 	struct dm_list *list;
 
-	if (!(list = lvseg_devices(mem, seg)))
+	if (!(list = lvseg_metadata_devices(mem, seg)))
 		return_NULL;
 
 	return str_list_to_str(mem, list, ",");
