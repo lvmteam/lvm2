@@ -3709,7 +3709,7 @@ static struct alloc_handle *_alloc_init(struct cmd_context *cmd,
 
 			/* Calculate log_len (i.e. length of each rmeta device) for RAID */
 			cur_rimage_extents = raid_rimage_extents(segtype, existing_extents, stripes, mirrors);
-			new_rimage_extents = raid_rimage_extents(segtype, existing_extents + new_extents, stripes, mirrors),
+			new_rimage_extents = raid_rimage_extents(segtype, existing_extents + new_extents, stripes, mirrors);
 			ah->log_len = raid_rmeta_extents_delta(cmd, cur_rimage_extents, new_rimage_extents,
 							       region_size, extent_size);
 			ah->metadata_area_count = metadata_area_count;
