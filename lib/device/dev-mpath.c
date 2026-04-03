@@ -459,21 +459,19 @@ static int _dev_is_mpath_component_sysfs(struct cmd_context *cmd, struct device 
 		return 0;
 	}
 
-	/* also will filter out partitions */
-	if (stat(holders_path, &info))
-		return 0;
-
-	if (!S_ISDIR(info.st_mode)) {
-		log_warn("Path %s is not a directory.", holders_path);
-		return 0;
-	}
-
 	/*
 	 * If any holder is a dm mpath device, then return 1;
+	 * This also filters out partitions (no holders directory).
 	 */
-
 	if (!(dr = opendir(holders_path))) {
-		log_debug("Device %s has no holders dir", dev_name(dev));
+		/* Distinguish between non-existent (partitions) and errors */
+		if (errno == ENOENT)
+			return 0; /* Normal for partitions */
+		if (errno == ENOTDIR) {
+			log_warn("Path %s is not a directory.", holders_path);
+			return 0;
+		}
+		log_debug("Device %s has no holders dir.", dev_name(dev));
 		return 0;
 	}
 
