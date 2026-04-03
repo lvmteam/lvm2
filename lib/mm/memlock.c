@@ -514,7 +514,7 @@ static void _restore_priority_if_possible(struct cmd_context *cmd)
 	if (setpriority(PRIO_PROCESS, 0, _priority) == 0)
 		log_debug_activation("Restoring original task priority %d.", _priority);
 	else
-		log_warn("WARNING: setpriority %u failed: %s.",
+		log_warn("WARNING: setpriority %d failed: %s.",
 			 _priority, strerror(errno));
 
 	_priority_raised = 0;
