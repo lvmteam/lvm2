@@ -333,7 +333,7 @@ void *dm_malloc_wrapper(size_t s, const char *file, int line)
 void *dm_malloc_aligned_wrapper(size_t s, size_t a, const char *file, int line)
 {
 	/* FIXME Implement alignment when debugging - currently just ignored */
-	return _dm_malloc_aux_debug(s, file, line);
+	return dm_malloc_aux_debug(s, file, line);
 }
 
 void *dm_zalloc_wrapper(size_t s, const char *file, int line)
