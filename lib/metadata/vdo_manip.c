@@ -668,7 +668,7 @@ static int _get_sysinfo_memory(uint64_t *total_mb, uint64_t *available_mb)
 		  (unsigned long long)si.freehigh >> 20, si.mem_unit);
 
 	*available_mb = ((uint64_t)(si.freeram + si.bufferram) * si.mem_unit) >> 30;
-	*total_mb = si.totalram >> 30;
+	*total_mb = ((uint64_t) si.totalram * si.mem_unit) >> 30;
 
 	return 1;
 }
