@@ -1138,6 +1138,7 @@ static int _add_dev_node(const char *dev_name, uint32_t major, uint32_t minor,
 	old_mask = umask(0);
 
 	/* The node may already have been created by udev. So ignore EEXIST. */
+	/* coverity[toctou] previous checks are for cleanup/optimization; EEXIST is handled */
 	if (mknod(path, S_IFBLK | mode, dev) < 0 && errno != EEXIST) {
 		log_error("%s: mknod for %s failed: %s", path, dev_name, strerror(errno));
 		umask(old_mask);
