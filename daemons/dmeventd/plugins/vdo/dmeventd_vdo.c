@@ -344,10 +344,11 @@ int register_device(const char *device,
 		state->argv[1] = str + 1;  /* 1 argument - vg/lv */
 		_init_thread_signals(state);
 	} else if (cmd[0] == 0) {
-		state->name = "volume"; /* What to use with 'others?' */
+		name = "volume"; /* What to use with 'others?' */
 	} else/* Unsupported command format */
 		goto inval;
 
+	state->max_fails = 1;
 	state->pid = -1;
 	state->name = name;
 	*user = state;
