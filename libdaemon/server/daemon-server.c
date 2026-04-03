@@ -283,6 +283,7 @@ static int _open_socket(daemon_state s)
 
 		fprintf(stderr, "removing stale socket %s\n", sockaddr.sun_path);
 
+		/* coverity[toctou] connect check is to detect in-use socket; ENOENT is handled */
 		if (unlink(sockaddr.sun_path) && (errno != ENOENT)) {
 			perror("unlink failed");
 			goto error;
