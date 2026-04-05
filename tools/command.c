@@ -94,7 +94,7 @@ static const struct command_name command_names[] = {
 #include "commands.h"
 #undef xx
 };
-static struct command commands[COMMAND_COUNT];
+static struct command commands[COMMAND_COUNT] = { 0 };
 
 #else /* MAN_PAGE_GENERATOR */
 
@@ -1386,8 +1386,6 @@ int define_commands(struct cmd_context *cmdtool, const char *run_name)
 	int skip = 0;
 	int i;
 	int lvm_command_enum;
-
-	memset(&commands, 0, sizeof(commands));
 
 	if (run_name && !strcmp(run_name, "help"))
 		run_name = NULL;

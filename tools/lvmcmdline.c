@@ -58,8 +58,11 @@ extern struct command_name_args command_names_args[];
 
 /*
  * Table of commands (as defined in command-lines.in)
+ * Explicitly zero-initialized for clarity, though global arrays are
+ * guaranteed zero-initialized by C runtime before main().
+ * Currently ~6 MiB (206 commands x ~31 KB each) - placed in .bss segment.
  */
-struct command commands[COMMAND_COUNT];
+struct command commands[COMMAND_COUNT] = { 0 };
 static struct command *commands_idx[COMMAND_COUNT];
 
 static struct cmdline_context _cmdline;
