@@ -1,5 +1,6 @@
 Version 2.03.44 - 
 ==================
+  Prevent redundant device access attempts after I/O errors via DEV_SCAN_NOT_READ.
   Fix pvscan autoactivation when DEVLINKS symlinks are not yet created.
 
 Version 2.03.43 - 30th September 2026

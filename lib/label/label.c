@@ -1775,6 +1775,11 @@ int label_scan_dev(struct cmd_context *cmd, struct device *dev)
 
 int label_scan_open(struct device *dev)
 {
+	if (dev->flags & DEV_SCAN_NOT_READ) {
+		log_debug_devs("Skipping %s, excluded after previous I/O error.", dev_name(dev));
+		return 0;
+	}
+
 	if (!_in_bcache(dev))
 		return _scan_dev_open(dev);
 	return 1;
@@ -1883,6 +1888,29 @@ int label_scan_reopen_rw(struct device *dev)
 
 bool dev_read_bytes(struct device *dev, uint64_t start, size_t len, void *data)
 {
+	/*
+	 * FIXME: Temporary workaround to prevent redundant device access attempts.
+	 *
+	 * Problem: When a device I/O error occurs, various filters (partition,
+	 * signature, etc.) continue to call dev_read_bytes() because the filter
+	 * chain doesn't properly propagate I/O errors vs. legitimate "not found"
+	 * results. For example, _has_partition_table() returns 0 for both
+	 * "no partition table" and "I/O error", so the partition filter passes
+	 * devices with I/O errors to subsequent filters.
+	 *
+	 * Proper fix: Modify dev_is_partitioned(), signature checks, and other
+	 * device inspection functions to return tri-state (error/not-found/found)
+	 * instead of boolean, and update filters to handle I/O errors distinctly.
+	 *
+	 * This early return prevents wasted error logging and syscalls but doesn't
+	 * address the root cause in the filter architecture.
+	 */
+	if (dev->flags & DEV_SCAN_NOT_READ) {
+		log_debug_devs("Skipping read from %s, device excluded after I/O error.",
+			       dev_name(dev));
+		return false;
+	}
+
 	if (!scan_bcache) {
 		/* Should not happen */
 		log_error("dev_read bcache not set up %s", dev_name(dev));
@@ -1894,6 +1922,7 @@ bool dev_read_bytes(struct device *dev, uint64_t start, size_t len, void *data)
 		if (!label_scan_open(dev)) {
 			log_error("Error opening device %s for reading at %llu length %zu.",
 				  dev_name(dev), (unsigned long long)start, len);
+			dev->flags |= DEV_SCAN_NOT_READ;
 			return false;
 		}
 	}
@@ -1901,6 +1930,7 @@ bool dev_read_bytes(struct device *dev, uint64_t start, size_t len, void *data)
 	if (!bcache_read_bytes(scan_bcache, dev->bcache_di, start, len, data)) {
 		log_error("Error reading device %s at %llu length %zu.",
 			  dev_name(dev), (unsigned long long)start, len);
+		dev->flags |= DEV_SCAN_NOT_READ;
 		label_scan_invalidate(dev);
 		return false;
 	}
