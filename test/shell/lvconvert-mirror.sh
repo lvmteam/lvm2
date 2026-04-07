@@ -16,7 +16,7 @@
 
 aux lvmconf "global/support_mirrored_mirror_log=1"
 
-aux prepare_pvs 5 50
+aux prepare_pvs 5 90
 get_devs
 
 # proper DEVRANGE needs to be set according to extent size
@@ -314,7 +314,7 @@ aux throttle_dm_mirror || SHOULD=should
 test "${LVM_VALGRIND:-0}" -eq 0 || SHOULD=should
 
 # Use large enough mirror that takes time to synchronize with small regionsize
-lvcreate -aey -L40 -Zn -Wn --type mirror --regionsize 4k -m2 -n $lv1 $vg "$dev1" "$dev2" "$dev4" "$dev3:$DEVRANGE"
+lvcreate -aey -L70 -Zn -Wn --type mirror --regionsize 4k -m2 -n $lv1 $vg "$dev1" "$dev2" "$dev4" "$dev3:$DEVRANGE"
 $SHOULD not lvconvert -m-1 $vg/$lv1 "$dev1" 2>&1 | tee out
 aux restore_dm_mirror
 $SHOULD grep "not in-sync" out
