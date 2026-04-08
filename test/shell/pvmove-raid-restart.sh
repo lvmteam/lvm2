@@ -60,6 +60,7 @@ check lv_field $vg/$lv1 lv_health_status ""
 
 # Leave pvmove to finish fast.
 aux enable_dev "$dev4"
-sleep 4
+
+pvmove --abort
 
 vgremove -ff $vg
