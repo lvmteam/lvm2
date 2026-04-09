@@ -725,6 +725,7 @@ static struct dm_config_value *_type(struct parser *p)
 	/* [+-]{0,1}[0-9]+ | [0-9]*\.[0-9]* | ".*" */
 	struct dm_config_value *v;
 	const char *str;
+	char *endptr;
 	size_t len;
 
 	switch (p->t) {
@@ -733,8 +734,8 @@ static struct dm_config_value *_type(struct parser *p)
 			break;
 		v->type = DM_CFG_INT;
 		errno = 0;
-		v->v.i = strtoll(p->tb, NULL, 0);	/* FIXME: check error */
-		if (errno) {
+		v->v.i = strtoll(p->tb, &endptr, 0);
+		if (errno || (endptr == p->tb) || (endptr != p->te)) {
 			if (errno == ERANGE && p->key &&
 			    strcmp("creation_time", p->key) == 0) {
 				/* Due to a bug in some older 32bit builds (<2.02.169),
