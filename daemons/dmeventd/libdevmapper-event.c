@@ -504,6 +504,7 @@ static int _start_daemon(char *dmeventd_path, struct dm_event_fifos *fifos)
 		log_sys_error("fork", "");
 
 	else if (!pid) {
+		/* coverity[toctou] stat check is only for error reporting; execvp validates file */
 		execvp(args[0], args);
 		log_error("Unable to exec dmeventd: %s.", strerror(errno));
 		_exit(EXIT_FAILURE);

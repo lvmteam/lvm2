@@ -103,6 +103,7 @@ int lvm_rename(const char *old, const char *new)
 		return 0;
 	}
 
+	/* coverity[toctou] link created new before stat; nlink check ensures atomicity; ENOENT is handled */
 	if (unlink(old) && (errno != ENOENT)) {
 		log_sys_error("unlink", old);
 		return 0;

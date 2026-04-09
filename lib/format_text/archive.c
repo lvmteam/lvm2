@@ -212,6 +212,7 @@ static void _remove_expired(const char *dir, const char *vgname,
 			continue;
 
 		log_very_verbose("Expiring archive %s", path);
+		/* coverity[toctou] stat check is for cleanup logic; ENOENT is handled */
 		if (unlink(path) && (errno != ENOENT))
 			log_sys_debug("unlink", path);
 

@@ -49,6 +49,7 @@ static void _undo_flock(const char *file, int fd)
 	    !stat(file, &buf1) &&
 	    !fstat(fd, &buf2) &&
 	    is_same_inode(buf1, buf2))
+		/* coverity[toctou] flock provides exclusive access; stat/fstat check ensures same inode */
 		if (unlink(file) && (errno != ENOENT))
 			log_sys_debug("unlink", file);
 
@@ -116,6 +117,7 @@ static int _do_flock(const char *file, int *fd, int operation, uint32_t nonblock
 		if ((*fd > -1) && close(*fd))
 			log_sys_debug("close", file);
 
+		/* coverity[toctou] open/flock/stat pattern validates lock on correct file; loop retries if changed */
 		if ((*fd = open(file, O_CREAT | O_APPEND | O_RDWR, 0777)) < 0) {
 			log_sys_error("open", file);
 			return 0;

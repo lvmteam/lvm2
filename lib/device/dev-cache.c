@@ -2077,6 +2077,7 @@ int setup_devices_file(struct cmd_context *cmd)
 	if (stat(dirpath, &st)) {
 		log_debug("Creating %s.", dirpath);
 		dm_prepare_selinux_context(dirpath, S_IFDIR);
+		/* coverity[toctou] mkdir is safe; concurrent creation causes EEXIST which is checked by second stat */
 		rv = mkdir(dirpath, 0755);
 		dm_prepare_selinux_context(NULL, 0);
 
