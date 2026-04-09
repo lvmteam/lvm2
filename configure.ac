@@ -93,11 +93,12 @@ AC_HEADER_DIRENT
 AC_HEADER_MAJOR
 AC_HEADER_STDBOOL
 
-AC_CHECK_HEADERS([assert.h ctype.h dirent.h errno.h fcntl.h float.h
-  getopt.h inttypes.h langinfo.h libgen.h limits.h locale.h paths.h
-  signal.h stdarg.h stddef.h stdio.h stdlib.h string.h sys/file.h
-  sys/ioctl.h syslog.h sys/mman.h sys/param.h sys/resource.h sys/stat.h
-  sys/time.h sys/types.h sys/utsname.h sys/wait.h time.h
+dnl -- Note: backslashes at end of lines are required for older autoconf (<2.70)
+AC_CHECK_HEADERS([assert.h ctype.h dirent.h errno.h fcntl.h float.h \
+  getopt.h inttypes.h langinfo.h libgen.h limits.h locale.h paths.h \
+  signal.h stdarg.h stddef.h stdio.h stdlib.h string.h sys/file.h \
+  sys/ioctl.h syslog.h sys/mman.h sys/param.h sys/resource.h sys/stat.h \
+  sys/time.h sys/types.h sys/utsname.h sys/wait.h time.h \
   unistd.h], , [AC_MSG_ERROR(bailing out)])
 
 AC_CHECK_HEADERS(termios.h sys/statvfs.h sys/timerfd.h sys/vfs.h linux/magic.h linux/fiemap.h)
@@ -140,9 +141,10 @@ AC_DEFINE([_REENTRANT], 1, [Define to use re-entrant thread safe versions])
 
 ################################################################################
 dnl -- Check for functions
-AC_CHECK_FUNCS([ftruncate gethostname getpagesize gettimeofday localtime_r
-  memchr memset mkdir mkfifo munmap nl_langinfo pselect realpath rmdir setenv
-  setlocale strcasecmp strchr strcspn strdup strerror strncasecmp strndup
+dnl -- Note: backslashes at end of lines are required for older autoconf (<2.70)
+AC_CHECK_FUNCS([ftruncate gethostname getpagesize gettimeofday localtime_r \
+  memchr memset mkdir mkfifo munmap nl_langinfo pselect realpath rmdir setenv \
+  setlocale strcasecmp strchr strcspn strdup strerror strncasecmp strndup \
   strrchr strspn strstr strtol strtoul uname], , [AC_MSG_ERROR(bailing out)])
 AC_CHECK_FUNCS([ffs mallinfo2 prlimit versionsort])
 AC_FUNC_ALLOCA
