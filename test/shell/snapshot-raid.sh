@@ -147,6 +147,7 @@ test_add_del_image_with_snap() {
 	lvremove -y $vg/snap
 
 	umount "$mount_dir"
+	aux wait_for_sync $vg $lv1
 }
 
 test_replace_image_with_snap() {
@@ -181,6 +182,7 @@ test_replace_image_with_snap() {
 
 	# put lv1 back to original state with images on dev1 and dev2
 	lvconvert -y -m-1 $vg/$lv1 "$dev5"
+	aux wait_for_sync $vg $lv1
 
 	umount "$mount_dir"
 }
@@ -260,11 +262,15 @@ test_merge_snap()
 
 	umount "$mount_dir"
 
+	# Wait for merge to complete (can take 20-30 seconds)
 	for i in $(seq 1 10); do
 		# Wait until snapshot is surely merged
-		dmsetup info $vg-snap || break
+		dmsetup info $vg-snap 2>/dev/null || break
 		sleep 0.1
 	done
+
+	# Verify merge completed
+	not dmsetup info $vg-snap 2>/dev/null
 }
 
 test_extend_snap()
