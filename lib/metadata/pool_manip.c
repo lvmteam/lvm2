@@ -539,7 +539,7 @@ int create_pool(struct logical_volume *pool_lv,
 		 * pool_lv is a new LV so the VG lock protects us
 		 */
 		/* Clear pool metadata device. */
-		if (!activate_and_wipe_lv(pool_lv, WIPE_MODE_METADATA, 0, 0)) {
+		if (!activate_and_wipe_lv(pool_lv, WIPE_MODE_METADATA, 0, PROMPT)) {
 			log_error("Aborting. Failed to wipe pool metadata %s.",
 				  display_lvname(pool_lv));
 			goto bad;

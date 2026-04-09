@@ -706,7 +706,7 @@ static int _clear_lvs(struct volume_group *vg, struct dm_list *lv_list)
 	if (!vg_write(vg) || !vg_commit(vg))
 		return_0;
 
-	return activate_and_wipe_lvlist(lv_list, WIPE_MODE_DO_ZERO, 0, 0);
+	return activate_and_wipe_lvlist(lv_list, WIPE_MODE_DO_ZERO, 0, PROMPT);
 }
 
 /* External interface to clear logical volumes on @lv_list */

@@ -1273,7 +1273,7 @@ int wipe_cache_pool(struct logical_volume *cache_pool_lv)
 		return 1;
 	}
 
-	if (!activate_and_wipe_lv(cache_pool_lv, WIPE_MODE_DO_ZERO, 0, 0)) {
+	if (!activate_and_wipe_lv(cache_pool_lv, WIPE_MODE_DO_ZERO, 0, PROMPT)) {
 		log_error("Aborting. Failed to wipe cache pool %s.",
 			  display_lvname(cache_pool_lv));
 		return 0;

@@ -1277,10 +1277,12 @@ out:
 static int _config_report(struct cmd_context *cmd, struct report_args *args, struct single_report_args *single_args)
 {
 	const char *str;
+	int headings_val;
 
 	args->aligned = find_config_tree_bool(cmd, report_aligned_CFG, NULL);
 	args->buffered = find_config_tree_bool(cmd, report_buffered_CFG, NULL);
-	args->headings = find_config_tree_int(cmd, report_headings_CFG, NULL);
+	headings_val = find_config_tree_int(cmd, report_headings_CFG, NULL);
+	args->headings = (report_headings_t)headings_val;
 	args->separator = find_config_tree_str(cmd, report_separator_CFG, NULL);
 	args->field_prefixes = find_config_tree_bool(cmd, report_prefixes_CFG, NULL);
 	args->quoted = find_config_tree_bool(cmd, report_quoted_CFG, NULL);

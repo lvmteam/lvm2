@@ -4454,7 +4454,7 @@ static int _lv_extend_layered_lv(struct alloc_handle *ah,
 				return_0;
 
 			/* Wipe lv list */
-			if (!activate_and_wipe_lvlist(&meta_lvs, WIPE_MODE_DO_ZERO, 0, 0)) {
+			if (!activate_and_wipe_lvlist(&meta_lvs, WIPE_MODE_DO_ZERO, 0, PROMPT)) {
 				/* If we failed clearing rmeta SubLVs, try removing the new RaidLV */
 				if (!lv_remove(lv))
 					log_error("Failed to remove LV");

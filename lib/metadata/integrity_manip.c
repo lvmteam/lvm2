@@ -642,7 +642,7 @@ int lv_add_integrity_to_raid(struct logical_volume *lv, struct dm_integrity_sett
 		 * dm-integrity requires the metadata LV header to be zeroed.
 		 */
 
-		if (!activate_and_wipe_lv(meta_lv, WIPE_MODE_DO_ZERO, 0, 0)) {
+		if (!activate_and_wipe_lv(meta_lv, WIPE_MODE_DO_ZERO, 0, PROMPT)) {
 			log_error("Failed to zero LV for integrity metadata %s", display_lvname(meta_lv));
 			goto bad;
 		}
