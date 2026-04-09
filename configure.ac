@@ -93,11 +93,11 @@ AC_HEADER_DIRENT
 AC_HEADER_MAJOR
 AC_HEADER_STDBOOL
 
-AC_CHECK_HEADERS([assert.h ctype.h dirent.h errno.h fcntl.h float.h \
-  getopt.h inttypes.h langinfo.h libgen.h limits.h locale.h paths.h \
-  signal.h stdarg.h stddef.h stdio.h stdlib.h string.h sys/file.h \
-  sys/ioctl.h syslog.h sys/mman.h sys/param.h sys/resource.h sys/stat.h \
-  sys/time.h sys/types.h sys/utsname.h sys/wait.h time.h \
+AC_CHECK_HEADERS([assert.h ctype.h dirent.h errno.h fcntl.h float.h
+  getopt.h inttypes.h langinfo.h libgen.h limits.h locale.h paths.h
+  signal.h stdarg.h stddef.h stdio.h stdlib.h string.h sys/file.h
+  sys/ioctl.h syslog.h sys/mman.h sys/param.h sys/resource.h sys/stat.h
+  sys/time.h sys/types.h sys/utsname.h sys/wait.h time.h
   unistd.h], , [AC_MSG_ERROR(bailing out)])
 
 AC_CHECK_HEADERS(termios.h sys/statvfs.h sys/timerfd.h sys/vfs.h linux/magic.h linux/fiemap.h)
@@ -140,9 +140,9 @@ AC_DEFINE([_REENTRANT], 1, [Define to use re-entrant thread safe versions])
 
 ################################################################################
 dnl -- Check for functions
-AC_CHECK_FUNCS([ftruncate gethostname getpagesize gettimeofday localtime_r \
-  memchr memset mkdir mkfifo munmap nl_langinfo pselect realpath rmdir setenv \
-  setlocale strcasecmp strchr strcspn strdup strerror strncasecmp strndup \
+AC_CHECK_FUNCS([ftruncate gethostname getpagesize gettimeofday localtime_r
+  memchr memset mkdir mkfifo munmap nl_langinfo pselect realpath rmdir setenv
+  setlocale strcasecmp strchr strcspn strdup strerror strncasecmp strndup
   strrchr strspn strstr strtol strtoul uname], , [AC_MSG_ERROR(bailing out)])
 AC_CHECK_FUNCS([ffs mallinfo2 prlimit versionsort])
 AC_FUNC_ALLOCA
@@ -430,7 +430,7 @@ AC_ARG_ENABLE(thin_check_needs_check,
 # if not - use plain defaults and warn user
 AS_CASE(["$THIN"],
 	[internal|shared], [
-	# Empty means a config way to ignore thin checking
+	# Empty value allows user to skip thin checking
 	AS_IF([test "$THIN_CHECK_CMD" = "autodetect"], [
 		AC_PATH_TOOL(THIN_CHECK_CMD, thin_check, [], [$PATH_SBIN])
 		AS_IF([test -z "$THIN_CHECK_CMD"], [
@@ -455,29 +455,29 @@ AS_CASE(["$THIN"],
 			THIN_CHECK_NEEDS_CHECK="no"
 		])
 	])
-	# Empty means a config way to ignore thin dumping
+	# Empty value allows user to skip thin dumping
 	AS_IF([test "$THIN_DUMP_CMD" = "autodetect"], [
 		AC_PATH_TOOL(THIN_DUMP_CMD, thin_dump, [], [$PATH_SBIN])
 		AS_IF([test -z "$THIN_DUMP_CMD"], [
-			AC_MSG_WARN(["thin_dump not found in path $PATH_SBIN"])
+			AC_MSG_WARN([thin_dump not found in path $PATH_SBIN])
 			THIN_DUMP_CMD="/usr/sbin/thin_dump"
 			THIN_CONFIGURE_WARN="y"
 		])
 	])
-	# Empty means a config way to ignore thin repairing
+	# Empty value allows user to skip thin repairing
 	AS_IF([test "$THIN_REPAIR_CMD" = "autodetect"], [
 		AC_PATH_TOOL(THIN_REPAIR_CMD, thin_repair, [], [$PATH_SBIN])
 		AS_IF([test -z "$THIN_REPAIR_CMD"], [
-			AC_MSG_WARN(["thin_repair not found in path $PATH_SBIN"])
+			AC_MSG_WARN([thin_repair not found in path $PATH_SBIN])
 			THIN_REPAIR_CMD="/usr/sbin/thin_repair"
 			THIN_CONFIGURE_WARN="y"
 		])
 	])
-	# Empty means a config way to ignore thin restoring
+	# Empty value allows user to skip thin restoring
 	AS_IF([test "$THIN_RESTORE_CMD" = "autodetect"], [
 		AC_PATH_TOOL(THIN_RESTORE_CMD, thin_restore, [], [$PATH_SBIN])
 		AS_IF([test -z "$THIN_RESTORE_CMD"], [
-			AC_MSG_WARN(["thin_restore not found in path $PATH_SBIN"])
+			AC_MSG_WARN([thin_restore not found in path $PATH_SBIN])
 			THIN_RESTORE_CMD="/usr/sbin/thin_restore"
 			THIN_CONFIGURE_WARN="y"
 		])
@@ -543,7 +543,7 @@ AC_ARG_ENABLE(cache_check_needs_check,
 # if not - use plain defaults and warn user
 AS_CASE(["$CACHE"],
 	[internal|shared], [
-	# Empty means a config way to ignore cache checking
+	# Empty value allows user to skip cache checking
 	AS_IF([test "$CACHE_CHECK_CMD" = "autodetect"], [
 		AC_PATH_TOOL(CACHE_CHECK_CMD, cache_check, [], [$PATH_SBIN])
 		AS_IF([test -z "$CACHE_CHECK_CMD"], [
@@ -575,33 +575,33 @@ AS_CASE(["$CACHE"],
 			])
 			AS_IF([test "$CACHE_CHECK_VSN_MINOR" -lt 7], [
 				AC_MSG_WARN([$CACHE_CHECK_CMD: Old version "$CACHE_CHECK_VSN" does not support new cache format V2])
-				CACHE_CHECK_VERSION_WARN=y
+				CACHE_CHECK_VERSION_WARN="y"
 			])
 		])
 	])
-	# Empty means a config way to ignore cache dumping
+	# Empty value allows user to skip cache dumping
 	AS_IF([test "$CACHE_DUMP_CMD" = "autodetect"], [
 		AC_PATH_TOOL(CACHE_DUMP_CMD, cache_dump, [], [$PATH_SBIN])
 		AS_IF([test -z "$CACHE_DUMP_CMD"], [
-			AC_MSG_WARN(["cache_dump not found in path $PATH_SBIN"])
+			AC_MSG_WARN([cache_dump not found in path $PATH_SBIN])
 			CACHE_DUMP_CMD="/usr/sbin/cache_dump"
 			CACHE_CONFIGURE_WARN="y"
 		])
 	])
-	# Empty means a config way to ignore cache repairing
+	# Empty value allows user to skip cache repairing
 	AS_IF([test "$CACHE_REPAIR_CMD" = "autodetect"], [
 		AC_PATH_TOOL(CACHE_REPAIR_CMD, cache_repair, [], [$PATH_SBIN])
 		AS_IF([test -z "$CACHE_REPAIR_CMD"], [
-			AC_MSG_WARN(["cache_repair not found in path $PATH_SBIN"])
+			AC_MSG_WARN([cache_repair not found in path $PATH_SBIN])
 			CACHE_REPAIR_CMD="/usr/sbin/cache_repair"
 			CACHE_CONFIGURE_WARN="y"
 		])
 	])
-	# Empty means a config way to ignore cache restoring
+	# Empty value allows user to skip cache restoring
 	AS_IF([test "$CACHE_RESTORE_CMD" = "autodetect"], [
 		AC_PATH_TOOL(CACHE_RESTORE_CMD, cache_restore, [], [$PATH_SBIN])
 		AS_IF([test -z "$CACHE_RESTORE_CMD"], [
-			AC_MSG_WARN(["cache_restore not found in path $PATH_SBIN"])
+			AC_MSG_WARN([cache_restore not found in path $PATH_SBIN])
 			CACHE_RESTORE_CMD="/usr/sbin/cache_restore"
 			CACHE_CONFIGURE_WARN="y"
 		])
@@ -935,13 +935,18 @@ AC_MSG_RESULT([$BUILD_LOCKDSANLOCK])
 
 dnl -- Look for sanlock libraries
 AS_IF([test "$BUILD_LOCKDSANLOCK" = "yes"], [
-	LOCKDSANLOCK_SUPPORT=370
-	PKG_CHECK_EXISTS(libsanlock_client >= 4.0.0, [LOCKDSANLOCK_SUPPORT=400])
-	PKG_CHECK_EXISTS(libsanlock_client >= 4.1.0, [LOCKDSANLOCK_SUPPORT=410])
-	PKG_CHECK_EXISTS(libsanlock_client >= 4.2.0, [LOCKDSANLOCK_SUPPORT=420])
-	PKG_CHECK_EXISTS(libsanlock_client >= 5.0.0, [LOCKDSANLOCK_SUPPORT=500])
-	PKG_CHECK_MODULES(LIBSANLOCKCLIENT, libsanlock_client >= 3.7.0, [BUILD_LVMLOCKD="yes"])
-	AC_DEFINE_UNQUOTED([LOCKDSANLOCK_SUPPORT], [$LOCKDSANLOCK_SUPPORT], [Define version of sanlock.])
+	PKG_CHECK_MODULES(LIBSANLOCKCLIENT, libsanlock_client >= 3.7.0, [
+		BUILD_LVMLOCKD="yes"
+		dnl Determine API level (newest to oldest, stops at first match)
+		PKG_CHECK_EXISTS([libsanlock_client >= 5.0.0], [LOCKDSANLOCK_SUPPORT=500],
+			[PKG_CHECK_EXISTS([libsanlock_client >= 4.2.0], [LOCKDSANLOCK_SUPPORT=420],
+			[PKG_CHECK_EXISTS([libsanlock_client >= 4.1.0], [LOCKDSANLOCK_SUPPORT=410],
+			[PKG_CHECK_EXISTS([libsanlock_client >= 4.0.0], [LOCKDSANLOCK_SUPPORT=400],
+			[LOCKDSANLOCK_SUPPORT=370])])])])
+		AC_MSG_CHECKING([sanlock API level])
+		AC_MSG_RESULT([$LOCKDSANLOCK_SUPPORT])
+		AC_DEFINE_UNQUOTED([LOCKDSANLOCK_SUPPORT], [$LOCKDSANLOCK_SUPPORT], [Define version of sanlock.])
+	])
 ])
 
 ################################################################################
