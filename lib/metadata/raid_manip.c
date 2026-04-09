@@ -4105,10 +4105,12 @@ static int _convert_mirror_to_raid1(struct logical_volume *lv,
 {
 	uint32_t s;
 	struct lv_segment *seg = first_seg(lv);
-	struct lv_list lvl_array[seg->area_count], *lvl;
+	struct lv_list *lvl_array, *lvl;
 	struct dm_list meta_lvs;
 	struct lv_segment_area *meta_areas;
 	char *new_name;
+
+	lvl_array = alloca(seg->area_count * sizeof(*lvl_array));
 
 	dm_list_init(&meta_lvs);
 
@@ -6854,11 +6856,13 @@ static int _lv_raid_rebuild_or_replace(struct logical_volume *lv,
 	struct dm_list new_meta_lvs, new_data_lvs;
 	struct lv_segment *raid_seg = first_seg(lv);
 	struct lv_list *lvl;
-	char *tmp_names[raid_seg->area_count * 2];
+	char **tmp_names;
 	char tmp_name_buf[NAME_LEN];
 	char *tmp_name_dup;
 	const char *action_str = rebuild ? "rebuild" : "replace";
 	int has_integrity;
+
+	tmp_names = alloca(raid_seg->area_count * 2 * sizeof(*tmp_names));
 
 	if ((has_integrity = lv_raid_has_integrity(lv))) {
 		if (rebuild) {
