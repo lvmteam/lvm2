@@ -108,7 +108,7 @@ static char *_list_args(const char *text, int state)
 			/* increase position for next iteration */
 			char c = _cmdline->opt_names[cna->valid_args[match_no++]].short_opt;
 			if (c) {
-				sprintf(s, "-%c", c);
+				snprintf(s, sizeof(s), "-%c", c);
 				if (!strncmp(text, s, len))
 					return strdup(s);
 			}
