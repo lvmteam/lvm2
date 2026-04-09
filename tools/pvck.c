@@ -3156,6 +3156,11 @@ static int _pvck_mf(struct metadata_file *mf, struct cmd_context *cmd, int argc,
 	if ((repair = arg_str_value(cmd, repairtype_ARG, NULL))) {
 		cmd->use_hints = 0;
 
+		if (!dev) {
+			log_error("--repairtype requires a device.");
+			return_ECMD_FAILED;
+		}
+
 		if (!strcmp(repair, "label_header"))
 			ret = _repair_label_header(cmd, repair, &set, labelsector, dev);
 
@@ -3174,6 +3179,11 @@ static int _pvck_mf(struct metadata_file *mf, struct cmd_context *cmd, int argc,
 
 	if (arg_is_set(cmd, repair_ARG)) {
 		cmd->use_hints = 0;
+
+		if (!dev) {
+			log_error("--repair requires a device.");
+			return_ECMD_FAILED;
+		}
 
 		/* repair is a combination of repairtype pv_header+metadata */
 
