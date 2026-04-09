@@ -742,7 +742,6 @@ static int vg_is_registered_by_host_id(struct cmd_context *cmd, struct volume_gr
 			continue;
 
 		found_key = 0;
-		found_gen = 0;
 
 		if (!dev_find_key(cmd, dev, 0, 0, NULL, host_id, &found_key, 0, NULL, NULL)) {
 			log_error("Failed to read persistent reservation key on %s", dev_name(dev));

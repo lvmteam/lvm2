@@ -2324,7 +2324,7 @@ int lm_lock_sanlock(struct lockspace *ls, struct resource *r, int ld_mode,
 	flags |= SANLK_ACQUIRE_OWNER_NOWAIT;
 
 	memset(&opt, 0, sizeof(opt));
-	sprintf(opt.owner_name, "%s", "lvmlockd");
+	snprintf(opt.owner_name, sizeof(opt.owner_name), "%s", "lvmlockd");
 
  repair_retry:
 

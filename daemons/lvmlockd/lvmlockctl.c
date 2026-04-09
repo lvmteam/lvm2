@@ -269,7 +269,7 @@ static void save_client_info(char *line)
 
 	clients[num_clients].client_id = client_id;
 	clients[num_clients].pid = pid;
-	strcpy(clients[num_clients].name, name);
+	memcpy(clients[num_clients].name, name, sizeof(clients[num_clients].name));
 	num_clients++;
 }
 
@@ -280,7 +280,8 @@ static void find_client_info(uint32_t client_id, uint32_t *pid, char *cl_name)
 	for (i = 0; i < num_clients; i++) {
 		if (clients[i].client_id == client_id) {
 			*pid = clients[i].pid;
-			strcpy(cl_name, clients[i].name);
+			strncpy(cl_name, clients[i].name, MAX_NAME);
+			cl_name[MAX_NAME] = 0;
 			return;
 		}
 	}
@@ -386,8 +387,8 @@ static void format_info_r(char *line, char *r_name_out, char *r_type_out)
 		    &ver) < 0)
 		return;
 
-	strcpy(r_name_out, r_name);
-	strcpy(r_type_out, r_type);
+	memcpy(r_name_out, r_name, MAX_NAME + 1);
+	memcpy(r_type_out, r_type, sizeof(r_type));
 
 	/* when mode is not un, wait and print each lk line */
 	if (strcmp(mode, "un"))
