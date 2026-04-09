@@ -435,11 +435,12 @@ static void split_line(char *buf, int *argc, char **argv, int max_args, char sep
 
 int lockd_lockargs_get_version(char *str, unsigned int *major, unsigned int *minor, unsigned int *patch)
 {
-	char version[16] = {0};
+	char version[16];
 	char *major_str, *minor_str, *patch_str;
 	char *n, *d1, *d2;
 
-	strncpy(version, str, 15);
+	strncpy(version, str, sizeof(version) - 1);
+	version[sizeof(version) - 1] = '\0';
 
 	n = strchr(version, ':');
 	if (n)
@@ -3575,6 +3576,7 @@ static int add_lockspace_thread(const char *ls_name,
 		return -ENOMEM;
 
 	strncpy(ls->name, ls_name, MAX_NAME);
+	ls->name[MAX_NAME] = '\0';
 	ls->lm_type = lm_type;
 
 	if (vg_args && strlen(vg_args) && (lm_type == LD_LM_SANLOCK) &&
@@ -3614,6 +3616,7 @@ static int add_lockspace_thread(const char *ls_name,
 		ls->host_id = act->host_id;
 
 	if (!(r = alloc_resource())) {
+		free_pvs_path(&ls->pvs);
 		free(ls);
 		return -ENOMEM;
 	}
