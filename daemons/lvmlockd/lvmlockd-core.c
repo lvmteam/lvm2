@@ -3465,9 +3465,9 @@ out_act:
 	 * blank or fill it with garbage, but instead set it to REM:<name>
 	 * to make it easier to follow progress of freeing is via log_debug.
 	 */
-	memset(tmp_name, 0, sizeof(tmp_name));
 	memcpy(tmp_name, "REM:", 4);
-	strncpy(tmp_name+4, ls->name, sizeof(tmp_name)-4);
+	strncpy(tmp_name + 4, ls->name, sizeof(tmp_name) - 5);
+	tmp_name[sizeof(tmp_name) - 1] = 0;
 	memcpy(ls->name, tmp_name, sizeof(ls->name));
 	pthread_mutex_unlock(&lockspaces_mutex);
 
@@ -7178,7 +7178,8 @@ static int send_helper_request(struct action *act, char *ls_name, uint32_t new_m
 	}
 
 	if (act->op == LD_OP_FENCE) {
-		strncpy(msg.ls_name, ls_name, MAX_NAME);
+		strncpy(msg.ls_name, ls_name, sizeof(msg.ls_name) - 1);
+		msg.ls_name[sizeof(msg.ls_name) - 1] = 0;
 		msg.type = HELPER_COMMAND;
 		msg.act = LD_OP_FENCE;
 		msg.msg_id = new_msg_id;
