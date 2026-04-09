@@ -304,6 +304,16 @@ static int _maps_line(const struct dm_config_node *cn, lvmlock_t lock,
 
 	if (lock == LVM_MLOCK) {
 		if (mlock((const void*)from, sz) < 0) {
+			/*
+			 * Anonymous regions (thread stacks, heap) can fail with ENOMEM
+			 * when trying to lock uncommitted pages. This is expected - only
+			 * committed pages get locked. Thread stacks MUST be locked to
+			 * prevent swap-related deadlocks.
+			 */
+			if (errno == ENOMEM && strstr(line + pos, " 00:00 0")) {
+				log_debug_mem("mlock failed for anonymous region (uncommitted pages): %s", line);
+				return 1;
+			}
 			log_sys_error("mlock", line);
 			return 0;
 		}
