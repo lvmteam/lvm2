@@ -85,6 +85,9 @@ struct mda_header {
 	struct raw_locn raw_locns[];	/* NULL-terminated list */
 } __attribute__ ((packed));
 
+int raw_parse_mda_header(struct mda_header *mdah, struct device_area *dev_area,
+			 uint32_t ignore_bad_fields, uint32_t *bad_fields);
+
 struct mda_header *raw_read_mda_header(const struct format_type *fmt,
 				       struct device_area *dev_area, int primary_mda,
 				       uint32_t ignore_bad_fields,

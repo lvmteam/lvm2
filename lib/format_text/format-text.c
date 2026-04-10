@@ -190,19 +190,9 @@ static void _xlate_mdah(struct mda_header *mdah)
 	}
 }
 
-static int _raw_read_mda_header(struct mda_header *mdah, struct device_area *dev_area,
-				int primary_mda, uint32_t ignore_bad_fields, uint32_t *bad_fields)
+int raw_parse_mda_header(struct mda_header *mdah, struct device_area *dev_area,
+			 uint32_t ignore_bad_fields, uint32_t *bad_fields)
 {
-	log_debug_metadata("Reading mda header sector from %s at %llu.",
-			   dev_name(dev_area->dev), (unsigned long long)dev_area->start);
-
-	if (!dev_read_bytes(dev_area->dev, dev_area->start, MDA_HEADER_SIZE, mdah)) {
-		log_error("Failed to read metadata area header on %s at %llu.",
-			  dev_name(dev_area->dev), (unsigned long long)dev_area->start);
-		*bad_fields |= BAD_MDA_READ;
-		return 0;
-	}
-
 	if (mdah->checksum_xl != htole32(calc_crc(INITIAL_CRC, (uint8_t *)mdah->magic,
 						  MDA_HEADER_SIZE -
 						  sizeof(mdah->checksum_xl)))) {
@@ -240,6 +230,22 @@ static int _raw_read_mda_header(struct mda_header *mdah, struct device_area *dev
 		return 0;
 
 	return 1;
+}
+
+static int _raw_read_mda_header(struct mda_header *mdah, struct device_area *dev_area,
+				int primary_mda, uint32_t ignore_bad_fields, uint32_t *bad_fields)
+{
+	log_debug_metadata("Reading mda header sector from %s at %llu.",
+			   dev_name(dev_area->dev), (unsigned long long)dev_area->start);
+
+	if (!dev_read_bytes(dev_area->dev, dev_area->start, MDA_HEADER_SIZE, mdah)) {
+		log_error("Failed to read metadata area header on %s at %llu.",
+			  dev_name(dev_area->dev), (unsigned long long)dev_area->start);
+		*bad_fields |= BAD_MDA_READ;
+		return 0;
+	}
+
+	return raw_parse_mda_header(mdah, dev_area, ignore_bad_fields, bad_fields);
 }
 
 struct mda_header *raw_read_mda_header(const struct format_type *fmt,
