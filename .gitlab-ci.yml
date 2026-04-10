@@ -18,13 +18,27 @@ approve1:
   script:
     - echo "Approved..."
   rules:
-    # TODO: Filter only safe repositories, or user in developers
+    # If not a safe repository: Always require approval:
     - if: $CI_PROJECT_PATH != "csonto/lvm2" && $CI_PROJECT_PATH != "lvmteam/lvm2"
+      when: manual
+    - if: $CI_MERGE_REQUEST_SOURCE_PROJECT_PATH != "lvmteam/lvm2"
       when: manual
     # TODO: for other branches than main/rhel: run pipeline only when requested:
     - if: $CI_COMMIT_BRANCH != "main" && $CI_COMMIT_BRANCH !~ "^rhel.*"
       when: manual
-    - when: on_success
+    # TODO: Can we skip whole pipeline for drafts?
+    - if: $CI_MERGE_REQUEST_TITLE =~ /^Draft:/
+      when: manual
+
+    # Safe to run: 
+    - if: $CI_MERGE_REQUEST_SOURCE_PROJECT_PATH == "lvmteam/lvm2"
+      when: on_success
+    # On commit to main (after merge?):
+    - if: $CI_PROJECT_PATH == "lvmteam/lvm2" && ($CI_COMMIT_BRANCH == "main" || $CI_COMMIT_BRANCH =~ /^rhel/)
+      when: on_success
+
+    # Anything else: manual
+    - when: manual
   allow_failure: false
 
 
@@ -52,6 +66,10 @@ make-rpm:
     - if bash ci/dry-run.sh; then echo "# ./configure && make rpm"; exit 0; fi
     - ./configure
     - make rpm
+  rules:
+    - if: $CI_MERGE_REQUEST_TITLE =~ /^Draft:/
+      when: never
+    - when: on_success
 
 make-rpm-all:
   stage: test1
@@ -66,6 +84,8 @@ make-rpm-all:
   rules:
     - if: $CI_MERGE_REQUEST_TITLE =~ /^Draft:/
       when: never
+    - if: $CI_MERGE_REQUEST_PROJECT_PATH == "lvmteam/lvm2"
+      when: on_success
   allow_failure: true
 
 # TODO: Add more checks:
@@ -127,10 +147,8 @@ test1:
     # TODO: Keep a list of known failures, and translate into regexp - or simply use python...
     - if grep failed test/results/list | grep -v '\(dbustest\|lvconvert-mirror\|lvconvert-raid-reshape-size\|lvconvert-raid-reshape-stripes-load-fail\)\.sh' | sort; then false; else true; fi
   rules:
-    # Filter only safe repositories, or user in developers:
-    # NOTE: Already done in approve stage, may be more caution than necessary
-    - if: $CI_PROJECT_PATH != "csonto/lvm2" && $CI_PROJECT_PATH != "lvmteam/lvm2"
-      when: manual
+    - if: $CI_MERGE_REQUEST_TITLE =~ /^Draft:/
+      when: never
     - when: on_success
 
 # TODO:
