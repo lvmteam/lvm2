@@ -88,6 +88,10 @@ struct mda_header {
 int raw_parse_mda_header(struct mda_header *mdah, struct device_area *dev_area,
 			 uint32_t ignore_bad_fields, uint32_t *bad_fields);
 
+int label_check_pv_layout(void *label_buf, struct device *dev,
+			  struct pv_header **pvhdr_ret,
+			  struct pv_header_extension **ext_ret);
+
 struct mda_header *raw_read_mda_header(const struct format_type *fmt,
 				       struct device_area *dev_area, int primary_mda,
 				       uint32_t ignore_bad_fields,

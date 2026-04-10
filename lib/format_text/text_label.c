@@ -399,6 +399,66 @@ static int _read_mda_header_and_metadata(const struct format_type *fmt,
 }
 
 /*
+ * Validate the structural layout of a PV label buffer.
+ * Checks pv_header offset, disk_locn array bounds, and extension fit.
+ * On success all disk_locn arrays are guaranteed null-terminated within
+ * the label sector, so callers may iterate them without bounds checks.
+ */
+int label_check_pv_layout(void *label_buf, struct device *dev,
+			  struct pv_header **pvhdr_ret,
+			  struct pv_header_extension **ext_ret)
+{
+	struct label_header *lh = (struct label_header *)label_buf;
+	struct pv_header *pvhdr;
+	struct disk_locn *dlocn_xl;
+	struct disk_locn *label_end;
+	uint32_t pv_offset;
+
+	if (pvhdr_ret)
+		*pvhdr_ret = NULL;
+	if (ext_ret)
+		*ext_ret = NULL;
+
+	pv_offset = htole32(lh->offset_xl);
+	if (pv_offset > LABEL_SIZE - sizeof(struct pv_header)) {
+		log_error("Invalid pv_header offset %u on %s.",
+			  pv_offset, dev_name(dev));
+		return 0;
+	}
+
+	pvhdr = (struct pv_header *)((char *)label_buf + pv_offset);
+	label_end = (struct disk_locn *)((char *)label_buf + LABEL_SIZE);
+
+	/* Data areas */
+	dlocn_xl = pvhdr->disk_areas_xl;
+	while ((dlocn_xl + 1) <= label_end && htole64(dlocn_xl->offset))
+		dlocn_xl++;
+	dlocn_xl++;
+	if (dlocn_xl > label_end) {
+		log_error("Disk areas overflow label on %s.", dev_name(dev));
+		return 0;
+	}
+
+	/* Metadata areas */
+	while ((dlocn_xl + 1) <= label_end && htole64(dlocn_xl->offset))
+		dlocn_xl++;
+	dlocn_xl++;
+	if (dlocn_xl > label_end) {
+		log_error("Metadata areas overflow label on %s.", dev_name(dev));
+		return 0;
+	}
+
+	if (pvhdr_ret)
+		*pvhdr_ret = pvhdr;
+
+	if (ext_ret &&
+	    (char *)dlocn_xl + sizeof(struct pv_header_extension) <= (char *)label_end)
+		*ext_ret = (struct pv_header_extension *)dlocn_xl;
+
+	return 1;
+}
+
+/*
  * Used by label_scan to get a summary of the VG that exists on this PV.  This
  * summary is stored in lvmcache vginfo/info/info->mdas and is used later by
  * vg_read which needs to know which PVs to read for a given VG name, and where
@@ -413,7 +473,6 @@ static int _text_read(struct cmd_context *cmd, struct labeller *labeller, struct
 	char vgid[ID_LEN + 1] __attribute__((aligned(8))) = { 0 };
 	struct lvmcache_info *info;
 	const struct format_type *fmt = labeller->fmt;
-	struct label_header *lh = (struct label_header *) label_buf;
 	struct pv_header *pvhdr;
 	struct pv_header_extension *pvhdr_ext;
 	struct metadata_area *mda = NULL;
@@ -421,7 +480,6 @@ static int _text_read(struct cmd_context *cmd, struct labeller *labeller, struct
 	struct metadata_area *mda2 = NULL;
 	struct disk_locn *dlocn_xl;
 	uint64_t offset;
-	uint32_t pv_offset;
 	uint32_t ext_version;
 	uint32_t bad_fields;
 	int mda_count = 0;
@@ -430,15 +488,12 @@ static int _text_read(struct cmd_context *cmd, struct labeller *labeller, struct
 	int rv1, rv2;
 
 	/*
-	 * PV header base
+	 * PV header base - validate label buffer layout.
+	 * After this all disk_locn arrays are guaranteed to have
+	 * null terminators within the label sector bounds.
 	 */
-	pv_offset = htole32(lh->offset_xl);
-	if (pv_offset > LABEL_SIZE - sizeof(struct pv_header)) {
-		log_error("Invalid pv_header offset %u on %s.",
-			  pv_offset, dev_name(dev));
-		return 0;
-	}
-	pvhdr = (struct pv_header *) ((char *) label_buf + pv_offset);
+	if (!label_check_pv_layout(label_buf, dev, &pvhdr, &pvhdr_ext))
+		return_0;
 
 	memcpy(pvid, &pvhdr->pv_uuid, ID_LEN);
 	strncpy(vgid, FMT_TEXT_ORPHAN_VG_NAME, ID_LEN);
@@ -468,18 +523,16 @@ static int _text_read(struct cmd_context *cmd, struct labeller *labeller, struct
 	lvmcache_del_mdas(info);
 	lvmcache_del_bas(info);
 
-	/* Data areas holding the PEs */
+	/* Data areas holding the PEs (bounds validated by label_check_pv_layout) */
 	dlocn_xl = pvhdr->disk_areas_xl;
 	while ((offset = htole64(dlocn_xl->offset))) {
 		lvmcache_add_da(info, offset, htole64(dlocn_xl->size));
 		dlocn_xl++;
 	}
-
 	dlocn_xl++;
 
-	/* Metadata areas */
+	/* Metadata areas (bounds validated by label_check_pv_layout) */
 	while ((offset = htole64(dlocn_xl->offset))) {
-
 		/*
 		 * This just calls add_mda() above, replacing info with info->mdas.
 		 */
@@ -498,12 +551,12 @@ static int _text_read(struct cmd_context *cmd, struct labeller *labeller, struct
 		}
 	}
 
-	dlocn_xl++;
-
 	/*
 	 * PV header extension
 	 */
-	pvhdr_ext = (struct pv_header_extension *) ((char *) dlocn_xl);
+	if (!pvhdr_ext)
+		goto scan_mdas;
+
 	if (!(ext_version = htole32(pvhdr_ext->version)))
 		goto scan_mdas;
 
@@ -517,7 +570,7 @@ static int _text_read(struct cmd_context *cmd, struct labeller *labeller, struct
 	/* Extension flags */
 	lvmcache_set_ext_flags(info, htole32(pvhdr_ext->flags));
 
-	/* Bootloader areas */
+	/* Bootloader areas (within validated extension) */
 	dlocn_xl = pvhdr_ext->bootloader_areas_xl;
 	while ((offset = htole64(dlocn_xl->offset))) {
 		lvmcache_add_ba(info, offset, htole64(dlocn_xl->size));
