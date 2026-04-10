@@ -440,6 +440,12 @@ static int _read_segment(struct cmd_context *cmd,
 	    !segtype->ops->text_import_area_count(sn_child, &area_count))
 		return_0;
 
+	if (segtype->parity_devs && area_count <= segtype->parity_devs) {
+		log_error("area_count %u must exceed parity_devs %u for segment in %s.",
+			  area_count, segtype->parity_devs, display_lvname(lv));
+		return 0;
+	}
+
 	area_extents = segtype->parity_devs ?
 		       raid_rimage_extents(segtype, extent_count, area_count - segtype->parity_devs, data_copies) : extent_count;
 	if (!(seg = alloc_lv_segment(segtype, lv, start_extent,
