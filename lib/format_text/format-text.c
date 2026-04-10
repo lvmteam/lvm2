@@ -224,6 +224,13 @@ int raw_parse_mda_header(struct mda_header *mdah, struct device_area *dev_area,
 		*bad_fields |= BAD_MDA_START;
 	}
 
+	if (mdah->size < MDA_HEADER_SIZE) {
+		log_warn("WARNING: Metadata area size %llu too small in mda header on %s at %llu.",
+			  (unsigned long long)mdah->size,
+			  dev_name(dev_area->dev), (unsigned long long)dev_area->start);
+		*bad_fields |= BAD_MDA_HEADER;
+	}
+
 	*bad_fields &= ~ignore_bad_fields;
 
 	if (*bad_fields)
@@ -424,7 +431,8 @@ static struct volume_group *_vg_read_raw_area(struct cmd_context *cmd,
 
 	/* Validate rlocn fields fit within mda bounds before uint32_t cast */
 	if (rlocn->offset >= mdah->size ||
-	    rlocn->size > mdah->size - MDA_HEADER_SIZE) {
+	    rlocn->size > mdah->size - MDA_HEADER_SIZE ||
+	    rlocn->size > UINT32_MAX) {
 		log_error("Metadata location out of bounds (offset %llu size %llu mda %llu) on %s.",
 			  (unsigned long long)rlocn->offset,
 			  (unsigned long long)rlocn->size,
@@ -1521,7 +1529,8 @@ int read_metadata_location_summary(const struct format_type *fmt,
 
 	/* Validate rlocn fields fit within mda bounds before uint32_t cast */
 	if (rlocn->offset >= mdah->size ||
-	    rlocn->size > mdah->size - MDA_HEADER_SIZE) {
+	    rlocn->size > mdah->size - MDA_HEADER_SIZE ||
+	    rlocn->size > UINT32_MAX) {
 		log_warn("WARNING: Metadata location out of bounds (offset %llu size %llu mda %llu) on %s.",
 			 (unsigned long long)rlocn->offset,
 			 (unsigned long long)rlocn->size,
