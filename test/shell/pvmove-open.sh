@@ -125,10 +125,10 @@ sleep 1.5
 if pgrep lvmdbusd; then
         echo "Skipping check for lvm processes, since lvmdbusd is running!"
 else
-	not pgrep -u root -lx lvm || {
+	pgrep -u root -ax lvm >out_pgrep || true
+	not grep "$PREFIX" out_pgrep || {
 		ps aux
-		die "Some 'lvm' process keeps running!"
-		# Bad luck, if admin runs parallel lvm2 command with our testsuite
+		die "Some 'lvm' process of this test keeps running!"
 	}
 
 	_check_msg "ABORTING: Failed" out
