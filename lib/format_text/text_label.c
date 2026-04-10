@@ -421,6 +421,7 @@ static int _text_read(struct cmd_context *cmd, struct labeller *labeller, struct
 	struct metadata_area *mda2 = NULL;
 	struct disk_locn *dlocn_xl;
 	uint64_t offset;
+	uint32_t pv_offset;
 	uint32_t ext_version;
 	uint32_t bad_fields;
 	int mda_count = 0;
@@ -431,7 +432,13 @@ static int _text_read(struct cmd_context *cmd, struct labeller *labeller, struct
 	/*
 	 * PV header base
 	 */
-	pvhdr = (struct pv_header *) ((char *) label_buf + htole32(lh->offset_xl));
+	pv_offset = htole32(lh->offset_xl);
+	if (pv_offset > LABEL_SIZE - sizeof(struct pv_header)) {
+		log_error("Invalid pv_header offset %u on %s.",
+			  pv_offset, dev_name(dev));
+		return 0;
+	}
+	pvhdr = (struct pv_header *) ((char *) label_buf + pv_offset);
 
 	memcpy(pvid, &pvhdr->pv_uuid, ID_LEN);
 	strncpy(vgid, FMT_TEXT_ORPHAN_VG_NAME, ID_LEN);
