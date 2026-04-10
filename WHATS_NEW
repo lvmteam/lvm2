@@ -1,5 +1,9 @@
 Version 2.03.40 - 
 ==================
+  Validate area_count before subtracting parity_devs in RAID metadata import.
+  Validate area_count against MAX_STRIPES to prevent integer overflow.
+  Validate mda size and prevent uint64 to uint32 truncation in metadata reads.
+  Extract label_check_pv_layout to validate PV label buffer structure.
   Remove redundant memset from command registration (global array is zero-init).
   Kill orphaned polling lvpoll process in lvmpolld on pvmove --abort.
   Fix pvmove mirror image bounds check off-by-one in poll completion.
