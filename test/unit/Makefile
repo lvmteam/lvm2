@@ -27,6 +27,7 @@ UNIT_SOURCE=\
 	test/unit/framework.c \
 	test/unit/io_engine_t.c \
 	test/unit/matcher_t.c \
+	test/unit/metadata_security_t.c \
 	test/unit/percent_t.c \
 	test/unit/radix_tree_t.c \
 	test/unit/run.c \
