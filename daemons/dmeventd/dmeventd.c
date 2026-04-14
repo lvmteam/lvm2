@@ -277,27 +277,48 @@ static pthread_mutex_t _timeout_mutex;
 static pthread_cond_t _timeout_cond;
 
 /*
- * Get current time with single time() handling wrapper.
+ * Get current time for timeout and elapsed-time computation.
  *
- * Uses clock_gettime(CLOCK_REALTIME) when available for better precision,
- * with a small forward adjustment (10ms) to handle sub-second timing edge cases.
- * Falls back to time() if HAVE_REALTIME is not defined or clock_gettime() fails.
+ * With HAVE_REALTIME, uses CLOCK_MONOTONIC to be immune to wall-clock
+ * jumps (NTP, manual date changes).  All condvars using
+ * pthread_cond_timedwait() are initialized with
+ * pthread_condattr_setclock(CLOCK_MONOTONIC) to match.
  *
- * All time() calls in dmeventd should use this wrapper for consistent time handling.
+ * Without HAVE_REALTIME, falls back to time() with CLOCK_REALTIME
+ * condvars (default) -- vulnerable to wall-clock jumps.
  */
 static time_t _get_curr_time(void)
 {
 #ifdef HAVE_REALTIME
-	struct timespec real_time;
+	struct timespec ts;
 
-	if (clock_gettime(CLOCK_REALTIME, &real_time) == 0)
-		/* 10ms back to the future */
-		return real_time.tv_sec + ((real_time.tv_nsec > (1000000000 - 10000000)) ? 1 : 0);
+	if (clock_gettime(CLOCK_MONOTONIC, &ts) == 0)
+		return ts.tv_sec;
 
-	/* fallback to time() */
 	log_sys_debug("clock_gettime", "");
 #endif
 	return time(NULL);
+}
+
+/*
+ * Initialize condvar -- with CLOCK_MONOTONIC when available,
+ * so pthread_cond_timedwait() matches _get_curr_time().
+ */
+static int _pthread_cond_init(pthread_cond_t *cond)
+{
+#ifdef HAVE_REALTIME
+	pthread_condattr_t cattr;
+	int r;
+
+	r = (pthread_condattr_init(&cattr) ||
+	     pthread_condattr_setclock(&cattr, CLOCK_MONOTONIC) ||
+	     pthread_cond_init(cond, &cattr));
+	pthread_condattr_destroy(&cattr);
+
+	return r;
+#else
+	return pthread_cond_init(cond, NULL);
+#endif
 }
 
 /**********
@@ -487,8 +508,7 @@ static struct thread_status *_alloc_thread_status(const struct message_data *dat
 		goto out;
 	}
 
-	/* Initialize grace period condition variable */
-	if (pthread_cond_init(&thread->grace_cond, NULL)) {
+	if (_pthread_cond_init(&thread->grace_cond)) {
 		log_error("Failed to initialize grace period condition variable.");
 		goto out;
 	}
@@ -2882,7 +2902,7 @@ int main(int argc, char *argv[])
 
 	if (pthread_mutex_init(&_global_mutex, NULL) ||
 	    pthread_mutex_init(&_timeout_mutex, NULL) ||
-	    pthread_cond_init(&_timeout_cond, NULL))
+	    _pthread_cond_init(&_timeout_cond))
 		exit(EXIT_FAILURE);
 
 	if (!_systemd_activation && !_open_fifos(&fifos))
