@@ -313,6 +313,16 @@ static const char *_syslog_num_to_name(int num)
 	return "unknown";
 }
 
+static void _pthread_cond_init(pthread_cond_t *cond)
+{
+	pthread_condattr_t cattr;
+
+	pthread_condattr_init(&cattr);
+	pthread_condattr_setclock(&cattr, CLOCK_MONOTONIC);
+	pthread_cond_init(cond, &cattr);
+	pthread_condattr_destroy(&cattr);
+}
+
 static uint64_t monotime(void)
 {
 	struct timespec ts;
@@ -4454,7 +4464,7 @@ static void *worker_thread_main(void *arg_in)
 
 	while (1) {
 		pthread_mutex_lock(&worker_mutex);
-		if (clock_gettime(CLOCK_REALTIME, &ts)) {
+		if (clock_gettime(CLOCK_MONOTONIC, &ts)) {
 			log_error("clock_gettime failed.");
 			ts.tv_sec = ts.tv_nsec = 0;
 		}
@@ -4667,7 +4677,7 @@ static int setup_worker_thread(void)
 	INIT_LIST_HEAD(&worker_list);
 
 	pthread_mutex_init(&worker_mutex, NULL);
-	pthread_cond_init(&worker_cond, NULL);
+	_pthread_cond_init(&worker_cond);
 
 	rv = pthread_create(&worker_thread, NULL, worker_thread_main, NULL);
 	if (rv)
