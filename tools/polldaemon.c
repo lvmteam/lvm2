@@ -133,6 +133,9 @@ static int _nanosleep(unsigned secs, unsigned allow_zero_time)
 static int _sleep_and_rescan_devices(struct cmd_context *cmd, struct daemon_parms *parms)
 {
 	if (!parms->aborting) {
+		/* Free stale cache and close device fds before sleeping. */
+		lvmcache_destroy(cmd, 1, 0);
+		label_scan_drop(cmd);
 		if (!_nanosleep(parms->interval, 0))
 			return_0;
 		if (!lvmcache_label_scan(cmd))
