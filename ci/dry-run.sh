@@ -30,7 +30,7 @@ esac
 
 echo -e "\nChecking the files for significant changes:"
 
-if git diff --name-only "${HEAD}" "^${TARGET}" | grep -v '^\(\.gitlab-ci.yaml\|ci/\|WHATS_NEW\|VERSION\|man/\|doc/\|README\|TESTING\|COPYING\|INSTALL\|\.gitignore\|coverity\|ikiwiki.setup/\|nix/\|po/\)'; then
+if git diff --name-only "${HEAD}" "^${TARGET}" | grep -v '^\(\.gitlab-ci.yml\|ci/\|WHATS_NEW\|VERSION\|man/\|doc/\|README\|TESTING\|COPYING\|INSTALL\|\.gitignore\|coverity\|ikiwiki.setup/\|nix/\|po/\)'; then
 	echo "INFO: Changed files, running CI" >&2
 	exit 1
 else
