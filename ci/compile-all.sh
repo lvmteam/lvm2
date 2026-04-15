@@ -12,7 +12,7 @@ hash() {
 HEAD="${1:-"HEAD"}"
 DESCRIBE="$(git describe "$HEAD")"
 HASH="$(hash "$HEAD")"
-TARGET=${2:-"main"}
+TARGET=${2:-"origin/main"}
 
 DEST=results
 mkdir "$DEST" || die "Failed to create '$DEST'"
