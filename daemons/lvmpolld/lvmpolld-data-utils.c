@@ -121,7 +121,8 @@ struct lvmpolld_lv *pdlv_create(struct lvmpolld_state *ls, const char *id,
 		.init_rq_count = 1
 	}, *pdlv = (struct lvmpolld_lv *) malloc(sizeof(struct lvmpolld_lv));
 
-	if (!pdlv || !tmp.lvmpolld_id || !tmp.lvname || !tmp.lvm_system_dir_env || !tmp.sinterval)
+	if (!pdlv || !tmp.lvmpolld_id || !tmp.lvname || !tmp.lvm_system_dir_env || !tmp.sinterval ||
+	    (devicesfile && !tmp.devicesfile))
 		goto err;
 
 	tmp.lvid = _get_lvid(tmp.lvmpolld_id, sysdir);

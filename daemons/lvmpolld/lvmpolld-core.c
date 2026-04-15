@@ -269,7 +269,8 @@ static int poll_for_output(struct lvmpolld_lv *pdlv, struct lvmpolld_thread_data
 		if (fds[0].revents & POLLIN) {
 			DEBUGLOG(pdlv->ls, "%s: %s", PD_LOG_PREFIX, "caught input data in STDOUT");
 
-			assert(read_single_line(data, 0)); /* may block indef. anyway */
+			if (!read_single_line(data, 0))
+				continue; /* may block indef. anyway */
 			INFO(pdlv->ls, "%s: PID %d: %s: '%s'", LVM2_LOG_PREFIX,
 			     pdlv->cmd_pid, "STDOUT", data->line);
 		} else if (fds[0].revents) {
@@ -287,7 +288,8 @@ static int poll_for_output(struct lvmpolld_lv *pdlv, struct lvmpolld_thread_data
 			DEBUGLOG(pdlv->ls, "%s: %s", PD_LOG_PREFIX,
 				 "caught input data in STDERR");
 
-			assert(read_single_line(data, 1)); /* may block indef. anyway */
+			if (!read_single_line(data, 1))
+				continue; /* may block indef. anyway */
 			WARN(pdlv->ls, "%s: PID %d: %s: '%s'", LVM2_LOG_PREFIX,
 			     pdlv->cmd_pid, "STDERR", data->line);
 		} else if (fds[1].revents) {
@@ -628,7 +630,8 @@ static response poll_init(client_handle h, struct lvmpolld_state *ls, request re
 	const char *devicesfile = daemon_request_str(req, LVMPD_PARM_DEVICESFILE, NULL);
 	unsigned abort_polling = daemon_request_int(req, LVMPD_PARM_ABORT, 0);
 
-	assert(type < POLL_TYPE_MAX);
+	if (type >= POLL_TYPE_MAX)
+		return reply(LVMPD_RESP_EINVAL, REASON_ILLEGAL_ABORT_REQUEST);
 
 	if (abort_polling && type != PVMOVE)
 		return reply(LVMPD_RESP_EINVAL, REASON_ILLEGAL_ABORT_REQUEST);
