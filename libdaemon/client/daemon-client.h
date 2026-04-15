@@ -98,11 +98,15 @@ void daemon_reply_destroy(daemon_reply r);
 
 static inline int64_t daemon_reply_int(daemon_reply r, const char *path, int64_t def)
 {
+	if (!r.cft)
+		return def;
 	return dm_config_find_int64(r.cft->root, path, def);
 }
 
 static inline const char *daemon_reply_str(daemon_reply r, const char *path, const char *def)
 {
+	if (!r.cft)
+		return def;
 	return dm_config_find_str_allow_empty(r.cft->root, path, def);
 }
 

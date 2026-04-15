@@ -450,6 +450,7 @@ static void *_client_thread(void *state)
 	thread_state *ts = state;
 	request req;
 	response res;
+	int r = 1;
 
 	buffer_init(&req.buffer);
 
@@ -470,17 +471,20 @@ static void *_client_thread(void *state)
 		if (res.error == EPROTO) /* Not a builtin, delegate to the custom handler. */
 			res = ts->s.handler(ts->s, ts->client, req);
 
-		if (!res.buffer.mem) {
-			if (!dm_config_write_node(res.cft->root, buffer_line, &res.buffer))
-				goto fail;
-			if (!buffer_append(&res.buffer, "\n\n"))
-				goto fail;
+		if (!res.buffer.mem && res.cft) {
+			r = dm_config_write_node(res.cft->root, buffer_line, &res.buffer) &&
+			    buffer_append(&res.buffer, "\n\n");
 			dm_config_destroy(res.cft);
 		}
 
 		if (req.cft)
 			dm_config_destroy(req.cft);
 		buffer_destroy(&req.buffer);
+
+		if (!r) {
+			buffer_destroy(&res.buffer);
+			goto fail;
+		}
 
 		daemon_log_multi(ts->s.log, DAEMON_LOG_WIRE, "-> ", res.buffer.mem);
 		buffer_write(ts->client.socket_fd, &res.buffer);
