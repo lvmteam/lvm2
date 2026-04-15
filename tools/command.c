@@ -94,7 +94,7 @@ static const struct command_name command_names[] = {
 #include "commands.h"
 #undef xx
 };
-static struct command commands[COMMAND_COUNT] = { 0 };
+static struct command commands[COMMAND_COUNT] = { };
 
 #else /* MAN_PAGE_GENERATOR */
 
