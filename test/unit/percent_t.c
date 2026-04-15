@@ -20,6 +20,7 @@
 
 static void test_percent_100(void *fixture)
 {
+	float f;
 	char buf[32];
 
 	/* Check 100% is shown only for DM_PERCENT_100*/
@@ -49,12 +50,14 @@ static void test_percent_100(void *fixture)
 	(void) dm_snprintf(buf, sizeof(buf), "%.4f", dm_percent_to_round_float(n_100, 4));
 	T_ASSERT_EQUAL(strcmp(buf, "99.9999"), 0);
 
-	(void) dm_snprintf(buf, sizeof(buf), "%d", (int)dm_percent_to_round_float(n_100, 0));
+	f = dm_percent_to_round_float(n_100, 0);
+	(void) dm_snprintf(buf, sizeof(buf), "%d", (int)f);
 	T_ASSERT_EQUAL(strcmp(buf, "99"), 0);
 }
 
 static void test_percent_0(void *fixture)
 {
+	float f;
 	char buf[32];
 
 	/* Check 0% is shown only for DM_PERCENT_0 */
@@ -81,7 +84,8 @@ static void test_percent_0(void *fixture)
 	(void) dm_snprintf(buf, sizeof(buf), "%.3f", dm_percent_to_round_float(n_0, 3));
 	T_ASSERT_EQUAL(strcmp(buf, "0.001"), 0);
 
-	(void) dm_snprintf(buf, sizeof(buf), "%d", (int)dm_percent_to_round_float(n_0, 0));
+	f = dm_percent_to_round_float(n_0, 0);
+	(void) dm_snprintf(buf, sizeof(buf), "%d", (int)f);
 	T_ASSERT_EQUAL(strcmp(buf, "1"), 0);
 }
 

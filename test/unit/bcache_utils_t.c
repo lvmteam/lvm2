@@ -49,12 +49,15 @@ static uint64_t byte(block_address b, uint64_t offset)
 
 static void *_fix_init(struct io_engine *engine)
 {
-	uint8_t buffer[T_BLOCK_SIZE];
+	const size_t bsize = T_BLOCK_SIZE;
+	uint8_t *buffer;
 	struct fixture *f = malloc(sizeof(*f));
 	unsigned b, i;
 	static int _runs_is_tmpfs = -1;
 
-	memset(buffer, 0, sizeof(buffer));
+	buffer = alloca(bsize);
+
+	memset(buffer, 0, bsize);
 	T_ASSERT(f);
 
 	if (_runs_is_tmpfs == -1) {
@@ -80,9 +83,9 @@ static void *_fix_init(struct io_engine *engine)
 	T_ASSERT(f->fd >= 0);
 
 	for (b = 0; b < NR_BLOCKS; b++) {
-		for (i = 0; i < sizeof(buffer); i++)
+		for (i = 0; i < bsize; i++)
 			buffer[i] = _pattern_at(INIT_PATTERN, byte(b, i));
-		T_ASSERT(write(f->fd, buffer, T_BLOCK_SIZE) > 0);
+		T_ASSERT(write(f->fd, buffer, bsize) > 0);
 	}
 
 	if (!_runs_is_tmpfs) {
@@ -92,7 +95,7 @@ static void *_fix_init(struct io_engine *engine)
 		T_ASSERT(f->fd >= 0);
 	}
 
-	f->cache = bcache_create(T_BLOCK_SIZE / 512, NR_BLOCKS, engine);
+	f->cache = bcache_create(bsize / 512, NR_BLOCKS, engine);
 	T_ASSERT(f->cache);
 
 	f->di = bcache_set_fd(f->fd);

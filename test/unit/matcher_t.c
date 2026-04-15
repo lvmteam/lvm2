@@ -100,11 +100,11 @@ static void test_kabi_query(void *fixture)
 
 	for (i = 0; i < DM_ARRAY_SIZE(_cases); i++) {
 		r = dm_regex_match(scanner, _cases[i].input);
-		if (r != _cases[i].r) {
+		if (r != (int)_cases[i].r) {
 			test_fail("'%s' expected to match '%s', but matched %s",
 				  _cases[i].input,
 				  _cases[i].r >= DM_ARRAY_SIZE(_patterns) ? "<nothing>" : _patterns[_cases[i].r],
-				  r >= DM_ARRAY_SIZE(_patterns) ? "<nothing>" : _patterns[r]);
+				  r >= (int)DM_ARRAY_SIZE(_patterns) ? "<nothing>" : _patterns[r]);
 		}
 	}
 }
