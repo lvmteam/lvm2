@@ -2990,6 +2990,7 @@ int lockd_query_lv(struct cmd_context *cmd, const struct logical_volume *lv, int
 	    lv_is_mirror_type(lv) ||
 	    lv_is_raid_type(lv) ||
 	    lv_is_vdo_type(lv) ||
+	    lv_is_writecache(lv) ||
 	    lv_is_cache_type(lv)) {
 		*ex = 1;
 		return 1;
@@ -3907,6 +3908,7 @@ int lockd_lv(struct cmd_context *cmd, struct logical_volume *lv,
 	    lv_is_mirror_type(lv) ||
 	    lv_is_raid_type(lv) ||
 	    lv_is_vdo_type(lv) ||
+	    lv_is_writecache(lv) ||
 	    lv_is_cache_type(lv) ||
 	    lv_is_origin(lv) ||
 	    lv_is_cow(lv)) {
