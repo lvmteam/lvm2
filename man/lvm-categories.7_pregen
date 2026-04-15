@@ -350,6 +350,9 @@ Low level logical volume management
 .TP 20
 .B dmstats
 Device-mapper statistics management
+.TP 20
+.B dmvdostats
+Display VDO statistics for device-mapper devices
 .PD
 .
 .SH Obsolete

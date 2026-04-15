@@ -79,6 +79,9 @@ Low level logical volume management
 .B dmstats
 Device-mapper statistics management
 .TP 20
+.B dmvdostats
+Display VDO statistics for device-mapper devices
+.TP 20
 .B dumpconfig
 Display and manipulate configuration information
 .PD
