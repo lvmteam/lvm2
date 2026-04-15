@@ -124,7 +124,7 @@ static char *_chars_to_hexstr(const void *in, void *out, int num, int max, const
 		i++;
 	}
 
-	memcpy(out, tmp, 256);
+	memcpy(out, tmp, max);
 
 	free(tmp);
 
@@ -2706,7 +2706,12 @@ static int _backup_file_to_raw_metadata(char *back_buf, uint64_t back_size,
 	uint32_t text_pos, pre_len = 0, back_pos, text_max;
 	int len, len2, vgnamelen;
 
-	text_max = back_size * 2;
+	if (back_size > UINT32_MAX / 2) {
+		log_error("Backup file too large.");
+		return 0;
+	}
+
+	text_max = (uint32_t)(back_size * 2);
 
 	if (!(text_buf = zalloc(text_max)))
 		return_0;
@@ -2809,7 +2814,8 @@ static int _dump_backup_to_raw(struct cmd_context *cmd, struct settings *set)
 	struct stat sb;
 	char *back_buf, *text_buf;
 	uint64_t back_size, text_size;
-	int fd, rv, ret;
+	ssize_t rv;
+	int fd, ret;
 
 	if (arg_is_set(cmd, file_ARG)) {
 		if (!(tofile = arg_str_value(cmd, file_ARG, NULL)))
@@ -2840,7 +2846,7 @@ static int _dump_backup_to_raw(struct cmd_context *cmd, struct settings *set)
 		goto fail_close;
 
 	rv = read(fd, back_buf, back_size);
-	if (rv != (int)back_size) {
+	if (rv != (ssize_t)back_size) {
 		log_error("Cannot read file: %s", input);
 		free(back_buf);
 		goto fail_close;
@@ -2956,7 +2962,8 @@ static int _read_metadata_file(struct cmd_context *cmd, struct metadata_file *mf
 	char *text_buf;
 	uint64_t text_size;
 	uint32_t text_crc;
-	int fd, rv;
+	ssize_t rv;
+	int fd;
 
 	if ((fd = open(mf->filename, O_RDONLY)) < 0) {
 		log_error("Cannot open file: %s", mf->filename);
@@ -2977,7 +2984,7 @@ static int _read_metadata_file(struct cmd_context *cmd, struct metadata_file *mf
 		goto_out;
 
 	rv = read(fd, text_buf, text_size);
-	if (rv != (int)text_size) {
+	if (rv != (ssize_t)text_size) {
 		log_error("Cannot read file: %s", mf->filename);
 		free(text_buf);
 		goto out;
