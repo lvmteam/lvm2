@@ -266,15 +266,18 @@ static int _daemon_read(struct dm_event_fifos *fifos,
 			if (!(size = msg->size = ntohl(header[1])))
 				break;
 
-			if (!(buf = msg->data = malloc(msg->size))) {
+			if (!(buf = msg->data = malloc(msg->size + 1))) {
 				log_error("Unable to allocate message data.");
 				return 0;
 			}
 		}
 	}
 
-	if (bytes == size)
+	if (bytes == size) {
+		if (msg->data)
+			((char*)msg->data)[msg->size] = 0;
 		return 1;
+	}
 
 bad:
 	free(msg->data);

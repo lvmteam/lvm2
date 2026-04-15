@@ -96,6 +96,9 @@ static const time_t DMEVENTD_IDLE_EXIT_TIMEOUT = 60 * 60;
 
 /* Default grace period for thread cleanup 10 seconds */
 #define DMEVENTD_DEFAULT_GRACE_PERIOD 10
+
+/* Sanity limit for client message size */
+#define DM_EVENT_MAX_MSG_SIZE (16 * 1024 * 1024)
 static int _grace_period = DMEVENTD_DEFAULT_GRACE_PERIOD;
 
 static int _systemd_activation = 0;
@@ -866,8 +869,8 @@ static int _get_status(struct message_data *message_data)
 	struct thread_status *thread;
 	int i = 0, j;
 	int ret = -ENOMEM;
-	int count;
-	int size = 0, current;
+	int count, current;
+	size_t size = 0;
 	size_t len;
 	char **buffers;
 	char *message;
@@ -2041,13 +2044,19 @@ static int _client_read(struct dm_event_fifos *fifos,
 			if (!(size = msg->size = ntohl(header[1])))
 				break;
 
-			if (!(buf = msg->data = malloc(msg->size)))
+			if (msg->size > (DM_EVENT_MAX_MSG_SIZE))
+				goto bad;
+
+			if (!(buf = msg->data = malloc(msg->size + 1)))
 				goto bad;
 		}
 	}
 
-	if (bytes == size)
+	if (bytes == size) {
+		if (msg->data)
+			((char*)msg->data)[msg->size] = 0;
 		return 1;
+	}
 
 bad:
 	free(msg->data);
@@ -2170,7 +2179,8 @@ static int _do_process_request(struct dm_event_daemon_message *msg)
 
 	msg->cmd = (uint32_t)ret;
 	if (!msg->data)
-		msg->size = dm_asprintf(&(msg->data), "%s %s", message_data.id, strerror(-ret));
+		msg->size = dm_asprintf(&(msg->data), "%s %s",
+					message_data.id ? : "-", strerror(-ret));
 
 	_free_message(&message_data);
 
@@ -2610,7 +2620,11 @@ static int _info_dmeventd(const char *name, struct dm_event_fifos *fifos)
 		goto out;
 	}
 
-	line = strchr(msg.data, ' ') + 1;
+	if (!(line = strchr(msg.data, ' '))) {
+		free(msg.data);
+		goto out;
+	}
+	line++;
 	for (i = 0; msg.data[i]; ++i)
 		if (msg.data[i] == ';') {
 			msg.data[i] = 0;
@@ -2677,7 +2691,9 @@ static int _restart_dmeventd(struct dm_event_fifos *fifos)
 	if (daemon_talk(fifos, &msg, DM_EVENT_CMD_GET_STATUS, "-", "-", 0, 0))
 		goto bad;
 
-	message = strchr(msg.data, ' ') + 1;
+	if (!(message = strchr(msg.data, ' ')))
+		goto bad;
+	message++;
 	for (i = 0; msg.data[i]; ++i)
 		if (msg.data[i] == ';') {
 			msg.data[i] = 0;
@@ -2705,7 +2721,7 @@ static int _restart_dmeventd(struct dm_event_fifos *fifos)
 			fprintf(stderr, "Failed to acquire parameters from old dmeventd.\n");
 			goto bad;
 		}
-		if (strstr(msg.data, "exec_method=systemd"))
+		if (msg.data && strstr(msg.data, "exec_method=systemd"))
 			_systemd_activation = 1;
 	}
 #ifdef __linux__
