@@ -430,9 +430,11 @@ for the kernel device-mapper.
 %{_sbindir}/blkdeactivate
 %attr(755,root,root) %{_sbindir}/dmsetup
 %{_sbindir}/dmstats
+%{_sbindir}/dmvdostats
 %{_mandir}/man8/blkdeactivate.8.gz
 %{_mandir}/man8/dmsetup.8.gz
 %{_mandir}/man8/dmstats.8.gz
+%{_mandir}/man8/dmvdostats.8.gz
 %if %{enable_dmfilemapd}
 %{_sbindir}/dmfilemapd
 %{_mandir}/man8/dmfilemapd.8.gz
