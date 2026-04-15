@@ -1387,6 +1387,15 @@ int define_commands(struct cmd_context *cmdtool, const char *run_name)
 	int i;
 	int lvm_command_enum;
 
+	/*
+	 * Re-zero on plugin re-init (dmeventd lvm2_exit + lvm2_init cycle).
+	 * Cannot reuse old data since some command fields (desc, autotype,
+	 * opt def.str) point into cmdtool->libmem destroyed by lvm_fin().
+	 * TODO: use persistent mempool for commands to avoid re-parsing.
+	 */
+	if (commands[0].name)
+		memset(&commands, 0, sizeof(commands));
+
 	if (run_name && !strcmp(run_name, "help"))
 		run_name = NULL;
 
