@@ -120,9 +120,10 @@ static void dumpBlock(void *buf, const char *label)
   // Print the tag+number to stderr, as if it was a data block
   DataBlockHeader *dbh = buf;
   char tag[TAG_SIZE + 1];
+  int i;
   memcpy(tag, dbh->head.tag, TAG_SIZE);
   tag[TAG_SIZE] = '\0';
-  for (int i = 0; i < TAG_SIZE; i++) {
+  for (i = 0; i < TAG_SIZE; i++) {
     if (tag[i] == '\0') {
       tag[i] = ' ';
     } else if (!isprint(tag[i])) {
@@ -136,23 +137,26 @@ static void dumpBlock(void *buf, const char *label)
 /***********************************************************************/
 static void fillRandomly(void *seedPtr, size_t seedLen, void *ptr, size_t len)
 {
+  unsigned int seed = 0;
+  unsigned int *pSeed = seedPtr;
+  unsigned long randNum  = 0;
+  unsigned long randMask = 0;
+  const unsigned long multiplier = (unsigned long) RAND_MAX + 1;
+  unsigned char *bp = ptr;
+  size_t i;
+
   if (seedLen < sizeof(unsigned int)) {
     errx(2, "Invalid header size");
   }
-  unsigned int seed = 0;
-  unsigned int *pSeed = seedPtr;
+
   while (seedLen >= sizeof(unsigned int)) {
     seedLen -= sizeof(unsigned int);
     seed |= *pSeed++;
   }
+
   srandom(seed);
 
-  unsigned long randNum  = 0;
-  unsigned long randMask = 0;
-  const unsigned long multiplier = (unsigned long) RAND_MAX + 1;
-
-  unsigned char *bp = ptr;
-  for (size_t i = 0; i < len; i++) {
+  for (i = 0; i < len; i++) {
     if (randMask < 0xff) {
       randNum  = randNum * multiplier + random();
       randMask = randMask * multiplier + RAND_MAX;
@@ -240,14 +244,14 @@ static void reportBS(DataStream *pds)
 /**********************************************************************/
 static DataStream *makeBlockStream(char *arg)
 {
+  double dedupe = 0.0;
+  // arg can have the form "tag", or "tag,dedupe" or "tag,dedupe,compress"
+  char *endTag = strchr(arg, ',');
   BlockStream *pbs = malloc(sizeof(BlockStream));
   memset(pbs, 0, sizeof(BlockStream));
   pbs->common.claim    = claimBS;
   pbs->common.generate = generateBS;
   pbs->common.report   = reportBS;
-  double dedupe = 0.0;
-  // arg can have the form "tag", or "tag,dedupe" or "tag,dedupe,compress"
-  char *endTag = strchr(arg, ',');
   if (endTag != NULL) {
     char *endCompress, *endDedupe;
     dedupe = strtod(&endTag[1], &endDedupe);
@@ -374,6 +378,8 @@ static int verifyDataStream(DataStream *pds, int n, void *buf, size_t bufSize)
 {
   while (pds != NULL) {
     if (pds->claim(pds, buf)) {
+      size_t i;
+      unsigned char *buffer;
       unsigned char *block = malloc(bufSize);
       if (block == NULL)
         errx(3, "memory allocation failure");
@@ -386,8 +392,8 @@ static int verifyDataStream(DataStream *pds, int n, void *buf, size_t bufSize)
       fprintf(stderr, "block %d compare failure\n", n);
       dumpBlock(buf,   "read    ");
       dumpBlock(block, "expected");
-      unsigned char *buffer = buf;
-      for (size_t i = 0; i < bufSize; i++) {
+      buffer = buf;
+      for (i = 0; i < bufSize; i++) {
         if (buffer[i] != block[i]) {
           fprintf(stderr, "byte %4zu got %02X expected %02X\n", i, buffer[i],
                   block[i]);
@@ -507,20 +513,21 @@ static void lseekSlice(const DeviceSlice *ds, int fd)
 /**********************************************************************/
 static int verifySlice(const DeviceSlice *ds, DataStream *pds)
 {
+  void *buffer;
+  int n, fd, status = 0;
+  int flags = O_RDONLY | (ds->direct ? O_DIRECT : 0) | (ds->sync ? O_SYNC : 0);
   if (ds->path == NULL) {
     errx(2, "the device path must be provided");
   }
 
-  int status = 0;
-  int flags = O_RDONLY | (ds->direct ? O_DIRECT : 0) | (ds->sync ? O_SYNC : 0);
-  int fd = open(ds->path, flags);
+  fd = open(ds->path, flags);
   if (fd < 0) {
     err(3, "open(%s) failure", ds->path);
   }
   lseekSlice(ds, fd);
 
-  void *buffer = allocateBufferForSlice(ds);
-  for (int n = 0; n < ds->blockCount; n++) {
+  buffer = allocateBufferForSlice(ds);
+  for (n = 0; n < ds->blockCount; n++) {
     ssize_t nRead = read(fd, buffer, ds->blockSize);
     if (nRead == -1) {
       warn("read failure on %s, block %d", ds->path, n);
@@ -544,6 +551,8 @@ static int verifySlice(const DeviceSlice *ds, DataStream *pds)
 /**********************************************************************/
 static int writeSlice(const DeviceSlice *ds, DataStream *pds)
 {
+  int n, fd, flags;
+  void *block;
   if (ds->path == NULL) {
     errx(2, "the device path must be provided");
   }
@@ -551,20 +560,21 @@ static int writeSlice(const DeviceSlice *ds, DataStream *pds)
     errx(2, "more than one data stream was provided");
   }
 
-  int flags = (O_WRONLY
+  flags = (O_WRONLY
                | (ds->creat  ? O_CREAT|O_TRUNC : 0)
                | (ds->direct ? O_DIRECT        : 0)
                | (ds->sync   ? O_SYNC          : 0));
-  int fd = open(ds->path, flags, 0666);
+  fd = open(ds->path, flags, 0666);
   if (fd < 0) {
     err(3, "open(%s) failure", ds->path);
   }
   lseekSlice(ds, fd);
 
-  void *block = allocateBufferForSlice(ds);
-  for (int n = 0; n < ds->blockCount; n++) {
+  block = allocateBufferForSlice(ds);
+  for (n = 0; n < ds->blockCount; n++) {
+    ssize_t nWrite;
     generateDataStream(pds, n, block, ds->blockSize);
-    ssize_t nWrite = write(fd, block, ds->blockSize);
+    nWrite = write(fd, block, ds->blockSize);
     if (nWrite == -1) {
       warn("write failure on %s, block %d", ds->path, n);
       return 3;
@@ -590,14 +600,15 @@ static char filePath[48];
 /**********************************************************************/
 static int iterateOverFiles(DeviceSlice *ds, DataStream *pds, bool writing)
 {
+  int n, dedupe;
+  int dirNumber = 0;
   enum { FILES_PER_DIRECTORY = 200 };
   BlockStream *pbs = container_of(pds, BlockStream, common);
   int status = 0;
   ds->path = filePath;
-  int dedupe = pbs->dedupe;
+  dedupe = pbs->dedupe;
   pbs->dedupe = 0;
-  int dirNumber = 0;
-  for (int n = 0; n < ds->fileCount; n++) {
+  for (n = 0; n < ds->fileCount; n++) {
     pbs->streamNumber = shrinkForDedupe(n, dedupe);
     if (ds->fileCount <= FILES_PER_DIRECTORY) {
       snprintf(filePath, sizeof(filePath), "%d.%d", n, pbs->streamNumber);
@@ -668,6 +679,8 @@ static int writeFiles(DeviceSlice *ds, DataStream *pds)
 /**********************************************************************/
 int main(int argc, char **argv)
 {
+  int status = 0;
+  bool done = false;
   DataStream *pds = NULL;
   DeviceSlice ds = {
     .dirPath    = NULL,
@@ -774,8 +787,6 @@ int main(int argc, char **argv)
     errx(2, "a data stream must be provided");
   }
 
-  int status = 0;
-  bool done = false;
   for (; optind < argc; optind++) {
     const char *arg = argv[optind];
     if ((allowedActions & ACTION_VERIFY_FILES)
