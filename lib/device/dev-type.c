@@ -650,6 +650,12 @@ static int _has_gpt_partition_table(struct device *dev)
 	nr_entries = le32toh(gpt_header.nr_part_entries);
 	sz_entry = le32toh(gpt_header.sz_part_entry);
 
+	if (sz_entry < sizeof(gpt_part_entry)) {
+		log_debug("GPT partition entry size %u too small on %s.",
+			  sz_entry, dev_name(dev));
+		return 0;
+	}
+
 	for (i = 0; i < nr_entries; i++) {
 		if (!dev_read_bytes(dev, entries_start + (uint64_t)i * sz_entry,
 				    sizeof(gpt_part_entry), &gpt_part_entry))

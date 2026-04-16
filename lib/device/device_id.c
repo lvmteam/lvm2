@@ -1897,16 +1897,15 @@ int device_ids_write(struct cmd_context *cmd)
 
 	t = time(NULL);
 
-	if ((fc_bytes = snprintf(fc, sizeof(fc),
-			    "# LVM uses devices listed in this file.\n" \
-			    "# Created by LVM command %s%s pid %d at %s" \
-			    "# HASH=%u\n",
-			    cmd->name, cmd->device_ids_auto_import ? " (auto)" : "",
-			    getpid(), ctime(&t), hash)) < 0) {
+	if ((fc_bytes = dm_snprintf(fc, sizeof(fc),
+				    "# LVM uses devices listed in this file.\n"
+				    "# Created by LVM command %s%s pid %d at %s"
+				    "# HASH=%u\n",
+				    cmd->name, cmd->device_ids_auto_import ? " (auto)" : "",
+				    getpid(), ctime(&t), hash)) < 0) {
 		log_warn("Failed to write buffer for devices file content.");
 		goto out;
 	}
-	fc[fc_bytes] = '\0';
 
 	if (fputs(fc, fp) < 0) {
 		log_warn("Failed to write devices file header.");
