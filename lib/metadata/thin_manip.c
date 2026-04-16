@@ -499,12 +499,14 @@ int thin_pool_prepare_metadata(struct logical_volume *metadata_lv,
 		log_error("Failed to activate temporary volume to "
 			  "prepare thin pool metadata %s.",
 			  display_lvname(metadata_lv));
-		return_0;
+		return 0;
 	}
 
 	/* coverity[secure_temp] until better solution */
 	if (!(f = tmpfile())) {
 		log_error("Cannot create temporary file to prepare metadata.");
+		if (!deactivate_lv(cmd, metadata_lv))
+			stack;
 		return 0;
 	}
 
