@@ -162,7 +162,8 @@ static int _sysfs_get_kvdo_value(const char *dm_name, const struct dm_info *dmin
 {
 	char path[PATH_MAX];
 	char temp[64];		/* Buffer to read-in 64-bit integer */
-	int fd, size, r = 0;
+	ssize_t size;
+	int fd, r = 0;
 
 	if (dm_snprintf(path, sizeof(path), "%sblock/dm-%d/vdo/%s",
 			dm_sysfs_dir(), dminfo->minor, vdo_param) < 0) {

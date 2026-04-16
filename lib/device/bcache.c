@@ -444,7 +444,7 @@ static void _sync_destroy(struct io_engine *ioe)
 static bool _sync_issue(struct io_engine *ioe, enum dir d, int di,
                         sector_t sb, sector_t se, void *data, void *context)
 {
-	int rv;
+	ssize_t rv;
 	off_t off;
 	uint64_t where;
 	uint64_t pos = 0;

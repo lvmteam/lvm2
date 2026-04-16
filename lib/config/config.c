@@ -495,7 +495,8 @@ int config_file_read_fd(struct dm_config_tree *cft, struct device *dev, dev_io_r
 	int bad_name = 0;
 	char *fb, *fe;
 	int r = 0;
-	int sz, use_plain_read = 1;
+	ssize_t sz;
+	int use_plain_read = 1;
 	char *buf = NULL;
 	struct config_source *cs = dm_config_get_custom(cft);
 	size_t rsize;

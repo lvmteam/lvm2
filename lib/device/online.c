@@ -63,7 +63,8 @@ static int _copy_pvid_file_field(const char *field, char *buf, int bufsize, char
 int online_pvid_file_read(char *path, unsigned *major, unsigned *minor, char *vgname, char *devname)
 {
 	char buf[MAX_PVID_FILE_SIZE] = { 0 };
-	int fd, rv;
+	ssize_t rv;
+	int fd;
 
 	fd = open(path, O_RDONLY);
 	if (fd < 0) {
@@ -256,8 +257,8 @@ int online_pvid_file_create(struct cmd_context *cmd, struct device *dev, const c
 	int devnamelen;
 	unsigned file_major = 0, file_minor = 0;
 	unsigned major, minor;
+	ssize_t rv;
 	int fd;
-	int rv;
 	int len;
 	int len1 = 0;
 	int len2 = 0;

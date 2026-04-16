@@ -336,7 +336,7 @@ out:
 
 int get_sysfs_binary(const char *path, char *buf, size_t buf_size, int *retlen)
 {
-	int ret;
+	ssize_t ret;
 	int fd;
 
 	fd = open(path, O_RDONLY);

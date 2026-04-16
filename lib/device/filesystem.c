@@ -167,7 +167,7 @@ static int _btrfs_get_mnt(struct fs_info *fsi, dev_t lv_devt)
 	struct dirent *de;
 	int ret = 1;
 	int fd = -1;
-	int r;
+	ssize_t r;
 	bool found = false;
 
 	/* For a mounted btrfs, there will be a sys dir like /sys/fs/btrfs/$uuid/devices */
