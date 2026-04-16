@@ -27,6 +27,7 @@
 #include <netinet/in.h>
 #include <sys/un.h>
 #include <unistd.h>
+#include <poll.h>
 #include <signal.h>
 
 #include <syslog.h> /* FIXME. For the global closelog(). */
@@ -621,7 +622,7 @@ void daemon_start(daemon_state s)
 	log_state _log = { { 0 } };
 	thread_state _threads = { .next = NULL };
 	unsigned timeout_count = 0;
-	fd_set in;
+	struct pollfd pfd;
 	sigset_t new_set, old_set;
 	int ret;
 
@@ -709,8 +710,8 @@ void daemon_start(daemon_state s)
 		if (!s.daemon_init(&s))
 			failed = 1;
 
-	if (s.socket_fd >= FD_SETSIZE)
-		failed = 1; /* FD out of available selectable set */
+	pfd.fd = s.socket_fd;
+	pfd.events = POLLIN;
 
 	sigfillset(&new_set);
 	if (sigprocmask(SIG_SETMASK, NULL, &old_set))
@@ -718,23 +719,21 @@ void daemon_start(daemon_state s)
 
 	while (!failed && !_shutdown_requested) {
 		_reset_timeout(s);
-		FD_ZERO(&in);
-		FD_SET(s.socket_fd, &in);
 
 		if (sigprocmask(SIG_SETMASK, &new_set, NULL))
 			perror("sigprocmask error");
-		ret = pselect(s.socket_fd + 1, &in, NULL, NULL, _get_timeout(s), &old_set);
+		ret = ppoll(&pfd, 1, _get_timeout(s), &old_set);
 		if (sigprocmask(SIG_SETMASK, &old_set, NULL))
 			perror("sigprocmask error");
 
 		if (ret < 0) {
 			if ((errno != EINTR) && (errno != EAGAIN))
-				perror("select error");
+				perror("ppoll error");
 			_reap(s, 0);
 			continue;
 		}
 
-		if (FD_ISSET(s.socket_fd, &in)) {
+		if (pfd.revents & POLLIN) {
 			timeout_count = 0;
 			_handle_connect(s);
 		}
