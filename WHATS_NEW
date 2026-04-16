@@ -1,5 +1,6 @@
-Version 2.03.40 - 
+Version 2.03.40 -
 ==================
+  Pre-create udev cookie before critical section to avoid resume failures.
   Validate area_count before subtracting parity_devs in RAID metadata import.
   Validate area_count against MAX_STRIPES to prevent integer overflow.
   Validate mda size and prevent uint64 to uint32 truncation in metadata reads.
