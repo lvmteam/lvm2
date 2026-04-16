@@ -508,6 +508,17 @@ void fs_unlock(void)
 	}
 }
 
+int fs_ensure_cookie(struct cmd_context *cmd)
+{
+	if (_fs_cookie != DM_COOKIE_AUTO_CREATE)
+		return 1;
+
+	if (!cmd->current_settings.udev_sync)
+		return 1;
+
+	return dm_udev_create_cookie(&_fs_cookie);
+}
+
 uint32_t fs_get_cookie(void)
 {
 	return _fs_cookie;

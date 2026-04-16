@@ -2346,6 +2346,11 @@ static int _lv_suspend(struct cmd_context *cmd, const char *lvid_s,
 			   &first_seg(lv)->external_lv->lvid.id[1], ID_LEN) != 0))))
 		lockfs = 1;
 
+	/* Pre-create udev cookie - semaphore allocation may fail
+	 * under resource exhaustion and must not block resume. */
+	if (!fs_ensure_cookie(cmd))
+		goto_out;
+
 	critical_section_inc(cmd, "suspending");
 
 	if (!_lv_suspend_lv(lv, laopts, lockfs, flush_required)) {
@@ -2720,6 +2725,11 @@ static int _lv_activate(struct cmd_context *cmd, const char *lvid_s,
 	}
 
 	lv_calculate_readahead(lv, NULL);
+
+	/* Pre-create udev cookie - semaphore allocation may fail
+	 * under resource exhaustion and must not block activation. */
+	if (!fs_ensure_cookie(cmd))
+		goto_out;
 
 	critical_section_inc(cmd, "activating");
 	if (!(r = _lv_activate_lv(lv, laopts)))
