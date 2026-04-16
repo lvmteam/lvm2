@@ -719,6 +719,9 @@ static uint32_t _estimate_chunk_size(uint32_t data_extents, uint32_t extent_size
 	uint32_t chunk_size = _estimate_size(data_extents, extent_size, metadata_size);
 	const uint32_t BIG_CHUNK =  2 * DEFAULT_THIN_POOL_CHUNK_SIZE_ALIGNED - 1;
 
+	if (chunk_size <= 1)
+		return DM_THIN_MIN_DATA_BLOCK_SIZE;
+
 	if ((attr & THIN_FEATURE_BLOCK_SIZE) &&
 	    (chunk_size > BIG_CHUNK) &&
 	    (chunk_size < (UINT32_MAX - BIG_CHUNK)))
