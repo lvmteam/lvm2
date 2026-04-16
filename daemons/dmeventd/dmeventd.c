@@ -33,6 +33,7 @@
 #include <signal.h>
 #include <arpa/inet.h>		/* for htonl, ntohl */
 #include <fcntl.h>		/* for musl libc */
+#include <poll.h>
 #include <unistd.h>
 #include <syslog.h>
 #include <sys/utsname.h>
@@ -2004,10 +2005,9 @@ static int _open_fifos(struct dm_event_fifos *fifos)
 static int _client_read(struct dm_event_fifos *fifos,
 			struct dm_event_daemon_message *msg)
 {
-	struct timeval t;
 	unsigned bytes = 0;
 	int ret = 0;
-	fd_set fds;
+	struct pollfd pfd = { .fd = fifos->client, .events = POLLIN };
 	size_t size = 2 * sizeof(uint32_t);	/* status + size */
 	uint32_t *header = alloca(size);
 	char *buf = (char *)header;
@@ -2017,17 +2017,8 @@ static int _client_read(struct dm_event_fifos *fifos,
 	errno = 0;
 	while (bytes < size && errno != EOF) {
 		/* Watch client read FIFO for input. */
-		FD_ZERO(&fds);
-		FD_SET(fifos->client, &fds);
-		if (_exit_now > DM_SIGNALED_EXIT) {
-			/* Use shorter timeout when exiting to cleanup threads quickly */
-			t.tv_sec = 0;
-			t.tv_usec = 10000;  /* 10ms */
-		} else {
-			t.tv_sec = 1;
-			t.tv_usec = 0;
-		}
-		ret = select(fifos->client + 1, &fds, NULL, NULL, &t);
+		ret = poll(&pfd, 1,
+			   (_exit_now > DM_SIGNALED_EXIT) ? 10 : 1000);
 
 		if (!ret && bytes)
 			continue; /* trying to finish read */
@@ -2074,7 +2065,7 @@ static int _client_write(struct dm_event_fifos *fifos,
 	uint32_t temp[2];
 	unsigned bytes = 0;
 	int ret = 0;
-	fd_set fds;
+	struct pollfd pfd = { .fd = fifos->server, .events = POLLOUT };
 
 	size_t size = 2 * sizeof(uint32_t) + ((msg->data) ? msg->size : 0);
 	uint32_t *header = malloc(size);
@@ -2094,11 +2085,16 @@ static int _client_write(struct dm_event_fifos *fifos,
 	}
 
 	while (bytes < size) {
-		do {
-			/* Watch client write FIFO to be ready for output. */
-			FD_ZERO(&fds);
-			FD_SET(fifos->server, &fds);
-		} while (select(fifos->server + 1, NULL, &fds, NULL, NULL) != 1);
+		/* Watch client write FIFO to be ready for output. */
+		ret = poll(&pfd, 1, -1);
+
+		if ((ret < 0) && (errno != EINTR)) {
+			log_sys_debug("poll", fifos->server_path);
+			break;
+		}
+
+		if (ret < 1)
+			continue;
 
 		if ((ret = write(fifos->server, buf + bytes, size - bytes)) > 0)
 			bytes += ret;

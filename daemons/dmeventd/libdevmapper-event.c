@@ -26,6 +26,7 @@
 #include <sys/wait.h>
 #include <arpa/inet.h>		/* for htonl, ntohl */
 #include <pthread.h>
+#include <poll.h>
 #include <syslog.h>
 #include <unistd.h>
 
@@ -223,7 +224,7 @@ static int _daemon_read(struct dm_event_fifos *fifos,
 {
 	unsigned bytes = 0;
 	int ret, i;
-	fd_set fds;
+	struct pollfd pfd = { .fd = fifos->server, .events = POLLIN };
 	size_t size = 2 * sizeof(uint32_t);	/* status + size */
 	uint32_t *header = alloca(size);
 	char *buf = (char *)header;
@@ -231,10 +232,7 @@ static int _daemon_read(struct dm_event_fifos *fifos,
 	while (bytes < size) {
 		for (i = 0, ret = 0; (i < 20) && (ret < 1); i++) {
 			/* Watch daemon read FIFO for input. */
-			struct timeval tval = { .tv_sec = 1 };
-			FD_ZERO(&fds);
-			FD_SET(fifos->server, &fds);
-			ret = select(fifos->server + 1, &fds, NULL, NULL, &tval);
+			ret = poll(&pfd, 1, 1000);
 			if (ret < 0 && errno != EINTR) {
 				log_error("Unable to read from event server.");
 				goto bad;
@@ -291,7 +289,7 @@ static int _daemon_write(struct dm_event_fifos *fifos,
 			 struct dm_event_daemon_message *msg)
 {
 	int ret;
-	fd_set fds;
+	struct pollfd pfd;
 	size_t bytes = 0;
 	size_t size = 2 * sizeof(uint32_t) + msg->size;
 	uint32_t *header = alloca(size);
@@ -303,11 +301,11 @@ static int _daemon_write(struct dm_event_fifos *fifos,
 	memcpy(buf + 2 * sizeof(uint32_t), msg->data, msg->size);
 
 	/* drain the answer fifo */
+	pfd.fd = fifos->server;
+	pfd.events = POLLIN;
 	while (1) {
-		struct timeval tval = { .tv_usec = 100 };
-		FD_ZERO(&fds);
-		FD_SET(fifos->server, &fds);
-		ret = select(fifos->server + 1, &fds, NULL, NULL, &tval);
+		/* Short wait to avoid busy loop while draining */
+		ret = poll(&pfd, 1, 1);
 		if (ret < 0) {
 			if (errno == EINTR)
 				continue;
@@ -325,12 +323,12 @@ static int _daemon_write(struct dm_event_fifos *fifos,
 		}
 	}
 
+	pfd.fd = fifos->client;
+	pfd.events = POLLOUT;
 	while (bytes < size) {
 		do {
 			/* Watch daemon write FIFO to be ready for output. */
-			FD_ZERO(&fds);
-			FD_SET(fifos->client, &fds);
-			ret = select(fifos->client + 1, NULL, &fds, NULL, NULL);
+			ret = poll(&pfd, 1, -1);
 			if ((ret < 0) && (errno != EINTR)) {
 				log_error("Unable to talk to event daemon.");
 				return 0;
