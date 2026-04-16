@@ -1876,6 +1876,7 @@ static int _lvmcache_update_vgname(struct cmd_context *cmd,
 		}
 
 		if (!_lvmcache_update_vgid(NULL, vginfo, vgid)) {
+			dm_hash_remove(_vgname_hash, vgname);
 			free(vginfo->vgname);
 			free(vginfo);
 			return_0;
