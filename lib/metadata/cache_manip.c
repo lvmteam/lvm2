@@ -854,7 +854,7 @@ int cache_set_policy(struct lv_segment *lvseg, const char *name,
 restart: /* remove any 'default" nodes */
 	cn = seg->policy_settings ? seg->policy_settings->child : NULL;
 	while (cn) {
-		if (cn->v->type == DM_CFG_STRING && !strcmp(cn->v->v.str, "default")) {
+		if (cn->v && cn->v->type == DM_CFG_STRING && !strcmp(cn->v->v.str, "default")) {
 			dm_config_remove_node(seg->policy_settings, cn);
 			goto restart;
 		}
@@ -1153,7 +1153,7 @@ int cache_vol_set_params(struct cmd_context *cmd,
   restart: /* remove any 'default" nodes */
 	cn = policy_settings ? policy_settings->child : NULL;
 	while (cn) {
-		if (cn->v->type == DM_CFG_STRING && !strcmp(cn->v->v.str, "default")) {
+		if (cn->v && cn->v->type == DM_CFG_STRING && !strcmp(cn->v->v.str, "default")) {
 			dm_config_remove_node(policy_settings, cn);
 			goto restart;
 		}

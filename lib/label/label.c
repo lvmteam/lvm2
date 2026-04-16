@@ -1940,11 +1940,15 @@ bool dev_write_bytes(struct device *dev, uint64_t start, size_t len, void *data)
 
 bool dev_invalidate_bytes(struct device *dev, uint64_t start, size_t len)
 {
+	if (!scan_bcache)
+		return true;
 	return bcache_invalidate_bytes(scan_bcache, dev->bcache_di, start, len);
 }
 
 void dev_invalidate(struct device *dev)
 {
+	if (!scan_bcache)
+		return;
 	bcache_invalidate_di(scan_bcache, dev->bcache_di);
 }
 
