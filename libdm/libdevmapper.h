@@ -2209,9 +2209,11 @@ struct dm_vdo_stats {
 	enum dm_vdo_operating_mode operating_mode;
 };
 
+#define DM_VDO_STAT_FIELD_LEN 80
+
 struct dm_vdo_stats_field {
-	char label[64];
-	char value[64];
+	char label[DM_VDO_STAT_FIELD_LEN];
+	char value[DM_VDO_STAT_FIELD_LEN];
 };
 
 struct dm_vdo_stats_full {

@@ -29,7 +29,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define MAX_STAT_LENGTH 80
 #define MAX_STATS 250
 
 static const char *_next_token(const char *b, const char *e)
@@ -158,8 +157,8 @@ static const char *_parse_group(const char *b,
 		return e;
 
 	while (b < e && *b != '}') {
-		char label[MAX_STAT_LENGTH];
-		char vbuf[MAX_STAT_LENGTH];
+		char label[DM_VDO_STAT_FIELD_LEN];
+		char vbuf[DM_VDO_STAT_FIELD_LEN];
 		size_t vlen;
 
 		while (b < e && *b == ',')
