@@ -512,13 +512,14 @@ int config_file_read_fd(struct dm_config_tree *cft, struct device *dev, dev_io_r
 	if (!(dev->flags & DEV_REGULAR) || size2)
 		use_plain_read = 0;
 
-	/* Ensure there is extra '\0' after end of buffer since we pass
-	 * buffer to functions like strtoll() */
 	if (size + size2 < size) {
-		log_error("Metadata buffer size overflow.");
+		log_error("Metadata buffer size overflow %zu + %zu on %s.",
+			  size, size2, dev_name(dev));
 		return 0;
 	}
 
+	/* Ensure there is extra '\0' after end of buffer since we pass
+	 * buffer to functions like strtoll() */
 	if (!(buf = zalloc(size + size2 + 1))) {
 		log_error("Failed to allocate circular buffer.");
 		return 0;
@@ -550,7 +551,7 @@ int config_file_read_fd(struct dm_config_tree *cft, struct device *dev, dev_io_r
 	fb = buf;
 
 	if (!(dev->flags & DEV_REGULAR)) {
-		memcpy(namebuf, buf, NAME_LEN);
+		strncpy(namebuf, buf, sizeof(namebuf) - 1);
 
 		while (namebuf[namelen] && !isspace(namebuf[namelen]) && namebuf[namelen] != '{' && namelen < (NAME_LEN - 1))
 			namelen++;
