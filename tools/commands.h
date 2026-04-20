@@ -229,7 +229,7 @@ xx(vgmknodes,
 
 xx(vgreduce,
    "Remove physical volume(s) from a volume group",
-   0)
+   ALL_VGS_IS_DEFAULT)
 
 xx(vgremove,
    "Remove volume group(s)",
