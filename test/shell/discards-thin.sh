@@ -32,7 +32,7 @@ get_devs
 
 pvmajor=$(get pv_field "$dev1" major)
 pvminor=$(get pv_field "$dev1" minor)
-test "$(< "/sys/dev/block/$pvmajor:$pvminor/queue/discard_granularity")" -gt 0 || \
+test "$(< "/sys/dev/block/$pvmajor:$pvminor/queue/discard_granularity")" -gt 0 ||
 	skip "Backing device lacks discard support"
 
 aux extend_filter_LVMTEST

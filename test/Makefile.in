@@ -193,6 +193,9 @@ check_lvmlockd_test: .tests-stamp
 	$(call run_check,udev-lvmlockd-test)
 endif
 
+check_scripts:
+	$(srcdir)/lib/check_scripts.sh $(srcdir)/shell
+
 check_cluster:
 	@if [ -n "$(G)" ]; then \
 		gargs=""; \

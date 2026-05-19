@@ -48,9 +48,9 @@ if command -v losetup >/dev/null 2>&1; then
         st=/sys/block/${dev#/dev/}/stat
         w0=$(awk '{print $7}' "$st")
         r0=$(awk '{print $3}' "$st")
-        dd if=/dev/zero of=$dev bs=1M count=$K conv=fdatasync status=none 2>/dev/null
+        dd if=/dev/zero of="$dev" bs=1M count=$K conv=fdatasync status=none 2>/dev/null
         TRUTH_OUT=$(( ( $(awk '{print $7}' "$st") - w0 ) / 2048 ))
-        dd if=$dev of=/dev/null bs=1M count=$K status=none 2>/dev/null
+        dd if="$dev" of=/dev/null bs=1M count=$K status=none 2>/dev/null
         TRUTH_IN=$(( ( $(awk '{print $3}' "$st") - r0 ) / 2048 ))
         losetup -d "$dev" 2>/dev/null
     fi

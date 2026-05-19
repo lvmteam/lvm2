@@ -86,7 +86,7 @@ endif
 DISTCLEAN_TARGETS += cscope.out
 CLEAN_DIRS += autom4te.cache
 
-check check_system check_cluster check_local check_lvmpolld check_lvmlockd_test check_lvmlockd_dlm check_lvmlockd_sanlock: test
+check check_system check_cluster check_local check_lvmpolld check_lvmlockd_test check_lvmlockd_dlm check_lvmlockd_sanlock check_scripts: test
 	$(MAKE) -C test $(@)
 
 conf.generate man.generate: tools
