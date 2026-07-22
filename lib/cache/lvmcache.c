@@ -1334,6 +1334,10 @@ static int _label_rescan_vg(struct cmd_context *cmd, const char *vgname, const c
 	dm_list_iterate_items(info, &vginfo->infos) {
 		if (!(devl = malloc(sizeof(*devl)))) {
 			log_error("device_list element allocation failed");
+			dm_list_iterate_items_safe(devl, devl2, &devs) {
+            	dm_list_del(&devl->list);
+            	free(devl);
+            }
 			return 0;
 		}
 		devl->dev = info->dev;
