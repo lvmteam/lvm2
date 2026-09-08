@@ -379,6 +379,50 @@ static void test_rlocn_valid(void *fixture)
 }
 
 /*----------------------------------------------------------------
+ * raw_locns iteration bounds
+ *
+ * Craft: mda_header with every raw_locn slot in the 512-byte sector
+ * holding a non-zero entry (no null terminator).
+ * Without bounds checking _xlate_mdah() walks past the end of the
+ * header buffer.
+ *--------------------------------------------------------------*/
+
+static void test_raw_locns_no_terminator(void *fixture)
+{
+	char mda_buf[MDA_HEADER_SIZE];
+	struct mda_header *mdah;
+	struct raw_locn *rlocn;
+	struct raw_locn *end;
+	struct device_area dev_area = { .dev = NULL, .start = 4096 };
+	uint32_t bad_fields = 0;
+	int count;
+
+	/* Build a valid header then fill all raw_locn slots: */
+	_build_mda_header(mda_buf, 4096, 1024 * 1024, MDA_HEADER_SIZE, 4096);
+	mdah = (struct mda_header *)mda_buf;
+
+	end = (struct raw_locn *)((char *)mda_buf + MDA_HEADER_SIZE);
+	for (rlocn = &mdah->raw_locns[0], count = 0;
+	     (rlocn + 1) <= end;
+	     rlocn++, count++) {
+		rlocn->offset = htole64(0x100000 + count * 0x1000ULL);
+		rlocn->size = htole64(0x1000);
+		rlocn->checksum = 0;
+		rlocn->flags = 0;
+	}
+	T_ASSERT(count > 0);
+
+	/* Recompute CRC after filling payload */
+	mdah->checksum_xl = htole32(calc_crc(INITIAL_CRC,
+		(const uint8_t *)mdah->magic,
+		MDA_HEADER_SIZE - sizeof(mdah->checksum_xl)));
+
+	/* Must reject: no null terminator within bounds */
+	T_ASSERT(!raw_parse_mda_header(mdah, &dev_area, 0, &bad_fields));
+	T_ASSERT(bad_fields & BAD_MDA_HEADER);
+}
+
+/*----------------------------------------------------------------
  * Test suite registration
  *--------------------------------------------------------------*/
 
@@ -411,6 +455,9 @@ void metadata_security_tests(struct dm_list *all_tests)
 	T("rlocn/size-truncation", "rlocn->size > UINT32_MAX", test_rlocn_size_truncation);
 	T("rlocn/offset-oob", "rlocn->offset >= mdah->size", test_rlocn_offset_exceeds_mda);
 	T("rlocn/valid", "rlocn normal values", test_rlocn_valid);
+
+	/* raw_locns iteration bounds */
+	T("raw-locns/no-terminator", "raw_locns array no null terminator", test_raw_locns_no_terminator);
 
 	dm_list_add(all_tests, &ts->list);
 }
