@@ -173,9 +173,14 @@ static int _text_lv_setup(struct format_instance *fid __attribute__((unused)),
 	return 1;
 }
 
-static void _xlate_mdah(struct mda_header *mdah)
+/* Return 0 if the raw_locns list is not terminated within the header,
+ * which means the header is corrupt.  Called from read and write paths. */
+static int _xlate_mdah(struct mda_header *mdah)
 {
-	struct raw_locn *rl;
+	struct raw_locn *rl, *end;
+
+	/* raw_locns is a NULL-terminated list that must fit within one sector */
+	end = (struct raw_locn *)((char *)mdah + MDA_HEADER_SIZE);
 
 	mdah->version = htole32(mdah->version);
 	mdah->start = htole64(mdah->start);
@@ -190,7 +195,12 @@ static void _xlate_mdah(struct mda_header *mdah)
 		if (rl->flags > 0xFF)
 			rl->flags = bswap_32(rl->flags);
 		rl++;
+
+		if ((rl + 1) > end)
+			return_0; /* next raw_locn does not fit */
 	}
+
+	return 1;
 }
 
 int raw_parse_mda_header(struct mda_header *mdah, struct device_area *dev_area,
@@ -205,7 +215,11 @@ int raw_parse_mda_header(struct mda_header *mdah, struct device_area *dev_area,
 		*bad_fields |= BAD_MDA_CHECKSUM;
 	}
 
-	_xlate_mdah(mdah);
+	if (!_xlate_mdah(mdah)) {
+		log_warn("WARNING: Metadata raw_locns list not terminated in mda header on %s at %llu.",
+			 dev_name(dev_area->dev), (unsigned long long)dev_area->start);
+		*bad_fields |= BAD_MDA_HEADER;
+	}
 
 	if (memcmp(mdah->magic, FMTT_MAGIC, sizeof(mdah->magic))) {
 		log_warn("WARNING: Wrong magic number in mda header on %s at %llu.",
@@ -286,7 +300,11 @@ static int _raw_write_mda_header(const struct format_type *fmt,
 	mdah->version = FMTT_VERSION;
 	mdah->start = start_byte;
 
-	_xlate_mdah(mdah);
+	if (!_xlate_mdah(mdah)) {
+		log_error(INTERNAL_ERROR "Invalid raw_locns list.");
+		return 0;
+	}
+
 	mdah->checksum_xl = htole32(calc_crc(INITIAL_CRC, (uint8_t *)mdah->magic,
 					     MDA_HEADER_SIZE -
 					     sizeof(mdah->checksum_xl)));
