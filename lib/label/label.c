@@ -211,7 +211,11 @@ int label_write(struct device *dev, struct label *label)
 			 htole32(lh->offset_xl));
 
 	if (!label_scan_open(dev)) {
-		log_error("Failed to open device %s", dev_name(dev));
+		if (dev_scan_io_failed(dev))
+			log_debug_devs("Skipping label write on %s: excluded after earlier I/O error.",
+				       dev_name(dev));
+		else
+			log_error("Failed to open device %s", dev_name(dev));
 		return 0;
 	}
 
@@ -1775,8 +1779,9 @@ int label_scan_dev(struct cmd_context *cmd, struct device *dev)
 
 int label_scan_open(struct device *dev)
 {
-	if (dev->flags & DEV_SCAN_NOT_READ) {
-		log_debug_devs("Skipping %s, excluded after previous I/O error.", dev_name(dev));
+	if (dev_scan_io_failed(dev)) {
+		log_debug_devs("Skipping open on %s: excluded after earlier I/O error.",
+			       dev_name(dev));
 		return 0;
 	}
 
@@ -1889,24 +1894,12 @@ int label_scan_reopen_rw(struct device *dev)
 bool dev_read_bytes(struct device *dev, uint64_t start, size_t len, void *data)
 {
 	/*
-	 * FIXME: Temporary workaround to prevent redundant device access attempts.
-	 *
-	 * Problem: When a device I/O error occurs, various filters (partition,
-	 * signature, etc.) continue to call dev_read_bytes() because the filter
-	 * chain doesn't properly propagate I/O errors vs. legitimate "not found"
-	 * results. For example, _has_partition_table() returns 0 for both
-	 * "no partition table" and "I/O error", so the partition filter passes
-	 * devices with I/O errors to subsequent filters.
-	 *
-	 * Proper fix: Modify dev_is_partitioned(), signature checks, and other
-	 * device inspection functions to return tri-state (error/not-found/found)
-	 * instead of boolean, and update filters to handle I/O errors distinctly.
-	 *
-	 * This early return prevents wasted error logging and syscalls but doesn't
-	 * address the root cause in the filter architecture.
+	 * Skip further reads after scan I/O failure (see DEV_SCAN_NOT_READ).
+	 * Filters still treat I/O errors like "not found"; full fix is tri-state
+	 * propagation in dev_is_partitioned() and related checks.
 	 */
-	if (dev->flags & DEV_SCAN_NOT_READ) {
-		log_debug_devs("Skipping read from %s, device excluded after I/O error.",
+	if (dev_scan_io_failed(dev)) {
+		log_debug_devs("Skipping read from %s: excluded after earlier I/O error.",
 			       dev_name(dev));
 		return false;
 	}
@@ -1963,8 +1956,12 @@ bool dev_write_bytes(struct device *dev, uint64_t start, size_t len, void *data)
 		/* This is not often needed. */
 		dev->flags |= DEV_BCACHE_WRITE;
 		if (!label_scan_open(dev)) {
-			log_error("Error opening device %s for writing at %llu length %zu.",
-				  dev_name(dev), (unsigned long long)start, len);
+			if (dev_scan_io_failed(dev))
+				log_debug_devs("Skipping write to %s: excluded after earlier I/O error.",
+					       dev_name(dev));
+			else
+				log_error("Error opening device %s for writing at %llu length %zu.",
+					  dev_name(dev), (unsigned long long)start, len);
 			return false;
 		}
 	}
@@ -2029,8 +2026,12 @@ bool dev_set_bytes(struct device *dev, uint64_t start, size_t len, uint8_t val)
 		/* This is not often needed. */
 		dev->flags |= DEV_BCACHE_WRITE;
 		if (!label_scan_open(dev)) {
-			log_error("Error opening device %s for writing at %llu length %zu.",
-				  dev_name(dev), (unsigned long long)start, len);
+			if (dev_scan_io_failed(dev))
+				log_debug_devs("Skipping write to %s: excluded after earlier I/O error.",
+					       dev_name(dev));
+			else
+				log_error("Error opening device %s for writing at %llu length %zu.",
+					  dev_name(dev), (unsigned long long)start, len);
 			return false;
 		}
 	}

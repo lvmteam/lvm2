@@ -230,7 +230,11 @@ static int _write_log_header(struct cmd_context *cmd, struct logical_volume *lv)
 	}
 
 	if (!label_scan_open(dev)) {
-		log_error("Failed to open %s/%s to write log header.", lv->vg->name, lv->name);
+		if (dev_scan_io_failed(dev))
+			log_debug_devs("Skipping mirror log header write on %s: excluded after earlier I/O error.",
+				       dev_name(dev));
+		else
+			log_error("Failed to open %s/%s to write log header.", lv->vg->name, lv->name);
 		return 0;
 	}
 

@@ -3211,7 +3211,7 @@ void device_ids_validate(struct cmd_context *cmd, struct dm_list *scanned_devs, 
 		 * The matched device could not be read so we do not have
 		 * the PVID from disk and cannot verify the devices file entry.
 		 */
-		if (dev->flags & DEV_SCAN_NOT_READ) {
+		if (dev_scan_io_failed(dev)) {
 			log_debug("Validate %s %s PVID %s on %s: not read",
 				  idtype_to_str(du->idtype), du->idname ?: ".", du->pvid ?: ".", dev_name(dev));
 			continue;
@@ -3368,7 +3368,7 @@ void device_ids_validate(struct cmd_context *cmd, struct dm_list *scanned_devs, 
 			devname = dev_name(du->dev);
 
 			if ((scanned_devs && !device_list_find_dev(scanned_devs, du->dev)) ||
-			    (du->dev->flags & DEV_SCAN_NOT_READ)) {
+			    dev_scan_io_failed(du->dev)) {
 				log_debug("Validate %s %s PVID %s on %s: not scanned",
 					  idtype_to_str(du->idtype), du->idname ?: ".", du->pvid ?: ".", devname);
 			} else {

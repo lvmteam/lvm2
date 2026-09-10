@@ -4564,7 +4564,12 @@ bool scan_text_mismatch(struct cmd_context *cmd, const char *vgname, const char 
 		 */
 		if (dev->bcache_di < 0) {
 			if (!label_scan_open(dev)) {
-				log_debug("Rescan for text mismatch - cannot reopen %s.", dev_name(dev));
+				if (dev_scan_io_failed(dev))
+					log_debug("Rescan for text mismatch - %s excluded after I/O error.",
+						  dev_name(dev));
+				else
+					log_debug("Rescan for text mismatch - cannot reopen %s.",
+						  dev_name(dev));
 				goto out;
 			}
 		}

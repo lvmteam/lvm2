@@ -521,7 +521,7 @@ int validate_hints(struct cmd_context *cmd, struct dm_list *hints)
 		 * that the PVID is actually found on a different device, so don't
 		 * depend on hints. (This would also fail the following pvid check.)
 		 */
-		if (dev->flags & DEV_SCAN_NOT_READ) {
+		if (dev_scan_io_failed(dev)) {
 			log_debug("Uncertain hint for unread device %u:%u %s.",
 				  major(hint->devt), minor(hint->devt), dev_name(dev));
 			ret = 0;

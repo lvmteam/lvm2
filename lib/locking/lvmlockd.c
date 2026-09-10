@@ -816,7 +816,11 @@ static int _extend_sanlock_lv(struct cmd_context *cmd, struct volume_group *vg, 
 	}
 
 	if (!label_scan_open(dev)) {
-		log_error("Extend sanlock LV %s cannot open device.", display_lvname(lv));
+		if (dev_scan_io_failed(dev))
+			log_debug_devs("Skipping sanlock LV extend on %s: excluded after earlier I/O error.",
+				       dev_name(dev));
+		else
+			log_error("Extend sanlock LV %s cannot open device.", display_lvname(lv));
 		return 0;
 	}
 
