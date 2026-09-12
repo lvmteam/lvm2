@@ -145,15 +145,14 @@ help:
 
 COMMA := ,
 
-# Chown test scripts to root before the runner, restore on exit.
+# Test wrappers and helper scripts are staged root-owned inside each
+# test directory by inittest.sh; the build tree stays owned by the
+# developer.
 # $(1) = flavour string, $(2) = optional --only override (default: $(T))
 define run_check
-	( trap 'chown $${SUDO_UID:-0}:$${SUDO_GID:-0} \
-		$(addprefix lib/, $(LIB_ROOT_OWNED))' EXIT ; \
-	  chown root:root $(addprefix lib/, $(LIB_ROOT_OWNED)) && \
-	  VERBOSE=$(VERBOSE) ./lib/runner \
+	VERBOSE=$(VERBOSE) ./lib/runner \
 		--testdir . --outdir $(LVM_TEST_RESULTS) \
-		--flavours $(1) --only $(or $(2),$(T)) --skip $(S) )
+		--flavours $(1) --only $(or $(2),$(T)) --skip $(S)
 endef
 
 check: .tests-stamp
@@ -289,7 +288,6 @@ LIB_CONF := $(LIB_LVMLOCKD_CONF) $(LIB_MKE2FS_CONF)
 LIB_DATA := $(LIB_FLAVOURS) dm-version-expected version-expected
 LIB_EXEC := $(LIB_NOT) dmsecuretest dlclose_test gen_data_blocks
 LVM_SCRIPTS := fsadm lvresize_fs_helper lvm_import_vdo
-LIB_ROOT_OWNED := $(LIB_WRAPPERS) $(LVM_SCRIPTS)
 
 install: .tests-stamp lib/paths-installed
 	$(SHOW) "    [INSTALL] tests"

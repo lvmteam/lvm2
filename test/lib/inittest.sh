@@ -149,8 +149,37 @@ if [[ "$SKIP_ROOT_DM_CHECK" -eq 0 ]]; then
 	esac
 fi
 
+# The scripts under test only execute root-owned binaries from a
+# root-owned path, so keep the test directory below trusted parents.
+safe_root_dir() {
+	local dir
+	local info owner mode
+
+	dir=$(readlink -f "$1" 2>/dev/null) || return 1
+	while :; do
+		info=$(stat -c '%u %a' "$dir" 2>/dev/null) || return 1
+		owner=${info%% *}
+		mode=${info##* }
+		[[ "$owner" = "0" ]] || return 1
+		if (( 0$mode & 022 )) && ! (( 0$mode & 01000 )); then
+			return 1
+		fi
+		[[ "$dir" = "/" ]] && break
+		dir=${dir%/*}
+		[[ -n "$dir" ]] || dir=/
+	done
+	return 0
+}
+
 [[ -n "$LVM_TEST_DIR" ]] || LVM_TEST_DIR=${TMPDIR:-/tmp}
 [[ "$LVM_TEST_DIR" = "/dev" ]] && die "Setting LVM_TEST_DIR=/dev is not supported!"
+
+if [[ "$(id -u)" -eq 0 ]] && ! safe_root_dir "$LVM_TEST_DIR"; then
+	echo "WARNING: LVM_TEST_DIR=\"$LVM_TEST_DIR\" is not a safe root-owned directory, using /tmp." >&2
+	LVM_TEST_DIR=/tmp
+	safe_root_dir "$LVM_TEST_DIR" ||
+		die "LVM_TEST_DIR must point into a root-owned directory."
+fi
 
 TESTDIR=$(mkdtemp "$LVM_TEST_DIR" "$PREFIX.XXXXXXXXXX") || \
 	die "failed to create temporary directory in \"$LVM_TEST_DIR\""
@@ -180,6 +209,35 @@ mkdir lib tmp
     -exec ln -s -t lib "{}" +
 find "$TESTOLDPWD/lib" ! \( -name '*.sh' -o -name '*.[cdo]' \
     -o -name '*~' \)  -exec ln -s -t lib "{}" +
+
+# The scripts under test refuse to execute binaries that are not
+# root-owned, while the build tree belongs to the developer.  Stage
+# root-owned copies of the test wrappers and helper scripts for this
+# test and point PATH and the binary overrides at them.
+if [[ "$(id -u)" -eq 0 && -n "${abs_top_builddir-}" ]]; then
+	LVM_TEST_BINDIR="$TESTDIR/bin"
+	mkdir "$LVM_TEST_BINDIR"
+	for f in "$TESTOLDPWD"/lib/lvm-wrapper "$TESTOLDPWD"/lib/dm-wrapper \
+		 "$TESTOLDPWD"/lib/lvm_vdo_wrapper "$TESTOLDPWD"/lib/fsadm \
+		 "$TESTOLDPWD"/lib/lvresize_fs_helper "$TESTOLDPWD"/lib/lvm_import_vdo; do
+		[[ -f "$f" ]] || continue
+		install -m 0755 -o root -g root "$f" "$LVM_TEST_BINDIR/${f##*/}"
+	done
+	# Recreate the command names (lvs, vgs, ...) leading to the copies
+	for f in "$TESTOLDPWD"/lib/*; do
+		[[ -L "$f" ]] || continue
+		link=$(readlink "$f") || continue
+		case "$link" in
+		  lvm-wrapper|dm-wrapper|lvm_vdo_wrapper)
+			ln -s "$link" "$LVM_TEST_BINDIR/${f##*/}" ;;
+		esac
+	done
+	PATH="$LVM_TEST_BINDIR:$PATH"
+	LVM_BINARY="$LVM_TEST_BINDIR/lvm"
+	DMSETUP_BINARY="$LVM_TEST_BINDIR/dmsetup"
+	export LVM_TEST_BINDIR PATH LVM_BINARY DMSETUP_BINARY
+fi
+
 LD_LIBRARY_PATH="$TESTDIR/lib:$LD_LIBRARY_PATH"
 
 DM_DEFAULT_NAME_MANGLING_MODE=none
