@@ -179,6 +179,27 @@ is_top_level_device() {
 	test ${#files[@]} -eq 0
 }
 
+# lsblk and findmnt raw output (\xHH encoded blanks, backslashes and
+# non-printable characters) must be decoded before the path is used.
+unhex_escape() {
+	local str=$1 out= hex
+
+	while [[ "$str" == *'\x'* ]]; do
+		out+=${str%%\\x*}
+		str=${str#*\\x}
+		hex=${str:0:2}
+		if [[ "$hex" == [0-9a-fA-F][0-9a-fA-F] ]]; then
+			printf -v hex "\\x$hex"
+			out+=$hex
+			str=${str:2}
+		else
+			out+='\x'
+		fi
+	done
+
+	printf '%s' "$out$str"
+}
+
 device_umount_one() {
 	test -z "$mnt" && return 0
 
@@ -203,6 +224,8 @@ device_umount() {
 	test "$devtype" != "lvm" && test "${kname:0:3}" != "dm-" &&
 		test "${kname:0:2}" != "md" && return 0
 
+	mnt=$(unhex_escape "$mnt")
+
 	# FINDMNT is defined only if umount --all-targets is not available.
 	# In that case, read the list of multiple mount points of one device
 	# using FINDMNT and unmount it one by one manually.
@@ -210,6 +233,7 @@ device_umount() {
 		device_umount_one
 	else
 		while read -r mnt; do
+			mnt=$(unhex_escape "$mnt")
 			device_umount_one || failures=1
 		done <<< "$("${FINDMNT[@]}" "$DEV_DIR/$kname")"
 		return "$failures"
