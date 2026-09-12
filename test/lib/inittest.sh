@@ -149,6 +149,9 @@ if [[ "$SKIP_ROOT_DM_CHECK" -eq 0 ]]; then
 	esac
 fi
 
+# TRUSTED_PATH (see scripts/fsadm.sh): same invariants as validate_path()
+# there -- root-owned path components, no group/world writability unless
+# the directory is sticky. This helper returns boolean; fsadm calls die.
 # The scripts under test only execute root-owned binaries from a
 # root-owned path, so keep the test directory below trusted parents.
 safe_root_dir() {
@@ -223,13 +226,16 @@ if [[ "$(id -u)" -eq 0 && -n "${abs_top_builddir-}" ]]; then
 		[[ -f "$f" ]] || continue
 		install -m 0755 -o root -g root "$f" "$LVM_TEST_BINDIR/${f##*/}"
 	done
-	# Recreate the command names (lvs, vgs, ...) leading to the copies
+	# Recreate every command name (lvs, vgs, dmsetup, ...) as a copy of
+	# its wrapper.  Copies keep the command name when a script resolves
+	# the override path with readlink -f, while a symlink would hand the
+	# wrapper its own name instead of the command name.
 	for f in "$TESTOLDPWD"/lib/*; do
 		[[ -L "$f" ]] || continue
-		link=$(readlink "$f") || continue
-		case "$link" in
+		link=$(readlink -f "$f") || continue
+		case "${link##*/}" in
 		  lvm-wrapper|dm-wrapper|lvm_vdo_wrapper)
-			ln -s "$link" "$LVM_TEST_BINDIR/${f##*/}" ;;
+			install -m 0755 -o root -g root "$link" "$LVM_TEST_BINDIR/${f##*/}" ;;
 		esac
 	done
 	PATH="$LVM_TEST_BINDIR:$PATH"
