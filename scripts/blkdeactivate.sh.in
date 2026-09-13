@@ -95,6 +95,8 @@ MPATHD_DO_DISABLEQUEUEING=0
 #
 declare -A SKIP_DEVICE_LIST=()
 declare -A SKIP_VG_LIST=()
+declare -A MOUNTED_DEVICE_LIST=()
+declare -A MOUNTED_VG_LIST=()
 
 #
 # List of specified device arguments already successfully deactivated.
@@ -173,8 +175,16 @@ add_device_to_skip_list() {
 	SKIP_DEVICE_LIST+=(["$kname"]=1)
 }
 
+add_device_to_mounted_list() {
+	MOUNTED_DEVICE_LIST+=(["$kname"]=1)
+}
+
 add_vg_to_skip_list() {
 	SKIP_VG_LIST+=(["$DM_VG_NAME"]=1)
+}
+
+add_vg_to_mounted_list() {
+	MOUNTED_VG_LIST+=(["$DM_VG_NAME"]=1)
 }
 
 is_top_level_device() {
@@ -206,6 +216,8 @@ unhex_escape() {
 }
 
 device_umount_one() {
+	local split_out
+
 	test -z "$mnt" && return 0
 
 	if test -z "${SKIP_UMOUNT_LIST["$mnt"]}" && test "$DO_UMOUNT" -eq 1; then
@@ -223,7 +235,12 @@ device_umount_one() {
 		# Skip by user policy or because -u was not requested: this
 		# is not a failure of this script.
 		echo "  [SKIP]: unmount of $name ($kname) mounted on $mnt"
-		add_device_to_skip_list
+		add_device_to_mounted_list
+		if test "$devtype" = "lvm" && test "$LVM_DO_WHOLE_VG" -eq 1 &&
+		   split_out=$("$DMSETUP" splitname --nameprefixes --noheadings --rows "$name" LVM 2>&8); then
+			eval "$split_out"
+			add_vg_to_mounted_list
+		fi
 	fi
 }
 
@@ -249,7 +266,7 @@ device_umount() {
 }
 
 deactivate_holders() {
-	local devtype kname name mnt skip=1
+	local devtype kname name mnt skip=1 rc
 
 	# Get holders for the device - either a mount or another device.
 	# The first line on the lsblk output is the device itself, which is
@@ -260,16 +277,31 @@ deactivate_holders() {
 		test -e "$SYS_BLK_DIR/$kname" || continue
 		# check if the device not on the skip list already
 		test -z "${SKIP_DEVICE_LIST["$kname"]}" || return 1
+		test -z "${MOUNTED_DEVICE_LIST["$kname"]}" || return 2
 
 		# try to deactivate the holder
-		deactivate || return 1
+		deactivate
+		rc=$?
+		test "$rc" -eq 0 || return 1
+		test -z "${MOUNTED_DEVICE_LIST["$kname"]}" || return 2
 	done <<< "$("${LSBLK[@]}" "$1")"
+}
+
+deactivate_holders_or_skip() {
+	local rc
+
+	deactivate_holders "$1"
+	rc=$?
+	test "$rc" -eq 2 || return "$rc"
+	add_device_to_mounted_list
+	return 0
 }
 
 deactivate_dm() {
 	local xname=$name
 	test -b "$DEV_DIR/mapper/$xname" || return 0
 	test -z "${SKIP_DEVICE_LIST["$kname"]}" || return 1
+	test -z "${MOUNTED_DEVICE_LIST["$kname"]}" || return 0
 
 	# Skip DM device deactivation if DM tools missing.
 	test "$DMSETUP_AVAILABLE" -eq 0 && {
@@ -277,7 +309,8 @@ deactivate_dm() {
 		return 1
 	}
 
-	deactivate_holders "$DEV_DIR/mapper/$xname" || return 1
+	deactivate_holders_or_skip "$DEV_DIR/mapper/$xname" || return 1
+	test -z "${MOUNTED_DEVICE_LIST["$kname"]}" || return 0
 
 	echo -n "  [DM]: deactivating $devtype device $xname ($kname)... "
 	if "$DMSETUP" "${DMSETUP_OPTS[@]}" remove "$xname" >&9 2>&8; then
@@ -291,6 +324,7 @@ deactivate_dm() {
 
 deactivate_lvm() {
 	local DM_VG_NAME DM_LV_NAME lv_list lv split_out
+	local devices holder_rc lv_kname lv_mnt
 
 	# Skip LVM device deactivation if DM tools missing.
 	test "$DMSETUP_AVAILABLE" -eq 0 && {
@@ -304,7 +338,10 @@ deactivate_lvm() {
 	fi
 	eval "$split_out"
 	test -b "$DEV_DIR/$DM_VG_NAME/$DM_LV_NAME" || return 0
+	test -z "${SKIP_DEVICE_LIST["$kname"]}" || return 1
+	test -z "${MOUNTED_DEVICE_LIST["$kname"]}" || return 0
 	test -z "${SKIP_VG_LIST["$DM_VG_NAME"]}" || return 1
+	test -z "${MOUNTED_VG_LIST["$DM_VG_NAME"]}" || return 0
 
 	if test "$LVM_DO_WHOLE_VG" -eq 0; then
 		# Skip LVM device deactivation if LVM tools missing.
@@ -313,10 +350,11 @@ deactivate_lvm() {
 			return 1
 		}
 		# Deactivating only the LV specified
-		deactivate_holders "$DEV_DIR/$DM_VG_NAME/$DM_LV_NAME" || {
+		deactivate_holders_or_skip "$DEV_DIR/$DM_VG_NAME/$DM_LV_NAME" || {
 			add_device_to_skip_list
 			return 1
 		}
+		test -z "${MOUNTED_DEVICE_LIST["$kname"]}" || return 0
 
 		echo -n "  [LVM]: deactivating Logical Volume $DM_VG_NAME/$DM_LV_NAME... "
 		if "$LVM" lvchange "${LVM_OPTS[@]}" --config "log{prefix=\"\"} $LVM_CONFIG" -aln "$DM_VG_NAME/$DM_LV_NAME" >&9 2>&8; then
@@ -340,9 +378,25 @@ deactivate_lvm() {
 		}
 		for lv in $lv_list; do
 			test -b "$DEV_DIR/$DM_VG_NAME/$lv" || continue
+			if devices=$("${LSBLK[@]}" --nodeps "$DEV_DIR/$DM_VG_NAME/$lv"); then
+				read -r _ lv_kname _ lv_mnt <<< "$devices"
+				lv_mnt=$(unhex_escape "$lv_mnt")
+				# A mounted LV in this VG may not be in MOUNTED_DEVICE_LIST
+				# when only another LV in the VG was given on the command line.
+				if test -n "$lv_mnt" ||
+				   test -n "${MOUNTED_DEVICE_LIST["$lv_kname"]}"; then
+					add_vg_to_mounted_list
+					return 0
+				fi
+			fi
 			deactivate_holders "$DEV_DIR/$DM_VG_NAME/$lv" || {
-				add_vg_to_skip_list
-				return 1
+				holder_rc=$?
+				test "$holder_rc" -eq 2 || {
+					add_vg_to_skip_list
+					return 1
+				}
+				add_vg_to_mounted_list
+				return 0
 			}
 		done
 
@@ -362,6 +416,7 @@ deactivate_md() {
 	test -b "$DEV_DIR/$xname" || return 0
 	test -d "$SYS_BLK_DIR/$kname/md" || return 0
 	test -z "${SKIP_DEVICE_LIST["$kname"]}" || return 1
+	test -z "${MOUNTED_DEVICE_LIST["$kname"]}" || return 0
 
 	# Skip MD device deactivation if MD tools missing.
 	test "$MDADM_AVAILABLE" -eq 0 && {
@@ -369,7 +424,8 @@ deactivate_md() {
 		return 1
 	}
 
-	deactivate_holders "$DEV_DIR/$xname" || return 1
+	deactivate_holders_or_skip "$DEV_DIR/$xname" || return 1
+	test -z "${MOUNTED_DEVICE_LIST["$kname"]}" || return 0
 
 	echo -n "  [MD]: deactivating $devtype device $kname... "
 
@@ -398,6 +454,7 @@ deactivate_vdo() {
 	local xname=$name
 	test -b "$DEV_DIR/mapper/$xname" || return 0
 	test -z "${SKIP_DEVICE_LIST["$kname"]}" || return 1
+	test -z "${MOUNTED_DEVICE_LIST["$kname"]}" || return 0
 
 	# Skip VDO device deactivation if VDO tools missing.
 	test "$VDO_AVAILABLE" -eq 0 && {
@@ -405,7 +462,8 @@ deactivate_vdo() {
 		return 1
 	}
 
-	deactivate_holders "$DEV_DIR/mapper/$xname" || return 1
+	deactivate_holders_or_skip "$DEV_DIR/mapper/$xname" || return 1
+	test -z "${MOUNTED_DEVICE_LIST["$kname"]}" || return 0
 
 	echo -n "  [VDO]: deactivating VDO volume $xname... "
 	if "$VDO" stop "${VDO_OPTS[@]}" --name="$xname" >&9 2>&8; then
@@ -444,7 +502,7 @@ deactivate() {
 }
 
 deactivate_all() {
-	local devtype kname name mnt devices skip=0 failures=0
+	local devtype kname name mnt devices arg skip=0 failures=0
 
 	echo "Deactivating block devices:"
 
@@ -484,25 +542,20 @@ deactivate_all() {
 			# 'disk' is at the bottom already and it's a real device
 			test "$devtype" = "disk" && continue
 
-			# if deactivation of any device fails, skip processing
-			# any subsequent devices within its subtree as the
-			# top-level device could not be deactivated anyway
+			# After deactivate() fails, skip=1: lsblk -s lists holders
+			# under the failed node before the next unrelated stack.
+			# is_top_level_device() is true when holders/ is empty, i.e.
+			# this line is a new stack root -- stop skipping there.
 			test "$skip" -eq 1 && {
-				# reset 'skip' on top level device
-				if is_top_level_device; then
-					skip=0
-				else
-					continue
-				fi
+				is_top_level_device || continue
+				skip=0
 			}
 
 			# check if the device is not on the skip list already
-			test -z "${SKIP_DEVICE_LIST["$kname"]}" || continue
+			test -z "${SKIP_DEVICE_LIST["$kname"]}" &&
+				test -z "${MOUNTED_DEVICE_LIST["$kname"]}" || continue
 
-			# try to deactivate top-level device, set 'skip=1'
-			# if it fails to do so - this will cause all the
-			# device's subtree to be skipped when processing
-			# devices further in this loop
+			# try to deactivate; on failure skip its subtree below
 			deactivate || { skip=1; failures=1; }
 		done <<< "$devices"
 	else
@@ -511,15 +564,18 @@ deactivate_all() {
 		##################################
 
 		while test $# -ne 0; do
-			# Skip empty arguments; DEACTIVATED_ARGS["$1"] with an empty
+			arg=$1
+			shift
+
+			# Skip empty arguments; DEACTIVATED_ARGS["$arg"] with an empty
 			# subscript makes bash report "bad array subscript".  The option
 			# parser already ignores "" the same way.
-			test -n "$1" || { shift; continue; }
+			test -n "$arg" || continue
 
 			# Unmount all relevant mountpoints first.
 			# A missing device is reported below, so an lsblk
 			# failure here is not fatal by itself.
-			if devices=$("${LSBLK[@]}" "$1"); then
+			if devices=$("${LSBLK[@]}" "$arg"); then
 				while read -r devtype kname name mnt; do
 					device_umount || failures=1
 				done <<< "$(printf '%s\n' "$devices" | "${SORT_MNT[@]}")"
@@ -527,33 +583,29 @@ deactivate_all() {
 
 			# Do deactivate
 			# Single dm device tree deactivation.
-			if test -b "$1"; then
-				devices=$("${LSBLK[@]}" --nodeps "$1") || {
-					echo "$TOOL: unable to list device \"$1\"." >&2
+			if test -b "$arg"; then
+				devices=$("${LSBLK[@]}" --nodeps "$arg") || {
+					echo "$TOOL: unable to list device \"$arg\"." >&2
 					failures=1
-					shift
 					continue
 				}
 				read -r devtype kname name mnt <<< "$devices"
 
 				# check if the device is not on the skip list already
-				test -z "${SKIP_DEVICE_LIST["$kname"]}" || {
-					shift
-					continue
-				}
+				test -z "${SKIP_DEVICE_LIST["$kname"]}" &&
+					test -z "${MOUNTED_DEVICE_LIST["$kname"]}" || continue
 
 				if deactivate; then
-					DEACTIVATED_ARGS+=(["$1"]=1)
+					DEACTIVATED_ARGS+=(["$arg"]=1)
 				else
 					failures=1
 				fi
-			elif test -n "${DEACTIVATED_ARGS["$1"]}" ; then
-				echo "$1: already deactivated"
+			elif test -n "${DEACTIVATED_ARGS["$arg"]}"; then
+				echo "$arg: already deactivated"
 			else
-				echo "$1: device not found"
+				echo "$arg: device not found"
 				failures=1
 			fi
-			shift
 		done
 	fi
 
