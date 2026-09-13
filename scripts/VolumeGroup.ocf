@@ -106,7 +106,7 @@ EOF
 VolumeGroup_status() {
 
     VGOUT=`vgdisplay -v $OCF_RESKEY_volgrpname 2>&1` || exit $OCF_ERR_GENERIC
-    echo "$VGOUT" | grep -i 'Status[ \t]*available' >/dev/null
+    printf '%s\n' "$VGOUT" | grep -i 'Status[ \t]*available' >/dev/null
     rc=$?
 
     if [ $rc -eq 0 ]; then
@@ -116,7 +116,7 @@ VolumeGroup_status() {
 	return $OCF_NOT_RUNNING
     fi
 
-    if echo "$VGOUT" | grep -i 'Access.*read/write' >/dev/null; then
+    if printf '%s\n' "$VGOUT" | grep -i 'Access.*read/write' >/dev/null; then
 	ocf_log debug "Volume $OCF_RESKEY_volgrpname is available read/write (running)"
     else
 	ocf_log debug "Volume $OCF_RESKEY_volgrpname is available read-only (running)"
