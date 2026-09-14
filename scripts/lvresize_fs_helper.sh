@@ -130,11 +130,12 @@ validate_newsizebytes() {
 	fi
 }
 
-# Reject a path a non-root user could modify or replace between this
-# check and its use: every component of the canonical path must be
-# root-owned and must not be group or world writable.  The sticky bit
-# is accepted for directories (e.g. /tmp), where other users cannot
-# remove entries owned by root.
+# TRUSTED_PATH: keep validate_path() in sync with scripts/fsadm.sh.
+# Reject a directory path a non-root user could tamper with (used for
+# TMPDIR when --mount is set; not applied to the block device path).
+# Every component of the canonical path must be root-owned and must not
+# be group or world writable.  The sticky bit is accepted for directories
+# (e.g. /tmp), where other users cannot remove entries owned by root.
 validate_path() {
 	local NAME=$1
 	local NODE=$2
@@ -191,7 +192,7 @@ cleanup() {
 #   16 = usage/syntax error, 32 = canceled by user
 #   128 = shared library error
 # Codes are OR'd together, so ret=3 means corrected + reboot.
-# Bits 0-1 (ret 1,2) are non-fatal; bits 2-7 (ret >= 4) are fatal.
+# Return codes 1 and 2 are non-fatal; codes >= 4 are fatal (die).
 accept_e2fsck() {
 	local ret=0
 	"$@" || ret=$?
@@ -265,7 +266,7 @@ TMP_MOUNT_DONE=0
 # Set to 1 if the fs resize command fails
 RESIZEFS_FAILED=0
 
-# Function to detect XFS mount options
+# Detect XFS quota mount options from the superblock (optional for mount).
 detect_xfs_mount_options() {
 	local device=$1
 	local qflags_output qflags_hex
@@ -507,9 +508,7 @@ cryptresize() {
 # BEGIN SCRIPT
 #
 
-# These are the only commands that this script will run.
-# Each is enabled (1) by the corresponding command options:
-# --fsextend, --fsreduce, --cryptresize, --mount, --unmount, --fsck
+# Operation flags set from command-line options below.
 DO_FSEXTEND=0
 DO_FSREDUCE=0
 DO_CRYPTRESIZE=0
@@ -651,10 +650,7 @@ if [ "$DO_MOUNT" -eq 1 ]; then
 	mkdir -m 0000 "$TEMPDIR" || errorexit "Failed to create temp mount point \"$TEMPDIR\"."
 fi
 
-#
-# Main program function:
-# - the two main functions are fsextend and fsreduce.
-# - one special case function is cryptresize.
+# Dispatch exactly one top-level operation (see input checks above).
 #
 
 if [ "$DO_FSEXTEND" -eq 1 ]; then
