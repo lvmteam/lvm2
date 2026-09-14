@@ -100,6 +100,32 @@ logerror() {
 	logmsg "$1" >&2
 }
 
+# Validate --newsizebytes.  $1 is 1 when the value is required (reduce and
+# cryptresize) and 0 when it is optional (extend, where btrfs falls back to
+# "max").  An optional value that is absent is fine; one that is present must
+# be a positive number.
+validate_newsizebytes() {
+	local required=$1
+
+	if [ -z "${NEWSIZEBYTES-}" ]; then
+		[ "$required" -eq 1 ] || return 0
+		errorexit "Missing required --newsizebytes."
+	fi
+
+	case "$NEWSIZEBYTES" in
+	*[!0-9]*) errorexit "--newsizebytes must be a number." ;;
+	esac
+
+	# Drop leading zeros so the value is never parsed as octal downstream,
+	# matching fsadm's parse_number().
+	NEWSIZEBYTES=${NEWSIZEBYTES#"${NEWSIZEBYTES%%[!0]*}"}
+	NEWSIZEBYTES=${NEWSIZEBYTES:-0}
+
+	if [ "$NEWSIZEBYTES" -eq 0 ]; then
+		errorexit "--newsizebytes must be greater than zero."
+	fi
+}
+
 # Reject a path a non-root user could modify or replace between this
 # check and its use: every component of the canonical path must be
 # root-owned and must not be group or world writable.  The sticky bit
@@ -281,7 +307,10 @@ detect_xfs_mount_options() {
 	# Join array elements with commas
 	MOUNT_OPTIONS=$(IFS=,; echo "${opts[*]}")
 
-	[[ -n "$MOUNT_OPTIONS" ]] && logmsg "mount options for xfs: ${MOUNT_OPTIONS}"
+	# An empty option list (no quota accounting) is a valid result: the "||"
+	# short-circuit also makes the function return success, so the caller
+	# does not report a bogus "not using XFS mount options".
+	[[ -z "$MOUNT_OPTIONS" ]] || logmsg "mount options for xfs: ${MOUNT_OPTIONS}"
 }
 
 fsextend() {
@@ -510,7 +539,13 @@ DO_FSCK=0
 # mounted and the script unmounted it.
 REMOUNT=0
 
-# Initialize MOUNT_OPTIONS to ensure clean state
+# Initialize to ensure clean state with set -u.  NEWSIZEBYTES stays empty
+# when --newsizebytes is not given, so the btrfs extend path below can fall
+# back to "max"; a literal 0 would defeat ${NEWSIZEBYTES:-max}.
+FSTYPE=""
+LVPATH=""
+CRYPTPATH=""
+NEWSIZEBYTES=""
 MOUNT_OPTIONS=""
 MOUNTDIR=""
 TEMPDIR=""
@@ -583,12 +618,18 @@ if [ -z "$DEVPATH" ]; then
 	errorexit "Missing path to device."
 fi
 
-if [ ! -e "$DEVPATH" ]; then
-	errorexit "Device does not exist \"$DEVPATH\"."
+DEVPATH=$(readlink -f "$DEVPATH") ||
+	errorexit "Cannot resolve device path."
+if [ ! -b "$DEVPATH" ]; then
+	errorexit "Device is not a block device \"$DEVPATH\"."
 fi
 
 if [[ "$DO_UNMOUNT" -eq 1 && -z "$MOUNTDIR" ]]; then
 	errorexit "Missing required --mountdir for --unmount."
+fi
+
+if [[ "$REMOUNT" -eq 1 && "$DO_UNMOUNT" -eq 0 ]]; then
+	errorexit "--remount requires --unmount."
 fi
 
 if [[ "$DO_FSREDUCE" -eq 1 && "$FSTYPE" == "xfs" ]]; then
@@ -597,6 +638,15 @@ fi
 
 if [[ "$DO_FSCK" -eq 1 && "$FSTYPE" == "xfs" ]]; then
 	errorexit "Cannot use --fsck with xfs."
+fi
+
+# --cryptresize always needs a size, and --fsreduce needs one for every fs
+# that can be reduced (xfs reduce is refused above).  --fsextend takes an
+# optional size; when given it must still be a valid positive number.
+if [[ "$DO_CRYPTRESIZE" -eq 1 ]] || [[ "$DO_FSREDUCE" -eq 1 && "$FSTYPE" != "xfs" ]]; then
+	validate_newsizebytes 1
+elif [[ "$DO_FSEXTEND" -eq 1 ]]; then
+	validate_newsizebytes 0
 fi
 
 if [ "$DO_MOUNT" -eq 1 ]; then
