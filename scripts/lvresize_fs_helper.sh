@@ -317,44 +317,125 @@ detect_xfs_mount_options() {
 	[[ -z "$MOUNT_OPTIONS" ]] || logmsg "mount options for xfs: ${MOUNT_OPTIONS}"
 }
 
-fsextend() {
-	if [ "$DO_UNMOUNT" -eq 1 ]; then
-		logmsg "unmount ${MOUNTDIR}"
-		umount "$MOUNTDIR" ||
-			errorexit "unmount failed for \"$MOUNTDIR\""
-		logmsg "unmount done"
+# Run fsck when --fsck was requested (ext* via e2fsck, btrfs via btrfs check).
+run_fsck_if_needed() {
+	[ "$DO_FSCK" -eq 1 ] || return 0
+	if [[ "$FSTYPE" == "ext"* ]]; then
+		logmsg "e2fsck ${DEVPATH}"
+		accept_e2fsck e2fsck -f -p "$DEVPATH"
+	elif [[ "$FSTYPE" == "btrfs" ]]; then
+		logmsg "btrfs check ${DEVPATH}"
+		btrfs check "$DEVPATH" ||
+			die "btrfs check failed on \"$DEVPATH\""
+		logmsg "btrfs check done"
 	fi
+}
 
-	if [ "$DO_FSCK" -eq 1 ]; then
-		if [[ "$FSTYPE" == "ext"* ]]; then
-			logmsg "e2fsck ${DEVPATH}"
-			accept_e2fsck e2fsck -f -p "$DEVPATH"
-		elif [[ "$FSTYPE" == "btrfs" ]]; then
-			logmsg "btrfs check ${DEVPATH}"
-			btrfs check "$DEVPATH" ||
-				errorexit "btrfs check failed on \"$DEVPATH\""
-			logmsg "btrfs check done"
-		fi
-	fi
-
-	if [ "$DO_CRYPTRESIZE" -eq 1 ]; then
+# Resize crypt device $DEVPATH; optional sector count (grow to device when omitted).
+run_cryptsetup_resize() {
+	if [ -z "${1:-}" ]; then
 		logmsg "cryptsetup resize ${DEVPATH}"
 		cryptsetup resize "$DEVPATH" ||
-			errorexit "cryptsetup resize failed on \"$DEVPATH\""
-		logmsg "cryptsetup done"
+			die "cryptsetup resize failed on \"$DEVPATH\""
+	else
+		logmsg "cryptsetup resize $1 sectors ${DEVPATH}"
+		cryptsetup resize --size "$1" "$DEVPATH" ||
+			die "cryptsetup resize failed on \"$DEVPATH\" to $1 sectors"
+	fi
+	logmsg "cryptsetup done"
+}
+
+# btrfs resize target: original mount dir, or $TEMPDIR after a temp mount.
+btrfs_real_mountpoint() {
+	if [ "$TMP_MOUNT_DONE" -eq 1 ]; then
+		printf '%s\n' "$TEMPDIR"
+	else
+		printf '%s\n' "$MOUNTDIR"
+	fi
+}
+
+# Resize btrfs at $1 (e.g. max or a byte count); sets RESIZEFS_FAILED on error.
+btrfs_filesystem_resize() {
+	local resize_target="$1"
+	local devid mountpoint
+
+	devid="$(btrfs_devid "$DEVPATH")"
+	mountpoint="$(btrfs_real_mountpoint)"
+
+	logmsg "btrfs filesystem resize ${devid}:${resize_target} ${mountpoint}"
+	if btrfs filesystem resize "$devid":"$resize_target" "$mountpoint"; then
+		logmsg "btrfs filesystem resize done"
+	else
+		logerror "btrfs filesystem resize failed: devid $devid to $resize_target on \"$mountpoint\""
+		RESIZEFS_FAILED=1
+	fi
+}
+
+# Unmount the filesystem at $MOUNTDIR when --unmount was requested.
+unmount_mountdir_if_needed() {
+	[ "$DO_UNMOUNT" -eq 1 ] || return 0
+	logmsg "unmount ${MOUNTDIR}"
+	umount "$MOUNTDIR" ||
+		die "unmount failed for \"$MOUNTDIR\""
+	logmsg "unmount done"
+}
+
+# Mount $DEVPATH on $TEMPDIR when --mount was requested.
+mount_tempdir_if_needed() {
+	[ "$DO_MOUNT" -eq 1 ] || return 0
+	if [[ "$FSTYPE" == "xfs" ]]; then
+		detect_xfs_mount_options "$DEVPATH" || logmsg "not using XFS mount options"
 	fi
 
-	if [ "$DO_MOUNT" -eq 1 ]; then
-		if [[ "$FSTYPE" == "xfs" ]]; then
-			detect_xfs_mount_options "$DEVPATH" || logmsg "not using XFS mount options"
-		fi
+	logmsg "mount ${DEVPATH} ${TEMPDIR}"
+	mount -t "$FSTYPE" ${MOUNT_OPTIONS:+-o "$MOUNT_OPTIONS"} "$DEVPATH" "$TEMPDIR" ||
+		die "mount failed for \"$DEVPATH\" on \"$TEMPDIR\""
+	logmsg "mount done"
+	TMP_MOUNT_DONE=1
+}
 
-		logmsg "mount ${DEVPATH} ${TEMPDIR}"
-		mount -t "$FSTYPE" ${MOUNT_OPTIONS:+-o "$MOUNT_OPTIONS"} "$DEVPATH" "$TEMPDIR" ||
-			errorexit "mount failed for \"$DEVPATH\" on \"$TEMPDIR\""
-		logmsg "mount done"
-		TMP_MOUNT_DONE=1
+# Remount at $MOUNTDIR after resize when --unmount and --remount were requested.
+# A remount failure is reported via logerror but does not change exit status.
+remount_mountdir_if_needed() {
+	[[ $DO_UNMOUNT -eq 1 && $REMOUNT -eq 1 ]] || return 0
+	if [[ "$FSTYPE" == "xfs" ]]; then
+		detect_xfs_mount_options "$DEVPATH" || logmsg "not using XFS mount options"
 	fi
+
+	logmsg "remount ${DEVPATH} ${MOUNTDIR}"
+	if mount -t "$FSTYPE" ${MOUNT_OPTIONS:+-o "$MOUNT_OPTIONS"} "$DEVPATH" "$MOUNTDIR"; then
+		logmsg "remount done"
+	else
+		logerror "remount failed for \"$DEVPATH\" on \"$MOUNTDIR\""
+	fi
+}
+
+# Unmount $TEMPDIR when a temp mount was done for this resize.
+cleanup_temp_mount_if_needed() {
+	[ "$TMP_MOUNT_DONE" -eq 1 ] || return 0
+	cleanup_temp_mount
+}
+
+# Unmount $TEMPDIR and remove the temp mount directories when done resizing.
+cleanup_temp_mount() {
+	logmsg "cleanup unmount ${TEMPDIR}"
+	umount "$TEMPDIR" ||
+		die "cleanup unmount failed for \"$TEMPDIR\""
+	logmsg "cleanup unmount done"
+	TMP_MOUNT_DONE=0
+	rmdir "$TEMPDIR" 2>/dev/null || true
+	rmdir "${TEMPDIR%/*}" 2>/dev/null || true
+}
+
+fsextend() {
+	unmount_mountdir_if_needed
+	run_fsck_if_needed
+
+	if [ "$DO_CRYPTRESIZE" -eq 1 ]; then
+		run_cryptsetup_resize
+	fi
+
+	mount_tempdir_if_needed
 
 	if [[ "$FSTYPE" == "ext"* ]]; then
 		logmsg "resize2fs ${DEVPATH}"
@@ -373,48 +454,11 @@ fsextend() {
 			RESIZEFS_FAILED=1
 		fi
 	elif [[ "$FSTYPE" == "btrfs" ]]; then
-		NEWSIZEBYTES=${NEWSIZEBYTES:-max}
-		BTRFS_DEVID="$(btrfs_devid "$DEVPATH")"
-		REAL_MOUNTPOINT="$MOUNTDIR"
-
-		if [ $TMP_MOUNT_DONE -eq 1 ]; then
-			REAL_MOUNTPOINT="$TEMPDIR"
-		fi
-
-		logmsg "btrfs filesystem resize ${BTRFS_DEVID}:${NEWSIZEBYTES} ${REAL_MOUNTPOINT}"
-		if btrfs filesystem resize "$BTRFS_DEVID":"$NEWSIZEBYTES" "$REAL_MOUNTPOINT"; then
-			logmsg "btrfs filesystem resize done"
-		else
-			logerror "btrfs filesystem resize failed: devid $BTRFS_DEVID to $NEWSIZEBYTES on \"$REAL_MOUNTPOINT\""
-			RESIZEFS_FAILED=1
-		fi
+		btrfs_filesystem_resize "${NEWSIZEBYTES:-max}"
 	fi
 
-	# If the fs was temporarily mounted, now unmount it.
-	if [ $TMP_MOUNT_DONE -eq 1 ]; then
-		logmsg "cleanup unmount ${TEMPDIR}"
-		umount "$TEMPDIR" ||
-			errorexit "cleanup unmount failed for \"$TEMPDIR\""
-		logmsg "cleanup unmount done"
-		TMP_MOUNT_DONE=0
-		rmdir "$TEMPDIR" 2>/dev/null || true
-		rmdir "${TEMPDIR%/*}" 2>/dev/null || true
-	fi
-
-	# If the fs was temporarily unmounted, now remount it.
-	# Not considered a command failure if this fails.
-	if [[ $DO_UNMOUNT -eq 1 && $REMOUNT -eq 1 ]]; then
-		if [[ "$FSTYPE" == "xfs" ]]; then
-			detect_xfs_mount_options "$DEVPATH" || logmsg "not using XFS mount options"
-		fi
-
-		logmsg "remount ${DEVPATH} ${MOUNTDIR}"
-		if mount -t "$FSTYPE" ${MOUNT_OPTIONS:+-o "$MOUNT_OPTIONS"} "$DEVPATH" "$MOUNTDIR"; then
-			logmsg "remount done"
-		else
-			logmsg "remount failed"
-		fi
-	fi
+	cleanup_temp_mount_if_needed
+	remount_mountdir_if_needed
 
 	if [ $RESIZEFS_FAILED -eq 1 ]; then
 		errorexit "File system extend failed."
@@ -424,32 +468,10 @@ fsextend() {
 }
 
 fsreduce() {
-	if [ "$DO_UNMOUNT" -eq 1 ]; then
-		logmsg "unmount ${MOUNTDIR}"
-		umount "$MOUNTDIR" ||
-			errorexit "unmount failed for \"$MOUNTDIR\""
-		logmsg "unmount done"
-	fi
+	unmount_mountdir_if_needed
+	run_fsck_if_needed
 
-	if [ "$DO_FSCK" -eq 1 ]; then
-		if [[ "$FSTYPE" == "ext"* ]]; then
-			logmsg "e2fsck ${DEVPATH}"
-			accept_e2fsck e2fsck -f -p "$DEVPATH"
-		elif [[ "$FSTYPE" == "btrfs" ]]; then
-			logmsg "btrfs check ${DEVPATH}"
-			btrfs check "$DEVPATH" ||
-				errorexit "btrfs check failed on \"$DEVPATH\""
-			logmsg "btrfs check done"
-		fi
-	fi
-
-	if [ "$DO_MOUNT" -eq 1 ]; then
-		logmsg "mount ${DEVPATH} ${TEMPDIR}"
-		mount -t "$FSTYPE" "$DEVPATH" "$TEMPDIR" ||
-			errorexit "mount failed for \"$DEVPATH\" on \"$TEMPDIR\""
-		logmsg "mount done"
-		TMP_MOUNT_DONE=1
-	fi
+	mount_tempdir_if_needed
 
 	if [[ "$FSTYPE" == "ext"* ]]; then
 		NEWSIZEKB=$(( NEWSIZEBYTES / 1024 ))
@@ -462,66 +484,26 @@ fsreduce() {
 			RESIZEFS_FAILED=1
 		fi
 	elif [[ "$FSTYPE" == "btrfs" ]]; then
-		BTRFS_DEVID="$(btrfs_devid "$DEVPATH")"
-		REAL_MOUNTPOINT="$MOUNTDIR"
-
-		if [ $TMP_MOUNT_DONE -eq 1 ]; then
-			REAL_MOUNTPOINT="$TEMPDIR"
-		fi
-
-		logmsg "btrfs filesystem resize ${BTRFS_DEVID}:${NEWSIZEBYTES} ${REAL_MOUNTPOINT}"
-		if btrfs filesystem resize "$BTRFS_DEVID":"$NEWSIZEBYTES" "$REAL_MOUNTPOINT"; then
-			logmsg "btrfs filesystem resize done"
-		else
-			logerror "btrfs filesystem resize failed: devid $BTRFS_DEVID to $NEWSIZEBYTES on \"$REAL_MOUNTPOINT\""
-			RESIZEFS_FAILED=1
-		fi
+		btrfs_filesystem_resize "$NEWSIZEBYTES"
 	fi
 
-	# If the fs was temporarily mounted, now unmount it.
-	if [ $TMP_MOUNT_DONE -eq 1 ]; then
-		logmsg "cleanup unmount ${TEMPDIR}"
-		umount "$TEMPDIR" ||
-			errorexit "cleanup unmount failed for \"$TEMPDIR\""
-		logmsg "cleanup unmount done"
-		TMP_MOUNT_DONE=0
-		rmdir "$TEMPDIR" 2>/dev/null || true
-		rmdir "${TEMPDIR%/*}" 2>/dev/null || true
-	fi
+	cleanup_temp_mount_if_needed
 
 	if [ $RESIZEFS_FAILED -eq 1 ]; then
 		errorexit "File system reduce failed."
 	fi
 
 	if [ "$DO_CRYPTRESIZE" -eq 1 ]; then
-		NEWSIZESECTORS=$(( NEWSIZEBYTES / 512 ))
-		logmsg "cryptsetup resize ${NEWSIZESECTORS} sectors ${DEVPATH}"
-		cryptsetup resize --size "$NEWSIZESECTORS" "$DEVPATH" ||
-			errorexit "cryptsetup resize failed on \"$DEVPATH\" to $NEWSIZESECTORS sectors"
-		logmsg "cryptsetup done"
+		run_cryptsetup_resize "$(( NEWSIZEBYTES / 512 ))"
 	fi
 
-	# If the fs was temporarily unmounted, now remount it.
-	# Not considered a command failure if this fails.
-	if [[ $DO_UNMOUNT -eq 1 && $REMOUNT -eq 1 ]]; then
-		logmsg "remount ${DEVPATH} ${MOUNTDIR}"
-		if mount -t "$FSTYPE" "$DEVPATH" "$MOUNTDIR"; then
-			logmsg "remount done"
-		else
-			logmsg "remount failed"
-		fi
-	fi
+	remount_mountdir_if_needed
 
 	exit 0
 }
 
 cryptresize() {
-	NEWSIZESECTORS=$(( NEWSIZEBYTES / 512 ))
-	logmsg "cryptsetup resize ${NEWSIZESECTORS} sectors ${DEVPATH}"
-	cryptsetup resize --size "$NEWSIZESECTORS" "$DEVPATH" ||
-		errorexit "cryptsetup resize failed on \"$DEVPATH\" to $NEWSIZESECTORS sectors"
-	logmsg "cryptsetup done"
-
+	run_cryptsetup_resize "$(( NEWSIZEBYTES / 512 ))"
 	exit 0
 }
 
