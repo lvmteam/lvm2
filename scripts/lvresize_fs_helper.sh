@@ -100,6 +100,10 @@ logerror() {
 	logmsg "$1" >&2
 }
 
+require_arg() {
+	test $# -ge 2 && test -n "$2" || errorexit "$1 requires an argument."
+}
+
 # Validate --newsizebytes.  $1 is 1 when the value is required (reduce and
 # cryptresize) and 0 when it is optional (extend, where btrfs falls back to
 # "max").  An optional value that is absent is fine; one that is present must
@@ -553,7 +557,8 @@ TEMPDIR=""
 trap 'cleanup $?' EXIT
 trap 'cleanup 2' HUP INT QUIT ABRT TERM
 
-OPTIONS=$("$GETOPT" -o h -l help,fsextend,fsreduce,cryptresize,mount,unmount,remount,fsck,fstype:,lvpath:,newsizebytes:,mountdir:,cryptpath: -n "${SCRIPTNAME}" -- "$@")
+OPTIONS=$("$GETOPT" -o h -l help,fsextend,fsreduce,cryptresize,mount,unmount,remount,fsck,fstype:,lvpath:,newsizebytes:,mountdir:,cryptpath: -n "${SCRIPTNAME}" -- "$@") ||
+	errorexit "Failed to parse options."
 eval set -- "$OPTIONS"
 
 while [ $# -gt 0 ]
@@ -566,11 +571,11 @@ do
 	--unmount)	DO_UNMOUNT=1 ;;
 	--fsck)		DO_FSCK=1 ;;
 	--remount)	REMOUNT=1 ;;
-	--fstype)	FSTYPE=$2; shift ;;
-	--lvpath)	LVPATH=$2; shift ;;
-	--newsizebytes)	NEWSIZEBYTES=$2; shift ;;
-	--mountdir)	MOUNTDIR=$2; shift ;;
-	--cryptpath)	CRYPTPATH=$2; shift ;;
+	--fstype)	require_arg "$@"; FSTYPE=$2; shift ;;
+	--lvpath)	require_arg "$@"; LVPATH=$2; shift ;;
+	--newsizebytes)	require_arg "$@"; NEWSIZEBYTES=$2; shift ;;
+	--mountdir)	require_arg "$@"; MOUNTDIR=$2; shift ;;
+	--cryptpath)	require_arg "$@"; CRYPTPATH=$2; shift ;;
 	-h|--help)	usage ;;
 	--)		shift; break ;;
 	*)		errorexit "Unknown option \"$1\"." ;;
@@ -586,9 +591,14 @@ fi
 # Input arg checking
 #
 
-# There are three top level commands: --fsextend, --fsreduce, --cryptresize.
+# Top-level operation: lvresize passes exactly one of --fsextend, --fsreduce, or
+# standalone --cryptresize.  It may also pass --cryptresize with extend/reduce
+# to resize the LUKS layer (DO_CRYPTRESIZE without making cryptresize() the main operation).
 if [[ "$DO_FSEXTEND" -eq 0 && "$DO_FSREDUCE" -eq 0 && "$DO_CRYPTRESIZE" -eq 0 ]]; then
 	errorexit "Missing --fsextend|--fsreduce|--cryptresize."
+fi
+if [[ "$DO_FSEXTEND" -eq 1 && "$DO_FSREDUCE" -eq 1 ]]; then
+	errorexit "Cannot use --fsextend together with --fsreduce."
 fi
 
 if [[ "$DO_FSEXTEND" -eq 1 || "$DO_FSREDUCE" -eq 1 ]]; then
