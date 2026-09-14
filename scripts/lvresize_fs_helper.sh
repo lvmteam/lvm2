@@ -460,9 +460,7 @@ fsextend() {
 	cleanup_temp_mount_if_needed
 	remount_mountdir_if_needed
 
-	if [ $RESIZEFS_FAILED -eq 1 ]; then
-		errorexit "File system extend failed."
-	fi
+	[ "$RESIZEFS_FAILED" -eq 0 ] || die "File system extend failed."
 
 	exit 0
 }
@@ -489,9 +487,7 @@ fsreduce() {
 
 	cleanup_temp_mount_if_needed
 
-	if [ $RESIZEFS_FAILED -eq 1 ]; then
-		errorexit "File system reduce failed."
-	fi
+	[ "$RESIZEFS_FAILED" -eq 0 ] || die "File system reduce failed."
 
 	if [ "$DO_CRYPTRESIZE" -eq 1 ]; then
 		run_cryptsetup_resize "$(( NEWSIZEBYTES / 512 ))"
@@ -565,7 +561,7 @@ do
 	shift
 done
 
-if [ "$UID" != 0 ] && [ "$EUID" != 0 ]; then
+if [ "$EUID" -ne 0 ]; then
 	errorexit "${SCRIPTNAME} must be run as root."
 fi
 
