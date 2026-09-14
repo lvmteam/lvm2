@@ -62,7 +62,7 @@ usage() {
 	      --remount
 		  Remount the file system after resizing if unmounted.
 	      --fsck
-		  Run fsck on the file system before resizing (only with ext*).
+		  Run fsck on the file system before resizing (ext* and btrfs).
 	      --newsizebytes num
 		  The new size of the file system.
 	      --cryptresize
@@ -133,23 +133,29 @@ accept_e2fsck() {
 }
 
 btrfs_path_major_minor() {
-	local STAT
+	local STAT TARGET
 
-	STAT=$(stat --format "echo \$((0x%t)):\$((0x%T))" "$(readlink -e "$1")") || \
-		errorexit "Cannot get major:minor for \"$1\"."
-	eval "$STAT"
+	TARGET=$(readlink -e "$1") ||
+		die "Cannot resolve \"$1\"."
+	test -b "$TARGET" ||
+		die "\"$1\" is not a block device."
+	STAT=$(stat --format '0x%t:0x%T' "$TARGET") ||
+		die "Cannot get major:minor for \"$1\"."
+	echo "$(( ${STAT%%:*} )):$(( ${STAT#*:} ))"
 }
 
 btrfs_devid() {
 	local devpath=$1
-	local devid devinfo major_minor path_major_minor
-	local IFS=$'\n'
+	local devid devinfo major_minor path_major_minor show_output
 
 	major_minor=$(btrfs_path_major_minor "$devpath")
 
-	# It could be a multi-devices btrfs, filter the output.
-	# Device in `btrfs filesystem show $devpath` could be /dev/mapper/* so call `readlink -e`
-	for devinfo in $(LC_ALL=C btrfs filesystem show "$devpath"); do
+	show_output=$(LC_ALL=C btrfs filesystem show "$devpath") ||
+		die "btrfs filesystem show failed on \"$devpath\""
+
+	# Multi-device btrfs: walk btrfs filesystem show output line by line.
+	# Device lines may be /dev/mapper/*; resolve via btrfs_path_major_minor.
+	while IFS= read -r devinfo; do
 		case "$devinfo" in
 		*devid*)
 			path_major_minor=$(btrfs_path_major_minor "${devinfo#* path }")
@@ -164,10 +170,9 @@ btrfs_devid() {
 			return 0
 			;;
 		esac
-	done
+	done <<< "$show_output"
 
-	# fail, devid not found
-	return 1
+	die "btrfs devid not found for \"$devpath\""
 }
 
 # Set to 1 while the fs is temporarily mounted on $TMPDIR
@@ -430,12 +435,9 @@ fsreduce() {
 	if [ "$DO_CRYPTRESIZE" -eq 1 ]; then
 		NEWSIZESECTORS=$(( NEWSIZEBYTES / 512 ))
 		logmsg "cryptsetup resize ${NEWSIZESECTORS} sectors ${DEVPATH}"
-		if cryptsetup resize --size "$NEWSIZESECTORS" "$DEVPATH"; then
-			logmsg "cryptsetup done"
-		else
-			logmsg "cryptsetup failed"
-			exit 1
-		fi
+		cryptsetup resize --size "$NEWSIZESECTORS" "$DEVPATH" ||
+			errorexit "cryptsetup resize failed on \"$DEVPATH\" to $NEWSIZESECTORS sectors"
+		logmsg "cryptsetup done"
 	fi
 
 	# If the fs was temporarily unmounted, now remount it.
