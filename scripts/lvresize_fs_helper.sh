@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright (C) 2022-2025 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2022-2026 Red Hat, Inc. All rights reserved.
 #
 # This file is part of LVM2.
 #
@@ -14,10 +14,9 @@
 
 set -euE -o pipefail
 
-PATH="/sbin:/usr/sbin:/bin:/usr/bin:$PATH"
+PATH="/sbin:/usr/sbin:/bin:/usr/bin"
 GETOPT="getopt"
-SCRIPTNAME=$(basename "$0")
-DM_DEV_DIR="${DM_DEV_DIR:-/dev}"
+SCRIPTNAME=${0##*/}
 
 usage() {
 	cat <<-EOF
@@ -76,19 +75,29 @@ usage() {
 	exit 0
 }
 
+# errorexit: invalid invocation (stderr only).  die: runtime failure
+# (stderr and syslog).  logerror: non-fatal problem or warning.
 errorexit() {
-	echo "$1" >&2
+	printf '%s\n' "$1" >&2
 	exit 1
 }
 
-logerror() {
-	echo "$1" >&2
-	logger "${SCRIPTNAME}: $1"
+die() {
+	logerror "$1"
+	exit 1
 }
 
+# logger is best-effort: it may be missing (minimal or container
+# environments), and under set -e a logger failure would otherwise abort
+# before the actual resize command runs.
+
 logmsg() {
-	echo "$1"
-	logger "${SCRIPTNAME}: $1"
+	printf '%s\n' "$1"
+	logger "${SCRIPTNAME}: $1" >/dev/null 2>&1 || true
+}
+
+logerror() {
+	logmsg "$1" >&2
 }
 
 # Handle e2fsck return codes according to fsck(8) exit code specification
