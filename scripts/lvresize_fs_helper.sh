@@ -100,6 +100,61 @@ logerror() {
 	logmsg "$1" >&2
 }
 
+# Reject a path a non-root user could modify or replace between this
+# check and its use: every component of the canonical path must be
+# root-owned and must not be group or world writable.  The sticky bit
+# is accepted for directories (e.g. /tmp), where other users cannot
+# remove entries owned by root.
+validate_path() {
+	local NAME=$1
+	local NODE=$2
+	local MODE
+
+	while :; do
+		MODE=$(stat -c '%u %a' "$NODE") ||
+			errorexit "$NAME \"$NODE\" is not accessible."
+		test "${MODE%% *}" = "0" ||
+			errorexit "$NAME \"$NODE\" must be owned by root."
+		MODE=${MODE##* }
+		test $(( 0$MODE & 022 )) -eq 0 ||
+			{ test -d "$NODE" && test $(( 0$MODE & 01000 )) -ne 0; } ||
+			errorexit "$NAME \"$NODE\" must not be group or world writable."
+		test "$NODE" = "/" && break
+		NODE=${NODE%/*}
+		test -n "$NODE" || NODE=/
+	done
+}
+
+# Run on any exit (EXIT trap) or interruption (signal traps).
+# Receives the exit code as $1 so the correct status is preserved:
+# signals pass 2, the EXIT trap passes the shell's real $?.
+# Always ends with exit, deliberately never returns to the caller.
+cleanup() {
+	local RET=${1:-1}
+
+	trap '' EXIT HUP INT QUIT ABRT TERM
+
+	if [ "$TMP_MOUNT_DONE" -eq 1 ]; then
+		logmsg "cleanup unmount ${TEMPDIR}"
+		if umount "$TEMPDIR"; then
+			TMP_MOUNT_DONE=0
+		else
+			logerror "cleanup unmount failed for \"$TEMPDIR\""
+		fi
+	fi
+
+	if test -n "$TEMPDIR"; then
+		rmdir "$TEMPDIR" 2>/dev/null || true
+		rmdir "${TEMPDIR%/*}" 2>/dev/null || true
+	fi
+
+	trap - EXIT HUP INT QUIT ABRT TERM
+
+	test "$RET" -eq 2 && logmsg "Break detected."
+
+	exit "$RET"
+}
+
 # Handle e2fsck return codes as bitmask per fsck(8) specification:
 #   1 = errors corrected, 2 = system should be rebooted
 #   4 = errors left uncorrected, 8 = operational error
@@ -175,7 +230,7 @@ btrfs_devid() {
 	die "btrfs devid not found for \"$devpath\""
 }
 
-# Set to 1 while the fs is temporarily mounted on $TMPDIR
+# Set to 1 while the fs is temporarily mounted on $TEMPDIR
 TMP_MOUNT_DONE=0
 # Set to 1 if the fs resize command fails
 RESIZEFS_FAILED=0
@@ -198,7 +253,7 @@ detect_xfs_mount_options() {
 	qflags_hex="${qflags_output#qflags = }"
 
 	# No flags set, no extra mount options needed.
-	[[ "$qflags_hex" == "0" ]] && return 0
+	[[ "$qflags_hex" == "0" || "$qflags_hex" == "0x0" ]] && return 0
 
 	if [[ ! "$qflags_hex" =~ ^0x[0-9a-fA-F]+$ ]]; then
 		logerror "xfs_db unexpected output for \"$device\": got \"$qflags_hex\""
@@ -232,12 +287,9 @@ detect_xfs_mount_options() {
 fsextend() {
 	if [ "$DO_UNMOUNT" -eq 1 ]; then
 		logmsg "unmount ${MOUNTDIR}"
-		if umount "$MOUNTDIR"; then
-			logmsg "unmount done"
-		else
-			logerror "unmount failed for \"$MOUNTDIR\""
-			exit 1
-		fi
+		umount "$MOUNTDIR" ||
+			errorexit "unmount failed for \"$MOUNTDIR\""
+		logmsg "unmount done"
 	fi
 
 	if [ "$DO_FSCK" -eq 1 ]; then
@@ -246,23 +298,17 @@ fsextend() {
 			accept_e2fsck e2fsck -f -p "$DEVPATH"
 		elif [[ "$FSTYPE" == "btrfs" ]]; then
 			logmsg "btrfs check ${DEVPATH}"
-			if btrfs check "$DEVPATH"; then
-				logmsg "btrfs check done"
-			else
-				logerror "btrfs check failed on \"$DEVPATH\""
-				exit 1
-			fi
+			btrfs check "$DEVPATH" ||
+				errorexit "btrfs check failed on \"$DEVPATH\""
+			logmsg "btrfs check done"
 		fi
 	fi
 
 	if [ "$DO_CRYPTRESIZE" -eq 1 ]; then
 		logmsg "cryptsetup resize ${DEVPATH}"
-		if cryptsetup resize "$DEVPATH"; then
-			logmsg "cryptsetup done"
-		else
-			logerror "cryptsetup resize failed on \"$DEVPATH\""
-			exit 1
-		fi
+		cryptsetup resize "$DEVPATH" ||
+			errorexit "cryptsetup resize failed on \"$DEVPATH\""
+		logmsg "cryptsetup done"
 	fi
 
 	if [ "$DO_MOUNT" -eq 1 ]; then
@@ -270,14 +316,11 @@ fsextend() {
 			detect_xfs_mount_options "$DEVPATH" || logmsg "not using XFS mount options"
 		fi
 
-		logmsg "mount ${DEVPATH} ${TMPDIR}"
-		if mount -t "$FSTYPE" ${MOUNT_OPTIONS:+-o "$MOUNT_OPTIONS"} "$DEVPATH" "$TMPDIR"; then
-			logmsg "mount done"
-			TMP_MOUNT_DONE=1
-		else
-			logerror "mount failed for \"$DEVPATH\" on \"$TMPDIR\""
-			exit 1
-		fi
+		logmsg "mount ${DEVPATH} ${TEMPDIR}"
+		mount -t "$FSTYPE" ${MOUNT_OPTIONS:+-o "$MOUNT_OPTIONS"} "$DEVPATH" "$TEMPDIR" ||
+			errorexit "mount failed for \"$DEVPATH\" on \"$TEMPDIR\""
+		logmsg "mount done"
+		TMP_MOUNT_DONE=1
 	fi
 
 	if [[ "$FSTYPE" == "ext"* ]]; then
@@ -302,7 +345,7 @@ fsextend() {
 		REAL_MOUNTPOINT="$MOUNTDIR"
 
 		if [ $TMP_MOUNT_DONE -eq 1 ]; then
-			REAL_MOUNTPOINT="$TMPDIR"
+			REAL_MOUNTPOINT="$TEMPDIR"
 		fi
 
 		logmsg "btrfs filesystem resize ${BTRFS_DEVID}:${NEWSIZEBYTES} ${REAL_MOUNTPOINT}"
@@ -316,15 +359,13 @@ fsextend() {
 
 	# If the fs was temporarily mounted, now unmount it.
 	if [ $TMP_MOUNT_DONE -eq 1 ]; then
-		logmsg "cleanup unmount ${TMPDIR}"
-		if umount "$TMPDIR"; then
-			logmsg "cleanup unmount done"
-			TMP_MOUNT_DONE=0
-			rmdir "$TMPDIR"
-		else
-			logerror "cleanup unmount failed for \"$TMPDIR\""
-			exit 1
-		fi
+		logmsg "cleanup unmount ${TEMPDIR}"
+		umount "$TEMPDIR" ||
+			errorexit "cleanup unmount failed for \"$TEMPDIR\""
+		logmsg "cleanup unmount done"
+		TMP_MOUNT_DONE=0
+		rmdir "$TEMPDIR" 2>/dev/null || true
+		rmdir "${TEMPDIR%/*}" 2>/dev/null || true
 	fi
 
 	# If the fs was temporarily unmounted, now remount it.
@@ -343,8 +384,7 @@ fsextend() {
 	fi
 
 	if [ $RESIZEFS_FAILED -eq 1 ]; then
-		logerror "File system extend failed."
-		exit 1
+		errorexit "File system extend failed."
 	fi
 
 	exit 0
@@ -353,12 +393,9 @@ fsextend() {
 fsreduce() {
 	if [ "$DO_UNMOUNT" -eq 1 ]; then
 		logmsg "unmount ${MOUNTDIR}"
-		if umount "$MOUNTDIR"; then
-			logmsg "unmount done"
-		else
-			logerror "unmount failed for \"$MOUNTDIR\""
-			exit 1
-		fi
+		umount "$MOUNTDIR" ||
+			errorexit "unmount failed for \"$MOUNTDIR\""
+		logmsg "unmount done"
 	fi
 
 	if [ "$DO_FSCK" -eq 1 ]; then
@@ -367,24 +404,18 @@ fsreduce() {
 			accept_e2fsck e2fsck -f -p "$DEVPATH"
 		elif [[ "$FSTYPE" == "btrfs" ]]; then
 			logmsg "btrfs check ${DEVPATH}"
-			if btrfs check "$DEVPATH"; then
-				logmsg "btrfs check done"
-			else
-				logerror "btrfs check failed on \"$DEVPATH\""
-				exit 1
-			fi
+			btrfs check "$DEVPATH" ||
+				errorexit "btrfs check failed on \"$DEVPATH\""
+			logmsg "btrfs check done"
 		fi
 	fi
 
 	if [ "$DO_MOUNT" -eq 1 ]; then
-		logmsg "mount ${DEVPATH} ${TMPDIR}"
-		if mount -t "$FSTYPE" "$DEVPATH" "$TMPDIR"; then
-			logmsg "mount done"
-			TMP_MOUNT_DONE=1
-		else
-			logerror "mount failed for \"$DEVPATH\" on \"$TMPDIR\""
-			exit 1
-		fi
+		logmsg "mount ${DEVPATH} ${TEMPDIR}"
+		mount -t "$FSTYPE" "$DEVPATH" "$TEMPDIR" ||
+			errorexit "mount failed for \"$DEVPATH\" on \"$TEMPDIR\""
+		logmsg "mount done"
+		TMP_MOUNT_DONE=1
 	fi
 
 	if [[ "$FSTYPE" == "ext"* ]]; then
@@ -402,7 +433,7 @@ fsreduce() {
 		REAL_MOUNTPOINT="$MOUNTDIR"
 
 		if [ $TMP_MOUNT_DONE -eq 1 ]; then
-			REAL_MOUNTPOINT="$TMPDIR"
+			REAL_MOUNTPOINT="$TEMPDIR"
 		fi
 
 		logmsg "btrfs filesystem resize ${BTRFS_DEVID}:${NEWSIZEBYTES} ${REAL_MOUNTPOINT}"
@@ -416,20 +447,17 @@ fsreduce() {
 
 	# If the fs was temporarily mounted, now unmount it.
 	if [ $TMP_MOUNT_DONE -eq 1 ]; then
-		logmsg "cleanup unmount ${TMPDIR}"
-		if umount "$TMPDIR"; then
-			logmsg "cleanup unmount done"
-			TMP_MOUNT_DONE=0
-			rmdir "$TMPDIR"
-		else
-			logerror "cleanup unmount failed for \"$TMPDIR\""
-			exit 1
-		fi
+		logmsg "cleanup unmount ${TEMPDIR}"
+		umount "$TEMPDIR" ||
+			errorexit "cleanup unmount failed for \"$TEMPDIR\""
+		logmsg "cleanup unmount done"
+		TMP_MOUNT_DONE=0
+		rmdir "$TEMPDIR" 2>/dev/null || true
+		rmdir "${TEMPDIR%/*}" 2>/dev/null || true
 	fi
 
 	if [ $RESIZEFS_FAILED -eq 1 ]; then
-		logerror "File system reduce failed."
-		exit 1
+		errorexit "File system reduce failed."
 	fi
 
 	if [ "$DO_CRYPTRESIZE" -eq 1 ]; then
@@ -457,12 +485,9 @@ fsreduce() {
 cryptresize() {
 	NEWSIZESECTORS=$(( NEWSIZEBYTES / 512 ))
 	logmsg "cryptsetup resize ${NEWSIZESECTORS} sectors ${DEVPATH}"
-	if cryptsetup resize --size "$NEWSIZESECTORS" "$DEVPATH"; then
-		logmsg "cryptsetup done"
-	else
-		logerror "cryptsetup resize failed on \"$DEVPATH\" to $NEWSIZESECTORS sectors"
-		exit 1
-	fi
+	cryptsetup resize --size "$NEWSIZESECTORS" "$DEVPATH" ||
+		errorexit "cryptsetup resize failed on \"$DEVPATH\" to $NEWSIZESECTORS sectors"
+	logmsg "cryptsetup done"
 
 	exit 0
 }
@@ -488,6 +513,10 @@ REMOUNT=0
 # Initialize MOUNT_OPTIONS to ensure clean state
 MOUNT_OPTIONS=""
 MOUNTDIR=""
+TEMPDIR=""
+
+trap 'cleanup $?' EXIT
+trap 'cleanup 2' HUP INT QUIT ABRT TERM
 
 OPTIONS=$("$GETOPT" -o h -l help,fsextend,fsreduce,cryptresize,mount,unmount,remount,fsck,fstype:,lvpath:,newsizebytes:,mountdir:,cryptpath: -n "${SCRIPTNAME}" -- "$@")
 eval set -- "$OPTIONS"
@@ -571,19 +600,17 @@ if [[ "$DO_FSCK" -eq 1 && "$FSTYPE" == "xfs" ]]; then
 fi
 
 if [ "$DO_MOUNT" -eq 1 ]; then
-	TMPDIR=$(mktemp --suffix _lvresize_$$ -d -p /tmp)
-	if [ ! -e "$TMPDIR" ]; then
-		errorexit "Failed to create temp dir."
-	fi
-	# In case the script terminates without doing cleanup
-	function finish {
-		if [ "$TMP_MOUNT_DONE" -eq 1 ]; then
-			logmsg "exit unmount ${TMPDIR}"
-			umount "$TMPDIR"
-			rmdir "$TMPDIR"
+	if test -n "${TMPDIR-}"; then
+		if test "${TMPDIR#/}" = "$TMPDIR"; then
+			errorexit "TMPDIR must be an absolute path."
 		fi
-	}
-	trap finish EXIT
+		TMPDIR=$(readlink -f "$TMPDIR") ||
+			errorexit "Cannot resolve TMPDIR \"$TMPDIR\"."
+		validate_path TMPDIR "$TMPDIR"
+	fi
+	TEMPDIR=$(mktemp -d "${TMPDIR:-/tmp}/${SCRIPTNAME}_XXXXXXXXXX") || errorexit "Failed to create temp dir."
+	TEMPDIR="${TEMPDIR}/m"
+	mkdir -m 0000 "$TEMPDIR" || errorexit "Failed to create temp mount point \"$TEMPDIR\"."
 fi
 
 #
