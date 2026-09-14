@@ -100,52 +100,36 @@ logerror() {
 	logmsg "$1" >&2
 }
 
-# Handle e2fsck return codes according to fsck(8) exit code specification
-# 0 = no errors, 1 = errors corrected, 2 = reboot required
-# 4 = errors left uncorrected, 8 = operational error
-# 16 = usage error, 32 = canceled, 128 = shared library error
+# Handle e2fsck return codes as bitmask per fsck(8) specification:
+#   1 = errors corrected, 2 = system should be rebooted
+#   4 = errors left uncorrected, 8 = operational error
+#   16 = usage/syntax error, 32 = canceled by user
+#   128 = shared library error
+# Codes are OR'd together, so ret=3 means corrected + reboot.
+# Bits 0-1 (ret 1,2) are non-fatal; bits 2-7 (ret >= 4) are fatal.
 accept_e2fsck() {
 	local ret=0
 	"$@" || ret=$?
 
-	case "$ret" in
-	  0)
-		# No errors
-		logmsg "e2fsck done"
-		return 0
-		;;
-	  1)
-		# Filesystem was corrected
-		logmsg "e2fsck done (filesystem errors were corrected)"
-		return 0
-		;;
-	  2)
-		# System should be rebooted
-		logerror "WARNING: Filesystem was corrected but system should be rebooted"
-		logmsg "e2fsck done (reboot recommended)"
-		return 0
-		;;
-	  4)
-		logerror "e2fsck failed: filesystem errors left uncorrected on \"$DEVPATH\""
-		exit 1
-		;;
-	  8)
-		logerror "e2fsck failed: operational error on \"$DEVPATH\""
-		exit 1
-		;;
-	  16)
-		logerror "e2fsck failed: usage or syntax error"
-		exit 1
-		;;
-	  32)
-		logerror "e2fsck canceled by user"
-		exit 1
-		;;
-	  *)
-		logerror "e2fsck failed with return code $ret on \"$DEVPATH\""
-		exit 1
-		;;
-	esac
+	test $((ret & 128)) -ne 0 &&
+		die "e2fsck failed (shared library error) on \"$DEVPATH\""
+	test $((ret & 32)) -ne 0 &&
+		die "e2fsck canceled by user"
+	test $((ret & 16)) -ne 0 &&
+		die "e2fsck failed: usage or syntax error"
+	test $((ret & 8)) -ne 0 &&
+		die "e2fsck failed: operational error on \"$DEVPATH\""
+	test $((ret & 4)) -ne 0 &&
+		die "e2fsck failed: filesystem errors left uncorrected on \"$DEVPATH\""
+	test $((ret & ~191)) -ne 0 &&
+		die "e2fsck failed with return code $ret on \"$DEVPATH\""
+
+	test $((ret & 2)) -ne 0 &&
+		logerror "WARNING: e2fsck recommends reboot for \"$DEVPATH\""
+	test $((ret & 1)) -ne 0 &&
+		logmsg "e2fsck corrected errors on \"$DEVPATH\""
+
+	logmsg "e2fsck done"
 }
 
 btrfs_path_major_minor() {
