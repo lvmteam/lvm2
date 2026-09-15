@@ -1,0 +1,52 @@
+<!-- Page title -->
+[[!meta title="Version 2.03.43 - Feature and Bug Fix Release"]]
+
+Version 2.03.43
+===============
+
+* Fix missing phtread key delete. (Regression introduced in 1.02.216)
+* Add command line option to edit configuration files.
+* dmeventd fixes and improvements.
+* Warn on non-power-of-2 thin pool chunk size; prompt when --chunksize is used.
+* Wipe stale signatures before formatting a VDO data LV on thin storage.
+* Allow stripe size smaller than page size for striped LVs.
+* Allow lvchange --refresh and property changes on thin and cache pools' hidden sub LVs.
+* Set limits on recursive parsers to prevent stack exhaustion.
+* Resolve dmsetup vdostats through device tree and try -vpool name suffix.
+    * This allows using dmvdostats on top level device and will report on any
+      VDO device it finds underneath.
+* Remove cmirrord and clustered mirror log daemon support.
+* Respect */run/mdadm/creating-<md_dev_name>* in *69-dm-lvm.rules.*
+* Default value of `global/lvmlockd_lock_retries` changed from `3` to `6`.
+* Reject undersized --pooldatavdo conversion before allocating pool metadata.
+* Many fixes in lvmpersist.
+
+[[!toggleable text="""
+See [[!toggle text="more"]]
+
+Editing configuration files on command line
+--------------------------------------------
+
+* Add `lvmconfig --edit Section/Field=Value` to set an *lvm.conf* setting.
+* Add `lvmconfig --edit Section/Field=-` to remove an *lvm.conf* setting.
+* Add `lvmconfig --input FILE` to dump config to stdout or a file.
+* Add `backup/config_file_backup_limit` - number of lvm.conf backup files kept.
+      Defaults to `50`.
+
+Improvements in dmeventd
+-------------------------
+
+* Fix dmeventd raid repair after partial replacement or resync completion.
+* Keep snapshot extend threshold unchanged when lvextend fails.
+* Retry failed snapshot extension with exponential backoff.
+* Unmount full snapshot only on invalid/overflow, not 100% usage alone.
+
+"""]]
+
+<!-- remove the pending tag on release, remove draft tag once editing is complete -->
+[[!tag draft pending]]
+<!--
+For old releases add Release Timestamp like this, date from git show $COMMIT is fine.
+\[[!meta date="Tue Nov 21 14:26:07 2023 +0100"]]
+-->
+
