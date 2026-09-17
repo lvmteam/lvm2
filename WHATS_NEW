@@ -1,6 +1,21 @@
 Version 2.03.44 - 
 ==================
-  Prevent redundant device access attempts after I/O errors via DEV_SCAN_NOT_READ.
+  Fix out-of-bounds access on an unterminated mda_header raw_locns list.
+  Log open failures at debug for devices excluded after scan I/O errors.
+  Fix blkdeactivate to exit 0 when devices stay mounted by policy.
+  Fix blkdeactivate -l wholevg when another LV in the VG stays mounted.
+  Fix blkdeactivate exit status on failed deactivation or mpath queueing.
+  Fix blkdeactivate umount for paths with spaces or lsblk hex escapes.
+  Update lvmdump for lvmlockd; add -A; drop lvmetad collection.
+  Harden fsadm size parsing and use mktemp for temporary mount dirs.
+  Ignore _FSADM_YES from the environment; pass --yes only from the CLI.
+  Fix fsadm fsck exit codes and mount detection via /proc/self/mountinfo.
+  Harden lvm_import_vdo YAML and stat parsing against shell injection.
+  Use mktemp in lvm_import_vdo; validate TMPDIR and tool binary overrides.
+  Harden lvresize_fs_helper temp mounts, signal cleanup, and TMPDIR checks.
+  Validate lvresize_fs_helper resize sizes and value-taking options.
+  Fix lvresize_fs_helper btrfs, e2fsck handling, and --fsextend/--fsreduce.
+  Prevent redundant device access after scan I/O errors (DEV_SCAN_NOT_READ).
   Fix pvscan autoactivation when DEVLINKS symlinks are not yet created.
 
 Version 2.03.43 - 30th September 2026
@@ -13,7 +28,7 @@ Version 2.03.43 - 30th September 2026
   Fix dmeventd snapshot threshold advance when lvextend failed.
   Fix dmeventd snapshot unmount on Invalid/Overflow, not 100% usage alone.
   Reject undersized --pooldatavdo conversion before allocating pool metadata.
-  Allow lvchange --refresh and properties on hidden thin and cache pool sub LVs.
+  Allow lvchange --refresh and properties on hidden thin, cache, and pool sub LVs.
   Allow 4K stripe size smaller than page size (except on DAX and MD RAID).
   Set recursion limit to 1024 LVs when processing device tree.
   Remove cmirrord and clustered mirror log daemon support.

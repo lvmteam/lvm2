@@ -1,5 +1,6 @@
 Version 1.02.218 - 
 ===================
+  Only prefix log output with source location when verbose is enabled.
 
 Version 1.02.217 - 30th September 2026
 ======================================
@@ -10,7 +11,7 @@ Version 1.02.217 - 30th September 2026
   Disable LeakSanitizer for the dmsetup udevcomplete udev rule.
   Hard limit config parser to 128 section nesting.
   Convert recursive config cloning to iteration.
-  Fix missing phtread key delete. (1.02.216)
+  Fix missing pthread key delete. (1.02.216)
   Set parent pointers in dm_config_clone_node_with_mem when cloning nodes.
   Fix dm_config_parent_name for root nodes in tree parsed by dm_config_parse.
 
