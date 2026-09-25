@@ -229,6 +229,7 @@ static int _daemon_read(struct dm_event_fifos *fifos,
 	uint32_t *header = alloca(size);
 	char *buf = (char *)header;
 
+	/* coverity[tainted_scalar] message size comes from the root-owned dmeventd daemon */
 	while (bytes < size) {
 		for (i = 0, ret = 0; (i < 20) && (ret < 1); i++) {
 			/* Watch daemon read FIFO for input. */
@@ -266,6 +267,7 @@ static int _daemon_read(struct dm_event_fifos *fifos,
 				goto bad;
 			}
 
+			/* coverity[tainted_scalar] message size comes from the root-owned dmeventd daemon */
 			if (!(buf = msg->data = malloc(msg->size + 1))) {
 				log_error("Unable to allocate message data.");
 				return 0;

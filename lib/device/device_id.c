@@ -731,6 +731,7 @@ int dev_read_vpd_wwids(struct cmd_context *cmd, struct device *dev)
 		vpd_datalen = VPD_SIZE; /* sanitize data size */
 
 	/* adds dev_wwid entry to dev->wwids for each id in vpd data */
+	/* coverity[tainted_scalar] VPD is read into a VPD_SIZE buffer, id sizes are clamped to it */
 	parse_vpd_ids((const unsigned char *)vpd_data, vpd_datalen, &dev->wwids);
 	return 1;
 }

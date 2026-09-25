@@ -386,6 +386,7 @@ static int _atomic_write_config(struct cmd_context *cmd,
 	if (dm_snprintf(temp_path, sizeof(temp_path), "%s/.lvm-config-XXXXXX", dir_path) < 0)
 		return 0;
 
+	/* coverity[secure_temp] mkstemp creates the file with mode 0600 */
 	fd = mkstemp(temp_path);
 	if (fd < 0) {
 		log_sys_error("mkstemp", temp_path);

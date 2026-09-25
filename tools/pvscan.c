@@ -584,6 +584,7 @@ static int _get_devs_from_saved_vg(struct cmd_context *cmd, const char *vgname,
 
 		devno = MKDEV(file_major, file_minor);
 
+		/* coverity[tainted_scalar] devname is from a root-owned /run online file, NAME_LEN-bounded */
 		if (!(dev = setup_dev_in_dev_cache(cmd, devno, file_devname[0] ? file_devname : NULL))) {
 			log_error_pvscan(cmd, "No device set up for online PV %u:%u %s PVID %s", file_major, file_minor, file_devname, pvid);
 			goto bad;
@@ -995,6 +996,7 @@ static void _set_pv_devices_online(struct cmd_context *cmd, struct volume_group 
 
 		devno = MKDEV(major, minor);
 
+		/* coverity[tainted_scalar] devname is from a root-owned /run online file, NAME_LEN-bounded */
 		if (!(dev = setup_dev_in_dev_cache(cmd, devno, file_devname[0] ? file_devname : NULL))) {
 			log_print_pvscan(cmd, "VG %s PV %s no device found for online PV %u:%u %s",
 					 vg->name, pvid, major, minor, file_devname);

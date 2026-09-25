@@ -1106,6 +1106,7 @@ static int _stats_parse_list(struct dm_stats *dms, const char *resp)
 			memset(&cur_group, 0, sizeof(cur_group));
 			fill.region_id = DM_STATS_REGION_NOT_PRESENT;
 			cur_group.group_id = DM_STATS_GROUP_NOT_PRESENT;
+			/* coverity[tainted_scalar] region_id comes from the kernel @stats_list response */
 			do {
 				if (!dm_pool_grow_object(mem, &fill, sizeof(fill)))
 					goto_bad;
