@@ -32,7 +32,6 @@
 #include <unistd.h>
 #include <time.h>
 #include <dirent.h>
-#include <locale.h>
 #include <sys/types.h>
 #include <sys/file.h>
 #include <sys/sysmacros.h>
