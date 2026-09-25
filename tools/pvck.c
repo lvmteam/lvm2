@@ -806,6 +806,12 @@ static int _dump_raw_locn(struct device *dev, struct devicefile *def, int print_
 	meta_checksum = htole32(rlocn->checksum);
 	meta_flags = htole32(rlocn->flags);
 
+	/* Corrupt offset; clear it so _dump_current_text() cannot wrap underflow. */
+	if (meta_offset > mda_size) {
+		log_print("CHECK: mda_header_%u.raw_locn[%u].offset larger than metadata area size", mn, ri);
+		meta_offset = 0;
+	}
+
 	if (meta_offset + meta_size > mda_size)
 		wrapped = 1;
 
