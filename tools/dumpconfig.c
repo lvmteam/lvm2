@@ -269,8 +269,11 @@ static int _create_backup_path(struct cmd_context *cmd, const char *filepath, ch
 
 	/* Create timestamp: YYYYMMDD-HHMMSS */
 	now = time(NULL);
-	tm = localtime(&now);
-	strftime(timestamp, sizeof(timestamp), "%Y%m%d-%H%M%S", tm);
+	if (!(tm = localtime(&now)) ||
+	    !strftime(timestamp, sizeof(timestamp), "%Y%m%d-%H%M%S", tm)) {
+		log_error("Failed to create backup timestamp.");
+		return 0;
+	}
 
 	/* Try filenames with counter from 00 to 99 to support multiple updates per second */
 	for (counter = 0; counter < 100; counter++) {
