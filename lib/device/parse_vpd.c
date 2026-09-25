@@ -145,6 +145,16 @@ static int _to_hex(const unsigned char *in, int in_bytes, unsigned char *out, in
 
 #define ID_BUFSIZE 1024
 
+static uint8_t _vpd_descriptor_id_size(const unsigned char *d,
+				       const unsigned char *vpd_end)
+{
+	uint8_t id_size = d[3];
+
+	if (d + 4 + id_size > vpd_end)
+		id_size = vpd_end - d - 4;
+	return id_size;
+}
+
 /*
  * based on linux kernel function
  */
@@ -167,9 +177,7 @@ int parse_vpd_ids(const unsigned char *vpd_data, int vpd_datalen, struct dm_list
 		switch (d[1] & 0xf) {
 		case 0x1:
 			/* T10 Vendor ID */
-			cur_id_size = d[3];
-			if (d + 4 + cur_id_size > vpd_end)
-				cur_id_size = vpd_end - d - 4;
+			cur_id_size = _vpd_descriptor_id_size(d, vpd_end);
 			cur_id_str = d + 4;
 			format_t10_id(cur_id_str, cur_id_size, tmp_str, sizeof(tmp_str));
 			id_size = snprintf(id, ID_BUFSIZE, "t10.%s", tmp_str);
@@ -181,7 +189,7 @@ int parse_vpd_ids(const unsigned char *vpd_data, int vpd_datalen, struct dm_list
 			break;
 		case 0x2:
 			/* EUI-64 */
-			cur_id_size = d[3];
+			cur_id_size = _vpd_descriptor_id_size(d, vpd_end);
 			cur_id_str = d + 4;
 			switch (cur_id_size) {
 			case 8:
@@ -207,7 +215,7 @@ int parse_vpd_ids(const unsigned char *vpd_data, int vpd_datalen, struct dm_list
 			break;
 		case 0x3:
 			/* NAA */
-			cur_id_size = d[3];
+			cur_id_size = _vpd_descriptor_id_size(d, vpd_end);
 			cur_id_str = d + 4;
 			switch (cur_id_size) {
 			case 8:
@@ -229,9 +237,7 @@ int parse_vpd_ids(const unsigned char *vpd_data, int vpd_datalen, struct dm_list
 			break;
 		case 0x8:
 			/* SCSI name string */
-			cur_id_size = d[3];
-			if (d + 4 + cur_id_size > vpd_end)
-				cur_id_size = vpd_end - d - 4;
+			cur_id_size = _vpd_descriptor_id_size(d, vpd_end);
 			cur_id_str = d + 4;
 			memcpy(id, cur_id_str, cur_id_size);
 			id_size = cur_id_size;
