@@ -41,7 +41,7 @@ static void _set_value_format_flags(struct dm_config_node *cn, uint32_t flags)
 static int _edit_to_config_string(struct dm_pool *mem, const char *spec_str, int for_removal)
 {
 	char str[4096];
-	char *eq, *slash, *p, *next;
+	char *eq, *p, *next;
 	const char *value;
 	char *parts[CFG_PATH_MAX_LEN];
 	int nparts = 0, i;
@@ -59,7 +59,7 @@ static int _edit_to_config_string(struct dm_pool *mem, const char *spec_str, int
 	*eq = '\0';
 	value = eq + 1;
 
-	if (!(slash = strrchr(str, '/'))) {
+	if (!strrchr(str, '/')) {
 		log_error("Invalid edit specification '%s' - expected 'Section/Field=Value'", spec_str);
 		return -1;
 	}
