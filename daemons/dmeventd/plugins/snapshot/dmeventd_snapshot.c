@@ -189,21 +189,20 @@ static void _snapshot_terminal(struct dso_state *state, struct dm_task *dmt,
 
 /*
  * At an armed usage step: apply retry backoff, warn, extend, and advance.
- * Returns 1 when the policy call was postponed or failed.
  */
-static int _snapshot_handle_percent_check(struct dso_state *state,
-					  const char *device,
-					  int percent)
+static void _snapshot_handle_percent_check(struct dso_state *state,
+					   const char *device,
+					   int percent)
 {
 	int retrying;
 
 	if (percent < state->percent_check)
-		return 0;
+		return;
 
 	retrying = state->policy_retry.fails ? 1 : 0;
 
 	if (dmeventd_policy_retry_should_postpone(&state->policy_retry, "extension"))
-		return 1;
+		return;
 
 	if (!retrying && (percent >= WARNING_THRESH))
 		log_warn("WARNING: Snapshot %s is now %.2f%% full.",
@@ -212,7 +211,7 @@ static int _snapshot_handle_percent_check(struct dso_state *state,
 	if (!_extend(state->cmd_lvextend)) {
 		log_error("Failed to extend snapshot %s.", device);
 		state->policy_retry.fails = 1;
-		return 1;
+		return;
 	}
 
 	dmeventd_policy_retry_after_success(&state->policy_retry);
@@ -220,8 +219,6 @@ static int _snapshot_handle_percent_check(struct dso_state *state,
 	dmeventd_advance_percent_check_after_action(percent,
 						    &state->percent_check,
 						    CHECK_STEP);
-
-	return 0;
 }
 
 void process_event(struct dm_task *dmt,
@@ -282,8 +279,7 @@ void process_event(struct dm_task *dmt,
 
 	percent = dm_make_percent(status->used_sectors, status->total_sectors);
 
-	if (_snapshot_handle_percent_check(state, device, percent))
-		goto out;
+	_snapshot_handle_percent_check(state, device, percent);
 out:
 	dm_pool_free(state->mem, status);
 }
