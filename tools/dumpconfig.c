@@ -372,13 +372,13 @@ static int _atomic_write_config(struct cmd_context *cmd,
 	exists = (stat(dest_path, &st) == 0);
 
 	/* Create temp file in same directory as destination */
-	if (dm_snprintf(dir_path, sizeof(dir_path), "%s", dest_path) < 0)
+	if (!_dm_strncpy(dir_path, dest_path, sizeof(dir_path)))
 		return 0;
 	last_slash = strrchr(dir_path, '/');
 	if (last_slash)
 		*last_slash = '\0';
 	else
-		strcpy(dir_path, ".");
+		dm_strncpy(dir_path, ".", sizeof(dir_path));
 
 	if (dm_snprintf(temp_path, sizeof(temp_path), "%s/.lvm-config-XXXXXX", dir_path) < 0)
 		return 0;
