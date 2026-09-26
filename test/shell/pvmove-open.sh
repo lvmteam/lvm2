@@ -43,11 +43,13 @@ _open_mapper_dev() {
 }
 
 # A fast machine can finish the copy before we manage to open the pvmove
-# device.  Writes to $dev3 are slowed once in setup (see delay_dev below).
-# _keep_open_wait runs in the background holding the named devices open and
-# restores full speed on $dev3 once they are all held.
+# device, so writes to $dev3 are slowed first.  _keep_open_wait runs in the
+# background holding the named devices open and restores full speed on $dev3
+# once they are all held.
 _keep_open()
 {
+	aux delay_dev "$dev3" 0 2 "$(get first_extent_sector "$dev3"):"
+
 	_keep_open_wait "$@" &
 	KEEP_OPEN_PID=$!
 }
@@ -87,9 +89,6 @@ aux lvmconf 'activation/retry_deactivation = 0' \
 # fallback to mirror throttling when dm-delay is not available
 # this does not work too well with fast CPUs
 aux target_at_least dm-delay 1 1 0 || { aux throttle_dm_mirror || skip ; }
-
-# Slow writes on $dev3 so pvmove cannot finish before we open mirror legs.
-aux delay_dev "$dev3" 0 2 "$(get first_extent_sector "$dev3"):"
 
 ########################################################
 # pvmove operation finishes, while 1 mirror leg is open
