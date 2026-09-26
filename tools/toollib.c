@@ -6167,21 +6167,20 @@ do_command:
 				}
 			}
 
-			if (found) {
-				log_debug("Using existing orphan PV %s.", pv_dev_name(vgpvl->pv));
-				pvl->pv = vgpvl->pv;
-				dm_list_add(&pp->pvs, &pvl->list);
-
-				/* allow deviceidtype_ARG/deviceid_ARG ? */
-				memcpy(pvid, &pvl->pv->id.uuid, ID_LEN);
-				if (!device_id_add(cmd, pd->dev, pvid, NULL, NULL, 0)) {
-					log_error("Failed to add device id for %s.", pd->name);
-					dm_list_move(&pp->arg_fail, &pd->list);
-					continue;
-				}
-
-			} else {
+			if (!found) {
 				log_error("Failed to find PV %s", pd->name);
+				dm_list_move(&pp->arg_fail, &pd->list);
+				continue;
+			}
+
+			log_debug("Using existing orphan PV %s.", pv_dev_name(vgpvl->pv));
+			pvl->pv = vgpvl->pv;
+			dm_list_add(&pp->pvs, &pvl->list);
+
+			/* allow deviceidtype_ARG/deviceid_ARG ? */
+			memcpy(pvid, &pvl->pv->id.uuid, ID_LEN);
+			if (!device_id_add(cmd, pd->dev, pvid, NULL, NULL, 0)) {
+				log_error("Failed to add device id for %s.", pd->name);
 				dm_list_move(&pp->arg_fail, &pd->list);
 			}
 		}

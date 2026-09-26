@@ -1200,7 +1200,6 @@ static void _add_rule(struct cmd_context *cmdtool, struct command *cmd,
 
 		else if (!strncmp(arg, "all", 3)) {
 			/* opt/lvt_bits/lvp_bits all remain 0 to mean all */
-			continue;
 		}
 
 		else if (!strncmp(arg, "--", 2)) {

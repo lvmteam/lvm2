@@ -366,12 +366,11 @@ static int _skip_unmovable_lvs(const struct logical_volume *lv_move,
 				log_error("LV %s is already locked by another pvmove.",
 					  display_lvname(lv_move));
 				return 0;
-			} else {
-				log_warn("WARNING: Not moving LV %s: locked by another pvmove.",
-					 display_lvname(lv));
-				dm_list_del(&lvl->list);
-				continue;
 			}
+			log_warn("WARNING: Not moving LV %s: locked by another pvmove.",
+				 display_lvname(lv));
+			dm_list_del(&lvl->list);
+			continue;
 		}
 
 		/* Note: "lock holder" terminology is outdated, it's really the top LV when "lv" is a sub LV */
@@ -382,12 +381,10 @@ static int _skip_unmovable_lvs(const struct logical_volume *lv_move,
 				log_error("LV %s is not moveable.",
 					  display_lvname(lv_move));
 				return 0;
-			} else {
-				log_warn("WARNING: Not moving LV %s: not moveable.",
-					 display_lvname(lv));
-				dm_list_del(&lvl->list);
-				continue;
 			}
+			log_warn("WARNING: Not moving LV %s: not moveable.",
+				 display_lvname(lv));
+			dm_list_del(&lvl->list);
 		}
 	}
 	return 1;

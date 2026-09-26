@@ -4504,7 +4504,6 @@ void vg_write_commit_bad_mdas(struct cmd_context *cmd, struct volume_group *vg)
 		if (!mda->ops->vg_commit(vg->fid, vg, mda)) {
 			log_warn("WARNING: Failed to commit VG %s metadata to bad mda%d at %llu on %s.",
 				 vg->name, mda->mda_num, (unsigned long long)mda->header_start, dev_name(dev));
-			continue;
 		}
 	}
 
