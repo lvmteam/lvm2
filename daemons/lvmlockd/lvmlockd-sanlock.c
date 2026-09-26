@@ -1059,9 +1059,12 @@ int lm_init_lv_sanlock(struct lockspace *ls, char *ls_name, char *vg_name, char 
 
 	if (daemon_test) {
 		align_size = 1024 * 1024;
-		dm_snprintf(lv_args, MAX_ARGS+1, "%s:%llu",
-			 LV_LOCK_ARGS_V1,
-			 (unsigned long long)((align_size * LV_LOCK_BEGIN) + (align_size * daemon_test_lv_count)));
+		if (dm_snprintf(lv_args, MAX_ARGS+1, "%s:%llu",
+				LV_LOCK_ARGS_V1,
+				(unsigned long long)((align_size * LV_LOCK_BEGIN) + (align_size * daemon_test_lv_count))) < 0) {
+			log_error("S %s init_lv_san lv_args is too long.", ls_name);
+			return -1;
+		}
 		daemon_test_lv_count++;
 		return 0;
 	}
