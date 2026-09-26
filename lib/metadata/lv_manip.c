@@ -5259,7 +5259,6 @@ static uint32_t _lvseg_get_stripes(struct lv_segment *seg, uint32_t *stripesize)
 
 			lv_image = seg_lv(seg, s);
 			seg_image = first_seg(lv_image);
-			seg_get = NULL;
 
 			if (seg_is_integrity(seg_image)) {
 				/* Get stripe values from the iorig layer. */

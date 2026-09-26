@@ -1572,7 +1572,6 @@ static void _devices_file_backup(struct cmd_context *cmd, char *fc, char *fb, ti
 	}
 	if (fclose(fp))
 		stack;
-	fp = NULL;
 	log_debug("Wrote backup %s", path);
 
 	backup_dir_cleanup(dirpath, "system.devices-", backup_limit, 0);
@@ -4214,24 +4213,23 @@ void device_ids_search(struct cmd_context *cmd, struct dm_list *new_devs,
 		new_idtype = 0;
 		new_idname = NULL;
 		new_idname2 = NULL;
-		new_devname = NULL;
 
 		if (cmd->device_ids_refresh_trigger || all_ids) {
 			if (!_device_id_system_read_preferred(cmd, dev, &new_idtype, &new_idname))
 				continue;
 			if (new_idname)
 				new_idname2 = strdup(new_idname);
-			new_devname = strdup(devname);
 			log_print_unless_silent("Devices file PVID %s has new device ID %s %s from %s.",
 				  du->pvid ?: "", idtype_to_str(new_idtype), new_idname ?: "", devname);
 		} else {
-			/* Use the new device name as the new idname. */
 			new_idtype = DEV_ID_TYPE_DEVNAME;
 			new_idname = strdup(devname);
 			new_idname2 = strdup(devname);
-			new_devname = strdup(devname);
 			log_debug("Found new device name %s for PVID %s.", devname, du->pvid ?: "");
 		}
+
+		/* DEVNAME in the devices file is always the current device name. */
+		new_devname = strdup(devname);
 
 		id = zalloc(sizeof(struct dev_id));
 

@@ -5257,8 +5257,6 @@ static int _stats_create_file(CMD_ARGS)
 	if (close(fd))
 		log_sys_debug("close", abspath);
 
-	fd = -1;
-
 	for (region = regions; *region != DM_STATS_REGIONS_ALL; region++)
 		count++;
 

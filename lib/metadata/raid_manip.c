@@ -4537,7 +4537,6 @@ static struct lv_segment *_convert_striped_to_raid0(struct logical_volume *lv,
 			  display_lvname(lv));
 		return NULL;
 	}
-	seg = first_seg(l->lv);
 	if (!(raid0_seg = alloc_lv_segment(segtype, lv,
 					   0 /* le */, lv->le_count /* len */,
 					   0, 0,
