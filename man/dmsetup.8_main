@@ -1124,7 +1124,7 @@ better snapshot support.
 .P
 To find out more about the various targets and their table formats
 and status lines, please read the files in
-the Documentation/device-mapper directory
+the Documentation/\:\%admin-guide/\:\%device-mapper directory
 in the kernel source tree.
 (Your distribution might include a copy of this information in the
 documentation directory for the device-mapper package.)
