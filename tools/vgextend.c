@@ -52,17 +52,15 @@ clear_flag:
 	return 1;
 }
 
-static int _vgextend_restoremissing(struct cmd_context *cmd __attribute__((unused)),
-				    const char *vg_name, struct volume_group *vg,
-				    struct processing_handle *handle)
+static int _vgextend_restoremissing_single(struct cmd_context *cmd,
+					   const char *vg_name, struct volume_group *vg,
+					   struct processing_handle *handle __attribute__((unused)))
 {
-	struct vgextend_params *vp = (struct vgextend_params *) handle->custom_handle;
-	struct pvcreate_params *pp = &vp->pp;
 	int fixed = 0;
-	unsigned i;
+	int i;
 
-	for (i = 0; i < pp->pv_count; i++)
-		if (_restore_pv(vg, pp->pv_names[i]))
+	for (i = 1; i < cmd->position_argc; i++)
+		if (_restore_pv(vg, cmd->position_argv[i]))
 			fixed++;
 
 	if (!fixed) {
@@ -76,6 +74,22 @@ static int _vgextend_restoremissing(struct cmd_context *cmd __attribute__((unuse
 	log_print_unless_silent("Volume group \"%s\" successfully extended", vg_name);
 
 	return ECMD_PROCESSED;
+}
+
+int vgextend_restoremissing(struct cmd_context *cmd, int argc __attribute__((unused)),
+			    char **argv __attribute__((unused)))
+{
+	const char *vg_name;
+
+	vg_name = skip_dev_dir(cmd, cmd->position_argv[0], NULL);
+
+	clear_hint_file(cmd);
+
+	cmd->handles_missing_pvs = 1;
+
+	return process_each_vg(cmd, 0, NULL, vg_name, NULL,
+			       READ_FOR_UPDATE, 0, NULL,
+			       &_vgextend_restoremissing_single);
 }
 
 static int _vgextend_single(struct cmd_context *cmd, const char *vg_name,
@@ -127,20 +141,13 @@ out:
 	return ret;
 }
 
-int vgextend(struct cmd_context *cmd, int argc, char **argv)
+int vgextend_general(struct cmd_context *cmd, int argc, char **argv)
 {
 	struct processing_handle *handle;
 	struct vgextend_params vp;
 	struct pvcreate_params *pp = &vp.pp;
-	unsigned restoremissing = arg_is_set(cmd, restoremissing_ARG);
 	const char *vg_name;
 	int ret;
-
-	if (!argc) {
-		log_error("Please enter volume group name and "
-			  "physical volume(s)");
-		return EINVALID_CMD_LINE;
-	}
 
 	vg_name = skip_dev_dir(cmd, argv[0], NULL);
 	argc--;
@@ -170,16 +177,12 @@ int vgextend(struct cmd_context *cmd, int argc, char **argv)
 	if (!lvmcache_label_scan(cmd))
 		return_ECMD_FAILED;
 
-	if (!(handle = init_processing_handle(cmd, NULL))) {
-		log_error("Failed to initialize processing handle.");
-		return ECMD_FAILED;
-	}
+	if (!(handle = init_processing_handle(cmd, NULL)))
+		return_ECMD_FAILED;
 
-	if (!restoremissing) {
-		if (!pvcreate_each_device(cmd, handle, pp)) {
-			destroy_processing_handle(cmd, handle);
-			return_ECMD_FAILED;
-		}
+	if (!pvcreate_each_device(cmd, handle, pp)) {
+		destroy_processing_handle(cmd, handle);
+		return_ECMD_FAILED;
 	}
 
 	unlock_devices_file(cmd);
@@ -196,9 +199,15 @@ int vgextend(struct cmd_context *cmd, int argc, char **argv)
 
 	ret = process_each_vg(cmd, 0, NULL, vg_name, NULL,
 			      READ_FOR_UPDATE | PROCESS_SKIP_SCAN, 0, handle,
-			      restoremissing ? &_vgextend_restoremissing : &_vgextend_single);
+			      &_vgextend_single);
 
 	destroy_processing_handle(cmd, handle);
 
 	return ret;
+}
+
+int vgextend(struct cmd_context *cmd, int argc, char **argv)
+{
+	log_error("missing command definition");
+	return ECMD_FAILED;
 }

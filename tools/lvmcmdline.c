@@ -109,6 +109,8 @@ static const struct command_function _command_functions[CMD_COUNT] = {
 	{ vgdisplay_columns_CMD,	vgdisplay_columns_cmd },
 	{ vgdisplay_colon_CMD,		vgdisplay_colon_cmd },
 	{ vgdisplay_general_CMD,	vgdisplay_general_cmd },
+	{ vgextend_restoremissing_CMD, vgextend_restoremissing },
+	{ vgextend_general_CMD, vgextend_general },
 
 	/* lvconvert utilities related to repair. */
 	{ lvconvert_repair_CMD,	lvconvert_repair_cmd },

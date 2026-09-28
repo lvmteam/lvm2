@@ -1955,8 +1955,12 @@ OO: --autobackup Bool,
 --force, --zero Bool, --labelsector Number, --metadatatype MetadataType,
 --metadatasize SizeMB, --pvmetadatacopies MetadataCopiesPV,
 --metadataignore Bool, --dataalignment SizeKB, --dataalignmentoffset SizeKB,
---reportformat ReportFmt, --restoremissing
+--reportformat ReportFmt
 ID: vgextend_general
+
+vgextend --restoremissing VG PV ...
+OO: --reportformat ReportFmt
+ID: vgextend_restoremissing
 
 ---
 
