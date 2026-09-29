@@ -739,23 +739,6 @@ settle_udev() {
 	udevadm settle || logmsg "failed to settle udev events before reserving $GROUP."
 }
 
-undo_register() {
-	# Only devices where our key was actually registered are undone, so
-	# an interrupt or a failure before any registration touches nothing.
-	for dev in "${REGISTERED_DEVICES[@]}"; do
-		set_cmd "$dev"
-
-		if [[ "$cmd" == "nvme" ]]; then
-			nvme resv-register --crkey="$OURKEY" --rrega=1 "$dev" >/dev/null 2>&1
-		else
-			"$cmd" "${cmdopts[@]}" --out --register --param-rk="$OURKEY" "$dev" >/dev/null 2>&1
-		fi
-		if [ $? -ne 0 ]; then
-			logmsg "$cmd unregister error on $dev"
-		fi
-	done
-}
-
 do_register_nvme() {
 	dev=$1
 	set_cmd "$dev"
@@ -791,7 +774,7 @@ do_register_scsi() {
 }
 
 do_register() {
-	dev=$1
+	local dev=$1
 	set_cmd "$dev"
 
 	if [[ "$cmd" == "nvme" ]]; then
@@ -799,12 +782,6 @@ do_register() {
 	else
 		do_register_scsi "$dev"
 	fi
-	# Only record a device our key was successfully registered on.
-	if [ $? -ne 0 ]; then
-		return 1
-	fi
-
-	REGISTERED_DEVICES+=("$dev")
 }
 
 do_takeover() {
@@ -847,7 +824,6 @@ do_takeover() {
 	for dev in "${DEVICES[@]}"; do
 		if ! do_register "$dev"; then
 			logmsg "start $GROUP failed to register our key."
-			undo_register
 			exit 1
 		fi
 	done
@@ -874,7 +850,6 @@ do_takeover() {
 
 		if [[ "$?" -ne 0 ]]; then
 			logmsg "start $GROUP failed to preempt-abort $REMKEY on $dev."
-			undo_register
 			exit 1
 		fi
 	done
@@ -911,7 +886,6 @@ do_start() {
 	for dev in "${DEVICES[@]}"; do
 		if ! do_register "$dev"; then
 			logmsg "start $GROUP failed to register our key."
-			undo_register
 			exit 1
 		fi
 	done
@@ -957,7 +931,6 @@ do_start() {
 				fi
 			fi
 			logmsg "start $GROUP failed to reserve $dev."
-			undo_register
 			exit 1
 		fi
 	done
@@ -1352,11 +1325,6 @@ DO_READKEYS=0
 DO_READRESERVATION=0
 DO_READ=0
 
-# Records the devices where our key was actually registered, so the
-# signal cleanup can undo exactly those and never touches (or warns
-# about) a device we did not register on.
-REGISTERED_DEVICES=()
-
 CMD=$1
 shift
 
@@ -1715,28 +1683,7 @@ fi
 
 check_devices
 
-cleanup() {
-	trap '' HUP INT TERM
-	# Signal handler.  undo_register only unregisters devices listed in
-	# REGISTERED_DEVICES, which do_register appends to during start and
-	# takeover.  Other commands never populate the array, so a signal
-	# during read-keys, stop, remove, or clear does not unregister keys.
-	#
-	# undo_register is keyed to OURKEY (SCSI: --register --param-rk=OURKEY
-	# with sark=0; NVMe: resv-register --crkey=OURKEY --rrega=1), so it can
-	# only remove our own key, never another host's.  It runs only over
-	# the devices in REGISTERED_DEVICES, never one we did not register
-	# on.  Unregistering the local key also drops the local
-	# reservation (see "stop" in lvmpersist(8)), so no explicit
-	# release/clear is needed; a --clear here would wrongly wipe other
-	# hosts' keys.
-	# The trap is installed after option validation, so OURKEY is already
-	# a valid key here.
-	undo_register
-	exit 1
-}
-
-trap "cleanup" HUP INT TERM
+trap 'exit 1' HUP INT TERM
 
 if [[ "$DO_START" -eq 1 && -n "$REMKEY" ]]; then
 	do_takeover
