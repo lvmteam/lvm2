@@ -761,7 +761,7 @@ do_register_nvme() {
 	set_cmd "$dev"
 
 	if [[ $PTPL -eq 1 ]]; then
-		cmdopts+=("--cptpl=1")
+		cmdopts+=("--cptpl=3")
 	fi
 
 	# If our previous key is still registered, then we must use
