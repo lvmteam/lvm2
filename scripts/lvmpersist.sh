@@ -1081,6 +1081,7 @@ do_clear() {
 }
 
 do_remove() {
+	local key_missing=0
 	err=0
 
 	require_opt OURKEY ourkey
@@ -1091,6 +1092,7 @@ do_remove() {
 		rc=$?
 		if [ "$rc" -eq 1 ]; then
 			logmsg "cannot remove $REMKEY from $dev without ourkey $OURKEY being registered"
+			key_missing=1
 			err=1
 			continue
 		elif [ "$rc" -eq 2 ]; then
@@ -1144,6 +1146,10 @@ do_remove() {
 	if [[ "$MISSING_DEV_COUNT" -gt 0 ]]; then
 		logmsg "remove failed: $MISSING_DEV_COUNT missing device(s) in VG $VGNAME."
 		err=1
+	fi
+
+	if [[ "$key_missing" -eq 1 && -n "$VGNAME" ]]; then
+		logmsg "run \"vgchange --persist start $VGNAME\" on this host; after it succeeds, retry the failed LVM command with --lockopt force."
 	fi
 
 	test "$err" -eq 0 || errorexit "remove $GROUP failed."

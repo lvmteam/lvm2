@@ -430,11 +430,13 @@ lockspace is started.
 .P
 .SS vgextend
 .P
-For local VGs, vgextend starts PR on the new devices before adding them to
-the VG (the require or autostart setting must be enabled.)  For shared
-VGs, the user must use lvmpersist to start PR on the new devices, from all
-hosts, before running vgextend.  vgextend verifies that the reservation
-and keys on the new devices match the existing devices.
+vgextend starts PR on new devices before adding them to the VG
+(the require or autostart setting must be enabled.)  For shared
+VGs, the user must next run vgchange --persist start on the extended
+VG from other hosts using the VG.  Until doing so, the other hosts will be
+unable to modify or activate the VG.  PR-based lock recovery may also be
+blocked until all nodes have started PR on the newly extended devices
+(see the Retrying section in lvmlockd(8).)
 .P
 .SS vgremove
 The vgremove command stops PR on the VG's devices only if "require" or

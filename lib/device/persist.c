@@ -1974,139 +1974,6 @@ int persist_stop(struct cmd_context *cmd, struct volume_group *vg)
 	return 1;
 }
 
-static int _persist_extend_shared(struct cmd_context *cmd, struct volume_group *vg,
-			  	  uint64_t our_key_val, struct device *check_dev)
-{
-	struct pv_list *pvl;
-	struct device *dev;
-	uint64_t *old_vals = NULL;
-	uint64_t *new_vals;
-	int old_count = 0;
-	int new_count;
-	int prtype = 0;
-	int error = 0;
-	int found;
-	int i, j;
-
-	/*
-	 * All hosts using the shared VG need to start PR on the new devs, not
-	 * just the host running vgextend.  For shared VGs, require the user to
-	 * use lvmpersist to start PR on the new devices from all hosts before
-	 * running vgextend.  Verify that has been done here, checking that all
-	 * the new devs have registrations/reservations set up from the user
-	 * running lvmpersist, and matching the PR found on an existing device.
-	 * Return 1 if PR has been set up on the new devs to match the old devs,
-	 * otherwise return 0 and fail to vgextend.
-	 */
-
-	/*
-	 * Check for reservation on new devs.
-	 */
-
-	dm_list_iterate_items(pvl, &vg->pv_write_list) {
-		if (!(dev = pvl->pv->dev))
-			continue;
-		if (dm_list_empty(&dev->aliases))
-			continue;
-
-		if (!_dev_read_reservation(cmd, dev, NULL, &prtype)) {
-			log_error("PR not found on %s.", dev_name(dev));
-			return 0;
-		}
-
-		if (!prtype) {
-			log_error("PR is not started on %s.", dev_name(dev));
-			log_error("(Use lvmpersist to start PR on new devices from all hosts, prior to vgextend).");
-			return 0;
-		}
-
-		if (prtype != PR_TYPE_WEAR) {
-			log_error("PR type %s (expect WEAR) found on %s.",
-				  _prtype_to_str(prtype), dev_name(dev));
-			return 0;
-		}
-	}
-
-	/*
-	 * Get keys from an existing/old device to use for
-	 * checking that the new devs have the same keys.
-	 */
-
-	if (!dev_find_key(cmd, check_dev, 0, 0, NULL, 0, NULL, 1, &old_count, &old_vals)) {
-		log_error("PR keys not found on %s.", dev_name(check_dev));
-		return 0;
-	}
-
-	/*
-	 * Check for registered keys on new devs.
-	 */
-
-	dm_list_iterate_items(pvl, &vg->pv_write_list) {
-		if (!(dev = pvl->pv->dev))
-			continue;
-		if (dm_list_empty(&dev->aliases))
-			continue;
-
-		new_count = 0;
-		new_vals = NULL;
-
-		if (!dev_find_key(cmd, dev, 0, 0, NULL, 0, NULL, 1, &new_count, &new_vals)) {
-			log_error("PR keys not found on %s.", dev_name(dev));
-			error = 1;
-			goto next;
-		}
-
-		/*
-		 * Check if our key is on the new device.
-		 */
-		found = 0;
-
-		for (i = 0; i < new_count; i++) {
-			if (new_vals[i] == our_key_val) {
-				found = 1;
-				break;
-			}
-		}
-		if (!found) {
-			log_error("Local PR key 0x%llx not found on %s.",
-				  (unsigned long long) our_key_val, dev_name(dev));
-			error = 1;
-			goto next;
-		}
-
-		if (new_count != old_count) {
-			log_error("PR keys incomplete (found %d of %d) on %s.",
-				  new_count, old_count, dev_name(dev));
-			error = 1;
-			goto next;
-		}
-
-		log_debug("checking for %d PR keys on %s.", new_count, dev_name(dev));
-
-		for (i = 0; i < old_count; i++) {
-			found = 0;
-			for (j = 0; j < old_count; j++) {
-				if (old_vals[i] == new_vals[j]) {
-					found = 1;
-					break;
-				}
-			}
-			if (!found) {
-				log_error("PR key 0x%llx not found on %s.",
-					  (unsigned long long) old_vals[i], dev_name(dev));
-				error = 1;
-			}
-		}
- next:
-		dm_pool_free(cmd->mem, new_vals);
-	}
-
-	log_debug("Found PR on all new devs.");
-	dm_pool_free(cmd->mem, old_vals);
-
-	return error ? 0 : 1;
-}
-
 int persist_upgrade_stop(struct cmd_context *cmd, struct volume_group *vg, uint64_t our_key_val)
 {
 	DM_LIST_INIT(devs);
@@ -2449,13 +2316,6 @@ int persist_vgcreate_update(struct cmd_context *cmd, struct volume_group *vg, ui
 	return 1;
 }
 
-/*
- * Return 1:
- * if PR is not in use on existing PVs (so nothing to do here),
- * or if PR is already started on the new PVs,
- * or if this is successful at starting PR on new PVs.
- */
-
 int persist_start_extend(struct cmd_context *cmd, struct volume_group *vg)
 {
 	char *local_key = (char *)find_config_tree_str(cmd, local_pr_key_CFG, NULL);
@@ -2465,6 +2325,7 @@ int persist_start_extend(struct cmd_context *cmd, struct volume_group *vg)
 	struct device *check_dev = NULL;
 	uint64_t our_key_val = 0;
 	char our_key_buf[PR_KEY_BUF_SIZE] = { 0 };
+	const char *access = vg_is_shared(vg) ? "sh" : "ex";
 	const char *devname;
 	const char **argv;
 	int status;
@@ -2528,15 +2389,6 @@ int persist_start_extend(struct cmd_context *cmd, struct volume_group *vg)
 		}
 	}
 
-	/*
-	 * For local VGs, vgextend starts PR on the new devs (here.)
-	 * For shared VGs, the user must start PR on the new devs using
-	 * lvmpersist (from all hosts) before running vgextend.
-	 */
-
-	if (vg_is_shared(vg))
-		return _persist_extend_shared(cmd, vg, our_key_val, check_dev);
-
 	dm_list_iterate_items(pvl, &vg->pv_write_list) {
 		if (!(dev = pvl->pv->dev))
 			continue;
@@ -2561,7 +2413,7 @@ int persist_start_extend(struct cmd_context *cmd, struct volume_group *vg)
 	argv[++args] = "--ourkey";
 	argv[++args] = our_key_buf;
 	argv[++args] = "--access";
-	argv[++args] = "ex";
+	argv[++args] = access;
 	argv[++args] = "--vg";
 	argv[++args] = vg->name;
 
@@ -2603,6 +2455,17 @@ int persist_start_extend(struct cmd_context *cmd, struct volume_group *vg)
 
 	if (n || errors)
 		return 0;
+
+	/*
+	 * If this is a shared VG, the user must start PR on the new devs
+	 * by rerunning vgchange --persist start vg (on all hosts). Until
+	 * they do that, their persist_is_started_gen() check will fail,
+	 * preventing them from modifying or activating the extended VG.
+	 */
+
+	if (vg_is_shared(vg))
+		log_warn("WARNING: \"vgchange --persist start %s\" is required on other hosts using this VG.", vg->name);
+
 	return 1;
 }
 
