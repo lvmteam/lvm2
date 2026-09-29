@@ -2478,7 +2478,6 @@ int persist_start(struct cmd_context *cmd, struct volume_group *vg,
 {
 	char *local_key = (char *)find_config_tree_str(cmd, local_pr_key_CFG, NULL);
 	int local_host_id = find_config_tree_int(cmd, local_host_id_CFG, NULL);
-	DM_LIST_INIT(devs);
 	struct pv_list *pvl;
 	struct device *dev;
 	uint64_t our_key_val = 0;
@@ -2667,13 +2666,13 @@ int persist_start(struct cmd_context *cmd, struct volume_group *vg,
 	if (!_vg_is_registered_by_key(cmd, vg, our_key_val, &partial_reg)) {
 		log_error("Persistent reservation start failed: local key 0x%llx is not registered.",
 			  (unsigned long long) our_key_val);
-		goto out_stop;
+		return 0;
 	}
 
 	if (partial_reg) {
 		log_error("Persistent reservation start failed: local key 0x%llx is partially registered.",
 			  (unsigned long long) our_key_val);
-		goto out_stop;
+		return 0;
 	}
 
 	dm_list_iterate_items(pvl, &vg->pvs) {
@@ -2688,25 +2687,25 @@ int persist_start(struct cmd_context *cmd, struct volume_group *vg,
 		if (!_dev_read_reservation(cmd, dev, &holder, &prtype)) {
 			log_error("Persistent reservation start failed: cannot read reservation on %s.",
 				  dev_name(dev));
-			goto out_stop;
+			return 0;
 		}
 
 		if (!prtype) {
 			log_error("Persistent reservation start failed: no reservation on %s.",
 				  dev_name(dev));
-			goto out_stop;
+			return 0;
 		}
 
 		if ((prtype != PR_TYPE_WE) && (prtype != PR_TYPE_WEAR)) {
 			log_error("Persistent reservation start failed: wrong type (%s) on %s.",
 				  _prtype_to_str(prtype), dev_name(dev));
-			goto out_stop;
+			return 0;
 		}
 
 		if ((prtype == PR_TYPE_WE) && (holder != our_key_val)) {
 			log_error("Persistent reservation start failed: other holder (0x%llx) on %s.",
 				  (unsigned long long) holder, dev_name(dev));
-			goto out_stop;
+			return 0;
 		}
 
 		if (vg_is_shared(vg)) {
@@ -2723,13 +2722,6 @@ int persist_start(struct cmd_context *cmd, struct volume_group *vg,
 		stack;
 
 	return 1;
-
- out_stop:
-	/* try to clean up any parts of start that were successful */
-	if (!pv_list_to_dev_list(cmd->mem, &vg->pvs, &devs))
-		return_0;
-	_run_stop(cmd, vg, &devs, our_key_buf, 1);
-	return 0;
 }
 
 int persist_remove(struct cmd_context *cmd, struct volume_group *vg, const char *remkey)
