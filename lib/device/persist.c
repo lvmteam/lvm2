@@ -2403,6 +2403,8 @@ int persist_start_extend(struct cmd_context *cmd, struct volume_group *vg)
 		  pv_count, (unsigned long long) our_key_val);
 
 	args = 9 + pv_count*2;
+	if (vg->pr & VG_PR_PTPL)
+		args += 1;
 
 	if (!(argv = dm_pool_alloc(cmd->mem, args * sizeof(char *))))
 		return_0;
@@ -2416,6 +2418,8 @@ int persist_start_extend(struct cmd_context *cmd, struct volume_group *vg)
 	argv[++args] = access;
 	argv[++args] = "--vg";
 	argv[++args] = vg->name;
+	if (vg->pr & VG_PR_PTPL)
+		argv[++args] = "--ptpl";
 
 	dm_list_iterate_items(pvl, &vg->pv_write_list) {
 		if (!(dev = pvl->pv->dev))
