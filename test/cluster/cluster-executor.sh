@@ -2016,6 +2016,8 @@ cluster_collect_debug_logs() {
                     cluster_warn "  NOP timeout often means the target stopped responding while a SCSI"
                     cluster_warn "  command (e.g. sg_persist preempt-abort) was in flight, not initiator"
                     cluster_warn "  CPU scheduling. Check node0 (LIO target) logs in the debug directory."
+                    cluster_warn "  Known related LIO PREEMPT-AND-ABORT deadlock:"
+                    cluster_warn "  https://lore.kernel.org/target-devel/ajrNEj-B63SDtZ9W@redhat.com/T/#u"
                 fi
             fi
         else
