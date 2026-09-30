@@ -138,11 +138,19 @@ void process_event(struct dm_task *dmt,
 
 		switch(_get_mirror_event(state, params)) {
 		case ME_INSYNC:
-			/* FIXME: all we really know is that this
-			   _part_ of the device is in sync
-			   Also, this is not an error
-			*/
 			log_notice("%s is now in-sync.", device);
+			/*
+			 * Run repair even on ME_INSYNC.  dm-mirror may not
+			 * report device health when legs fail (e.g. flush
+			 * errors on offline SCSI devices), so status can stay
+			 * all-alive while PVs are missing.  lvconvert --repair
+			 * detects missing PVs via metadata and is a fast no-op
+			 * when the LV is consistent.  Mirror repair uses
+			 * noflush suspend so it does not deadlock on I/O.
+			 */
+			if (!_remove_failed_devices(state->cmd_lvconvert, device))
+				log_error("Failed to remove faulty devices in %s.",
+					  device);
 			break;
 		case ME_FAILURE:
 			log_error("Device failure in %s.", device);
