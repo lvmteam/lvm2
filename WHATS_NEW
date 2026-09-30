@@ -1,3 +1,6 @@
+Version 2.03.44 - 
+==================
+
 Version 2.03.43 - 30th September 2026
 =====================================
   Wipe stale signatures before formatting a VDO data LV on thin storage.
