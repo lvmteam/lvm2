@@ -2327,11 +2327,13 @@ int lockd_global(struct cmd_context *cmd, const char *def_mode)
 	if ((cmd->lockopt & LOCKOPT_ADOPTGL) ||
 	    (cmd->lockopt & LOCKOPT_ADOPT) ||
 	    (cmd->lockopt & LOCKOPT_REPAIRGL) ||
-	    (cmd->lockopt & LOCKOPT_REPAIR)) {
-		if (dm_snprintf(opt_buf, sizeof(opt_buf), "%s%s%s",
+	    (cmd->lockopt & LOCKOPT_REPAIR) ||
+	    (cmd->lockopt & LOCKOPT_FORCE)) {
+		if (dm_snprintf(opt_buf, sizeof(opt_buf), "%s%s%s%s",
 			    (cmd->lockopt & LOCKOPT_ADOPTGL) ? "adopt_only" : "",
 			    (cmd->lockopt & LOCKOPT_ADOPT) ? "adopt" : "",
-			    (cmd->lockopt & (LOCKOPT_REPAIR|LOCKOPT_REPAIRGL)) ? "repair" : "") < 0) {
+			    (cmd->lockopt & (LOCKOPT_REPAIR|LOCKOPT_REPAIRGL)) ? "repair" : "",
+			    (cmd->lockopt & LOCKOPT_FORCE) ? "force" : "") < 0) {
 			log_error("Options string too long %x", cmd->lockopt);
 			return 0;
 		}
@@ -2681,11 +2683,13 @@ int lockd_vg(struct cmd_context *cmd, const char *vg_name, const char *def_mode,
 	if ((cmd->lockopt & LOCKOPT_ADOPTVG) ||
 	    (cmd->lockopt & LOCKOPT_ADOPT) ||
 	    (cmd->lockopt & LOCKOPT_REPAIRVG) ||
-	    (cmd->lockopt & LOCKOPT_REPAIR)) {
-		if (dm_snprintf(opt_buf, sizeof(opt_buf), "%s%s%s",
+	    (cmd->lockopt & LOCKOPT_REPAIR) ||
+	    (cmd->lockopt & LOCKOPT_FORCE)) {
+		if (dm_snprintf(opt_buf, sizeof(opt_buf), "%s%s%s%s",
 			    (cmd->lockopt & LOCKOPT_ADOPTVG) ? "adopt_only" : "",
 			    (cmd->lockopt & LOCKOPT_ADOPT) ? "adopt" : "",
-			    (cmd->lockopt & (LOCKOPT_REPAIR|LOCKOPT_REPAIRVG)) ? "repair" : "") < 0) {
+			    (cmd->lockopt & (LOCKOPT_REPAIR|LOCKOPT_REPAIRVG)) ? "repair" : "",
+			    (cmd->lockopt & LOCKOPT_FORCE) ? "force" : "") < 0) {
 			log_error("Options string too long %x.", cmd->lockopt);
 			return 0;
 		}
