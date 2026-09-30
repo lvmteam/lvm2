@@ -1,7 +1,9 @@
 Version 2.03.44 - 
 ==================
-  Run mirror repair from dmeventd when dm-mirror reports in-sync with failed legs.
-  Fix out-of-bounds access on an unterminated mda_header raw_locns list.
+  Run build-tree binaries against build libraries, not installed copies.
+  Avoid spurious dmeventd unregister errors when removing monitored snapshots.
+  Run mirror repair from dmeventd when mirror reports in-sync with failed legs.
+  Fix out-of-bounds access on an unterminated mda_header raw_locns (BZ2510937).
   Log open failures at debug for devices excluded after scan I/O errors.
   Fix blkdeactivate to exit 0 when devices stay mounted by policy.
   Fix blkdeactivate -l wholevg when another LV in the VG stays mounted.
