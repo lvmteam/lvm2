@@ -133,7 +133,7 @@ test_raid1_stale_metadata_lvcreate()
 # Run tests
 #####################################################################
 
-#test_mirror_dmeventd_repair
+test_mirror_dmeventd_repair
 test_mirror_stale_metadata_lvcreate
 aux have_raid 1 3 0 && test_raid1_stale_metadata_lvcreate
 
