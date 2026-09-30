@@ -336,7 +336,21 @@ out:
 
 int dev_cache_add_alias(struct device *dev, const char *name)
 {
-	return _add_alias(dev, name, NO_HASH);
+	struct dm_list *preferred = dm_list_first(&dev->aliases);
+
+	if (!_add_alias(dev, name, NO_HASH))
+		return 0;
+
+	/*
+	 * pvscan imports DEVLINKS for regex filters before udev creates symlinks.
+	 * Keep the existing preferred name for opening the device.
+	 */
+	if (preferred) {
+		dm_list_del(preferred);
+		dm_list_add_h(&dev->aliases, preferred);
+	}
+
+	return 1;
 }
 
 int get_sysfs_binary(const char *path, char *buf, size_t buf_size, int *retlen)

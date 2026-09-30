@@ -1,5 +1,6 @@
 Version 2.03.44 - 
 ==================
+  Fix pvscan autoactivation when DEVLINKS symlinks are not yet created.
 
 Version 2.03.43 - 30th September 2026
 =====================================

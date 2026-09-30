@@ -16,6 +16,7 @@
 UNIT_SOURCE=\
 	test/unit/bcache_t.c \
 	test/unit/daemon_stray_t.c \
+	test/unit/dev_cache_t.c \
 	test/unit/bcache_utils_t.c \
 	test/unit/bitset_t.c \
 	test/unit/config_t.c \
@@ -48,6 +49,9 @@ CLEAN_TARGETS += $(UNIT_DEPENDS) $(UNIT_OBJECTS) \
 
 lib/liblvm-internal.a: lib
 libdaemon/client/libdaemonclient.a: libdaemon
+
+# toolcontext.h requires the generated cmds.h.
+test/unit/dev_cache_t.o: | include
 
 $(UNIT_TARGET): $(UNIT_OBJECTS) $(LVMINTERNAL_LIBS)
 	$(SHOW) "    [LD] $@"
