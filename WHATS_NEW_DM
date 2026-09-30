@@ -1,5 +1,5 @@
-Version 1.02.217 - 
-===================
+Version 1.02.217 - 30th September 2026
+======================================
   Ignore stale raid sync/nosync in active table for reload suppression.
   Fix dmvdostats help -c to list VDO report fields instead of dmstats fields.
   Resolve dmsetup vdostats through device tree and try -vpool name suffix.
