@@ -21,6 +21,8 @@
 #ifdef UDEV_SYNC_SUPPORT
 #include <libudev.h>
 
+#define UDEV_CONTROL_PATH "/run/udev/control"
+
 static struct udev *_udev;
 
 int udev_init_library_context(void)
@@ -31,14 +33,11 @@ int udev_init_library_context(void)
 	if (getenv("DM_DISABLE_UDEV"))
 		return 0;
 
+	if (!udev_is_running())
+		return 0;
+
 	if (!(_udev = udev_new())) {
 		log_error("Failed to create udev library context.");
-		return 0;
-	}
-
-	if (!udev_is_running()) {
-		udev_unref(_udev);
-		_udev = NULL;
 		return 0;
 	}
 
@@ -54,25 +53,9 @@ void udev_fin_library_context(void)
 
 int udev_is_running(void)
 {
-	struct udev_queue *udev_queue;
-	int r;
+	if (access(UDEV_CONTROL_PATH, F_OK) >= 0)
+		return 1;
 
-	if (!_udev) {
-		log_debug_activation("Udev library context not set.");
-		goto bad;
-	}
-
-	if (!(udev_queue = udev_queue_new(_udev))) {
-		log_debug_activation("Could not get udev state.");
-		goto bad;
-	}
-
-	r = udev_queue_get_udev_is_active(udev_queue);
-	udev_queue_unref(udev_queue);
-
-	return r > 0;
-
-bad:
 	log_debug_activation("Assuming udev is not running.");
 	return 0;
 }

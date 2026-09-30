@@ -30,7 +30,6 @@
 #  include <sys/types.h>
 #  include <sys/ipc.h>
 #  include <sys/sem.h>
-#  include <libudev.h>
 #endif
 
 #ifdef __linux__
@@ -47,6 +46,8 @@
 #define DM_DEFAULT_NAME_MANGLING_MODE_ENV_VAR_NAME "DM_DEFAULT_NAME_MANGLING_MODE"
 
 #define DEV_DIR "/dev/"
+
+#define UDEV_CONTROL_PATH "/run/udev/control"
 
 #ifdef UDEV_SYNC_SUPPORT
 #ifdef _SEM_SEMUN_UNDEFINED
@@ -2597,30 +2598,13 @@ static int _check_semaphore_is_supported(void)
 
 static int _check_udev_is_running(void)
 {
-	struct udev *udev;
-	struct udev_queue *udev_queue;
-	int r;
+	int r = access(UDEV_CONTROL_PATH, F_OK) >= 0;
 
-	if (!(udev = udev_new()))
-		goto_bad;
-
-	if (!(udev_queue = udev_queue_new(udev))) {
-		udev_unref(udev);
-		goto_bad;
-	}
-
-	if (!(r = udev_queue_get_udev_is_active(udev_queue)))
+	if (!r)
 		log_debug_activation("Udev is not running. "
 				     "Not using udev synchronization code.");
 
-	udev_queue_unref(udev_queue);
-	udev_unref(udev);
-
 	return r;
-
-bad:
-	log_error("Could not get udev state. Assuming udev is not running.");
-	return 0;
 }
 
 static pthread_once_t _udev_sync_once = PTHREAD_ONCE_INIT;

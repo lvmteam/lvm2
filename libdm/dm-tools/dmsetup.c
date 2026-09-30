@@ -49,7 +49,6 @@
 #  include <sys/types.h>
 #  include <sys/ipc.h>
 #  include <sys/sem.h>
-#  include <libudev.h>
 #endif
 
 /* FIXME Unused so far */
