@@ -330,6 +330,28 @@ vgimport --persist start
 .br
 vgchange --systemid <local_id> --persist start
 .P
+.SS Errors during PR start
+.P
+If the PR start operation in lvmpersist start or vgchange --persist start
+fails or is interrupted, completed registrations, reservations, and
+preemptions remain in place.  Failure handling does not unregister the
+local key or restore keys removed during takeover.
+A failed or interrupted PR start may leave PR started on only some devices.
+For a VG requiring PR, ordinary LVM metadata writes and LV activation require
+PR to be started on all its devices.
+.P
+With vgchange --setpersist y --persist start, successful PR start is
+followed by a VG metadata update.  If that update fails, the command
+attempts to stop PR.
+.P
+Inspect keys and reservations on all devices before recovering a failed
+takeover (using lvmpersist read or vgchange --persist read.)  Repeating
+start with removekey may fail because the target key has already been
+removed from some devices.  Do not unregister the new reservation holder
+while the previous host may still issue I/O: unregistering the WE holder
+or the last WEAR registrant releases the reservation and may allow the
+previous host to write again.
+.P
 .SS Local VG usage
 .P
 When using a local VG, only one host is started at a time, and a WE
