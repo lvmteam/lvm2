@@ -735,25 +735,34 @@ int dm_event_unregister_handler(const struct dm_event_handler *dmevh)
 {
 	int ret = 1, err;
 	const char *uuid;
-	struct dm_task *dmt;
+	const char *name_for_log;
+	struct dm_task *dmt = NULL;
 	struct dm_event_daemon_message msg = { 0 };
 
-	if (!(dmt = _get_device_info(dmevh)))
-		return_0;
+	/* Unregister may run after the DM device is gone; use handler uuid. */
+	if (dmevh->uuid) {
+		uuid = dmevh->uuid;
+		name_for_log = dmevh->dev_name ? dmevh->dev_name : uuid;
+	} else {
+		if (!(dmt = _get_device_info(dmevh)))
+			return_0;
 
-	uuid = dm_task_get_uuid(dmt);
+		uuid = dm_task_get_uuid(dmt);
+		name_for_log = dm_task_get_name(dmt);
+	}
 
 	if ((err = _do_event(DM_EVENT_CMD_UNREGISTER_FOR_EVENT, dmevh->dmeventd_path, &msg,
 			    dmevh->dso, uuid, dmevh->mask, dmevh->timeout)) < 0) {
 		log_error("%s: event deregistration failed: %s.",
-			  dm_task_get_name(dmt),
+			  name_for_log,
 			  msg.data ? msg.data : strerror(-err));
 		ret = 0;
 	}
 
 	free(msg.data);
 
-	dm_task_destroy(dmt);
+	if (dmt)
+		dm_task_destroy(dmt);
 
 	return ret;
 }
