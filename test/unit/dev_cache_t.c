@@ -52,18 +52,18 @@ static void test_devlinks_preserve_preferred_name(void *fixture)
 	T_ASSERT(dev_cache_add_alias(&dev, "/dev/dm-0"));
 
 	/* DEVLINKS may advertise these names before udev creates the symlinks. */
-	T_ASSERT(dev_cache_add_alias(&dev, "/dev/mapper/cryptlvm"));
+	T_ASSERT(dev_cache_add_alias(&dev, "/dev/mapper/testcrypt"));
 	T_ASSERT(!strcmp(dev_name(&dev), "/dev/dm-0"));
 	T_ASSERT(dev_cache_add_alias(&dev, "/dev/disk/by-id/lvm-test"));
 	T_ASSERT(!strcmp(dev_name(&dev), "/dev/dm-0"));
 
 	/* Retain pending aliases for regex filters, without adding duplicates. */
-	T_ASSERT(dev_cache_add_alias(&dev, "/dev/mapper/cryptlvm"));
+	T_ASSERT(dev_cache_add_alias(&dev, "/dev/mapper/testcrypt"));
 	T_ASSERT(dev_cache_add_alias(&dev, "/dev/dm-0"));
 	T_ASSERT(!strcmp(dev_name(&dev), "/dev/dm-0"));
 	T_ASSERT_EQUAL(dm_list_size(&dev.aliases), 3);
 	dm_list_iterate_items(sl, &dev.aliases) {
-		if (!strcmp(sl->str, "/dev/mapper/cryptlvm"))
+		if (!strcmp(sl->str, "/dev/mapper/testcrypt"))
 			aliases_found |= 1;
 		if (!strcmp(sl->str, "/dev/disk/by-id/lvm-test"))
 			aliases_found |= 2;
