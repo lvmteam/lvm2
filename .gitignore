@@ -37,11 +37,15 @@ make.tmpl
 /config.log
 /config.status
 /configure.scan
+/cov/
 /cscope.*
 /html/
 /python/
 /reports/
 /tags
+# Also listed in test/.gitignore. Repeated at the top level because some tools
+# read only the root .gitignore and do not recurse into nested ignore files.
+/test/results/
 /tmp/
 
 coverity/coverity_model.xml
