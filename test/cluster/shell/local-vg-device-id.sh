@@ -183,7 +183,7 @@ wipe_all
 node1 "rm $DF"
 
 node1 vgcreate testvg $d1 $d2 ${d3:+$d3}
-node1 "rm $DF"
+node1 "rm -f $DF"
 node1 "touch $DF"
 
 for dev in $d1 $d2 ${d3:+$d3}; do
@@ -210,7 +210,7 @@ node1 "rm $DF"
 node1 vgcreate testvg1 $d1
 node1 vgcreate testvg2 $d2
 
-node1 "rm $DF"
+node1 "rm -f $DF"
 node1 vgimportdevices -a
 node1 "ls $DF"
 
