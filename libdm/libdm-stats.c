@@ -350,6 +350,9 @@ static uint64_t _stats_region_is_grouped(const struct dm_stats* dms,
 	if (!dms->regions)
 		return 0;
 
+	if (region_id > dms->max_region)
+		return 0;
+
 	if (!_stats_region_present(&dms->regions[region_id]))
 		return 0;
 
@@ -357,6 +360,22 @@ static uint64_t _stats_region_is_grouped(const struct dm_stats* dms,
 
 	return group_id != DM_STATS_GROUP_NOT_PRESENT;
 }
+
+static int _stats_region_index_in_table(const struct dm_stats *dms, int region_id)
+{
+	return region_id >= 0 && (uint64_t) region_id <= dms->max_region;
+}
+
+/*
+ * Walk each region id set in a group members bitset.
+ * i is int; dm_bit_get_first/next() return -1 at end. The INT_MAX
+ * upper bound is redundant at run time but documents the kernel limit
+ * for static analysis (see STATS_LIST_MAX_REGION_INDEX).
+ */
+#define _foreach_group_bit(regions, i)					\
+for ((i) = dm_bit_get_first(regions);					\
+     (i) >= 0 && (uint64_t)(i) <= STATS_LIST_MAX_REGION_INDEX;		\
+     (i) = dm_bit_get_next(regions, (i)))
 
 static void _stats_region_destroy(struct dm_stats_region *region)
 {
@@ -692,10 +711,11 @@ static void _stats_update_groups(struct dm_stats *dms)
 
 		group = &dms->groups[group_id];
 
-		for (i = dm_bit_get_first(group->regions);
-		     i != (int)DM_STATS_GROUP_NOT_PRESENT;
-		     i = dm_bit_get_next(group->regions, i))
+		_foreach_group_bit(group->regions, i) {
+			if (!_stats_region_index_in_table(dms, i))
+				continue;
 			dms->regions[i].group_id = group_id;
+		}
 	}
 }
 
@@ -703,15 +723,14 @@ static void _check_group_regions_present(struct dm_stats *dms,
 					 struct dm_stats_group *group)
 {
 	dm_bitset_t regions = group->regions;
-	int64_t i, group_id;
+	int i;
 
-	group_id = i = dm_bit_get_first(regions);
-
-	for (; i > 0; i = dm_bit_get_next(regions, i))
-		if (!_stats_region_present(&dms->regions[i])) {
-			log_warn("Group descriptor " FMTd64 " contains "
-				 "non-existent region_id " FMTd64 ".",
-				 group_id, i);
+	_foreach_group_bit(regions, i)
+		if (!_stats_region_index_in_table(dms, i) ||
+		    !_stats_region_present(&dms->regions[i])) {
+			log_warn("WARNING: Group descriptor " FMTu64
+				 " contains non-existent region_id %d.",
+				 group->group_id, i);
 			dm_bit_clear(regions, i);
 		}
 }
@@ -1160,12 +1179,22 @@ static int _stats_load_list_rows(struct dm_stats *dms, FILE *list_rows)
 }
 
 /*
- * Finalize the group descriptors read from region aux_data.
+ * Validate group descriptors read from region aux_data before
+ * _stats_update_groups() copies group ids into the region table.
+ * dm_stats_foreach_group() cannot be used here for the group walk:
+ * _group_walk_start() selects groups through _stats_region_is_grouped(),
+ * which tests regions[].group_id -- still DM_STATS_GROUP_NOT_PRESENT
+ * until _stats_update_groups() runs below -- so the walk would visit no
+ * groups. Iterate the group table directly instead.
  */
 static void _stats_finalize_list_groups(struct dm_stats *dms)
 {
-	dm_stats_foreach_group(dms)
-		_check_group_regions_present(dms, &dms->groups[dms->cur_group]);
+	uint64_t group_id;
+
+	for (group_id = 0; group_id <= dms->max_region; group_id++)
+		if (_stats_group_id_present(dms, group_id))
+			_check_group_regions_present(dms,
+						     &dms->groups[group_id]);
 
 	_stats_update_groups(dms);
 }
@@ -2224,10 +2253,9 @@ static void _stats_clear_group_regions(struct dm_stats *dms, uint64_t group_id)
 	int i;
 
 	group = &dms->groups[group_id];
-	for (i = dm_bit_get_first(group->regions);
-	     i != (int)DM_STATS_GROUP_NOT_PRESENT;
-	     i = dm_bit_get_next(group->regions, i))
-		dms->regions[i].group_id = DM_STATS_GROUP_NOT_PRESENT;
+	_foreach_group_bit(group->regions, i)
+		if (_stats_region_index_in_table(dms, i))
+			dms->regions[i].group_id = DM_STATS_GROUP_NOT_PRESENT;
 }
 
 static int _stats_remove_region_id_from_group(struct dm_stats *dms,
