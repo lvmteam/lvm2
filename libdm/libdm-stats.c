@@ -103,6 +103,12 @@ struct dm_stats_region {
 	struct dm_stats_counters *counters;
 };
 
+/*
+ * Kernel stores dm stats region_id in struct dm_stat::id (int); see
+ * linux/drivers/md/dm-stats.c (assignment stops at INT_MAX).
+ */
+#define STATS_LIST_MAX_REGION_INDEX ((uint64_t)INT_MAX)
+
 struct dm_stats_group {
 	uint64_t group_id;
 	const char *alias;
@@ -1016,6 +1022,9 @@ static int _stats_parse_list_region(struct dm_stats *dms,
 		return 0;
 	}
 
+	if (region->region_id == DM_STATS_REGION_NOT_PRESENT)
+		return 0;
+
 	/* Copy string data after the parsed numeric fields */
 	if (!dm_strncpy(string_data, line + consumed, sizeof(string_data)))
 		return_0;
@@ -1100,20 +1109,34 @@ static int _stats_parse_list(struct dm_stats *dms, const char *resp)
 		if (!_stats_parse_list_region(dms, &cur, line))
 			goto_bad;
 
+		if (cur.region_id < max_region) {
+			log_error("Out of order region_id " FMTu64
+				  " in @stats_list response.",
+				  cur.region_id);
+			goto_bad;
+		}
+
+		if (cur.region_id > STATS_LIST_MAX_REGION_INDEX) {
+			log_error("region_id " FMTu64
+				  " too large in @stats_list response.",
+				  cur.region_id);
+			goto_bad;
+		}
+
 		/* handle holes in the list of region_ids */
 		if (cur.region_id > max_region) {
 			memset(&fill, 0, sizeof(fill));
 			memset(&cur_group, 0, sizeof(cur_group));
 			fill.region_id = DM_STATS_REGION_NOT_PRESENT;
 			cur_group.group_id = DM_STATS_GROUP_NOT_PRESENT;
-			/* coverity[tainted_scalar] region_id comes from the kernel @stats_list response */
-			do {
+			while (max_region < cur.region_id) {
 				if (!dm_pool_grow_object(mem, &fill, sizeof(fill)))
 					goto_bad;
 				if (!dm_pool_grow_object(group_mem, &cur_group,
 							 sizeof(cur_group)))
 					goto_bad;
-			} while (max_region++ < (cur.region_id - 1));
+				max_region++;
+			}
 		}
 
 		if (cur.aux_data)
