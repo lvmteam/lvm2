@@ -6001,8 +6001,25 @@ static const struct command _stats_subcommands[] = {
 static int _dmsetup_help(CMD_ARGS);
 
 /*
- * VDO stats command.
+ * VDO stats: whitelist sysfs-derived names (alnum and . _ - +) before
+ * dm_task_set_name() so path separators and other unexpected characters
+ * are rejected.
  */
+/* coverity[+tainted_string_sanitize_content:arg-0] */
+static int _vdo_dm_name_valid(const char *name)
+{
+	unsigned char c;
+
+	if (!*name)
+		return 0;
+
+	while ((c = *name++))
+		if (!isalnum(c) && c != '.' && c != '_' &&
+		    c != '-' && c != '+')
+			return 0;
+
+	return 1;
+}
 
 static int _vdostats_process_device(const char *name)
 {
@@ -6143,7 +6160,7 @@ static int _vdostats_walk(int major, int minor, struct vdo_walk *w)
 					dev_name, sizeof(dev_name)))
 			continue;
 
-		if (_vdo_check_device(dev_name)) {
+		if (_vdo_dm_name_valid(dev_name) && _vdo_check_device(dev_name)) {
 			/* Separate multiple verbose reports for readability */
 			if (w->found && _switches[VERBOSE_ARG])
 				putchar('\n');
