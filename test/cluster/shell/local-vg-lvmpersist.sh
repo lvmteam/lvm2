@@ -15,6 +15,10 @@ fi
 KEY1=0x1001
 KEY2=0x1002
 
+# bb916d2efe86 removed unregister rollback from failed starts.  The tests
+# previously relied on that cleanup; now they must verify retained keys
+# and explicitly unregister them where needed.  A key is not ownership of WE.
+
 # Build list of device types with >= 2 devices available
 DEV_TYPES=""
 [ "${CLUSTER_NUM_SCSI:-0}" -ge 2 ]     && DEV_TYPES="$DEV_TYPES scsi"
@@ -33,9 +37,10 @@ for devtype in $DEV_TYPES; do
         mpath) d1=$mpath1; d2=$mpath2 ;;
     esac
 
-    # The default --access ex maps to WEAR for mpath, which allows
-    # multiple nodes to start.  Node2's competing start needs --prtype WE
-    # to properly conflict with node1's reservation.
+    # Keep node1's default WEAR for multipath I/O: WE can reject writes or
+    # cache flushes through another path on the same host.  Node2 requests
+    # WE to conflict with node1's WEAR; parallel starts use WE to select
+    # one reservation holder rather than allowing every registrant to join.
     WE_FOR_MPATH=""
     case $devtype in
         mpath) WE_FOR_MPATH="--prtype WE" ;;
@@ -89,9 +94,13 @@ node1 lvmpersist clear --ourkey $KEY1 --vg testvg
 node1 lvmpersist read-keys --vg testvg | grep -q "keys: none"
 node1 lvmpersist read-reservation --vg testvg | grep -q "reservation: none"
 
-# WE: node1 holds reservation, node2 cannot start or write
+# A competing start fails to acquire WE but retains its registered key.
 node1 lvmpersist start --ourkey $KEY1 --vg testvg
 node2 not lvmpersist start --ourkey $KEY2 $WE_FOR_MPATH --vg testvg
+# When node failed, it's key was still left registered, so remove it.
+node1 lvmpersist check-key --key $KEY2 --vg testvg
+node2 lvmpersist stop --ourkey $KEY2 --vg testvg
+node1 not lvmpersist check-key --key $KEY2 --vg testvg
 node1 lvchange -ay testvg/lv1
 node2 lvchange -ay testvg/lv1
 node1 dd if=/dev/zero of=/dev/testvg/lv1 bs=4096 count=1 oflag=direct,sync
@@ -190,6 +199,9 @@ node1 lvmpersist read-reservation --vg testvg | grep -q "reservation: none"
 node1 lvmpersist start --ourkey $KEY1 --vg testvg
 node2 not lvmpersist start --ourkey $KEY2 $WE_FOR_MPATH --vg testvg
 node1 lvmpersist check-key --key $KEY1 --vg testvg
+# node2 failed to start but left its key registered
+node1 lvmpersist check-key --key $KEY2 --vg testvg
+node2 lvmpersist stop --ourkey $KEY2 --vg testvg
 node1 not lvmpersist check-key --key $KEY2 --vg testvg
 
 #
@@ -315,9 +327,12 @@ for i in $(seq 1 5); do
     success_node 'lvmpersist check-key --key 0x100${NODE_NUM} --vg testvg'
 
     for node_num in $NODEP_FAIL_NODES; do
-        noden ${node_num} not lvmpersist check-key --key 0x100${node_num} --vg testvg
+        # Losing the WE race leaves registrations but does not allow writes.
+        noden ${node_num} lvmpersist check-key --key 0x100${node_num} --vg testvg
         noden ${node_num} not dd if=/dev/zero of=$d1 bs=4096 count=1 oflag=direct,sync
         noden ${node_num} not dd if=/dev/zero of=$d2 bs=4096 count=1 oflag=direct,sync
+        # Remove losing keys before the winner stops, leaving the next race clean.
+        noden ${node_num} lvmpersist stop --ourkey 0x100${node_num} --vg testvg
     done
 
     success_node 'lvmpersist stop --ourkey 0x100${NODE_NUM} --vg testvg'
