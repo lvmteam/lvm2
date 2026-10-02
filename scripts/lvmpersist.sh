@@ -739,6 +739,54 @@ settle_udev() {
 	udevadm settle || logmsg "failed to settle udev events before reserving $GROUP."
 }
 
+# Start and takeover intentionally leave completed PR operations
+# in place when a later operation fails or the script is interrupted.
+# Start can be rerun on a VG already using PR, e.g. after vgextend to register
+# this host's key on added PVs while retaining its access to the original PVs.
+# Registration and reservation changes on different devices are separate
+# operations, so a failed command can leave a partially completed start.
+# Unregistering our key is not a general way to undo those changes:
+#
+# - REGISTER may repeat an existing registration or replace a previous local
+#   key, e.g. when updating the sanlock generation. A successful REGISTER does
+#   not mean this invocation created a new registration. Unregistering it can
+#   remove access supporting active LVs. Even finding OURKEY absent beforehand
+#   would not establish that no previous local key was replaced.
+#
+# - Takeover may remove the old host's key and establish our reservation on
+#   one device before failing on another. Unregistering a WE holder releases
+#   its reservation, even if other registrations remain. Unregistering the
+#   last WEAR registrant also releases the reservation. Once the reservation
+#   is gone, the old host may write again despite its key having been removed.
+#   Cleanup cannot restore preempted keys or reverse completed fencing.
+#
+# - Ordinary start may run on devices where an earlier partial takeover
+#   already removed another host's key and left our reservation in place.
+#   The absence of removekey in this invocation does not establish that
+#   releasing a reservation is safe. WEAR registration itself can grant write
+#   access under an existing reservation, before we attempt to reserve.
+#
+# - A transport failure or interruption after submitting a preempt command
+#   may leave its outcome unknown. The device may have removed the old host's
+#   key and established our reservation even though the tool reports failure.
+#   Unregistering our key could then release that protection and allow the
+#   old host to write again. We therefore retain our registration even when
+#   no preempt command reported success. The same failure may also prevent
+#   querying the resulting PR state to determine whether cleanup is safe.
+#
+# Unregistering after failure can be safe if the registrations were created
+# by this command, no existing I/O depends on them, and removing them cannot
+# release a reservation needed to exclude another host. Establishing these
+# conditions requires knowledge of VG usage and coordination with other
+# hosts that this script does not have.
+#
+# Reading and saving the registered keys before starting would add device
+# queries to every start. Those reads would not tell us whether I/O depends
+# on a registration, and other hosts could still change PR state between the
+# reads and cleanup. We therefore leave completed PR operations in place and
+# report failure. The caller or administrator can fix the cause and retry,
+# or remove registrations after establishing that doing so is safe.
+
 do_register_nvme() {
 	dev=$1
 	set_cmd "$dev"
