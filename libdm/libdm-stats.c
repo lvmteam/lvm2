@@ -2261,12 +2261,16 @@ static void _stats_clear_group_regions(struct dm_stats *dms, uint64_t group_id)
 static int _stats_remove_region_id_from_group(struct dm_stats *dms,
 					      uint64_t region_id)
 {
-	struct dm_stats_region *region = &dms->regions[region_id];
-	uint64_t group_id = region->group_id;
-	dm_bitset_t regions = dms->groups[group_id].regions;
+	struct dm_stats_region *region;
+	dm_bitset_t regions;
+	uint64_t group_id;
 
 	if (!_stats_region_is_grouped(dms, region_id))
 		return_0;
+
+	region = &dms->regions[region_id];
+	group_id = region->group_id;
+	regions = dms->groups[group_id].regions;
 
 	dm_bit_clear(regions, region_id);
 
