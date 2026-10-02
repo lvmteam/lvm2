@@ -153,6 +153,7 @@ node1 pvremove -y $mpath1
 
 echo "== Section 6: Devices file integration =="
 
+node1 touch /etc/lvm/devices/system.devices
 node1 pvcreate -y $mpath1
 node1 vgcreate testvg $mpath1
 
