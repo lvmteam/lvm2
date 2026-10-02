@@ -3291,7 +3291,7 @@ int dm_stats_get_region_len(const struct dm_stats *dms, uint64_t *len,
 
 		/* use sum of region sizes as group size */
 		if (_stats_region_is_grouped(dms, region_id))
-			_foreach_group_region(dms, dms->cur_group, i)
+			_foreach_group_region(dms, dms->regions[region_id].group_id, i)
 				/* coverity[overflow_sink] - only positive 'i' is used */
 				*len += dms->regions[i].len;
 		else {
