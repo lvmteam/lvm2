@@ -1,5 +1,8 @@
 Version 1.02.218 - 
 ===================
+  Fix dmstats handling of stale group members after @stats_delete.
+  Fix dmstats histogram bounds leak when statistics regions are re-listed.
+  Validate dmsetup vdostats device name before use.
   Only prefix log output with source location when verbose is enabled.
 
 Version 1.02.217 - 30th September 2026
