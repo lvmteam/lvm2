@@ -3707,8 +3707,9 @@ static int _dm_stats_region_id_disp(struct dm_report *rh,
 		group_id = dm_stats_get_group_id(dms, dm_stats_get_current_region(dms));
 		if (!dm_stats_get_group_descriptor(dms, group_id, &group_buf))
 			return 0;
-		/* group_buf will disappear with the current handle */
+		/* group_buf is caller-owned; copy it out and release it. */
 		repstr = dm_pool_strdup(mem, group_buf);
+		dm_stats_buffer_destroy((struct dm_stats *) dms, group_buf);
 		dm_report_field_set_value(field, repstr, &group_id);
 		return 1;
 	}

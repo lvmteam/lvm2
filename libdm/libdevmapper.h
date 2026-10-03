@@ -729,15 +729,9 @@ int dm_stats_clear_region(struct dm_stats *dms, uint64_t region_id);
 
 /*
  * Print the current counter values for the specified statistics region
- * and return them as a string. The memory for the string buffer will
- * be allocated from the dm_stats handle's private pool and should be
- * returned by calling dm_stats_buffer_destroy() when no longer
- * required. The pointer will become invalid following any call that
- * clears or reinitializes the handle (destroy, list, populate, bind).
- *
- * This allows applications that wish to access the raw message response
- * to obtain it via a dm_stats handle; no parsing of the textual counter
- * data is carried out by this function.
+ * and return them as a string. The memory for the string buffer is
+ * allocated for the caller and must be released by calling
+ * dm_stats_buffer_destroy() when no longer required.
  *
  * Most users are recommended to use the dm_stats_populate() call
  * instead since this will automatically parse the statistics data into
@@ -756,8 +750,13 @@ char *dm_stats_print_region(struct dm_stats *dms, uint64_t region_id,
 			    unsigned clear);
 
 /*
- * Destroy a statistics response buffer obtained from a call to
- * dm_stats_print_region().
+ * Release a response buffer obtained from dm_stats_print_region() or
+ * dm_stats_get_group_descriptor().
+ *
+ * The buffer belongs to the caller and is released independently of the
+ * handle, so buffers may be released in any order and one release never
+ * invalidates another.  The handle is not consulted; the dms argument is
+ * retained for API compatibility.
  */
 void dm_stats_buffer_destroy(struct dm_stats *dms, char *buffer);
 
@@ -1326,10 +1325,8 @@ uint64_t dm_stats_get_group_id(const struct dm_stats *dms, uint64_t region_id);
  * The string is in the same format as the 'group' argument to
  * dm_stats_create_group().
  *
- * The pointer does not need to be freed explicitly by the caller: it
- * will become invalid following a subsequent dm_stats_list(),
- * dm_stats_populate() or dm_stats_destroy() of the corresponding
- * dm_stats handle.
+ * The buffer is allocated for the caller and must be released with
+ * dm_stats_buffer_destroy() when no longer required.
  */
 int dm_stats_get_group_descriptor(const struct dm_stats *dms,
 				  uint64_t group_id, char **buf);

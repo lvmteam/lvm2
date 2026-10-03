@@ -116,6 +116,29 @@ struct dm_stats_group {
 	struct dm_histogram *histogram;
 };
 
+/*
+ * A dm_pool is released all at once: dm_pool_empty() drops everything in
+ * it and dm_pool_free() drops the given block and everything after it.
+ * The handle therefore keeps one arena per thing that has to be released
+ * on its own.
+ *
+ *   mem      - the listing: the region table and the group table together
+ *              with everything they own (per-row program_id, aux_data and
+ *              counter sets, member bitsets, aliases).  The two tables are
+ *              always built and dropped together, so they share one arena
+ *              and the whole listing goes in a single dm_pool_empty().
+ *   hist_mem - histograms and the strings rendered from them by
+ *              dm_histogram_to_string().  Separate from mem because
+ *              _stats_parse_region() grows the counter array with
+ *              dm_pool_begin_object() while _stats_parse_histogram()
+ *              grows a histogram in the middle of that, and object_len is
+ *              per-pool, so nesting two object builds on one arena would
+ *              clobber the outer one.
+ *
+ * Buffers the caller *does* own (dm_stats_print_region(),
+ * dm_stats_get_group_descriptor()) are plain allocations released by
+ * dm_stats_buffer_destroy().
+ */
 struct dm_stats {
 	/* device binding */
 	int bind_major;  /* device major that this dm_stats object is bound to */
@@ -124,11 +147,11 @@ struct dm_stats {
 	char *bind_uuid; /* device-mapper UUID */
 	char *program_id; /* default program_id for this handle */
 	const char *name; /* cached device_name used for reporting */
-	struct dm_pool *mem; /* memory pool for region and counter tables */
-	struct dm_pool *hist_mem; /* separate pool for histogram tables */
-	struct dm_pool *group_mem; /* separate pool for group tables */
+	struct dm_pool *mem; /* region and group tables and all their data */
+	struct dm_pool *hist_mem; /* histograms and their rendered strings */
+
 	uint64_t nr_regions; /* total number of present regions */
-	uint64_t max_region; /* size of the regions table */
+	uint64_t max_region; /* highest region_id; table size is max_region + 1 */
 	uint64_t interval_ns;  /* sampling interval in nanoseconds */
 	uint64_t timescale; /* default sample value multiplier */
 	int precise; /* use precise_timestamps when creating regions */
@@ -216,7 +239,6 @@ static uint64_t _nr_areas_region(struct dm_stats_region *region)
 struct dm_stats *dm_stats_create(const char *program_id)
 {
 	size_t hist_hint = sizeof(struct dm_histogram_bin);
-	size_t group_hint = sizeof(struct dm_stats_group);
 	struct dm_stats *dms = NULL;
 
 	if (!(dms = dm_zalloc(sizeof(*dms))))
@@ -229,9 +251,6 @@ struct dm_stats *dm_stats_create(const char *program_id)
 	}
 
 	if (!(dms->hist_mem = dm_pool_create("histogram_pool", hist_hint)))
-		goto_bad;
-
-	if (!(dms->group_mem = dm_pool_create("group_pool", group_hint)))
 		goto_bad;
 
 	if (!program_id || !strlen(program_id))
@@ -255,8 +274,13 @@ struct dm_stats *dm_stats_create(const char *program_id)
 	dms->timescale = NSEC_PER_MSEC;
 	dms->precise = 0;
 
-	dms->nr_regions = DM_STATS_REGION_NOT_PRESENT;
-	dms->max_region = DM_STATS_REGION_NOT_PRESENT;
+	/*
+	 * The table is sized max_region + 1, so an unlisted handle must
+	 * not use DM_STATS_REGION_NOT_PRESENT here: the walk and group
+	 * helpers loop up to max_region.
+	 */
+	dms->nr_regions = 0;
+	dms->max_region = 0;
 	dms->regions = NULL;
 
 	/* maintain compatibility with earlier walk version */
@@ -268,8 +292,6 @@ bad:
 	dm_pool_destroy(dms->mem);
 	if (dms->hist_mem)
 		dm_pool_destroy(dms->hist_mem);
-	if (dms->group_mem)
-		dm_pool_destroy(dms->group_mem);
 	dm_free(dms);
 	return NULL;
 }
@@ -336,20 +358,6 @@ static uint64_t _stats_region_is_grouped(const struct dm_stats* dms,
 	return group_id != DM_STATS_GROUP_NOT_PRESENT;
 }
 
-static void _stats_histograms_destroy(struct dm_pool *mem,
-				      struct dm_stats_region *region)
-{
-	/* Unpopulated handle. */
-	if (!region->counters)
-		return;
-
-	/*
-	 * Free everything in the pool back to the first histogram.
-	 */
-	if (region->counters[0].histogram)
-		dm_pool_free(mem, region->counters[0].histogram);
-}
-
 static void _stats_region_destroy(struct dm_stats_region *region)
 {
 	if (!_stats_region_present(region))
@@ -359,39 +367,39 @@ static void _stats_region_destroy(struct dm_stats_region *region)
 	region->timescale = 0;
 
 	/*
-	 * Don't free counters and histogram bounds here: they are
-	 * dropped from the pool along with the corresponding
-	 * regions table.
-	 *
-	 * The following objects are all allocated with dm_malloc.
+	 * Don't free counters, histogram bounds, program_id or aux_data
+	 * here: they are dropped from mem along with the listing.
 	 */
 
 	region->counters = NULL;
 	region->bounds = NULL;
-
-	dm_free(region->program_id);
 	region->program_id = NULL;
-	dm_free(region->aux_data);
 	region->aux_data = NULL;
 	region->region_id = DM_STATS_REGION_NOT_PRESENT;
 }
 
-static void _stats_regions_destroy(struct dm_stats *dms)
+/*
+ * Drop the listing: the region and group tables and everything they own,
+ * plus the histogram tables and cached aggregates beside them.  The
+ * arenas go together because all of it dies at the same moment - on any
+ * relist, rebind or teardown - so there is no window in which one part
+ * has been released and another has not.
+ *
+ * Emptying hist_mem orphans the aggregate cached in regions[].histogram
+ * and groups[].histogram.  That is safe because this function always
+ * leaves dms->regions NULL, which is what every reader of those caches
+ * checks first, and dms->regions only becomes non-NULL again in
+ * _stats_alloc_list_tables().
+ */
+static void _stats_listing_destroy(struct dm_stats *dms)
 {
-	struct dm_pool *mem = dms->mem;
-	uint64_t i;
+	dm_pool_empty(dms->mem);
+	dm_pool_empty(dms->hist_mem);
 
-	if (!dms->regions)
-		return;
-
-	/* walk backwards to obey pool order */
-	for (i = dms->max_region; (i != DM_STATS_REGION_NOT_PRESENT); i--) {
-		_stats_histograms_destroy(dms->hist_mem, &dms->regions[i]);
-		_stats_region_destroy(&dms->regions[i]);
-	}
-
-	dm_pool_free(mem, dms->regions);
 	dms->regions = NULL;
+	dms->groups = NULL;
+	dms->nr_regions = 0;
+	dms->max_region = 0;
 }
 
 static void _stats_group_destroy(struct dm_stats_group *group)
@@ -399,30 +407,14 @@ static void _stats_group_destroy(struct dm_stats_group *group)
 	if (!_stats_group_present(group))
 		return;
 
+	/*
+	 * alias and member bitset live in mem and are dropped with the
+	 * listing, not individually here.
+	 */
 	group->histogram = NULL;
-
-	if (group->alias) {
-		dm_free((char *) group->alias);
-		group->alias = NULL;
-	}
-	if (group->regions) {
-		dm_bitset_destroy(group->regions);
-		group->regions = NULL;
-	}
+	group->alias = NULL;
+	group->regions = NULL;
 	group->group_id = DM_STATS_GROUP_NOT_PRESENT;
-}
-
-static void _stats_groups_destroy(struct dm_stats *dms)
-{
-	uint64_t i;
-
-	if (!dms->groups)
-		return;
-
-	for (i = dms->max_region; (i != DM_STATS_REGION_NOT_PRESENT); i--)
-		_stats_group_destroy(&dms->groups[i]);
-	dm_pool_free(dms->group_mem, dms->groups);
-	dms->groups = NULL;
 }
 
 static int _set_stats_device(struct dm_stats *dms, struct dm_task *dmt)
@@ -448,10 +440,13 @@ static int _stats_bound(const struct dm_stats *dms)
 
 static void _stats_clear_binding(struct dm_stats *dms)
 {
-	if (dms->bind_name)
-		dm_pool_free(dms->mem, dms->bind_name);
-	if (dms->bind_uuid)
-		dm_pool_free(dms->mem, dms->bind_uuid);
+	/*
+	 * The binding strings are single short allocations rather than
+	 * part of a bulk arena, so they carry no dependency on the table
+	 * lifetime.
+	 */
+	dm_free(dms->bind_name);
+	dm_free(dms->bind_uuid);
 	dm_free((char *) dms->name);
 
 	dms->bind_name = dms->bind_uuid = NULL;
@@ -461,9 +456,8 @@ static void _stats_clear_binding(struct dm_stats *dms)
 
 int dm_stats_bind_devno(struct dm_stats *dms, int major, int minor)
 {
+	_stats_listing_destroy(dms);
 	_stats_clear_binding(dms);
-	_stats_regions_destroy(dms);
-	_stats_groups_destroy(dms);
 
 	dms->bind_major = major;
 	dms->bind_minor = minor;
@@ -473,11 +467,10 @@ int dm_stats_bind_devno(struct dm_stats *dms, int major, int minor)
 
 int dm_stats_bind_name(struct dm_stats *dms, const char *name)
 {
+	_stats_listing_destroy(dms);
 	_stats_clear_binding(dms);
-	_stats_regions_destroy(dms);
-	_stats_groups_destroy(dms);
 
-	if (!(dms->bind_name = dm_pool_strdup(dms->mem, name)))
+	if (!(dms->bind_name = dm_strdup(name)))
 		return_0;
 
 	return 1;
@@ -485,11 +478,10 @@ int dm_stats_bind_name(struct dm_stats *dms, const char *name)
 
 int dm_stats_bind_uuid(struct dm_stats *dms, const char *uuid)
 {
+	_stats_listing_destroy(dms);
 	_stats_clear_binding(dms);
-	_stats_regions_destroy(dms);
-	_stats_groups_destroy(dms);
 
-	if (!(dms->bind_uuid = dm_pool_strdup(dms->mem, uuid)))
+	if (!(dms->bind_uuid = dm_strdup(uuid)))
 		return_0;
 
 	return 1;
@@ -694,7 +686,7 @@ static void _stats_update_groups(struct dm_stats *dms)
 	uint64_t group_id;
 	int i; /* dm_bit_get_first/next return int, -1 == (int)DM_STATS_GROUP_NOT_PRESENT */
 
-	for (group_id = 0; group_id < dms->max_region + 1; group_id++) {
+	for (group_id = 0; group_id <= dms->max_region; group_id++) {
 		if (!_stats_group_id_present(dms, group_id))
 			continue;
 
@@ -747,8 +739,7 @@ static int _parse_aux_data_group(struct dm_stats *dms,
 	char *alias, *c, *end;
 	dm_bitset_t regions;
 
-	memset(group, 0, sizeof(*group));
-	group->group_id = DM_STATS_GROUP_NOT_PRESENT;
+	/* Caller passes an empty groups[] row (dm_pool_zalloc + group_id init). */
 
 	/* find start of group tag */
 	c = strstr(region->aux_data, DMS_GROUP_TAG);
@@ -760,22 +751,14 @@ static int _parse_aux_data_group(struct dm_stats *dms,
 
 	c = strchr(c, DMS_GROUP_SEP);
 
-	if (!c) {
-		log_error("Found malformed group tag while reading aux_data");
-		return 0;
-	}
+	if (!c)
+		goto_bad;
 
 	/* terminate alias and advance to members accounting for closing quote */
 	*(c - 1) = '\0';
 	c++;
 
 	log_debug("Read alias '%s' from aux_data", alias);
-
-	if (!c) {
-		log_error("Found malformed group descriptor while "
-			  "reading aux_data, expected '%c'", DMS_GROUP_SEP);
-		return 0;
-	}
 
 	/* if user aux_data follows make sure we have a terminated
 	 * string to pass to dm_bitset_parse_list().
@@ -785,53 +768,51 @@ static int _parse_aux_data_group(struct dm_stats *dms,
 		end = c + strlen(c);
 	*(end++) = '\0';
 
-	if (!(regions = dm_bitset_parse_list(c, NULL, 0))) {
-		log_error("Could not parse member list while "
-			  "reading group aux_data");
-		return 0;
-	}
+	if (!(regions = dm_bitset_parse_list(c, dms->mem, 0)))
+		goto_bad;
 
 	group->group_id = dm_bit_get_first(regions);
-	if (group->group_id != region->region_id) {
-		log_error("Found invalid group descriptor in region " FMTu64
-			  " aux_data.", region->region_id);
-		group->group_id = DM_STATS_GROUP_NOT_PRESENT;
-		goto bad;
-	}
+	if (group->group_id != region->region_id)
+		goto_bad;
 
 	group->regions = regions;
 	group->alias = NULL;
 	if (strlen(alias)) {
-		group->alias = dm_strdup(alias);
-		if (!group->alias) {
-			log_error("Could not allocate memory for group alias");
-			goto bad;
-		}
+		if (!(group->alias = dm_pool_strdup(dms->mem, alias)))
+			goto_bad;
 	}
 
-	/* separate group tag from user aux_data */
-	if ((strlen(end) > 1) || strncmp(end, "-", 1))
-		c = dm_strdup(end);
-	else
-		c = dm_strdup("");
+	/*
+	 * Separate the group tag from the user aux_data.  The string
+	 * parsed by _stats_parse_list_region() is replaced by pointer only;
+	 * it is not rolled back, because dm_pool_free() would also release
+	 * anything allocated after it in mem and that tail is not this
+	 * function's to reason about.  The superseded string is reclaimed
+	 * with the rest of mem when the listing is released, which happens
+	 * on the next list/populate/bind.
+	 */
+	region->aux_data = (char *) "";
 
-	if (!c) {
-		log_error("Could not allocate memory for user aux_data");
-		goto bad_alias;
-	}
-
-	dm_free(region->aux_data);
-	region->aux_data = c;
+	if (strlen(end) > 1 || strncmp(end, "-", 1))
+		if (!(region->aux_data = dm_pool_strdup(dms->mem, end)))
+			goto_bad;
 
 	log_debug("Found group_id " FMTu64 ": alias=\"%s\"", group->group_id,
 		  (group->alias) ? group->alias : "");
 
 	return 1;
 
-bad_alias:
-	dm_free((char *) group->alias);
 bad:
-	dm_bitset_destroy(regions);
+	log_warn("WARNING: Failed to parse group descriptor from region_id "
+		 FMTu64 " aux_data: '%s'", region->region_id,
+		 region->aux_data);
+	/*
+	 * Reset the group to empty so the caller never stores dangling
+	 * pointers into the table; the pool allocations made here are
+	 * dropped with the tables.
+	 */
+	memset(group, 0, sizeof(*group));
+	group->group_id = DM_STATS_GROUP_NOT_PRESENT;
 	return 0;
 }
 
@@ -1007,6 +988,9 @@ static int _stats_parse_list_region(struct dm_stats *dms,
 	char *p, *program_id, *aux_data, *stats_args;
 	int r, consumed;
 
+	region->program_id = NULL;
+	region->aux_data = NULL;
+
 	/*
 	 * Parse fixed fields, line format:
 	 *
@@ -1047,42 +1031,141 @@ static int _stats_parse_list_region(struct dm_stats *dms,
 	region->histogram = NULL;
 	region->group_id = DM_STATS_GROUP_NOT_PRESENT;
 
-	if (!(region->program_id = dm_strdup(program_id))) {
+	if (!(region->program_id = dm_pool_strdup(dms->mem, program_id)))
 		return_0;
-	}
 
-	if (!(region->aux_data = dm_strdup(aux_data))) {
-		dm_free(region->program_id);
+	if (!(region->aux_data = dm_pool_strdup(dms->mem, aux_data)))
 		return_0;
-	}
 
 	region->counters = NULL;
 	return 1;
 }
 
+/*
+ * First pass: find the highest region_id so the dense region and group
+ * tables can be allocated once at their final size.
+ */
+static int _stats_scan_list_response_ids(FILE *list_rows, uint64_t *max_region,
+					 uint64_t *nr_regions)
+{
+	char line[STATS_ROW_BUF_LEN];
+	uint64_t region_id, last_region = 0;
+	uint64_t count = 0;
+	int first = 1;
+
+	while (fgets(line, sizeof(line), list_rows)) {
+		if (sscanf(line, FMTu64 ":", &region_id) != 1) {
+			log_error("Could not parse region_id from "
+				  "@stats_list response.");
+			return 0;
+		}
+
+		if (region_id > STATS_LIST_MAX_REGION_INDEX) {
+			log_error("region_id " FMTu64
+				  " too large in @stats_list response.",
+				  region_id);
+			return 0;
+		}
+
+		/* the kernel emits region_ids in ascending order */
+		if (!first && region_id <= last_region) {
+			log_error("Out of order region_id " FMTu64
+				  " in @stats_list response.",
+				  region_id);
+			return 0;
+		}
+
+		first = 0;
+		last_region = region_id;
+		count++;
+	}
+
+	if (!count) {
+		log_error("No region data in @stats_list response.");
+		return 0;
+	}
+
+	*max_region = last_region;
+	*nr_regions = count;
+	return 1;
+}
+
+/*
+ * Allocate the dense region and group tables at their final size.
+ *
+ * nr_entries comes from the highest region_id in the response, which
+ * _stats_scan_list_response_ids() has already bounded by
+ * STATS_LIST_MAX_REGION_INDEX.
+ *
+ * Both tables live in mem and are released with the whole listing, so no
+ * ordering between them has to be preserved.
+ */
+static int _stats_alloc_list_tables(struct dm_stats *dms, uint64_t nr_entries)
+{
+	uint64_t i;
+
+	dms->regions = dm_pool_zalloc(dms->mem,
+				      nr_entries * sizeof(*dms->regions));
+	dms->groups = dm_pool_zalloc(dms->mem,
+				     nr_entries * sizeof(*dms->groups));
+	if (!dms->regions || !dms->groups)
+		return_0;
+
+	for (i = 0; i < nr_entries; i++) {
+		dms->regions[i].region_id = DM_STATS_REGION_NOT_PRESENT;
+		dms->groups[i].group_id = DM_STATS_GROUP_NOT_PRESENT;
+	}
+
+	return 1;
+}
+
+static int _stats_load_list_rows(struct dm_stats *dms, FILE *list_rows)
+{
+	struct dm_stats_region cur = { 0 };
+	char line[STATS_ROW_BUF_LEN];
+
+	while (fgets(line, sizeof(line), list_rows)) {
+		if (!_stats_parse_list_region(dms, &cur, line))
+			return_0;
+
+		if (cur.aux_data &&
+		    !_parse_aux_data_group(dms, &cur,
+					   &dms->groups[cur.region_id])) {
+			/* parse failure already logged */
+		}
+
+		dms->regions[cur.region_id] = cur;
+	}
+
+	return 1;
+}
+
+/*
+ * Finalize the group descriptors read from region aux_data.
+ */
+static void _stats_finalize_list_groups(struct dm_stats *dms)
+{
+	dm_stats_foreach_group(dms)
+		_check_group_regions_present(dms, &dms->groups[dms->cur_group]);
+
+	_stats_update_groups(dms);
+}
+
 static int _stats_parse_list(struct dm_stats *dms, const char *resp)
 {
-	uint64_t max_region = 0, nr_regions = 0;
-	struct dm_stats_region cur, fill;
-	struct dm_stats_group cur_group;
-	struct dm_pool *mem = dms->mem, *group_mem = dms->group_mem;
-	char line[STATS_ROW_BUF_LEN];
-	FILE *list_rows;
+	uint64_t max_region = 0, nr_regions = 0, nr_entries;
+	FILE *list_rows = NULL;
 
 	if (!resp) {
 		log_error("Could not parse NULL @stats_list response.");
 		return 0;
 	}
 
-	_stats_regions_destroy(dms);
-	_stats_groups_destroy(dms);
+	_stats_listing_destroy(dms);
 
 	/* no regions */
-	if (!strlen(resp)) {
-		dms->nr_regions = dms->max_region = 0;
-		dms->regions = NULL;
+	if (!strlen(resp))
 		return 1;
-	}
 
 	/*
 	 * dm_task_get_message_response() returns a 'const char *' but
@@ -1092,84 +1175,22 @@ static int _stats_parse_list(struct dm_stats *dms, const char *resp)
 	if (!(list_rows = fmemopen((char *)resp, strlen(resp), "r")))
 		return_0;
 
-	/* begin region table */
-	if (!dm_pool_begin_object(mem, 1024))
-		goto_bad;
-
-	/* begin group table */
-	if (!dm_pool_begin_object(group_mem, 32))
-		goto_bad;
-
-	while(fgets(line, sizeof(line), list_rows)) {
-
-		cur_group.group_id = DM_STATS_GROUP_NOT_PRESENT;
-		cur_group.regions = NULL;
-		cur_group.alias = NULL;
-
-		if (!_stats_parse_list_region(dms, &cur, line))
-			goto_bad;
-
-		if (cur.region_id < max_region) {
-			log_error("Out of order region_id " FMTu64
-				  " in @stats_list response.",
-				  cur.region_id);
-			goto_bad;
-		}
-
-		if (cur.region_id > STATS_LIST_MAX_REGION_INDEX) {
-			log_error("region_id " FMTu64
-				  " too large in @stats_list response.",
-				  cur.region_id);
-			goto_bad;
-		}
-
-		/* handle holes in the list of region_ids */
-		if (cur.region_id > max_region) {
-			memset(&fill, 0, sizeof(fill));
-			memset(&cur_group, 0, sizeof(cur_group));
-			fill.region_id = DM_STATS_REGION_NOT_PRESENT;
-			cur_group.group_id = DM_STATS_GROUP_NOT_PRESENT;
-			while (max_region < cur.region_id) {
-				if (!dm_pool_grow_object(mem, &fill, sizeof(fill)))
-					goto_bad;
-				if (!dm_pool_grow_object(group_mem, &cur_group,
-							 sizeof(cur_group)))
-					goto_bad;
-				max_region++;
-			}
-		}
-
-		if (cur.aux_data)
-			if (!_parse_aux_data_group(dms, &cur, &cur_group))
-				log_error("Failed to parse group descriptor "
-					  "from region_id " FMTu64 " aux_data:"
-					  "'%s'", cur.region_id, cur.aux_data);
-				/* continue */
-
-		if (!dm_pool_grow_object(mem, &cur, sizeof(cur)))
-			goto_bad;
-
-		if (!dm_pool_grow_object(group_mem, &cur_group,
-					 sizeof(cur_group)))
-			goto_bad;
-
-		max_region++;
-		nr_regions++;
-	}
-
-	if (!nr_regions)
-		/* no region data read from @stats_list */
+	if (!_stats_scan_list_response_ids(list_rows, &max_region, &nr_regions))
 		goto bad;
 
+	nr_entries = max_region + 1;
+	rewind(list_rows);
+
+	dms->max_region = max_region;
 	dms->nr_regions = nr_regions;
-	dms->max_region = max_region - 1;
-	dms->regions = dm_pool_end_object(mem);
-	dms->groups = dm_pool_end_object(group_mem);
 
-	dm_stats_foreach_group(dms)
-		_check_group_regions_present(dms, &dms->groups[dms->cur_group]);
+	if (!_stats_alloc_list_tables(dms, nr_entries))
+		goto_bad;
 
-	_stats_update_groups(dms);
+	if (!_stats_load_list_rows(dms, list_rows))
+		goto bad;
+
+	_stats_finalize_list_groups(dms);
 
 	if (fclose(list_rows))
 		stack;
@@ -1179,8 +1200,8 @@ static int _stats_parse_list(struct dm_stats *dms, const char *resp)
 bad:
 	if (fclose(list_rows))
 		stack;
-	dm_pool_abandon_object(mem);
-	dm_pool_abandon_object(group_mem);
+
+	_stats_listing_destroy(dms);
 
 	return 0;
 }
@@ -1200,9 +1221,6 @@ int dm_stats_list(struct dm_stats *dms, const char *program_id)
 
 	if (!_stats_set_name_cache(dms))
 		return_0;
-
-	if (dms->regions)
-		_stats_regions_destroy(dms);
 
 	r = dm_snprintf(msg, sizeof(msg), "@stats_list %s", program_id);
 
@@ -1309,6 +1327,17 @@ bad:
 	return 0;
 }
 
+/*
+ * Parse the @stats_print response for one region into a counter set.
+ *
+ * The counter set is appended to mem, which is owned by the listing and
+ * released with it.  A bump arena cannot release a block from the middle
+ * of a run, so an existing counter set is not reclaimed here: it is
+ * accounted for when the listing is next replaced (dm_stats_list(),
+ * dm_stats_populate(), dm_stats_bind_*(), dm_stats_destroy()).  The
+ * caller is responsible for invalidating the cached aggregate histogram,
+ * which no longer reflects the new counters.
+ */
 static int _stats_parse_region(struct dm_stats *dms, const char *resp,
 			       struct dm_stats_region *region,
 			       uint64_t timescale)
@@ -1594,8 +1623,20 @@ int dm_stats_walk_init(struct dm_stats *dms, uint64_t flags)
 
 void dm_stats_walk_start(struct dm_stats *dms)
 {
-	if (!dms || !dms->regions)
+	if (!dms)
 		return;
+
+	if (!dms->regions) {
+		/*
+		 * Still reset the cursor: a walk over an unlisted handle
+		 * has to report the end, not walk off the empty table.
+		 */
+		dms->cur_flags = 0;
+		dms->cur_region = DM_STATS_REGION_NOT_PRESENT;
+		dms->cur_area = DM_STATS_REGION_NOT_PRESENT;
+		dms->cur_group = DM_STATS_GROUP_NOT_PRESENT;
+		return;
+	}
 
 	dms->cur_flags = dms->walk_flags;
 
@@ -2270,12 +2311,12 @@ int dm_stats_delete_region(struct dm_stats *dms, uint64_t region_id)
 		_stats_region_destroy(&dms->regions[region_id]);
 	else
 		/* return handle to prior state */
-		_stats_regions_destroy(dms);
+		_stats_listing_destroy(dms);
 
 	return 1;
 bad:
 	if (listed)
-		_stats_regions_destroy(dms);
+		_stats_listing_destroy(dms);
 
 	return 0;
 }
@@ -2364,7 +2405,7 @@ char *dm_stats_print_region(struct dm_stats *dms, uint64_t region_id,
 	if (!(response = dm_task_get_message_response(dmt)))
 		goto_out;
 
-	if (!(resp = dm_pool_strdup(dms->mem, response)))
+	if (!(resp = dm_strdup(response)))
 		log_error("Could not allocate memory for response buffer.");
 out:
 	dm_task_destroy(dmt);
@@ -2374,7 +2415,14 @@ out:
 
 void dm_stats_buffer_destroy(struct dm_stats *dms, char *buffer)
 {
-	dm_pool_free(dms->mem, buffer);
+	/*
+	 * Buffers handed out by dm_stats_print_region() and
+	 * dm_stats_get_group_descriptor() are plain allocations owned by the
+	 * caller, so this releases exactly one buffer and can never roll back
+	 * handle state.  dms is unused and kept for API compatibility.
+	 */
+	(void) dms;
+	dm_free(buffer);
 }
 
 uint64_t dm_stats_get_nr_regions(const struct dm_stats *dms)
@@ -2429,6 +2477,13 @@ static int _dm_stats_populate_region(struct dm_stats *dms, uint64_t region_id,
 	if (!_stats_bound(dms))
 		return_0;
 
+	/*
+	 * The cached aggregate no longer describes the counters that are
+	 * about to be replaced.  The allocation itself is reclaimed with
+	 * the listing, so only the reference is dropped here.
+	 */
+	region->histogram = NULL;
+
 	if (!_stats_parse_region(dms, resp, region, region->timescale)) {
 		log_error("Could not parse @stats_print message response.");
 		return 0;
@@ -2446,8 +2501,8 @@ int dm_stats_populate(struct dm_stats *dms, const char *program_id,
 	const char *resp;
 
 	/*
-	 * We are about do destroy and re-create the region table, so it
-	 * is safe to use the cursor embedded in the stats handle: just
+	 * We are about do destroy and re-create the listing, so it is
+	 * safe to use the cursor embedded in the stats handle: just
 	 * save a copy of the current walk_flags to restore later.
 	 */
 	saved_flags = dms->walk_flags;
@@ -2503,8 +2558,7 @@ int dm_stats_populate(struct dm_stats *dms, const char *program_id,
 
 bad:
 	dms->walk_flags = saved_flags;
-	_stats_regions_destroy(dms);
-	dms->regions = NULL;
+	_stats_listing_destroy(dms);
 	return 0;
 }
 
@@ -2516,12 +2570,10 @@ void dm_stats_destroy(struct dm_stats *dms)
 	if (!dms)
 		return;
 
-	_stats_regions_destroy(dms);
-	_stats_groups_destroy(dms);
+	_stats_listing_destroy(dms);
 	_stats_clear_binding(dms);
 	dm_pool_destroy(dms->mem);
 	dm_pool_destroy(dms->hist_mem);
-	dm_pool_destroy(dms->group_mem);
 	dm_free(dms->program_id);
 	dm_free((char *) dms->name);
 	dm_free(dms);
@@ -3351,25 +3403,26 @@ int dm_stats_set_alias(struct dm_stats *dms, uint64_t group_id, const char *alia
 	group = &dms->groups[group_id];
 	old_alias = group->alias;
 
-	group->alias = dm_strdup(alias);
+	/*
+	 * The alias is owned by mem: the new string replaces the old by
+	 * pointer and both are released together with the listing.
+	 * old_alias is not freed, only restored on the failure paths below.
+	 */
+	group->alias = dm_pool_strdup(dms->mem, alias);
 	if (!group->alias) {
 		log_error("Could not allocate memory for alias.");
-		goto bad;
+		group->alias = old_alias;
+		return 0;
 	}
 
 	if (!_stats_set_aux(dms, group_id, dms->regions[group_id].aux_data)) {
 		log_error("Could not set new aux_data");
-		goto bad;
+		/* the new alias is dropped with the listing */
+		group->alias = old_alias;
+		return 0;
 	}
 
-	dm_free((char *) old_alias);
-
 	return 1;
-
-bad:
-	dm_free((char *) group->alias);
-	group->alias = old_alias;
-	return 0;
 }
 
 const char *dm_stats_get_alias(const struct dm_stats *dms, uint64_t id)
@@ -3874,7 +3927,12 @@ const char *dm_histogram_to_string(const struct dm_histogram *dmh, int bin,
 	char buf[BOUNDS_LEN], bounds_buf[BOUNDS_LEN];
 	int minwidth, bounds, values, start, last;
 	uint64_t lower, upper, val_u64; /* bounds of the current bin. */
-	/* Use the histogram pool for string building. */
+	/*
+	 * The result is handed to the caller and is never freed explicitly;
+	 * it lives in the histogram arena, which is emptied whenever the
+	 * handle is relisted, rebound or destroyed - the lifetime the
+	 * public header documents.
+	 */
 	struct dm_pool *mem = dmh->dms->hist_mem;
 	const char *sep = "";
 	int bounds_width;
@@ -4037,9 +4095,13 @@ static int _stats_create_group(struct dm_stats *dms, dm_bitset_t regions,
 	group->regions = regions;
 
 	if (alias)
-		group->alias = dm_strdup(alias);
+		group->alias = dm_pool_strdup(dms->mem, alias);
 	else
 		group->alias = NULL;
+	if (alias && !group->alias) {
+		log_error("Could not allocate memory for group alias");
+		goto bad;
+	}
 
 	/* force an update of the group tag stored in aux_data */
 	if (!_stats_set_aux(dms, *group_id, dms->regions[*group_id].aux_data))
@@ -4047,12 +4109,18 @@ static int _stats_create_group(struct dm_stats *dms, dm_bitset_t regions,
 
 	return 1;
 bad:
+	/* the bitset and alias are dropped with the listing */
 	group->group_id = DM_STATS_GROUP_NOT_PRESENT;
 	group->regions = NULL;
-	dm_free((char *) group->alias);
+	group->alias = NULL;
 	return 0;
 }
 
+/*
+ * Report whether the given members overlap.  The extent map is a single
+ * per-call temporary with a known size, so it is a plain allocation freed
+ * on the way out rather than a pool with a rollback discipline to maintain.
+ */
 static int _stats_group_check_overlap(const struct dm_stats *dms,
 				      dm_bitset_t regions, int count)
 {
@@ -4061,10 +4129,10 @@ static int _stats_group_check_overlap(const struct dm_stats *dms,
 	size_t map_size = (dms->max_region + 1) * sizeof(*map);
 	int i = 0, id, overlap, merged;
 
-	map = dm_pool_alloc(dms->mem, map_size);
+	map = dm_malloc(map_size);
 	if (!map) {
 		log_error("Could not allocate memory for region map");
-		return 0;
+		return_0;
 	}
 
 	/* build a table of extents in order of region_id */
@@ -4079,7 +4147,7 @@ static int _stats_group_check_overlap(const struct dm_stats *dms,
 
 	/* A single region cannot overlap itself. */
 	if (i == 1) {
-		dm_pool_free(dms->mem, map);
+		dm_free(map);
 		return 1;
 	}
 
@@ -4117,7 +4185,7 @@ merge:
 	if (merged)
 		goto merge;
 
-	dm_pool_free(dms->mem, map);
+	dm_free(map);
 	return (overlap == 0);
 }
 
@@ -4170,14 +4238,9 @@ int dm_stats_create_group(struct dm_stats *dms, const char *members,
 		return 0;
 	};
 
-	if (!(regions = dm_bitset_parse_list(members, NULL, 0))) {
+	if (!(regions = dm_bitset_parse_list(members, dms->mem, 0))) {
 		log_error("Could not parse list: '%s'", members);
 		return 0;
-	}
-
-	if (!(check = dm_pool_zalloc(dms->hist_mem, sizeof(*check)))) {
-		log_error("Could not allocate memory for bounds check");
-		goto bad;
 	}
 
 	/* too many bits? */
@@ -4205,16 +4268,21 @@ int dm_stats_create_group(struct dm_stats *dms, const char *members,
 		if (dms->regions[i].timescale == 1)
 			precise++;
 
-		/* check for matching histogram bounds */
+		/*
+		 * All members carrying a histogram must agree on the
+		 * bounds. Compare against the first one seen rather than
+		 * copying it: struct dm_histogram has a flexible bins[]
+		 * member, so a bare sizeof(*check) allocation could not
+		 * hold a copy of the bins.
+		 */
 		bounds = dms->regions[i].bounds;
-		if (bounds && !check->nr_bins)
-			_stats_copy_histogram_bounds(check, bounds);
-		else if (bounds) {
-			if (!_stats_check_histogram_bounds(check, bounds)) {
-				log_error("All region histogram bounds "
-					  "must match exactly");
-				goto bad;
-			}
+		if (bounds && !check)
+			check = bounds;
+		else if (bounds &&
+			 !_stats_check_histogram_bounds(check, bounds)) {
+			log_error("All region histogram bounds must match "
+				  "exactly");
+			goto bad;
 		}
 		count++;
 	}
@@ -4229,12 +4297,9 @@ int dm_stats_create_group(struct dm_stats *dms, const char *members,
 	if (!_stats_create_group(dms, regions, alias, group_id))
 		goto bad;
 
-	dm_pool_free(dms->hist_mem, check);
 	return 1;
 
 bad:
-	dm_pool_free(dms->hist_mem, check);
-	dm_bitset_destroy(regions);
 	return 0;
 }
 
@@ -4305,19 +4370,29 @@ uint64_t dm_stats_get_group_id(const struct dm_stats *dms, uint64_t region_id)
 int dm_stats_get_group_descriptor(const struct dm_stats *dms,
 				  uint64_t group_id, char **buf)
 {
-	dm_bitset_t regions = dms->groups[group_id].regions;
+	dm_bitset_t regions;
 	size_t buflen;
+
+	if (!dms || !dms->groups || !_stats_group_id_present(dms, group_id)) {
+		log_error("Group ID " FMTu64 " does not exist", group_id);
+		return_0;
+	}
+
+	regions = dms->groups[group_id].regions;
 
 	buflen = _stats_group_tag_len(dms, regions);
 
-	*buf = dm_pool_alloc(dms->mem, buflen);
+	*buf = dm_malloc(buflen);
 	if (!*buf) {
 		log_error("Could not allocate memory for regions string");
 		return 0;
 	}
 
-	if (!_stats_group_tag_fill(dms, regions, *buf, buflen))
+	if (!_stats_group_tag_fill(dms, regions, *buf, buflen)) {
+		dm_free(*buf);
+		*buf = NULL;
 		return 0;
+	}
 
 	return 1;
 }
@@ -4327,11 +4402,12 @@ int dm_stats_get_group_descriptor(const struct dm_stats *dms,
  * Resize the group bitmap corresponding to group_id so that it can
  * contain at least num_regions members.
  */
-static int _stats_resize_group(struct dm_stats_group *group,
+static int _stats_resize_group(struct dm_stats *dms,
+			       struct dm_stats_group *group,
 			       uint64_t num_regions)
 {
 	uint64_t last_bit = dm_bit_get_last(group->regions);
-	dm_bitset_t new, old;
+	dm_bitset_t new;
 
 	if (last_bit >= num_regions) {
 		log_error("Cannot resize group bitmap to " FMTu64
@@ -4343,16 +4419,15 @@ static int _stats_resize_group(struct dm_stats_group *group,
 			 " (last_bit: " FMTu64 ").", group->regions[0],
 			 num_regions, last_bit);
 
-	new = dm_bitset_create(NULL, (unsigned) num_regions);
+	new = dm_bitset_create(dms->mem, (unsigned) num_regions);
 	if (!new) {
 		log_error("Could not allocate memory for new group bitmap.");
 		return 0;
 	}
 
-	old = group->regions;
-	dm_bit_copy(new, old);
+	/* the old bitset is dropped with the listing */
+	dm_bit_copy(new, group->regions);
 	group->regions = new;
-	dm_bitset_destroy(old);
 	return 1;
 }
 
@@ -4362,7 +4437,7 @@ static int _stats_resize_group(struct dm_stats_group *group,
 static int _stats_group_file_regions(struct dm_stats *dms, uint64_t *region_ids,
 				     uint64_t count, const char *alias)
 {
-	dm_bitset_t regions = dm_bitset_create(NULL, dms->nr_regions);
+	dm_bitset_t regions = dm_bitset_create(dms->mem, dms->nr_regions);
 	uint64_t i, group_id = DM_STATS_GROUP_NOT_PRESENT;
 	char *members = NULL;
 	size_t buflen;
@@ -4381,7 +4456,6 @@ static int _stats_group_file_regions(struct dm_stats *dms, uint64_t *region_ids,
 	if (!members) {
 		log_error("Cannot map file: failed to allocate group "
 			  "descriptor.");
-		dm_bitset_destroy(regions);
 		return 0;
 	}
 
@@ -4401,7 +4475,6 @@ static int _stats_group_file_regions(struct dm_stats *dms, uint64_t *region_ids,
 	dm_free(members);
 	return 1;
 bad:
-	dm_bitset_destroy(regions);
 	dm_free(members);
 	return 0;
 }
@@ -4798,9 +4871,8 @@ static uint64_t *_stats_map_file_regions(struct dm_stats *dms, int fd,
 				 fd, major(buf.st_dev), minor(buf.st_dev));
 
 	/* Use a temporary, private pool for the extent table. This avoids
-         * hijacking the dms->mem (region table) pool which would lead to
-         * interleaving temporary allocations with dm_stats_list() data,
-         * causing complications in the error path.
+         * interleaving temporary allocations with the listing owned by
+         * dms->mem.
          */
 	if (!(extent_mem = dm_pool_create("extents", sizeof(*extents))))
 		return_NULL;
@@ -4863,7 +4935,7 @@ static uint64_t *_stats_map_file_regions(struct dm_stats *dms, int fd,
 			/* expand group bitmap */
 			if (regions[i] > (group->regions[0] - 1)) {
 				num_bits = regions[i] + *count;
-				if (!_stats_resize_group(group, num_bits)) {
+				if (!_stats_resize_group(dms, group, num_bits)) {
 					log_error("Failed to resize group "
 						  "bitmap.");
 					goto out_remove;
