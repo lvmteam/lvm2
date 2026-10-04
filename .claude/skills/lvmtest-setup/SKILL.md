@@ -1,5 +1,7 @@
 ---
+name: lvmtest-setup
 description: Set up host prerequisites for running lvmtest as a non-root user via session libvirt
+trigger: /lvmtest-setup
 ---
 
 # HOST PREREQUISITES (NON-ROOT USAGE)
