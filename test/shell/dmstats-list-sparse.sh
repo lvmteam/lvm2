@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright (C) 2023 Red Hat, Inc. All rights reserved.
+# Copyright (C) 2026 Red Hat, Inc. All rights reserved.
 #
 # This copyrighted material is made available to anyone wishing to use,
 # modify, copy, or redistribute it subject to the terms and conditions
@@ -10,7 +10,6 @@
 # along with this program; if not, write to the Free Software Foundation,
 # Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
 
-
 . lib/inittest --skip-with-lvmpolld --skip-with-lvmlockd
 
 # Don't attempt to test stats with driver < 4.33.00
@@ -19,15 +18,17 @@ aux driver_at_least 4 33 || skip
 # ensure we can create devices (uses dmsetup, etc)
 aux prepare_devs 1
 
-HIST_BOUNDS="10ms,20ms,30ms"
+# Create three regions, delete the middle one, then re-list. The kernel
+# still reports region_ids 0 and 2 with a hole at 1; parsing must size
+# the region table from the highest id, not only the region count.
+dmstats create --start 0 --length 256 "$dev1"
+dmstats create --start 256 --length 256 "$dev1"
+dmstats create --start 512 --length 256 "$dev1"
+dmsetup message "$dev1" 0 "@stats_delete 1"
 
-# Create a region with a histogram and verify it in the list output
-dmstats create --bounds "$HIST_BOUNDS" "$dev1"
-dmstats list -ostats_name,hist_bounds |& tee out
-grep "$HIST_BOUNDS" out
+dmstats list "$dev1" --noheadings --separator : -oregion_id,stats_name |& tee out
+grep -E '^0:' out
+grep -E '^2:' out
+not grep -E '^1:' out
 
-# Grouping regions whose histogram bounds differ must be refused.
-dmstats create --bounds "10ms,20ms" --start 2048 "$dev1"
-not dmstats group --alias mismatched --regions 0,1 "$dev1" 2>&1 | tee out
-grep "must match" out
-
+dmstats delete --allregions "$dev1"

@@ -26,3 +26,14 @@ dmstats create --bounds 10ms,20ms,30ms "$dev1"
 dmstats report
 dmstats report --count 1
 dmstats report --histogram
+
+# Reporting a group walks _dm_stats_region_id_disp(), which asks the handle
+# for the group descriptor and releases the caller-owned string there.
+# Both members carry identical bounds: mixing a histogram region with a
+# plain one segfaults in _sum_histogram_bins(), which is a separate
+# pre-existing bug.
+dmstats create --bounds 10ms,20ms,30ms --start 2048 "$dev1"
+dmstats group --alias reportgroup --regions 0,1 "$dev1"
+dmstats report
+dmstats report -oregion_id,stats_name
+dmstats report --histogram

@@ -64,6 +64,24 @@ grep -q "$VPOOL_DM" lvpath.out
 dmvdostats "$vg-$lv2" | tee vpool.out
 grep -q "$VPOOL_DM" vpool.out
 
+# Dependency-tree walk: skip invalid sysfs-derived names (e.g. '#') and descend.
+INVALID="${PREFIX}vdostats-bad#mid"
+TOP="${PREFIX}vdostats-top"
+read -r vsize < <(dmsetup table "$VPOOL_DM" | awk '{print $2; exit}')
+vmajor=$(dmsetup info -c --noheadings -o major "$VPOOL_DM")
+vminor=$(dmsetup info -c --noheadings -o minor "$VPOOL_DM")
+dmsetup create "$INVALID" --verifyudev --manglename none \
+	--table "0 $vsize linear $vmajor:$vminor 0"
+bmajor=$(dmsetup info -c --noheadings -o major "$INVALID")
+bminor=$(dmsetup info -c --noheadings -o minor "$INVALID")
+dmsetup create "$TOP" --table "0 $vsize linear $bmajor:$bminor 0"
+dmvdostats "$TOP" | tee invalid-name-walk.out
+grep -q "$VPOOL_DM" invalid-name-walk.out
+dmsetup vdostats "$TOP" | tee invalid-name-walk-dmsetup.out
+grep -q "$VPOOL_DM" invalid-name-walk-dmsetup.out
+dmsetup remove "$TOP"
+dmsetup remove "$INVALID" --verifyudev --manglename none
+
 # A plain LV with no underlying VDO device is rejected
 lvcreate -L1 -n $lv3 $vg
 not dmvdostats "$vg-$lv3"
