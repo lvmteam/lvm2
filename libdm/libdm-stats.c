@@ -1254,6 +1254,14 @@ bad:
 	return 0;
 }
 
+int dm_stats_read_list(struct dm_stats *dms, const char *list_response)
+{
+	if (!_stats_bound(dms))
+		return_0;
+
+	return _stats_parse_list(dms, list_response);
+}
+
 int dm_stats_list(struct dm_stats *dms, const char *program_id)
 {
 	char msg[STATS_MSG_BUF_LEN];

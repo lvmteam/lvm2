@@ -608,6 +608,12 @@ int dm_stats_get_current_region_precise_timestamps(const struct dm_stats *dms);
  */
 int dm_stats_list(struct dm_stats *dms, const char *program_id);
 
+/*
+ * Parse a @stats_list message response body without device I/O.
+ * dm_stats_list() performs the same parsing after querying the kernel.
+ */
+int dm_stats_read_list(struct dm_stats *dms, const char *list_response);
+
 #define DM_STATS_REGIONS_ALL UINT64_MAX
 /*
  * Populate a dm_stats object with statistics for one or more regions of
