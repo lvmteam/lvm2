@@ -924,53 +924,72 @@ bad:
 	return 0;
 }
 
+/*
+ * Return the start of the last space-delimited token in [base, end), or
+ * NULL when the range is empty or the token starts at base.  The
+ * optional args always follow aux_data, so a token at base is aux_data
+ * itself, never an argument.
+ */
+static char *_stats_prev_arg(char *base, char *end)
+{
+	char *word = end;
+
+	while (word > base && word[-1] != ' ')
+		word--;
+
+	return (word == end || word == base) ? NULL : word;
+}
+
 static int _stats_parse_string_data(char *string_data, char **program_id,
 				    char **aux_data, char **stats_args)
 {
-	char *p, *next_gap, *empty_string = (char *)"";
+	char *p, *aux, *aux_end, *args, *word, *empty_string = (char *) "";
 	size_t len;
 
 	/*
 	 * String data format:
 	 * <program_id> <aux_data> [precise_timestamps] [histogram:n1,n2,n3,..]
+	 *
+	 * aux_data may contain spaces (a quoted group alias, user aux_data),
+	 * so the optional args are found from the end: the kernel appends
+	 * histogram:... last and precise_timestamps, if present, before it.
 	 */
 
 	/* Remove trailing whitespace */
 	len = strlen(string_data);
-	if (len > 0 && (string_data)[len - 1] == '\n') {
-		(string_data)[len - 1] = '\0';
-	}
-	p = strchr(string_data, ' ');
+	if (len > 0 && string_data[len - 1] == '\n')
+		string_data[len - 1] = '\0';
+
 	*program_id = string_data;
-	if (!p) {
+	if (!(p = strchr(string_data, ' '))) {
 		*aux_data = *stats_args = empty_string;
 		return 1;
 	}
 
 	*p = '\0';
+	aux = ++p;
+	*aux_data = aux;
 
-	p++;
-	if (strstr(p, DMS_GROUP_TAG)) {
-		*aux_data = p;
-		/* Skip over the group tag */
-		if ((next_gap = strchr(p, DMS_AUX_SEP_CHAR)))
-			next_gap = strchr(next_gap, ' ');
-		if (next_gap) {
-			*(next_gap++) = '\0';
-			*stats_args = next_gap++;
-		} else
-			*stats_args = empty_string;
-	} else {
-		next_gap = strchr(p, ' ');
-		if (next_gap) {
-			*next_gap = '\0';
-			*aux_data = p;
-			*stats_args = next_gap + 1;
-		} else {
-			*aux_data = p;
-			*stats_args = empty_string;
-		}
+	aux_end = aux + strlen(aux);
+	args = aux_end;
+
+	/* histogram:... is always the last argument */
+	word = _stats_prev_arg(aux, args);
+	if (word && !strncmp(word, HISTOGRAM_ARG, sizeof(HISTOGRAM_ARG) - 1)) {
+		args = word - 1;
+		word = _stats_prev_arg(aux, args);
 	}
+
+	/* precise_timestamps, if present, precedes histogram:... */
+	if (word && (size_t) (args - word) == sizeof(PRECISE_ARG) - 1 &&
+	    !strncmp(word, PRECISE_ARG, sizeof(PRECISE_ARG) - 1))
+		args = word - 1;
+
+	if (args < aux_end) {
+		*args = '\0';
+		*stats_args = args + 1;
+	} else
+		*stats_args = empty_string;
 
 	if (!strcmp(*program_id, "-"))
 		*program_id = empty_string;
