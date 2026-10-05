@@ -1677,20 +1677,25 @@ int dm_stats_walk_init(struct dm_stats *dms, uint64_t flags)
 	return 1;
 }
 
+/*
+ * Reset the walk cursor of a handle with no listing: a walk over it has
+ * to report the end, not walk off the empty table.
+ */
+static void _stats_walk_reset(struct dm_stats *dms)
+{
+	dms->cur_flags = 0;
+	dms->cur_region = DM_STATS_REGION_NOT_PRESENT;
+	dms->cur_area = DM_STATS_REGION_NOT_PRESENT;
+	dms->cur_group = DM_STATS_GROUP_NOT_PRESENT;
+}
+
 void dm_stats_walk_start(struct dm_stats *dms)
 {
 	if (!dms)
 		return;
 
 	if (!dms->regions) {
-		/*
-		 * Still reset the cursor: a walk over an unlisted handle
-		 * has to report the end, not walk off the empty table.
-		 */
-		dms->cur_flags = 0;
-		dms->cur_region = DM_STATS_REGION_NOT_PRESENT;
-		dms->cur_area = DM_STATS_REGION_NOT_PRESENT;
-		dms->cur_group = DM_STATS_GROUP_NOT_PRESENT;
+		_stats_walk_reset(dms);
 		return;
 	}
 
@@ -1809,6 +1814,11 @@ int dm_stats_walk_end(struct dm_stats *dms)
 {
 	if (!dms)
 		return 1;
+
+	if (!dms->regions) {
+		_stats_walk_reset(dms);
+		return 1;
+	}
 
 	if (_stats_walk_end(dms, &dms->cur_flags,
 			    &dms->cur_region, &dms->cur_area,
@@ -4410,8 +4420,14 @@ int dm_stats_delete_group(struct dm_stats *dms, uint64_t group_id,
 
 uint64_t dm_stats_get_group_id(const struct dm_stats *dms, uint64_t region_id)
 {
+	if (!dms || !dms->regions)
+		return DM_STATS_GROUP_NONE;
+
 	region_id = (region_id == DM_STATS_REGION_CURRENT)
 		     ? dms->cur_region : region_id;
+
+	if (region_id == DM_STATS_REGION_NOT_PRESENT)
+		return DM_STATS_GROUP_NONE;
 
 	if (region_id & DM_STATS_WALK_GROUP) {
 		if (region_id == DM_STATS_WALK_GROUP)
@@ -4422,6 +4438,9 @@ uint64_t dm_stats_get_group_id(const struct dm_stats *dms, uint64_t region_id)
 
 	if (region_id & DM_STATS_WALK_REGION)
 		region_id &= ~DM_STATS_WALK_REGION;
+
+	if (!dm_stats_region_present(dms, region_id))
+		return DM_STATS_GROUP_NONE;
 
 	return dms->regions[region_id].group_id;
 }
