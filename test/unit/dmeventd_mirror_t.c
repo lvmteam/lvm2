@@ -118,12 +118,12 @@ static void _mirror(void *fixture, const char *status, unsigned repairs)
 }
 
 /*
- * A healthy in-sync mirror (all devices and the disk log alive) is never
- * repaired. */
+ * A healthy in-sync mirror still runs repair so missing PVs can be detected
+ * when dm status reports all legs alive. */
 static void _insync(void *fixture)
 {
-	_mirror(fixture, "2 253:1 253:2 400/400 1 AA 3 disk 253:0 A", 0);
-	_mirror(fixture, "2 253:1 253:2 400/400 1 AA 3 disk 253:0 A", 0);
+	_mirror(fixture, "2 253:1 253:2 400/400 1 AA 3 disk 253:0 A", 1);
+	_mirror(fixture, "2 253:1 253:2 400/400 1 AA 3 disk 253:0 A", 2);
 }
 
 /*
@@ -152,14 +152,15 @@ static void _flush_failed(void *fixture)
 }
 
 /*
- * 'S' and 'R' failures are only logged: with all regions in sync the mirror
- * is reported healthy, with missing regions it is ignored. */
+ * 'S' and 'R' on mirror legs are only logged (no ME_FAILURE).  When fully
+ * in-sync that still yields ME_INSYNC and runs repair; incomplete regions are
+ * ignored without repair. */
 static void _sync_read_failed(void *fixture)
 {
-	_mirror(fixture, "2 253:1 253:2 400/400 1 AS 3 disk 253:0 A", 0);
-	_mirror(fixture, "2 253:1 253:2 399/400 1 AS 3 disk 253:0 A", 0);
-	_mirror(fixture, "2 253:1 253:2 400/400 1 AR 3 disk 253:0 A", 0);
-	_mirror(fixture, "2 253:1 253:2 399/400 1 AR 3 disk 253:0 A", 0);
+	_mirror(fixture, "2 253:1 253:2 400/400 1 AS 3 disk 253:0 A", 1);
+	_mirror(fixture, "2 253:1 253:2 399/400 1 AS 3 disk 253:0 A", 1);
+	_mirror(fixture, "2 253:1 253:2 400/400 1 AR 3 disk 253:0 A", 2);
+	_mirror(fixture, "2 253:1 253:2 399/400 1 AR 3 disk 253:0 A", 2);
 }
 
 /*
@@ -175,32 +176,32 @@ static void _unclassified(void *fixture)
  * 'R' on the log are only logged. */
 static void _log_failure(void *fixture)
 {
-	_mirror(fixture, "2 253:1 253:2 400/400 1 AA 3 disk 253:0 A", 0);
-	_mirror(fixture, "2 253:1 253:2 400/400 1 AA 3 disk 253:0 D", 1);
-	_mirror(fixture, "2 253:1 253:2 400/400 1 AA 3 disk 253:0 F", 2);
-	_mirror(fixture, "2 253:1 253:2 400/400 1 AA 3 disk 253:0 S", 2);
-	_mirror(fixture, "2 253:1 253:2 400/400 1 AA 3 disk 253:0 R", 2);
+	_mirror(fixture, "2 253:1 253:2 400/400 1 AA 3 disk 253:0 A", 1);
+	_mirror(fixture, "2 253:1 253:2 400/400 1 AA 3 disk 253:0 D", 2);
+	_mirror(fixture, "2 253:1 253:2 400/400 1 AA 3 disk 253:0 F", 3);
+	_mirror(fixture, "2 253:1 253:2 400/400 1 AA 3 disk 253:0 S", 4);
+	_mirror(fixture, "2 253:1 253:2 400/400 1 AA 3 disk 253:0 R", 5);
 }
 
 /*
  * Core and cluster logs carry no log devices, so only device health matters. */
 static void _core_log(void *fixture)
 {
-	_mirror(fixture, "2 253:1 253:2 400/400 1 AA 1 core", 0);
-	_mirror(fixture, "2 253:1 253:2 400/400 1 AA 3 cluster 253:0 A", 0);
-	_mirror(fixture, "4 253:1 253:2 253:3 253:4 400/400 1 ADFF 1 core", 1);
+	_mirror(fixture, "2 253:1 253:2 400/400 1 AA 1 core", 1);
+	_mirror(fixture, "2 253:1 253:2 400/400 1 AA 3 cluster 253:0 A", 2);
+	_mirror(fixture, "4 253:1 253:2 253:3 253:4 400/400 1 ADFF 1 core", 3);
 }
 
 /*
  * A failed lvconvert command is reported; the next event may retry, and a
- * subsequent healthy mirror never runs the policy. */
+ * subsequent healthy in-sync mirror runs repair again. */
 static void _repair_failure(void *fixture)
 {
 	_repair_result = 0;
 	_mirror(fixture, "2 253:1 253:2 400/400 1 AD 3 disk 253:0 A", 1);
 	_mirror(fixture, "2 253:1 253:2 400/400 1 AD 3 disk 253:0 A", 2);
 	_repair_result = 1;
-	_mirror(fixture, "2 253:1 253:2 400/400 1 AA 3 disk 253:0 A", 2);
+	_mirror(fixture, "2 253:1 253:2 400/400 1 AA 3 disk 253:0 A", 3);
 }
 
 /*
@@ -247,11 +248,11 @@ void dmeventd_mirror_tests(struct dm_list *all_tests)
 
 	T_ASSERT(ts);
 #define TEST(name, desc, fn) register_test(ts, "/dmeventd/mirror/" name, desc, fn)
-	TEST("insync", "healthy mirror is not repaired", _insync);
+	TEST("insync", "healthy in-sync mirror runs repair policy", _insync);
 	TEST("partial", "ignore incomplete in-sync regions", _partial);
 	TEST("dead", "dead leg triggers repair", _dead);
 	TEST("flush-failed", "flush failure triggers repair", _flush_failed);
-	TEST("sync-read-failed", "sync and read failures are only logged", _sync_read_failed);
+	TEST("sync-read-failed", "leg sync/read logged; in-sync still repairs", _sync_read_failed);
 	TEST("unclassified", "unknown health is a failure", _unclassified);
 	TEST("log-failure", "log device failures trigger repair", _log_failure);
 	TEST("core-log", "core and cluster logs have no log devices", _core_log);
