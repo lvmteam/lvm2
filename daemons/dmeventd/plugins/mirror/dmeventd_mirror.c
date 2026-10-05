@@ -98,17 +98,16 @@ static int _get_mirror_event(struct dso_state *state, const char *params)
 	return r;
 }
 
-static int _remove_failed_devices(const char *cmd_lvconvert, const char *device)
+static void _repair_mirror_lv(const char *cmd_lvconvert, const char *device)
 {
 	/* if repair goes OK, report success even if lvscan has failed */
 	if (!dmeventd_lvm2_run_with_lock(cmd_lvconvert)) {
 		log_error("Repair of mirrored device %s failed.", device);
-		return 0;
+		log_error("Failed to remove faulty devices in %s.", device);
+		return;
 	}
 
 	log_info("Repair of mirrored device %s finished successfully.", device);
-
-	return 1;
 }
 
 void process_event(struct dm_task *dmt,
@@ -148,16 +147,11 @@ void process_event(struct dm_task *dmt,
 			 * when the LV is consistent.  Mirror repair uses
 			 * noflush suspend so it does not deadlock on I/O.
 			 */
-			if (!_remove_failed_devices(state->cmd_lvconvert, device))
-				log_error("Failed to remove faulty devices in %s.",
-					  device);
+			_repair_mirror_lv(state->cmd_lvconvert, device);
 			break;
 		case ME_FAILURE:
 			log_error("Device failure in %s.", device);
-			if (!_remove_failed_devices(state->cmd_lvconvert, device))
-				/* FIXME Why are all the error return codes unused? Get rid of them? */
-				log_error("Failed to remove faulty devices in %s.",
-					  device);
+			_repair_mirror_lv(state->cmd_lvconvert, device);
 			/* Should check before warning user that device is now linear
 			else
 				log_notice("%s is now a linear device.",
