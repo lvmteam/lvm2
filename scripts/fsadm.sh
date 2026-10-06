@@ -26,7 +26,7 @@
 #
 # ext2/ext3/ext4: resize2fs, tune2fs
 # reiserfs: resize_reiserfs, reiserfstune
-# xfs: xfs_growfs, xfs_info, xfs_repair
+# xfs: xfs_growfs, xfs_info, xfs_db, xfs_repair
 # crypto_LUKS: cryptsetup
 #
 # Return values:
@@ -82,6 +82,9 @@ RESIZE_REISER="resize_reiserfs"
 TUNE_XFS="xfs_info"
 RESIZE_XFS="xfs_growfs"
 XFS_CHECK="xfs_check"
+# XFS_DB reads geometry from the superblock without mounting the filesystem;
+# xfs_info needs a mount point on older xfsprogs.
+XFS_DB="xfs_db"
 # XFS_REPAIR -n is used when XFS_CHECK is not found
 XFS_REPAIR="xfs_repair"
 FSCK="fsck"
@@ -205,7 +208,7 @@ validate_fs_tools() {
 		PACKAGE=xfsprogs
 		# check_xfs selects whichever read-only checker is installed.
 		set --
-		if test "$ACTION" = resize; then set -- "$TUNE_XFS" "$RESIZE_XFS"; fi ;;
+		if test "$ACTION" = resize; then set -- "$TUNE_XFS" "$XFS_DB" "$RESIZE_XFS"; fi ;;
 	  crypto_LUKS)
 		PACKAGE=cryptsetup
 		set -- "$CRYPTSETUP" ;;
@@ -810,23 +813,35 @@ resize_reiser() {
 resize_xfs() {
 	local i
 	local OUTPUT
+	local PARSE_TOOL
 
 	if detect_mounted; then
 		MOUNTPOINT=$MOUNTED
 	elif [ "$DRY" -ne 0 ]; then
-		# In dryrun do not mount the device, query the filesystem directly
+		# In dryrun do not mount the device; xfs_info requires a mount
+		# point on older xfsprogs, so read the superblock with xfs_db.
 		MOUNTPOINT=$VOLUME
 	else
 		temp_mount
 		MOUNTPOINT=$TEMPDIR
 	fi
 
-	verbose "Parsing $TUNE_XFS \"$MOUNTPOINT\"."
-	OUTPUT=$(LC_ALL=C "$TUNE_XFS" "$MOUNTPOINT") || error "Cannot read $TUNE_XFS geometry on \"$MOUNTPOINT\"."
+	if test "$DRY" -ne 0 && test -z "$MOUNTED"; then
+		PARSE_TOOL=$XFS_DB
+		verbose "Parsing $PARSE_TOOL \"$VOLUME\"."
+		OUTPUT=$(LC_ALL=C "$PARSE_TOOL" -r -c "sb 0" -c "print blocksize" -c "print dblocks" "$VOLUME") ||
+			error "Cannot read $PARSE_TOOL geometry on \"$VOLUME\"."
+	else
+		PARSE_TOOL=$TUNE_XFS
+		verbose "Parsing $PARSE_TOOL \"$MOUNTPOINT\"."
+		OUTPUT=$(LC_ALL=C "$PARSE_TOOL" "$MOUNTPOINT") || error "Cannot read $PARSE_TOOL geometry on \"$MOUNTPOINT\"."
+	fi
 	BLOCKSIZE='' BLOCKCOUNT=''
 	while read -r i; do
 		case "$i" in
 		  "data"*) BLOCKSIZE=${i##*bsize=}; BLOCKCOUNT=${i##*blocks=} ;;
+		  "blocksize"*) BLOCKSIZE=${i##* = } ;;
+		  "dblocks"*) BLOCKCOUNT=${i##* = } ;;
 		esac
 	done <<-EOF
 		$OUTPUT
@@ -834,7 +849,7 @@ resize_xfs() {
 
 	BLOCKSIZE=${BLOCKSIZE%%[!0-9]*}
 	BLOCKCOUNT=${BLOCKCOUNT%%[!0-9]*}
-	validate_parsing "$TUNE_XFS"
+	validate_parsing "$PARSE_TOOL"
 	prepare_resize "$1" "$BLOCKSIZE"
 	lvresize_reexec_only && return 0
 	if test "$DRY" -ne 0; then
@@ -1293,7 +1308,7 @@ trap 'cleanup 2' HUP INT QUIT ABRT TERM
 
 # test some prerequisites
 for i in "$TUNE_EXT" "$RESIZE_EXT" "$TUNE_REISER" "$RESIZE_REISER" \
-	"$TUNE_XFS" "$RESIZE_XFS" "$MOUNT" "$UMOUNT" "$MKDIR" \
+	"$TUNE_XFS" "$XFS_DB" "$RESIZE_XFS" "$MOUNT" "$UMOUNT" "$MKDIR" \
 	"$RMDIR" "$BLOCKDEV" "$BLKID" "$AWK" "$READLINK" "$STAT" \
 	"$DATE" "$FSCK" "$XFS_CHECK" "$XFS_REPAIR"; do
 	test -n "$i" || error "Required command definitions in the script are missing!"
