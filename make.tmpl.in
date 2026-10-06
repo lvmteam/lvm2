@@ -420,6 +420,12 @@ INTERNAL_LIBS = \
 LIBS += -L$(top_builddir)/libdm/ioctl -l$(LIBDM_NAME) -Wl,-rpath-link,$(top_builddir)/libdm/ioctl
 LVMINTERNAL_LIBS = $(top_builddir)/lib/liblvm-internal.a $(INTERNAL_LIBS)
 
+# Directories holding shared libraries built by this tree. Binaries run from
+# the build tree (e.g. tools/lvm) have no runpath, so without these in front
+# of LD_LIBRARY_PATH the dynamic loader falls back to the ld.so cache and may
+# pick up a stale copy installed under the configured prefix.
+BUILDLIB_PATH = $(top_builddir)/libdm/ioctl:$(top_builddir)/daemons/dmeventd
+
 all: $(SUBDIRS) $(TARGETS)
 
 define SIMPLE_RECURSIVE_RULE
