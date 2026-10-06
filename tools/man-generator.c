@@ -185,6 +185,7 @@ static int _get_val_enum(const struct command_name *cname, int opt_enum)
 {
 	return _update_relative_opt(cname->name, opt_enum, opt_names[opt_enum].val_enum);
 }
+
 /*
  * FIXME: this just replicates the val usage strings
  * that officially lives in vals.h.  Should there
@@ -242,6 +243,10 @@ static void _print_val_man(const struct command_name *cname, int opt_enum, int v
 		return;
 	case pnumber_VAL:
 		printf("[\\fB+\\fP]\\fINumber\\fP");
+		return;
+	case locktype_VAL:
+		/* make substitutes the list of enabled backends (SUBSTVARS) */
+		printf("#LOCKTYPE_ARG#");
 		return;
 	}
 

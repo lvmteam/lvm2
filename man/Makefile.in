@@ -178,6 +178,16 @@ else
 DEFAULT_LIBLINE=readline
 endif
 
+# --locktype value with the lvmlockd backends enabled by configure bolded,
+# in display order, e.g. \fBsanlock\fP|\:\fBdlm\fP|\:\fBnone\fP.  foreach
+# joins items with a space, so the space after each |\: is substituted away.
+# Backslashes are doubled because the value is passed through sed as the
+# replacement text.
+LOCKTYPE_ARG = $(subst |\\: ,|\\:,$(foreach t,$(strip \
+	$(if $(filter yes,@BUILD_LOCKDSANLOCK@),sanlock) \
+	$(if $(filter yes,@BUILD_LOCKDDLM@),dlm) \
+	$(if $(filter yes,@BUILD_LOCKDIDM@),idm)),\\fB$(t)\\fP|\\:)\\fBnone\\fP)
+
 define SUBSTVARS
 $(SED) -e "s+#VERSION#+$(LVM_VERSION)+" \
 	-e "s+#DEFAULT_SYS_DIR#+$(DEFAULT_SYS_DIR)+" \
@@ -187,6 +197,7 @@ $(SED) -e "s+#VERSION#+$(LVM_VERSION)+" \
 	-e "s+#DEFAULT_CACHE_DIR#+$(DEFAULT_CACHE_DIR)+" \
 	-e "s+#DEFAULT_LOCK_DIR#+$(DEFAULT_LOCK_DIR)+" \
 	-e "s+#LVM_PATH#+@bindir@/lvm+" \
+	-e 's+#LOCKTYPE_ARG#+$(LOCKTYPE_ARG)+' \
 	-e "s+#DEFAULT_RUN_DIR#+$(DEFAULT_RUN_DIR)+" \
 	-e "s+#DEFAULT_PID_DIR#+$(DEFAULT_PID_DIR)+" \
 	-e "s+#SYSTEMD_GENERATOR_DIR#+$(SYSTEMD_GENERATOR_DIR)+" \
