@@ -43,7 +43,7 @@ static void _fixture_exit(void *fixture)
 
 static void test_devlinks_preserve_preferred_name(void *fixture)
 {
-	struct device dev = { 0 };
+	struct device dev = { .dev = 0 };
 	struct dm_str_list *sl;
 	unsigned aliases_found = 0;
 
