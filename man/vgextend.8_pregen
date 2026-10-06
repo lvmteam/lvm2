@@ -150,7 +150,7 @@ vgextend \(em Add physical volumes to a volume group
 .
 .nh
 .TP
-\fBvgextend\fP \fIposition_args\fP
+\fBvgextend\fP \fIoption_args\fP \fIposition_args\fP
 [ \fIoption_args\fP ]
 .hy
 .
@@ -219,18 +219,28 @@ will initialize them. In this case pvcreate options can be used, e.g.
 .O_pvmetadatacopies
 ]
 .br
-[
-.O_reportformat
-]
-.br
-[
+[ COMMON_OPTIONS ]
+.RE
+.
+.P
+\(em
+.P
+.
+.B vgextend
 .O_restoremissing
-]
-.br
+\fIVG\fP \fIPV\fP\ .\|.\|.\&
+.RS
 [ COMMON_OPTIONS ]
 .RE
 .P
 \(em
+.P
+Common options for command:
+.RS
+[
+.O_reportformat
+]
+.RE
 .P
 Common options for lvm:
 .RS
