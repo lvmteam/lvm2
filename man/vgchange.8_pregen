@@ -121,9 +121,7 @@
 ..
 .de O_locktype
 .OPA locktype
-\%\fBsanlock\fP|\:\
-\fBdlm\fP|\:\
-\fBnone\fP
+#LOCKTYPE_ARG#
 ..
 .de O_logicalvolume
 .OPA l logicalvolume

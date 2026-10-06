@@ -833,9 +833,7 @@ See \fBlvmlockd\fP(8) for more information.
 Used by: \fBvgchange\fP
 .
 .TP
-\fB--locktype\fP \%\fBsanlock\fP|\:\
-\fBdlm\fP|\:\
-\fBnone\fP
+\fB--locktype\fP #LOCKTYPE_ARG#
 .br
 Used by: \fBvgchange\fP, \fBvgcreate\fP
 .
