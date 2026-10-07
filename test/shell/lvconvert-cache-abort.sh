@@ -59,7 +59,9 @@ test "$(get lv_field $vg/$lv1 cache_dirty_blocks)" -gt 0 || {
 LVM_TEST_TAG="kill_me_$PREFIX" lvconvert -vvvv --splitcache $vg/$lv1 >logconvert 2>&1 &
 PID_CONVERT=$!
 sent_kill=0
-for i in {1..200}; do
+# Allow slow cleaner reloads and udev waits before the interruptible wait.
+deadline=$((SECONDS + 10))
+while test "$SECONDS" -lt "$deadline"; do
 	grep -q "Flushing.*aborted" logconvert && break
 	kill -0 "$PID_CONVERT" 2>/dev/null || break
 	out=$(dmsetup status --noflush "$vg-$lv1")
