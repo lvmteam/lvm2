@@ -25,7 +25,7 @@
 #   find, xargs, head, cut, tr, lvm, dmsetup
 #
 # ext2/ext3/ext4: resize2fs, tune2fs
-# reiserfs: resize_reiserfs, reiserfstune
+# reiserfs: resize_reiserfs, debugreiserfs
 # xfs: xfs_growfs, xfs_info, xfs_db, xfs_repair
 # crypto_LUKS: cryptsetup
 #
@@ -77,7 +77,10 @@ tool_usage() {
 # External commands
 TUNE_EXT="tune2fs"
 RESIZE_EXT="resize2fs"
-TUNE_REISER="reiserfstune"
+# DEBUG_REISER reads geometry from the superblock without touching the
+# device and also works on a mounted filesystem; reiserfstune refuses to
+# run on one.
+DEBUG_REISER="debugreiserfs"
 RESIZE_REISER="resize_reiserfs"
 TUNE_XFS="xfs_info"
 RESIZE_XFS="xfs_growfs"
@@ -203,7 +206,7 @@ validate_fs_tools() {
 	  reiserfs)
 		PACKAGE=reiserfsprogs
 		set -- "$FSCK"
-		if test "$ACTION" = resize; then set -- "$@" "$TUNE_REISER" "$RESIZE_REISER"; fi ;;
+		if test "$ACTION" = resize; then set -- "$@" "$DEBUG_REISER" "$RESIZE_REISER"; fi ;;
 	  xfs)
 		PACKAGE=xfsprogs
 		# check_xfs selects whichever read-only checker is installed.
@@ -769,8 +772,8 @@ resize_reiser() {
 	local i
 	local OUTPUT
 
-	verbose "Parsing $TUNE_REISER \"$VOLUME\"."
-	OUTPUT=$(LC_ALL=C "$TUNE_REISER" "$VOLUME") || error "Cannot read $TUNE_REISER geometry on \"$VOLUME\"."
+	verbose "Parsing $DEBUG_REISER \"$VOLUME\"."
+	OUTPUT=$(LC_ALL=C "$DEBUG_REISER" "$VOLUME") || error "Cannot read $DEBUG_REISER geometry on \"$VOLUME\"."
 	BLOCKSIZE='' BLOCKCOUNT=''
 	while read -r i; do
 		case "$i" in
@@ -781,7 +784,7 @@ resize_reiser() {
 		$OUTPUT
 	EOF
 
-	validate_parsing "$TUNE_REISER"
+	validate_parsing "$DEBUG_REISER"
 	prepare_resize "$1" "$BLOCKSIZE"
 	lvresize_reexec_only && return 0
 	if detect_mounted; then
@@ -1307,7 +1310,7 @@ trap 'cleanup $?' EXIT
 trap 'cleanup 2' HUP INT QUIT ABRT TERM
 
 # test some prerequisites
-for i in "$TUNE_EXT" "$RESIZE_EXT" "$TUNE_REISER" "$RESIZE_REISER" \
+for i in "$TUNE_EXT" "$RESIZE_EXT" "$DEBUG_REISER" "$RESIZE_REISER" \
 	"$TUNE_XFS" "$XFS_DB" "$RESIZE_XFS" "$MOUNT" "$UMOUNT" "$MKDIR" \
 	"$RMDIR" "$BLOCKDEV" "$BLKID" "$AWK" "$READLINK" "$STAT" \
 	"$DATE" "$FSCK" "$XFS_CHECK" "$XFS_REPAIR"; do
