@@ -179,6 +179,7 @@ test ! -f "$RUNDIR/lvm/vgs_online/$vg"
 #lvs -o active $vg |tee out || true
 #not grep "active" out
 
+aux cleanup_md_dev
 aux wipefs_a "$dev1" "$dev2"
 
 ##########################################
@@ -300,6 +301,7 @@ pvscan --cache -aay "$dev4"
 test ! -f "$RUNDIR/lvm/pvs_online/$PVIDMD"
 test ! -f "$RUNDIR/lvm/vgs_online/$vg"
 
+aux cleanup_md_dev
 aux wipefs_a "$dev1" "$dev2" "$dev4"
 fi   # MD_LEVEL == 1
 
