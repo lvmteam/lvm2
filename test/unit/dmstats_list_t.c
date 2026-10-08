@@ -40,7 +40,7 @@ static void *_stats_fixture_init(void)
 {
 	struct dm_stats *dms;
 
-	dms = dm_stats_create("");
+	dms = dm_stats_create("test");
 	if (!dms) {
 		fprintf(stderr, "dm_stats_create failed\n");
 		exit(1);
