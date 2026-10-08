@@ -18,6 +18,7 @@
 
 case "$(uname -r)" in
   3.10.0-862*) skip "Cannot run this test on unfixed kernel." ;;
+  5.14.0-687.5.1.el9_8*) skip "Known RAID5 reshape data corruption on this kernel." ;;
 esac
 
 aux have_fs ext4 || skip
