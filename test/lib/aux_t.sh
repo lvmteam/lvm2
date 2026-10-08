@@ -1024,7 +1024,7 @@ cleanup_md_dev() {
 	done
 
 	for i in {0..10} ; do
-		grep -q "$base" /proc/mdstat || break
+		grep -q "^$base " /proc/mdstat || break
 		if [[ "$i" != 0 ]]; then
 			sleep .1
 			echo "$mddev is still present, stopping again"
@@ -1033,6 +1033,10 @@ cleanup_md_dev() {
 		mdadm --stop "$mddev" || true
 		udev_wait  # wait till events are process, not zeroing to early
 	done
+	if grep -q "^$base " /proc/mdstat; then
+		echo "$mddev is still present after stop retries."
+		return 1
+	fi
 
 	[[ "$DM_DEV_DIR" = "/dev" ]] || rm -f "$(< MD_DEV_PV)"
 
