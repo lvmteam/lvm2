@@ -22,6 +22,7 @@
 #include <libudev.h>
 
 #define UDEV_CONTROL_PATH "/run/udev/control"
+#define UDEV_LEGACY_QUEUE_PATH "/dev/.udev/queue.bin"
 
 static struct udev *_udev;
 
@@ -53,7 +54,8 @@ void udev_fin_library_context(void)
 
 int udev_is_running(void)
 {
-	if (access(UDEV_CONTROL_PATH, F_OK) >= 0)
+	if ((access(UDEV_CONTROL_PATH, F_OK) >= 0) ||
+	    (access(UDEV_LEGACY_QUEUE_PATH, F_OK) >= 0))
 		return 1;
 
 	log_debug_activation("Assuming udev is not running.");

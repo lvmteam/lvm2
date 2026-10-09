@@ -48,6 +48,7 @@
 #define DEV_DIR "/dev/"
 
 #define UDEV_CONTROL_PATH "/run/udev/control"
+#define UDEV_LEGACY_QUEUE_PATH "/dev/.udev/queue.bin"
 
 #ifdef UDEV_SYNC_SUPPORT
 #ifdef _SEM_SEMUN_UNDEFINED
@@ -2598,7 +2599,8 @@ static int _check_semaphore_is_supported(void)
 
 static int _check_udev_is_running(void)
 {
-	int r = access(UDEV_CONTROL_PATH, F_OK) >= 0;
+	int r = (access(UDEV_CONTROL_PATH, F_OK) >= 0) ||
+		(access(UDEV_LEGACY_QUEUE_PATH, F_OK) >= 0);
 
 	if (!r)
 		log_debug_activation("Udev is not running. "
