@@ -179,6 +179,20 @@ out:
 	return NULL;
 }
 
+static int _vdo_pool_stats_supported(const struct logical_volume *lv)
+{
+	const struct segment_type *segtype;
+	unsigned attrs = 0;
+
+	if (!(segtype = get_segtype_from_flag(lv->vg->cmd, SEG_VDO_POOL)) ||
+	    !segtype->ops || !segtype->ops->target_present ||
+	    !segtype->ops->target_present(lv->vg->cmd, NULL, &attrs))
+		return 0;
+
+	/* dm-vdo added "stats" in target version 8.2.0, also marked by VERSION4. */
+	return (attrs & VDO_FEATURE_VERSION4) ? 1 : 0;
+}
+
 /* Read data_blocks_used and logical_blocks_used from VDO stats message */
 static int _vdo_pool_message_stats(struct dm_pool *mem,
 				   const struct logical_volume *lv,
@@ -192,6 +206,12 @@ static int _vdo_pool_message_stats(struct dm_pool *mem,
 
 	status->data_blocks_used = ULLONG_MAX;
 	status->logical_blocks_used = ULLONG_MAX;
+
+	if (!_vdo_pool_stats_supported(lv)) {
+		/* Missing stats are not an error; leave values unset for sysfs fallback. */
+		r = 1;
+		goto out;
+	}
 
 	if (!(dlid = build_dm_uuid(mem, lv, lv_layer(lv))))
 		return_0;
@@ -218,7 +238,8 @@ static int _vdo_pool_message_stats(struct dm_pool *mem,
 
 	r = 1;
 out:
-	dm_task_destroy(dmt);
+	if (dmt)
+		dm_task_destroy(dmt);
 
 	return r;
 }
