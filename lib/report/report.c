@@ -569,13 +569,13 @@ static int _preparse_fuzzy_time(const char *s, struct time_info *info)
 		s = _skip_space(s);
 	}
 
-	info->ti_list = list;
 	r = 1;
 out:
 	if (!(r && fuzzy)) {
 		dm_pool_free(info->mem, list);
 		return 0;
 	}
+	info->ti_list = list;
 
 	return 1;
 }
