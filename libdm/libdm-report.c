@@ -4354,8 +4354,10 @@ static int _alloc_rh_selection(struct dm_report *rh)
 	if (!(rh->selection = dm_pool_zalloc(rh->mem, sizeof(struct selection))) ||
 	    !(rh->selection->mem = dm_pool_create("report selection", 1024))) {
 		log_error("Failed to allocate report selection structure.");
-		if (rh->selection)
+		if (rh->selection) {
 			dm_pool_free(rh->mem, rh->selection);
+			rh->selection = NULL;
+		}
 		return 0;
 	}
 
@@ -4376,7 +4378,7 @@ static int _report_set_selection(struct dm_report *rh, const char *selection, in
 		rh->selection->selection_root = NULL;
 	} else {
 		if (!_alloc_rh_selection(rh))
-			goto_bad;
+			return 0;
 	}
 
 	if (!selection || !selection[0] || !strcasecmp(selection, SPECIAL_SELECTION_ALL))
